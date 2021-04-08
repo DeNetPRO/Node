@@ -1,2 +1,5 @@
 # working enviroment
 .idea/
+
+# build stuff
+main.exe
