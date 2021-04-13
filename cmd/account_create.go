@@ -17,16 +17,16 @@ var accountCreateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("create called")
 
-		var password_1, password_2 string
-		password_match := false
+		var password1, password2 string
+		passwordMatch := false
 
-		for !password_match {
+		for !passwordMatch {
 			fmt.Println("Enter password: ")
 			bytePassword, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
 				log.Fatal(err)
 			}
-			password_1 = string(bytePassword)
+			password1 = string(bytePassword)
 
 			fmt.Println("Enter password again: ")
 			bytePassword, err = terminal.ReadPassword(int(os.Stdin.Fd()))
@@ -34,10 +34,10 @@ var accountCreateCmd = &cobra.Command{
 				log.Fatal(err)
 			}
 
-			password_2 = string(bytePassword)
+			password2 = string(bytePassword)
 
-			if password_1 == password_2 {
-				password_match = true
+			if password1 == password2 {
+				passwordMatch = true
 			} else{
 				fmt.Println("Passwords do not match! Please, enter passwords again")
 			}
