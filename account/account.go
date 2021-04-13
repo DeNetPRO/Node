@@ -4,15 +4,12 @@ import (
 	"crypto/ecdsa"
 	"dfile-secondary-node/common"
 	"errors"
-	"fmt"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	commonEtherium "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/ethereum/go-ethereum/crypto"
 )
 
-//TODO: write comment
+//GetAllAccounts go to the folder ~/dfile/accounts and return all accounts addresses in string format
 func GetAllAccounts() ([]string, error) {
 	var blockchainAccounts []string
 
@@ -33,7 +30,7 @@ func GetAllAccounts() ([]string, error) {
 	return blockchainAccounts, err
 }
 
-// TODO: write comment
+// CreateAccount creates account and keystore file with encryption with password
 func CreateAccount(password string) (string, error) {
 	accountDir, err := common.GetAccountDirectory()
 	if err != nil {
@@ -49,12 +46,14 @@ func CreateAccount(password string) (string, error) {
 	return account.Address.String(), nil
 }
 
+//DFileAccount is simple structure with main fields for working with smart contracts and blockchain
 type DFileAccount struct {
 	Address    commonEtherium.Address
 	PrivateKey *ecdsa.PrivateKey
 	PublicKey  *ecdsa.PublicKey
 }
 
+//LoadAccount load in memory keystore file and decrypt it for further use
 func (dfileAccount *DFileAccount) LoadAccount(blockchainAccountString, password string) error {
 	accountDir, err := common.GetAccountDirectory()
 	if err != nil {
@@ -98,10 +97,6 @@ func (dfileAccount *DFileAccount) LoadAccount(blockchainAccountString, password 
 		return errAccountPublicKey
 	}
 	dfileAccount.PublicKey = publicKeyECDSA
-
-	fmt.Println(hexutil.Encode(crypto.FromECDSA(dfileAccount.PrivateKey)))
-	fmt.Println(hexutil.Encode(crypto.FromECDSAPub(dfileAccount.PublicKey)))
-	fmt.Println(crypto.PubkeyToAddress(*dfileAccount.PublicKey).String())
 
 	return nil
 }
