@@ -23,7 +23,7 @@ func Start(address, port string) {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/upload", SaveFiles).Methods("POST")
-	r.HandleFunc("/download/{name}", ServeFiles).Methods("GET")
+	r.HandleFunc("/download/{fileKey}", ServeFiles).Methods("GET")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -130,13 +130,13 @@ func SaveFiles(w http.ResponseWriter, r *http.Request) {
 
 func ServeFiles(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	name := vars["name"]
+	fileKey := vars["fileKey"]
 
-	if strings.Trim(name, " ") == "" {
+	if strings.Trim(fileKey, " ") == "" {
 		http.Error(w, "address or name is not provided", 400)
 		return
 	}
 
-	pathToFile := filepath.Join(shared.AccDir, AccountAddress, "storage", name)
+	pathToFile := filepath.Join(shared.AccDir, AccountAddress, "storage", fileKey)
 	http.ServeFile(w, r, pathToFile)
 }

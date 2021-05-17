@@ -13,7 +13,7 @@ var accountListCmd = &cobra.Command{
 	Short: "display addresses of all blockchain accounts",
 	Long:  `display addresses of all blockchain accounts`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Please, choose an account address and enter password.\n")
+		fmt.Println("Accounts:")
 		accounts := account.GetAllAccounts()
 		for i, a := range accounts {
 			fmt.Println(i+1, a)

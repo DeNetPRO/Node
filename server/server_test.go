@@ -14,21 +14,22 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
+
+	"github.com/gorilla/mux"
 )
 
 var (
 	accAddress     string
+	fileSize       int64
 	firstFileName  = "file.txt"
 	secondFileName = "text.doc"
 )
 
 func TestMain(m *testing.M) {
 
-	shared.GetOrCreateWorkDir()
-	shared.GetAccountDirectory()
+	shared.CreateIfNotExistAccDirs()
 
 	address, err := account.CreateAccount("12345")
 	if err != nil {
@@ -54,9 +55,9 @@ func TestFilesUpload(t *testing.T) {
 
 	rand.Seed(time.Now().Unix())
 
-	fileLen := int64(rand.Intn(10000000))
+	fileSize = int64(rand.Intn(10000000))
 
-	b := make([]byte, fileLen)
+	b := make([]byte, fileSize)
 
 	firstFilePath := filepath.Join(shared.WorkingDir, firstFileName)
 
@@ -70,9 +71,7 @@ func TestFilesUpload(t *testing.T) {
 	f.Write(b)
 	f.Close()
 
-	fileLen = int64(rand.Intn(10000000))
-
-	b1 := make([]byte, fileLen)
+	b1 := make([]byte, fileSize)
 
 	secondFilePath := filepath.Join(shared.WorkingDir, secondFileName)
 
@@ -130,38 +129,37 @@ func TestFilesUpload(t *testing.T) {
 		t.Error(err)
 	}
 
-	fmt.Println(stat)
+	stat1, err := os.Stat(filepath.Join(shared.AccDir, accAddress, "storage", secondFileName))
+	if err != nil {
+		t.Error(err)
+	}
+
+	if stat == nil || stat1 == nil {
+		t.Error("files aren't saved")
+	}
+
+	if stat.Size() != fileSize || stat1.Size() != fileSize {
+		t.Error("files size is incorrect")
+	}
 }
 
 // ====================================================================================
 
-// func TestFileDownload(t *testing.T) {
+func TestFileDownload(t *testing.T) {
 
-// 	endpoint := "/file/download/" + secondTestQKey
+	endpoint := "/download/" + firstFileName
 
-// 	req, err := http.NewRequest("GET", endpoint, nil)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	rr := httptest.NewRecorder()
-
-// 	router := mux.NewRouter()
-// 	router.HandleFunc("/file/download/{fileKey}", server.FileDownload)
-// 	router.ServeHTTP(rr, req)
-// }
-
-// ========================================================================================================
-
-func testHandler(t *testing.T, r *strings.Reader, e string, h http.HandlerFunc) *httptest.ResponseRecorder {
-	req, err := http.NewRequest("POST", e, r)
+	req, err := http.NewRequest("GET", endpoint, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	rr := httptest.NewRecorder()
 
-	h.ServeHTTP(rr, req)
-
-	return rr
+	router := mux.NewRouter()
+	router.HandleFunc("/download/{fileKey}", server.ServeFiles)
+	router.ServeHTTP(rr, req)
+	if int64(rr.Body.Len()) != fileSize {
+		t.Error("downloaded file size is wrong")
+	}
 }

@@ -4,20 +4,50 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-
-	"github.com/mitchellh/go-homedir"
+	"strings"
 )
 
-var WorkingDir string
-var AccDir string
+var (
+	WorkingDir string
+	AccDir     string
+)
 
-//GetAccountDirectory return account directory of dfile products
-func GetAccountDirectory() {
+// GetHomeDirectory return path to the home directory of dfile
+func CreateIfNotExistAccDirs() {
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal("Fatal error")
+	}
+
+	workDir := filepath.Join(homeDir, "dfile")
+
+	_, err = os.Stat(workDir)
+	if err != nil {
+		errPart := strings.Split(err.Error(), ":")
+
+		if strings.Trim(errPart[1], " ") != "no such file or directory" {
+			log.Fatal("Fatal error")
+		}
+
+		err = os.MkdirAll(workDir, os.ModePerm|os.ModeDir)
+		if err != nil {
+			log.Fatal("Fatal error")
+		}
+	}
+
+	WorkingDir = workDir
 
 	accDir := filepath.Join(WorkingDir, "accounts")
 
-	_, err := os.Stat(accDir)
+	_, err = os.Stat(accDir)
 	if err != nil {
+		errPart := strings.Split(err.Error(), ":")
+
+		if strings.Trim(errPart[1], " ") != "no such file or directory" {
+			log.Fatal("Fatal error")
+		}
+
 		err = os.MkdirAll(accDir, os.ModePerm|os.ModeDir)
 		if err != nil {
 			log.Fatal("Fatal error")
@@ -25,27 +55,7 @@ func GetAccountDirectory() {
 	}
 
 	AccDir = accDir
-}
 
-// GetHomeDirectory return path to the home directory of dfile
-func GetOrCreateWorkDir() {
-
-	homeDir, err := homedir.Dir()
-	if err != nil {
-		log.Fatal("Fatal error")
-	}
-
-	homeDir = filepath.Join(homeDir, "dfile")
-
-	_, err = os.Stat(homeDir)
-	if err != nil {
-		err = os.MkdirAll(homeDir, os.ModePerm|os.ModeDir)
-		if err != nil {
-			log.Fatal("Fatal error")
-		}
-	}
-
-	WorkingDir = homeDir
 }
 
 // GetHomeDirectory return path to the app data of dfile secondary node

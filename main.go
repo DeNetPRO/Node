@@ -17,8 +17,10 @@ package main
 
 import (
 	"dfile-secondary-node/cmd"
+	"dfile-secondary-node/shared"
 )
 
 func main() {
+	shared.CreateIfNotExistAccDirs()
 	cmd.Execute()
 }
