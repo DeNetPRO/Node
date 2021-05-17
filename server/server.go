@@ -81,13 +81,7 @@ func checkSignature(h http.Handler) http.Handler {
 
 func SaveFiles(w http.ResponseWriter, r *http.Request) {
 
-	accountDir, err := shared.GetAccountDirectory()
-	if err != nil {
-		http.Error(w, "Account directiry is not found", 400)
-		return
-	}
-
-	err = r.ParseMultipartForm(1 << 20) // maxMemory 32MB
+	err := r.ParseMultipartForm(1 << 20) // maxMemory 32MB
 	if err != nil {
 		http.Error(w, "Parse multiform problem", 400)
 		return
@@ -112,7 +106,7 @@ func SaveFiles(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "File saving problem", 400)
 		}
 
-		path := filepath.Join(accountDir, AccountAddress, "storage", fh.Filename)
+		path := filepath.Join(shared.AccDir, AccountAddress, "storage", fh.Filename)
 
 		newFile, err := os.Create(path)
 		if err != nil {
@@ -143,12 +137,6 @@ func ServeFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accountDir, err := shared.GetAccountDirectory()
-	if err != nil {
-		http.Error(w, "account directiry is not found", 400)
-		return
-	}
-
-	pathToFile := filepath.Join(accountDir, AccountAddress, "storage", name)
+	pathToFile := filepath.Join(shared.AccDir, AccountAddress, "storage", name)
 	http.ServeFile(w, r, pathToFile)
 }

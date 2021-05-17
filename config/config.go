@@ -80,10 +80,8 @@ func (config *SecondaryNodeConfig) Create() error {
 	// Account name
 
 	fmt.Println("Please select on of account addresses")
-	accounts, err := account.GetAllAccounts()
-	if err != nil {
-		return err
-	}
+	accounts := account.GetAllAccounts()
+
 	for i, a := range accounts {
 		fmt.Println(i, a)
 	}

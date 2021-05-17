@@ -36,10 +36,7 @@ var accountCheckCmd = &cobra.Command{
 
 			address = string(byteAddress)
 
-			accounts, err := account.GetAllAccounts()
-			if err != nil {
-				log.Fatal("Fatal error while account log in.")
-			}
+			accounts := account.GetAllAccounts()
 
 			addressMatches := false
 

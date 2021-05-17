@@ -21,19 +21,14 @@ import (
 
 var (
 	accAddress     string
-	workingDir     string
 	firstFileName  = "file.txt"
 	secondFileName = "text.doc"
 )
 
 func TestMain(m *testing.M) {
 
-	workDir, err := shared.GetOrCreateWorkDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	workingDir = workDir
+	shared.GetOrCreateWorkDir()
+	shared.GetAccountDirectory()
 
 	address, err := account.CreateAccount("12345")
 	if err != nil {
@@ -45,7 +40,7 @@ func TestMain(m *testing.M) {
 
 	exitVal := m.Run()
 
-	err = os.RemoveAll(workDir)
+	err = os.RemoveAll(shared.WorkingDir)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -63,7 +58,7 @@ func TestFilesUpload(t *testing.T) {
 
 	b := make([]byte, fileLen)
 
-	firstFilePath := filepath.Join(workingDir, firstFileName)
+	firstFilePath := filepath.Join(shared.WorkingDir, firstFileName)
 
 	f, err := os.Create(firstFilePath)
 	if err != nil {
@@ -79,7 +74,7 @@ func TestFilesUpload(t *testing.T) {
 
 	b1 := make([]byte, fileLen)
 
-	secondFilePath := filepath.Join(workingDir, secondFileName)
+	secondFilePath := filepath.Join(shared.WorkingDir, secondFileName)
 
 	f1, err := os.Create(secondFilePath)
 	if err != nil {
@@ -130,7 +125,12 @@ func TestFilesUpload(t *testing.T) {
 
 	handler.ServeHTTP(rr, req)
 
-	fmt.Println(rr)
+	stat, err := os.Stat(filepath.Join(shared.AccDir, accAddress, "storage", firstFileName))
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(stat)
 }
 
 // ====================================================================================

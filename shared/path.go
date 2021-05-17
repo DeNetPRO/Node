@@ -1,39 +1,38 @@
 package shared
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/mitchellh/go-homedir"
 )
 
+var WorkingDir string
+var AccDir string
+
 //GetAccountDirectory return account directory of dfile products
-func GetAccountDirectory() (string, error) {
+func GetAccountDirectory() {
 
-	workDir, err := GetOrCreateWorkDir()
+	accDir := filepath.Join(WorkingDir, "accounts")
+
+	_, err := os.Stat(accDir)
 	if err != nil {
-		return "", err
-	}
-
-	workDir = filepath.Join(workDir, "accounts")
-
-	_, err = os.Stat(workDir)
-	if err != nil {
-		err = os.MkdirAll(workDir, os.ModePerm|os.ModeDir)
+		err = os.MkdirAll(accDir, os.ModePerm|os.ModeDir)
 		if err != nil {
-			return "", err
+			log.Fatal("Fatal error")
 		}
 	}
 
-	return workDir, nil
+	AccDir = accDir
 }
 
 // GetHomeDirectory return path to the home directory of dfile
-func GetOrCreateWorkDir() (string, error) {
+func GetOrCreateWorkDir() {
 
 	homeDir, err := homedir.Dir()
 	if err != nil {
-		return "", err
+		log.Fatal("Fatal error")
 	}
 
 	homeDir = filepath.Join(homeDir, "dfile")
@@ -42,32 +41,27 @@ func GetOrCreateWorkDir() (string, error) {
 	if err != nil {
 		err = os.MkdirAll(homeDir, os.ModePerm|os.ModeDir)
 		if err != nil {
-			return "", err
+			log.Fatal("Fatal error")
 		}
 	}
 
-	return homeDir, nil
+	WorkingDir = homeDir
 }
 
 // GetHomeDirectory return path to the app data of dfile secondary node
 func GetDirectoryDFileSecondaryNode() (string, error) {
 
-	homeDir, err := GetOrCreateWorkDir()
-	if err != nil {
-		return "", err
-	}
+	nodeDir := filepath.Join(WorkingDir, "dfile-secondary-node")
 
-	homeDir = filepath.Join(homeDir, "dfile-secondary-node")
-
-	_, err = os.Stat(homeDir)
+	_, err := os.Stat(nodeDir)
 	if err != nil {
-		err = os.MkdirAll(homeDir, os.ModePerm|os.ModeDir)
+		err = os.MkdirAll(nodeDir, os.ModePerm|os.ModeDir)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	return homeDir, nil
+	return nodeDir, nil
 }
 
 // GetConfigsDirectory return path to the app data of dfile secondary node
