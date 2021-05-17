@@ -41,7 +41,7 @@ func TestMain(m *testing.M) {
 
 	exitVal := m.Run()
 
-	err = os.RemoveAll(shared.WorkingDir)
+	err = os.RemoveAll(shared.WorkDir)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -59,7 +59,7 @@ func TestFilesUpload(t *testing.T) {
 
 	b := make([]byte, fileSize)
 
-	firstFilePath := filepath.Join(shared.WorkingDir, firstFileName)
+	firstFilePath := filepath.Join(shared.WorkDir, firstFileName)
 
 	f, err := os.Create(firstFilePath)
 	if err != nil {
@@ -73,7 +73,7 @@ func TestFilesUpload(t *testing.T) {
 
 	b1 := make([]byte, fileSize)
 
-	secondFilePath := filepath.Join(shared.WorkingDir, secondFileName)
+	secondFilePath := filepath.Join(shared.WorkDir, secondFileName)
 
 	f1, err := os.Create(secondFilePath)
 	if err != nil {

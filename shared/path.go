@@ -8,8 +8,8 @@ import (
 )
 
 var (
-	WorkingDir string
-	AccDir     string
+	WorkDir string
+	AccDir  string
 )
 
 // GetHomeDirectory return path to the home directory of dfile
@@ -36,9 +36,9 @@ func CreateIfNotExistAccDirs() {
 		}
 	}
 
-	WorkingDir = workDir
+	WorkDir = workDir
 
-	accDir := filepath.Join(WorkingDir, "accounts")
+	accDir := filepath.Join(WorkDir, "accounts")
 
 	_, err = os.Stat(accDir)
 	if err != nil {
@@ -61,7 +61,7 @@ func CreateIfNotExistAccDirs() {
 // GetHomeDirectory return path to the app data of dfile secondary node
 func GetDirectoryDFileSecondaryNode() (string, error) {
 
-	nodeDir := filepath.Join(WorkingDir, "dfile-secondary-node")
+	nodeDir := filepath.Join(WorkDir, "dfile-secondary-node")
 
 	_, err := os.Stat(nodeDir)
 	if err != nil {
