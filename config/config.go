@@ -3,8 +3,8 @@ package config
 import (
 	"bufio"
 	"dfile-secondary-node/account"
-	"dfile-secondary-node/common"
 	"dfile-secondary-node/crypto"
+	"dfile-secondary-node/shared"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -16,7 +16,7 @@ import (
 
 func GetConfigsList() (map[string]string, error) {
 	configs := make(map[string]string)
-	path, err := common.GetConfigsDirectory()
+	path, err := shared.GetConfigsDirectory()
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,6 @@ type SecondaryNodeConfig struct {
 	LimitGB                int    `json:"storage_limit"`
 	AccountName            string `json:"account_name"`
 }
-
 
 func (config *SecondaryNodeConfig) Create() error {
 
@@ -134,7 +133,7 @@ func (config *SecondaryNodeConfig) Create() error {
 	for !normalInput {
 		fmt.Println("Enter disk space for usage in GB (should be positive integer number)")
 
-		availableSpace := common.GetAvailableSpace(config.PathToStorageDirectory)
+		availableSpace := shared.GetAvailableSpace(config.PathToStorageDirectory)
 		fmt.Println("Available space:", availableSpace)
 		space, err := readFromConsole()
 		if err != nil {
@@ -161,7 +160,6 @@ func (config *SecondaryNodeConfig) Create() error {
 		}
 
 	}
-
 
 	// http port
 	normalInput = false

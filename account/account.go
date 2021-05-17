@@ -2,7 +2,7 @@ package account
 
 import (
 	"crypto/ecdsa"
-	"dfile-secondary-node/common"
+	"dfile-secondary-node/shared"
 	"errors"
 	"os"
 	"path/filepath"
@@ -17,7 +17,7 @@ import (
 func GetAllAccounts() ([]string, error) {
 	var blockchainAccounts []string
 
-	accountDir, err := common.GetAccountDirectory()
+	accountDir, err := shared.GetAccountDirectory()
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func GetAllAccounts() ([]string, error) {
 
 // CreateAccount creates account and keystore file with encryption with password
 func CreateAccount(password string) (string, error) {
-	accountDir, err := common.GetAccountDirectory()
+	accountDir, err := shared.GetAccountDirectory()
 	if err != nil {
 		return "", err
 	}
@@ -64,7 +64,7 @@ type DFileAccount struct {
 
 //LoadAccount load in memory keystore file and decrypt it for further use
 func (dfileAccount *DFileAccount) LoadAccount(blockchainAccountString, password string) error {
-	accountDir, err := common.GetAccountDirectory()
+	accountDir, err := shared.GetAccountDirectory()
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func (dfileAccount *DFileAccount) LoadAccount(blockchainAccountString, password 
 
 func CheckPassword(password string, address string) error {
 
-	accountDir, err := common.GetAccountDirectory()
+	accountDir, err := shared.GetAccountDirectory()
 	if err != nil {
 		return err
 	}

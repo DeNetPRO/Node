@@ -1,4 +1,4 @@
-package common
+package shared
 
 import (
 	"os"
@@ -10,26 +10,26 @@ import (
 //GetAccountDirectory return account directory of dfile products
 func GetAccountDirectory() (string, error) {
 
-	homeDir, err := GetOrCreateHomeDirectory()
+	workDir, err := GetOrCreateWorkDir()
 	if err != nil {
 		return "", err
 	}
 
-	homeDir = filepath.Join(homeDir, "accounts")
+	workDir = filepath.Join(workDir, "accounts")
 
-	_, err = os.Stat(homeDir)
+	_, err = os.Stat(workDir)
 	if err != nil {
-		err = os.MkdirAll(homeDir, os.ModePerm|os.ModeDir)
+		err = os.MkdirAll(workDir, os.ModePerm|os.ModeDir)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	return homeDir, nil
+	return workDir, nil
 }
 
 // GetHomeDirectory return path to the home directory of dfile
-func GetOrCreateHomeDirectory() (string, error) {
+func GetOrCreateWorkDir() (string, error) {
 
 	homeDir, err := homedir.Dir()
 	if err != nil {
@@ -52,7 +52,7 @@ func GetOrCreateHomeDirectory() (string, error) {
 // GetHomeDirectory return path to the app data of dfile secondary node
 func GetDirectoryDFileSecondaryNode() (string, error) {
 
-	homeDir, err := GetOrCreateHomeDirectory()
+	homeDir, err := GetOrCreateWorkDir()
 	if err != nil {
 		return "", err
 	}

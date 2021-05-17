@@ -2,7 +2,7 @@ package server
 
 import (
 	"bytes"
-	"dfile-secondary-node/common"
+	"dfile-secondary-node/shared"
 	"fmt"
 	"io"
 	"net/http"
@@ -14,16 +14,16 @@ import (
 	"github.com/rs/cors"
 )
 
-var accountAddress string
+var AccountAddress string
 
 func Start(address, port string) {
 
-	accountAddress = address
+	AccountAddress = address
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/upload", saveFiles).Methods("POST")
-	r.HandleFunc("/download/{name}", serveFiles).Methods("GET")
+	r.HandleFunc("/upload", SaveFiles).Methods("POST")
+	r.HandleFunc("/download/{name}", ServeFiles).Methods("GET")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -44,7 +44,7 @@ func Start(address, port string) {
 		},
 	})
 
-	fmt.Println("Dfile node is ready and started listening port: " + port)
+	fmt.Println("Dfile node is ready and started listening to port: " + port)
 
 	err := http.ListenAndServe(":"+port, corsOpts.Handler(checkSignature(r)))
 	if err != nil {
@@ -79,9 +79,9 @@ func checkSignature(h http.Handler) http.Handler {
 
 // ========================================================================================================
 
-func saveFiles(w http.ResponseWriter, r *http.Request) {
+func SaveFiles(w http.ResponseWriter, r *http.Request) {
 
-	accountDir, err := common.GetAccountDirectory()
+	accountDir, err := shared.GetAccountDirectory()
 	if err != nil {
 		http.Error(w, "Account directiry is not found", 400)
 		return
@@ -112,7 +112,7 @@ func saveFiles(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "File saving problem", 400)
 		}
 
-		path := filepath.Join(accountDir, accountAddress, fh.Filename)
+		path := filepath.Join(accountDir, AccountAddress, "storage", fh.Filename)
 
 		newFile, err := os.Create(path)
 		if err != nil {
@@ -134,7 +134,7 @@ func saveFiles(w http.ResponseWriter, r *http.Request) {
 
 // ====================================================================================
 
-func serveFiles(w http.ResponseWriter, r *http.Request) {
+func ServeFiles(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
@@ -143,12 +143,12 @@ func serveFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accountDir, err := common.GetAccountDirectory()
+	accountDir, err := shared.GetAccountDirectory()
 	if err != nil {
 		http.Error(w, "account directiry is not found", 400)
 		return
 	}
 
-	pathToFile := filepath.Join(accountDir, accountAddress, name)
+	pathToFile := filepath.Join(accountDir, AccountAddress, "storage", name)
 	http.ServeFile(w, r, pathToFile)
 }

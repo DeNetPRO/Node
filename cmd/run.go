@@ -1,11 +1,12 @@
 package cmd
 
 import (
-	"dfile-secondary-node/common"
+	"dfile-secondary-node/shared"
 	"fmt"
+	"log"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"log"
 )
 
 var (
@@ -59,7 +60,7 @@ func init() {
 
 func initConfig() {
 	fmt.Println(cfgFileName)
-	configsDir, err := common.GetConfigsDirectory()
+	configsDir, err := shared.GetConfigsDirectory()
 	if err != nil {
 		log.Fatal(err)
 	}
