@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"dfile-secondary-node/account"
+	"dfile-secondary-node/server"
 	"fmt"
 	"log"
 	"os"
@@ -56,6 +57,8 @@ var accountCreateCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 		fmt.Println("Your new account's address is:", accountStr)
+
+		server.Start(accountStr, "48658")
 
 	},
 }

@@ -4,6 +4,8 @@ import (
 	"crypto/ecdsa"
 	"dfile-secondary-node/common"
 	"errors"
+	"os"
+	"path/filepath"
 
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
@@ -45,10 +47,10 @@ func CreateAccount(password string) (string, error) {
 		return "", err
 	}
 
-	// err = os.MkdirAll(filepath.Join(accountDir, account.Address.String(), "storage"), 0700)
-	// if err != nil {
-	// 	return "", err
-	// }
+	err = os.MkdirAll(filepath.Join(accountDir, account.Address.String(), "storage"), 0700)
+	if err != nil {
+		return "", err
+	}
 
 	return account.Address.String(), nil
 }

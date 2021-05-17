@@ -14,12 +14,16 @@ import (
 	"github.com/rs/cors"
 )
 
-func StartServer(port string) {
+var accountAddress string
+
+func Start(address, port string) {
+
+	accountAddress = address
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/upload/{address}", saveFiles).Methods("POST")
-	r.HandleFunc("/download/{address}/{name}", serveFiles).Methods("GET")
+	r.HandleFunc("/upload", saveFiles).Methods("POST")
+	r.HandleFunc("/download/{name}", serveFiles).Methods("GET")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -40,7 +44,7 @@ func StartServer(port string) {
 		},
 	})
 
-	fmt.Println("Starting server at port: " + port)
+	fmt.Println("Dfile node is ready and started listening port: " + port)
 
 	err := http.ListenAndServe(":"+port, corsOpts.Handler(checkSignature(r)))
 	if err != nil {
@@ -77,14 +81,6 @@ func checkSignature(h http.Handler) http.Handler {
 
 func saveFiles(w http.ResponseWriter, r *http.Request) {
 
-	vars := mux.Vars(r)
-	address := vars["address"]
-
-	if strings.Trim(address, " ") == "" {
-		http.Error(w, "address is not specified", 400)
-		return
-	}
-
 	accountDir, err := common.GetAccountDirectory()
 	if err != nil {
 		http.Error(w, "Account directiry is not found", 400)
@@ -116,7 +112,7 @@ func saveFiles(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "File saving problem", 400)
 		}
 
-		path := filepath.Join(accountDir, address, fh.Filename)
+		path := filepath.Join(accountDir, accountAddress, fh.Filename)
 
 		newFile, err := os.Create(path)
 		if err != nil {
@@ -140,10 +136,9 @@ func saveFiles(w http.ResponseWriter, r *http.Request) {
 
 func serveFiles(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	address := vars["address"]
 	name := vars["name"]
 
-	if strings.Trim(address, " ") == "" || strings.Trim(name, " ") == "" {
+	if strings.Trim(name, " ") == "" {
 		http.Error(w, "address or name is not provided", 400)
 		return
 	}
@@ -154,6 +149,6 @@ func serveFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pathToFile := filepath.Join(accountDir, address, name)
+	pathToFile := filepath.Join(accountDir, accountAddress, name)
 	http.ServeFile(w, r, pathToFile)
 }

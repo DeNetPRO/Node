@@ -3,6 +3,7 @@ package cmd
 import (
 	"bufio"
 	"dfile-secondary-node/account"
+	"dfile-secondary-node/server"
 	"fmt"
 	"log"
 	"os"
@@ -77,7 +78,10 @@ var accountCheckCmd = &cobra.Command{
 			fmt.Println("Wrong password")
 			return
 		}
-		fmt.Println("succeed")
+
+		fmt.Println("Success")
+
+		server.Start(address, "48658")
 
 	},
 }
