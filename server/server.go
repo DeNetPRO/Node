@@ -44,7 +44,7 @@ func Start(address, port string) {
 		},
 	})
 
-	fmt.Println("Dfile node is ready and started listening to port: " + port)
+	fmt.Println("Dfile node is ready and started listening on port: " + port)
 
 	err := http.ListenAndServe(":"+port, corsOpts.Handler(checkSignature(r)))
 	if err != nil {
