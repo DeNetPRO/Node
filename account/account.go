@@ -4,8 +4,10 @@ import (
 	"crypto/ecdsa"
 	"dfile-secondary-node/common"
 	"errors"
+
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"github.com/ethereum/go-ethereum/cmd/utils"
 	commonEtherium "github.com/ethereum/go-ethereum/common"
 )
 
@@ -42,6 +44,11 @@ func CreateAccount(password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// err = os.MkdirAll(filepath.Join(accountDir, account.Address.String(), "storage"), 0700)
+	// if err != nil {
+	// 	return "", err
+	// }
 
 	return account.Address.String(), nil
 }
@@ -98,5 +105,28 @@ func (dfileAccount *DFileAccount) LoadAccount(blockchainAccountString, password 
 	}
 	dfileAccount.PublicKey = publicKeyECDSA
 
+	return nil
+}
+
+func CheckPassword(password string, address string) error {
+
+	accountDir, err := common.GetAccountDirectory()
+	if err != nil {
+		return err
+	}
+
+	ks := keystore.NewKeyStore(accountDir, keystore.StandardScryptN, keystore.StandardScryptP)
+	acc, err := utils.MakeAddress(ks, address)
+	if err != nil {
+		return err
+	}
+	key, err := ks.Export(acc, password, password)
+	if err != nil {
+		return err
+	}
+	_, err = keystore.DecryptKey(key, password)
+	if err != nil {
+		return err
+	}
 	return nil
 }

@@ -15,7 +15,9 @@ limitations under the License.
 */
 package main
 
-import "dfile-secondary-node/cmd"
+import (
+	"dfile-secondary-node/cmd"
+)
 
 func main() {
 	cmd.Execute()

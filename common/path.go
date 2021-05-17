@@ -1,16 +1,16 @@
 package common
 
 import (
-	"github.com/mitchellh/go-homedir"
 	"os"
 	"path/filepath"
-)
 
+	"github.com/mitchellh/go-homedir"
+)
 
 //GetAccountDirectory return account directory of dfile products
 func GetAccountDirectory() (string, error) {
 
-	homeDir, err := GetHomeDirectory()
+	homeDir, err := GetOrCreateHomeDirectory()
 	if err != nil {
 		return "", err
 	}
@@ -29,7 +29,7 @@ func GetAccountDirectory() (string, error) {
 }
 
 // GetHomeDirectory return path to the home directory of dfile
-func GetHomeDirectory() (string, error) {
+func GetOrCreateHomeDirectory() (string, error) {
 
 	homeDir, err := homedir.Dir()
 	if err != nil {
@@ -52,7 +52,7 @@ func GetHomeDirectory() (string, error) {
 // GetHomeDirectory return path to the app data of dfile secondary node
 func GetDirectoryDFileSecondaryNode() (string, error) {
 
-	homeDir, err := GetHomeDirectory()
+	homeDir, err := GetOrCreateHomeDirectory()
 	if err != nil {
 		return "", err
 	}
@@ -90,5 +90,3 @@ func GetConfigsDirectory() (string, error) {
 
 	return homeDir, nil
 }
-
-

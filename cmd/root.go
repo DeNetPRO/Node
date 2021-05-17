@@ -1,7 +1,9 @@
 package cmd
 
 import (
-	"fmt"
+	"dfile-secondary-node/account"
+	"log"
+
 	"github.com/spf13/cobra"
 )
 
@@ -12,7 +14,18 @@ var rootCmd = &cobra.Command{
 	Long: `dfile-secondary-node is a CLI application that allows a user (miner) 
 	to connect to the DeNet decentralized network and mine DFile tokens.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("dfile-secondary-node is called!!!")
+		accs, err := account.GetAllAccounts()
+		if err != nil {
+			log.Fatal("FATAL ERROR")
+		}
+
+		if len(accs) == 0 {
+			accountCreateCmd.Run(accountCreateCmd, []string{})
+		} else {
+			accountListCmd.Run(accountListCmd, []string{})
+			accountCheckCmd.Run(accountCheckCmd, []string{})
+		}
+
 	},
 }
 

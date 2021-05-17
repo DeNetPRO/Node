@@ -3,17 +3,18 @@ package cmd
 import (
 	"dfile-secondary-node/account"
 	"fmt"
-	"github.com/spf13/cobra"
 	"log"
+
+	"github.com/spf13/cobra"
 )
 
 // accountListCmd represents the list command
 var accountListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "display addresses of all blockchain accounts",
-	Long: `display addresses of all blockchain accounts`,
+	Long:  `display addresses of all blockchain accounts`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("list called")
+		fmt.Println("Please, choose an account address and enter password.\n")
 		accounts, err := account.GetAllAccounts()
 		if err != nil {
 			log.Fatal(err)

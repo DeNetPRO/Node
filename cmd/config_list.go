@@ -3,9 +3,10 @@ package cmd
 import (
 	"dfile-secondary-node/config"
 	"fmt"
-	"github.com/spf13/cobra"
 	"log"
 	"strconv"
+
+	"github.com/spf13/cobra"
 )
 
 // configListCmd represents the configList command
@@ -20,7 +21,7 @@ var configListCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 		i := 1
-		for k, _ := range configs {
+		for k := range configs {
 			fmt.Println(strconv.Itoa(i) + " " + k)
 			i++
 		}
