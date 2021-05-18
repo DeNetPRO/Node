@@ -1,6 +1,8 @@
 package shared
 
 import (
+	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -93,4 +95,29 @@ func GetConfigsDirectory() (string, error) {
 	}
 
 	return homeDir, nil
+}
+
+func ContainsAccount(accounts []string, address string) bool {
+	for _, a := range accounts {
+		if a == address {
+			return true
+		}
+	}
+	return false
+}
+
+func ReadFromConsole() (string, error) {
+	fmt.Print("Enter value here: ")
+	reader := bufio.NewReader(os.Stdin)
+	// ReadString will block until the delimiter is entered
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+
+	// remove the delimiter from the string
+	input = strings.TrimSuffix(input, "\n")
+	input = strings.TrimSuffix(input, "\r")
+
+	return input, err
 }

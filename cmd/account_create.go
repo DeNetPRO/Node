@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"dfile-secondary-node/account"
+	"dfile-secondary-node/config"
 	"dfile-secondary-node/server"
 	"fmt"
 	"log"
@@ -23,7 +24,7 @@ var accountCreateCmd = &cobra.Command{
 		passwordMatch := false
 
 		fmt.Println("Password is required for account creation. It can't be restored so please save it in a safe place.")
-		fmt.Println("Please, enter password: \n")
+		fmt.Println("Please, enter password: ")
 
 		for !passwordMatch {
 			bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
@@ -58,7 +59,12 @@ var accountCreateCmd = &cobra.Command{
 		}
 		fmt.Println("Your new account's address is:", accountStr)
 
-		server.Start(accountStr, "48658")
+		secondaryNodeConfig, err := config.Create(accountStr)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		server.Start(accountStr, secondaryNodeConfig.HTTPPort)
 
 	},
 }

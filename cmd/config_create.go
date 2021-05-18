@@ -20,9 +20,7 @@ var configCreateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("configCreate called")
 
-		secondaryNodeConfig := config.SecondaryNodeConfig{}
-
-		err := secondaryNodeConfig.Create()
+		secondaryNodeConfig, err := config.Create("")
 		if err != nil {
 			log.Fatal(err)
 		}

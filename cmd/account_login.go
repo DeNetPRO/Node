@@ -1,12 +1,17 @@
 package cmd
 
 import (
-	"bufio"
 	"dfile-secondary-node/account"
+	"dfile-secondary-node/config"
 	"dfile-secondary-node/server"
+	"dfile-secondary-node/shared"
+	"encoding/json"
 	"fmt"
+	"io"
+	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -28,8 +33,7 @@ var accountCheckCmd = &cobra.Command{
 		var password string
 
 		for !allMatch {
-			reader := bufio.NewReader(os.Stdin)
-			byteAddress, _, err := reader.ReadLine()
+			byteAddress, err := shared.ReadFromConsole()
 			if err != nil {
 				log.Fatal("Fatal error while account log in.")
 			}
@@ -38,13 +42,7 @@ var accountCheckCmd = &cobra.Command{
 
 			accounts := account.GetAllAccounts()
 
-			addressMatches := false
-
-			for _, a := range accounts {
-				if a == address {
-					addressMatches = true
-				}
-			}
+			addressMatches := shared.ContainsAccount(accounts, address)
 
 			if !addressMatches {
 				fmt.Println("There is no such account address:")
@@ -71,14 +69,65 @@ var accountCheckCmd = &cobra.Command{
 
 		err := account.CheckPassword(password, address)
 		if err != nil {
-			fmt.Println(err)
 			fmt.Println("Wrong password")
 			return
 		}
 
+		confFiles := []string{}
+
+		confDir := "config"
+
+		confFilePath := filepath.Join(shared.AccDir, address, confDir)
+
+		err = filepath.WalkDir(confFilePath,
+			func(path string, info fs.DirEntry, err error) error {
+				if err != nil {
+					log.Fatal("Fatal error while account log in.")
+				}
+
+				if info.Name() != confDir {
+					confFiles = append(confFiles, info.Name())
+				}
+
+				return nil
+			})
+		if err != nil {
+			log.Fatal("Fatal error while account log in.")
+		}
+
+		var portAddr string
+
+		if len(confFiles) == 0 {
+			config, err := config.Create(address)
+			if err != nil {
+				log.Fatal("Fatal error while account log in.")
+			}
+
+			portAddr = config.HTTPPort
+		} else {
+			confFile, err := os.Open(filepath.Join(confFilePath, confFiles[0]))
+			if err != nil {
+				log.Fatal("Fatal error while account log in.")
+			}
+
+			fileBytes, err := io.ReadAll(confFile)
+			if err != nil {
+				log.Fatal("Fatal error while account log in.")
+			}
+
+			var conf config.SecondaryNodeConfig
+
+			err = json.Unmarshal(fileBytes, &conf)
+			if err != nil {
+				log.Fatal("Fatal error while account log in.")
+			}
+
+			portAddr = conf.HTTPPort
+		}
+
 		fmt.Println("Success")
 
-		server.Start(address, "48658")
+		server.Start(address, portAddr)
 
 	},
 }

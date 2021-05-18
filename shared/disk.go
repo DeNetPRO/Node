@@ -7,6 +7,5 @@ import (
 func GetAvailableSpace(storagePath string) int {
 	var KB = uint64(1024)
 	usage := du.NewDiskUsage(storagePath)
-	return int(usage.Available() / (KB * KB * KB))
-
+	return int(usage.Free() / (KB * KB * KB))
 }

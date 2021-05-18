@@ -1,10 +1,10 @@
 package config
 
 import (
-	"bufio"
 	"dfile-secondary-node/account"
 	"dfile-secondary-node/crypto"
 	"dfile-secondary-node/shared"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -34,233 +34,222 @@ func GetConfigsList() (map[string]string, error) {
 }
 
 type SecondaryNodeConfig struct {
-	Name                   string `json:"config_name"`
-	HTTPPort               int    `json:"HTTP_port"`
-	HTTPSPort              int    `json:"HTTPS_port"`
-	Address                string `json:"public_address"`
-	PathToStorageDirectory string `json:"path_to_storage"`
-	LimitGB                int    `json:"storage_limit"`
-	AccountName            string `json:"account_name"`
+	Name         string `json:"configName"`
+	HTTPPort     string `json:"portHTTP"`
+	HTTPSPort    string `json:"portHTTPS"`
+	Address      string `json:"publicAddress"`
+	PathToConfig string `json:"pathToConfig"`
+	StorageLimit int    `json:"storageLimit"`
+	AccountName  string `json:"accountName"`
 }
 
-func (config *SecondaryNodeConfig) Create() error {
+func Create(address string) (SecondaryNodeConfig, error) {
 
-	normalInput := false
+	config := SecondaryNodeConfig{}
 
-	// Config name
-	for !normalInput {
-		fmt.Println("Enter config name (use only letters, numbers and symbol '_')")
-		name, err := readFromConsole()
-		if err != nil {
-			return err
+	addressIsCorrect := false
+
+	if address == "" {
+		fmt.Println("Please select one of account addresses")
+		accounts := account.GetAllAccounts()
+
+		for i, a := range accounts {
+			fmt.Println(i+1, a)
 		}
 
-		match, err := regexp.MatchString("[A-Za-z0-9_]+", name)
-		if err != nil {
-			return err
-		}
-
-		if match {
-			configNames, err := GetConfigsList()
+		for !addressIsCorrect {
+			accountAddress, err := shared.ReadFromConsole()
 			if err != nil {
-				return err
-			}
-			if _, ok := configNames[name]; !ok {
-				config.Name = name
-				normalInput = true
-			} else {
-				fmt.Println("This config name is exist, try again")
+				return config, err
 			}
 
-		} else {
-			fmt.Println("Name is incorrect, try again")
-		}
-	}
+			addressMatches := shared.ContainsAccount(accounts, accountAddress)
 
-	// Account name
+			if !addressMatches {
+				fmt.Println("Account is incorrect, try again")
+				continue
+			}
 
-	fmt.Println("Please select on of account addresses")
-	accounts := account.GetAllAccounts()
-
-	for i, a := range accounts {
-		fmt.Println(i, a)
-	}
-
-	normalInput = false
-
-	for !normalInput {
-		accountAddress, err := readFromConsole()
-		if err != nil {
-			return err
-		}
-
-		inAccounts := containsAccount(accounts, accountAddress)
-
-		if inAccounts {
-			normalInput = true
+			addressIsCorrect = true
 			config.Address = accountAddress
-		} else {
-			fmt.Println("Account is incorrect, try again")
+			address = accountAddress
+
 		}
+	} else {
+		config.Address = address
+		err := os.Mkdir(filepath.Join(shared.AccDir, address, "config"), 0700)
+		if err != nil {
+			return config, err
+		}
+
+		fmt.Println("Now, a config file creation is needed.")
 	}
 
-	//storage path
+	config.PathToConfig = filepath.Join(shared.AccDir, address, "config")
 
-	normalInput = false
+	regName := regexp.MustCompile("[A-Za-z0-9_]+")
+	configNameIsCorrect := false
 
-	for !normalInput {
-		fmt.Println("Enter storage path (path to store DFile decentralized files)")
-		storagePath, err := readFromConsole()
+	for !configNameIsCorrect {
+		fmt.Println("Please, enter config file name (use only letters, numbers and symbol '_')")
+
+		name, err := shared.ReadFromConsole()
 		if err != nil {
-			return err
+			return config, err
 		}
 
-		storagePath = filepath.FromSlash(storagePath)
-		err = os.MkdirAll(storagePath, os.ModePerm|os.ModeDir)
-		if err != nil {
-			fmt.Println("Bad path, try again")
-		} else {
-			normalInput = true
-			config.PathToStorageDirectory = storagePath
-		}
-	}
+		match := regName.MatchString(name)
 
-	// storage space
-	normalInput = false
-
-	for !normalInput {
-		fmt.Println("Enter disk space for usage in GB (should be positive integer number)")
-
-		availableSpace := shared.GetAvailableSpace(config.PathToStorageDirectory)
-		fmt.Println("Available space:", availableSpace)
-		space, err := readFromConsole()
-		if err != nil {
-			return err
-		}
-
-		match, err := regexp.MatchString("[0-9]+", space)
-		if match {
-			intSpace, err := strconv.Atoi(space)
-			if err != nil {
-				fmt.Println("Bad number, try again")
-				continue
-			}
-			if (intSpace >= 0) && (intSpace <= availableSpace) {
-				normalInput = true
-				config.LimitGB = intSpace
-			} else {
-				fmt.Println("Bad number, try again")
-				continue
-			}
-		} else {
-			fmt.Println("Bad number, try again")
+		if !match {
+			fmt.Println("Name is incorrect, please try again.")
 			continue
 		}
 
-	}
-
-	// http port
-	normalInput = false
-
-	for !normalInput {
-		fmt.Println("Enter http port number (press enter to use default 48654):")
-
-		httpPort, err := readFromConsole()
+		configNames, err := GetConfigsList()
 		if err != nil {
-			return err
+			return config, err
 		}
+		_, nameExists := configNames[name]
 
-		match, err := regexp.MatchString("[0-9]+|", httpPort)
-		if match {
-
-			if httpPort == "" {
-				normalInput = true
-				config.HTTPPort = 48654
-				continue
-			}
-			intHttpPort, err := strconv.Atoi(httpPort)
-			if err != nil {
-				fmt.Println("Bad number, try again")
-				continue
-			}
-			if (intHttpPort >= 1) && (intHttpPort <= 65535) {
-				normalInput = true
-				config.HTTPPort = intHttpPort
-				continue
-			} else {
-				fmt.Println("Bad number, try again")
-				continue
-			}
-		} else {
-			fmt.Println("Bad number, try again")
+		if nameExists {
+			fmt.Println("This config name exists, please try a new name")
 			continue
 		}
+		config.Name = name
+		configNameIsCorrect = true
 	}
 
-	// https port
-	normalInput = false
+	spaceValueIsCorrect := false
 
-	for !normalInput {
-		fmt.Println("Enter https port number (press enter to use default 48654):")
+	regNum := regexp.MustCompile(("[0-9]+"))
 
-		httpsPort, err := readFromConsole()
+	for !spaceValueIsCorrect {
+		fmt.Println("Enter disk space for usage in GB (should be positive number)")
+
+		availableSpace := shared.GetAvailableSpace(config.PathToConfig)
+		fmt.Println("Available space:", availableSpace, " GB")
+		space, err := shared.ReadFromConsole()
 		if err != nil {
-			return err
+			return config, err
 		}
 
-		match, err := regexp.MatchString("[0-9]+|", httpsPort)
-		if match {
+		match := regNum.MatchString(space)
 
-			if httpsPort == "" {
-				normalInput = true
-				config.HTTPSPort = 48655
-				continue
-			}
-			intHttpsPort, err := strconv.Atoi(httpsPort)
-			if err != nil {
-				fmt.Println("Bad number, try again")
-				continue
-			}
-			if (intHttpsPort >= 1) && (intHttpsPort <= 65535) {
-				normalInput = true
-				config.HTTPSPort = intHttpsPort
-				continue
-			} else {
-				fmt.Println("Bad number, try again")
-				continue
-			}
-		} else {
-			fmt.Println("Bad number, try again")
+		if !match {
+			fmt.Println("Value is incorrect, please try again")
 			continue
 		}
+
+		intSpace, err := strconv.Atoi(space)
+		if err != nil {
+			fmt.Println("Value is incorrect, please try again")
+			continue
+		}
+
+		if intSpace < 0 || intSpace >= availableSpace {
+			fmt.Println("Value is incorrect, please try again")
+			continue
+		}
+
+		spaceValueIsCorrect = true
+		config.StorageLimit = intSpace
+
 	}
-	accountName := crypto.Sha256String([]byte(config.Address + config.Name))
-	config.AccountName = accountName
 
-	return nil
-}
+	portHTTPValueIsCorrect := false
+	regPort := regexp.MustCompile("[0-9]+|")
 
-func readFromConsole() (string, error) {
-	fmt.Print("Enter text: ")
-	reader := bufio.NewReader(os.Stdin)
-	// ReadString will block until the delimiter is entered
-	input, err := reader.ReadString('\n')
+	for !portHTTPValueIsCorrect {
+		fmt.Println("Enter http port number (value from 49152 to 65535) or press enter to use default port number 55050")
+
+		httpPort, err := shared.ReadFromConsole()
+		if err != nil {
+			return config, err
+		}
+
+		match := regPort.MatchString(httpPort)
+		if !match {
+			fmt.Println("Value is incorrect, please try again")
+			continue
+
+		}
+
+		if httpPort == "" {
+			portHTTPValueIsCorrect = true
+			config.HTTPPort = fmt.Sprint(55050)
+			continue
+		}
+
+		intHttpPort, err := strconv.Atoi(httpPort)
+		if err != nil {
+			fmt.Println("Value is incorrect, please try again")
+			continue
+		}
+		if intHttpPort < 49152 || intHttpPort > 65535 {
+			fmt.Println("Value is incorrect, please try again")
+			continue
+
+		}
+
+		portHTTPValueIsCorrect = true
+		config.HTTPPort = fmt.Sprint(intHttpPort)
+	}
+
+	portHTTPSValueIsCorrect := false
+
+	for !portHTTPSValueIsCorrect {
+		fmt.Println("Enter http port number (value from 49152 to 65535)  or press enter to use default port number 55051")
+
+		httpsPort, err := shared.ReadFromConsole()
+		if err != nil {
+			return config, err
+		}
+
+		match := regPort.MatchString(httpsPort)
+		if !match {
+			fmt.Println("Value is incorrect, please try again")
+			continue
+		}
+
+		if httpsPort == "" {
+			portHTTPSValueIsCorrect = true
+			config.HTTPSPort = fmt.Sprint(55051)
+			continue
+		}
+		intHttpsPort, err := strconv.Atoi(httpsPort)
+		if err != nil {
+			fmt.Println("Value is incorrect, please try again")
+			continue
+		}
+		if intHttpsPort < 49152 || intHttpsPort > 65535 {
+			fmt.Println("Value is incorrect, please try again")
+			continue
+
+		}
+		portHTTPSValueIsCorrect = true
+		config.HTTPSPort = fmt.Sprint(intHttpsPort)
+		continue
+	}
+
+	config.AccountName = crypto.Sha256String([]byte(config.Address + config.Name))
+
+	confFile, err := os.Create(filepath.Join(config.PathToConfig, config.Name+".json"))
 	if err != nil {
-		return "", err
+		return config, err
+	}
+	defer confFile.Close()
+
+	confJSON, err := json.Marshal(config)
+	if err != nil {
+		return config, err
 	}
 
-	// remove the delimiter from the string
-	input = strings.TrimSuffix(input, "\n")
-	input = strings.TrimSuffix(input, "\r")
-
-	return input, err
-}
-
-func containsAccount(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
+	_, err = confFile.Write(confJSON)
+	if err != nil {
+		return config, err
 	}
-	return false
+
+	confFile.Sync()
+
+	return config, nil
 }
