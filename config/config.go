@@ -6,35 +6,13 @@ import (
 	"dfile-secondary-node/shared"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"strings"
 )
 
-func GetConfigsList() (map[string]string, error) {
-	configs := make(map[string]string)
-	path, err := shared.GetConfigsDirectory()
-	if err != nil {
-		return nil, err
-	}
-
-	files, err := ioutil.ReadDir(path)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, f := range files {
-		configs[strings.TrimSuffix(f.Name(), ".json")] = filepath.Join(path, f.Name())
-	}
-
-	return configs, err
-}
-
 type SecondaryNodeConfig struct {
-	Name         string `json:"configName"`
 	HTTPPort     string `json:"portHTTP"`
 	HTTPSPort    string `json:"portHTTPS"`
 	Address      string `json:"publicAddress"`
@@ -81,38 +59,6 @@ func Create(address string) (SecondaryNodeConfig, error) {
 	}
 
 	config.PathToConfig = filepath.Join(shared.AccDir, address, "config")
-
-	regName := regexp.MustCompile("[A-Za-z0-9_]+")
-	configNameIsCorrect := false
-
-	for !configNameIsCorrect {
-		fmt.Println("Please, enter config file name (use only letters, numbers and symbol '_')")
-
-		name, err := shared.ReadFromConsole()
-		if err != nil {
-			return config, err
-		}
-
-		match := regName.MatchString(name)
-
-		if !match {
-			fmt.Println("Name is incorrect, please try again.")
-			continue
-		}
-
-		configNames, err := GetConfigsList()
-		if err != nil {
-			return config, err
-		}
-		_, nameExists := configNames[name]
-
-		if nameExists {
-			fmt.Println("This config name exists, please try a new name")
-			continue
-		}
-		config.Name = name
-		configNameIsCorrect = true
-	}
 
 	spaceValueIsCorrect := false
 
@@ -226,9 +172,9 @@ func Create(address string) (SecondaryNodeConfig, error) {
 		continue
 	}
 
-	config.AccountName = crypto.Sha256String([]byte(config.Address + config.Name))
+	config.AccountName = crypto.Sha256String([]byte(config.Address + "config"))
 
-	confFile, err := os.Create(filepath.Join(config.PathToConfig, config.Name+".json"))
+	confFile, err := os.Create(filepath.Join(config.PathToConfig, "config.json"))
 	if err != nil {
 		return config, err
 	}

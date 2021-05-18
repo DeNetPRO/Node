@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"dfile-secondary-node/shared"
 	"fmt"
 	"log"
 
@@ -48,7 +47,6 @@ var runCmd = &cobra.Command{
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
 	rootCmd.AddCommand(runCmd)
 	runCmd.Flags().StringVarP(&cfgFileName, "config", "c", "", "config file name")
 	err := runCmd.MarkFlagRequired("config")
@@ -56,18 +54,4 @@ func init() {
 		log.Fatal(err)
 	}
 
-}
-
-func initConfig() {
-	fmt.Println(cfgFileName)
-	configsDir, err := shared.GetConfigsDirectory()
-	if err != nil {
-		log.Fatal(err)
-	}
-	viper.AddConfigPath(configsDir)
-	viper.SetConfigName(cfgFileName)
-	viper.SetConfigType("json")
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using configuration file: ", cfgFileName)
-	}
 }
