@@ -5,7 +5,6 @@ go 1.16
 require (
 	github.com/ethereum/go-ethereum v1.10.2
 	github.com/gorilla/mux v1.8.0
-	github.com/mitchellh/go-homedir v1.1.0
 	github.com/ricochet2200/go-disk-usage v0.0.0-20150921141558-f0d1b743428f
 	github.com/rs/cors v1.7.0
 	github.com/spf13/cobra v1.1.3
