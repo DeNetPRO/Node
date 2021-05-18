@@ -43,6 +43,11 @@ func CreateAccount(password string) (string, error) {
 		return "", err
 	}
 
+	err = os.MkdirAll(filepath.Join(shared.AccDir, account.Address.String(), "config"), 0700)
+	if err != nil {
+		return "", err
+	}
+
 	return account.Address.String(), nil
 }
 

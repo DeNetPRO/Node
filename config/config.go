@@ -77,11 +77,6 @@ func Create(address string) (SecondaryNodeConfig, error) {
 		}
 	} else {
 		config.Address = address
-		err := os.Mkdir(filepath.Join(shared.AccDir, address, "config"), 0700)
-		if err != nil {
-			return config, err
-		}
-
 		fmt.Println("Now, a config file creation is needed.")
 	}
 
@@ -127,7 +122,7 @@ func Create(address string) (SecondaryNodeConfig, error) {
 		fmt.Println("Enter disk space for usage in GB (should be positive number)")
 
 		availableSpace := shared.GetAvailableSpace(config.PathToConfig)
-		fmt.Println("Available space:", availableSpace, " GB")
+		fmt.Println("Available space:", availableSpace, "GB")
 		space, err := shared.ReadFromConsole()
 		if err != nil {
 			return config, err
