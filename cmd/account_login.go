@@ -67,7 +67,7 @@ var accountCheckCmd = &cobra.Command{
 			allMatch = true
 		}
 
-		err := account.CheckPassword(password, address)
+		err := account.AccountLogin(address, password)
 		if err != nil {
 			fmt.Println("Wrong password")
 			return

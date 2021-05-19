@@ -139,7 +139,7 @@ func Create(address string) (SecondaryNodeConfig, error) {
 	portHTTPSValueIsCorrect := false
 
 	for !portHTTPSValueIsCorrect {
-		fmt.Println("Enter http port number (value from 49152 to 65535)  or press enter to use default port number 55051")
+		fmt.Println("Enter https port number (value from 49152 to 65535)  or press enter to use default port number 55051")
 
 		httpsPort, err := shared.ReadFromConsole()
 		if err != nil {

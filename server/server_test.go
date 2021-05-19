@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 
 	shared.CreateIfNotExistAccDirs()
 
-	address, err := account.CreateAccount("12345")
+	address, err := account.AccountCreate("12345")
 	if err != nil {
 		log.Fatal(err)
 	}

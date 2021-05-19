@@ -30,7 +30,7 @@ func GetAllAccounts() []string {
 }
 
 // CreateAccount creates account and keystore file with encryption with password
-func CreateAccount(password string) (string, error) {
+func AccountCreate(password string) (string, error) {
 
 	ks := keystore.NewKeyStore(shared.AccDir, keystore.StandardScryptN, keystore.StandardScryptP)
 	account, err := ks.NewAccount(password)
@@ -59,7 +59,9 @@ type DFileAccount struct {
 }
 
 //LoadAccount load in memory keystore file and decrypt it for further use
-func (dfileAccount *DFileAccount) LoadAccount(blockchainAccountString, password string) error {
+func AccountLogin(blockchainAccountString, password string) error {
+
+	dfileAccount := DFileAccount{}
 
 	ks := keystore.NewKeyStore(shared.AccDir, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccounts := ks.Accounts()
@@ -94,7 +96,7 @@ func (dfileAccount *DFileAccount) LoadAccount(blockchainAccountString, password 
 	publicKey := dfileAccount.PrivateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	if !ok {
-		errAccountPublicKey := errors.New("Account Public Key error: unable to cast from crypto to ecdsa.")
+		errAccountPublicKey := errors.New("account Public Key error: unable to cast from crypto to ecdsa")
 		return errAccountPublicKey
 	}
 	dfileAccount.PublicKey = publicKeyECDSA
