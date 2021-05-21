@@ -97,16 +97,16 @@ func ReadFromConsole() (string, error) {
 
 func CalcRootHash(hashArr []string) (string, error) {
 	hashArrLen := len(hashArr)
+	resArr := [][]string{}
+	resArr = append(resArr, hashArr)
 
 	i := 0
-	j := i + 1
 
 	lvlCount := 2
 	upperLvl := hashArrLen + hashArrLen/lvlCount
 
-	var decodedJ []byte
-
 	for len(hashArr) < hashArrLen*2-1 {
+		j := i + 1
 
 		decodedI, err := hex.DecodeString(hashArr[i])
 		if err != nil {
@@ -117,36 +117,26 @@ func CalcRootHash(hashArr []string) (string, error) {
 
 			if upperLvl%2 != 0 {
 				hashArr = append(hashArr, "0000000000000000000000000000000000000000000000000000000000000000")
-
-				decodedJ, err = hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
-				if err != nil {
-					return "", err
-				}
-
 				hashArrLen += 1
-
-			} else {
-				decodedJ, err = hex.DecodeString(hashArr[j])
-				if err != nil {
-					return "", err
-				}
 			}
 
 			lvlCount *= 2
 			upperLvl = upperLvl + hashArrLen/lvlCount
-		} else {
-			decodedJ, err = hex.DecodeString(hashArr[j])
-			if err != nil {
-				return "", err
-			}
 		}
+
+		decodedJ, err := hex.DecodeString(hashArr[j])
+		if err != nil {
+			return "", err
+		}
+
+		fmt.Println(hashArr[i], hashArr[j])
 
 		concatBytes := append(decodedI, decodedJ...)
 
 		hSum := sha256.Sum256(concatBytes)
 		hashArr = append(hashArr, hex.EncodeToString(hSum[:]))
 
-		i++
+		i += 2
 	}
 
 	return hashArr[len(hashArr)-1], nil
