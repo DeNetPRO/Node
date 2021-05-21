@@ -241,7 +241,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		}
 		defer rqFile.Close()
 
-		addressPath := filepath.Join(shared.AccDir, storageProviderAddress[0])
+		addressPath := filepath.Join(shared.AccDir, AccountAddress, "storage", storageProviderAddress[0])
 
 		stat, err := os.Stat(addressPath)
 		if err != nil {
@@ -262,7 +262,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 			}
 		}
 
-		pathToFile := filepath.Join(addressPath, storageProviderAddress[0], reqFile.Filename)
+		pathToFile := filepath.Join(addressPath, reqFile.Filename)
 
 		newFile, err := os.Create(pathToFile)
 		if err != nil {
@@ -291,6 +291,6 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	storageProviderAddress := vars["address"]
 	name := vars["fileName"]
 
-	pathToFile := filepath.Join(shared.AccDir, AccountAddress, storageProviderAddress, "storage", name)
+	pathToFile := filepath.Join(shared.AccDir, AccountAddress, "storage", storageProviderAddress, name)
 	http.ServeFile(w, req, pathToFile)
 }

@@ -32,7 +32,7 @@ func CreateIfNotExistAccDirs() {
 		log.Fatal("Fatal error")
 	}
 
-	workDir := filepath.Join(homeDir, "dfileTest")
+	workDir := filepath.Join(homeDir, "dfile")
 
 	_, err = os.Stat(workDir)
 	if err != nil {

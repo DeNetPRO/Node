@@ -2,6 +2,7 @@ package account
 
 import (
 	"crypto/ecdsa"
+	"dfile-secondary-node/server"
 	"dfile-secondary-node/shared"
 	"errors"
 	"os"
@@ -99,6 +100,7 @@ func AccountLogin(blockchainAccountString, password string) error {
 		errAccountPublicKey := errors.New("account Public Key error: unable to cast from crypto to ecdsa")
 		return errAccountPublicKey
 	}
+	server.AccountAddress = etherAccount.Address.String()
 	dfileAccount.PublicKey = publicKeyECDSA
 
 	return nil
