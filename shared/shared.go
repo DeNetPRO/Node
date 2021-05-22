@@ -99,6 +99,11 @@ func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 	resByte := [][][]byte{}
 	base := [][]byte{}
 
+	emptyValue, err := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
+	if err != nil {
+		return "", resByte, err
+	}
+
 	for _, v := range hashArr {
 		decoded, err := hex.DecodeString(v)
 		if err != nil {
@@ -108,11 +113,7 @@ func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 	}
 
 	if len(base)%2 != 0 {
-		decoded, err := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
-		if err != nil {
-			return "", resByte, err
-		}
-		base = append(base, decoded)
+		base = append(base, emptyValue)
 	}
 
 	resByte = append(resByte, base)
@@ -131,14 +132,11 @@ func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 
 			resByte[len(resByte)-1] = append(resByte[len(resByte)-1], hSum[:])
 
-			if len(base[len(base)-1])%2 != 0 && len(prevList) > 2 {
-				decoded, err := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
-				if err != nil {
-					return "", resByte, err
-				}
-				base = append(base, decoded)
+		}
 
-			}
+		if len(resByte[len(resByte)-1])%2 != 0 && len(prevList) > 2 {
+			resByte[len(resByte)-1] = append(resByte[len(resByte)-1], emptyValue)
+
 		}
 	}
 
