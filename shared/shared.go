@@ -95,71 +95,52 @@ func ReadFromConsole() (string, error) {
 	return input, err
 }
 
-func CalcRootHash(hashArr []string) (string, [][]byte, error) {
-	resArr := [][]byte{}
+func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
+	resByte := [][][]byte{}
+	base := [][]byte{}
 
-	hashArrLen := len(hashArr)
-	baseLen := hashArrLen
-	base := []byte{}
-
-	lvlCount := 2
-	upperLvl := hashArrLen + hashArrLen/lvlCount
-
-	treeNodes := []byte{}
-
-	i := 0
-
-	for len(hashArr) < hashArrLen*2-1 {
-		j := i + 1
-
-		decodedI, err := hex.DecodeString(hashArr[i])
+	for _, v := range hashArr {
+		decoded, err := hex.DecodeString(v)
 		if err != nil {
-			return "", resArr, err
+			return "", resByte, err
 		}
-
-		if len(hashArr) == upperLvl {
-
-			if upperLvl%2 != 0 {
-				hashArr = append(hashArr, "0000000000000000000000000000000000000000000000000000000000000000")
-				hashArrLen += 1
-
-				decoded, err := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
-				if err != nil {
-					return "", resArr, err
-				}
-
-				treeNodes = append(treeNodes, decoded...)
-
-			}
-
-			lvlCount *= 2
-			upperLvl = upperLvl + hashArrLen/lvlCount
-		}
-
-		decodedJ, err := hex.DecodeString(hashArr[j])
-		if err != nil {
-			return "", resArr, err
-		}
-
-		if j < baseLen {
-			base = append(base, decodedI...)
-			base = append(base, decodedJ...)
-		}
-
-		concatBytes := append(decodedI, decodedJ...)
-
-		hSum := sha256.Sum256(concatBytes)
-		treeNodes = append(treeNodes, hSum[:]...)
-
-		hashArr = append(hashArr, hex.EncodeToString(hSum[:]))
-
-		i += 2
+		base = append(base, decoded)
 	}
 
-	resArr = append(resArr, base)
+	if len(base)%2 != 0 {
+		decoded, err := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
+		if err != nil {
+			return "", resByte, err
+		}
+		base = append(base, decoded)
+	}
 
-	resArr = append(resArr, treeNodes)
+	resByte = append(resByte, base)
 
-	return hashArr[len(hashArr)-1], resArr, nil
+	for len(resByte[len(resByte)-1]) != 1 {
+		prevList := resByte[len(resByte)-1]
+		resByte = append(resByte, [][]byte{})
+		r := len(prevList) / 2
 
+		for i := 0; i < r; i++ {
+			a := prevList[i*2]
+			b := prevList[i*2+1]
+
+			concatBytes := append(a, b...)
+			hSum := sha256.Sum256(concatBytes)
+
+			resByte[len(resByte)-1] = append(resByte[len(resByte)-1], hSum[:])
+
+			if len(base[len(base)-1])%2 != 0 && len(prevList) > 2 {
+				decoded, err := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
+				if err != nil {
+					return "", resByte, err
+				}
+				base = append(base, decoded)
+
+			}
+		}
+	}
+
+	return hex.EncodeToString(resByte[len(resByte)-1][0]), resByte, nil
 }

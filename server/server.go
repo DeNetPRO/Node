@@ -20,8 +20,8 @@ import (
 )
 
 type treeInfo struct {
-	Nonce string   `json:"Nonce"`
-	Tree  [][]byte `json:"Tree"`
+	Nonce string     `json:"Nonce"`
+	Tree  [][][]byte `json:"Tree"`
 }
 
 var AccountAddress string
@@ -102,13 +102,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	fsHashes := make([]string, len(fs))
 	copy(fsHashes, fs)
 
-	fsHashesLen := len(fsHashes)
-
 	sort.Strings(fsHashes)
-
-	if fsHashesLen%2 != 0 {
-		fsHashes = append(fsHashes, "0000000000000000000000000000000000000000000000000000000000000000")
-	}
 
 	fsRootHash, fsTree, err := shared.CalcRootHash(fsHashes)
 	if err != nil {
@@ -233,13 +227,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	}
 
-	oneMBHashesLen := len(oneMBHashes)
-
 	sort.Strings(fsHashes)
-
-	if oneMBHashesLen%2 != 0 {
-		oneMBHashes = append(oneMBHashes, "0000000000000000000000000000000000000000000000000000000000000000")
-	}
 
 	fsContainsFile := false
 
