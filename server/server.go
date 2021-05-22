@@ -165,7 +165,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 		bufBytes := buf.Bytes()
 
-		for i := 0; i < len(bufBytes)-1; i += eightKB {
+		for i := 0; i < len(bufBytes); i += eightKB {
 			hSum := sha256.Sum256(bufBytes[i : i+eightKB])
 			eightKBHashes = append(eightKBHashes, hex.EncodeToString(hSum[:]))
 		}
