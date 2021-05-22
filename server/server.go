@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"dfile-secondary-node/shared"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,6 +18,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 )
+
+type treeInfo struct {
+	Nonce string   `json:"Nonce"`
+	Tree  [][]byte `json:"Tree"`
+}
 
 var AccountAddress string
 
@@ -104,7 +110,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		fsHashes = append(fsHashes, "0000000000000000000000000000000000000000000000000000000000000000")
 	}
 
-	fsRootHash, _, err := shared.CalcRootHash(fsHashes)
+	fsRootHash, fsTree, err := shared.CalcRootHash(fsHashes)
 	if err != nil {
 		http.Error(w, "File saving problem", 400)
 		return
@@ -136,6 +142,48 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Wrong signature", http.StatusForbidden)
 		return
 	}
+
+	addressPath := filepath.Join(shared.AccDir, AccountAddress, "storage", storageProviderAddress[0])
+
+	stat, err := os.Stat(addressPath)
+	if err != nil {
+		errPart := strings.Split(err.Error(), ":")
+
+		if strings.Trim(errPart[1], " ") != "no such file or directory" {
+			http.Error(w, "File saving problem", 500)
+			return
+		}
+
+	}
+
+	if stat == nil {
+		err = os.Mkdir(addressPath, 0700)
+		if err != nil {
+			http.Error(w, "File saving problem", 500)
+			return
+		}
+	}
+
+	treeFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
+	if err != nil {
+		http.Error(w, "File saving problem", 500)
+		return
+	}
+	defer treeFile.Close()
+
+	tree := treeInfo{
+		Nonce: nonce[0],
+		Tree:  fsTree,
+	}
+
+	js, err := json.Marshal(tree)
+	if err != nil {
+		http.Error(w, "File saving problem", 500)
+		return
+	}
+
+	treeFile.Write(js)
+	treeFile.Sync()
 
 	const eightKB = 8192
 
@@ -220,27 +268,6 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		defer rqFile.Close()
-
-		addressPath := filepath.Join(shared.AccDir, AccountAddress, "storage", storageProviderAddress[0])
-
-		stat, err := os.Stat(addressPath)
-		if err != nil {
-			errPart := strings.Split(err.Error(), ":")
-
-			if strings.Trim(errPart[1], " ") != "no such file or directory" {
-				http.Error(w, "File saving problem", 500)
-				return
-			}
-
-		}
-
-		if stat == nil {
-			err = os.Mkdir(addressPath, 0700)
-			if err != nil {
-				http.Error(w, "File saving problem", 500)
-				return
-			}
-		}
 
 		pathToFile := filepath.Join(addressPath, reqFile.Filename)
 
