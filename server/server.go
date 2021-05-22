@@ -227,14 +227,19 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	}
 
-	sort.Strings(fsHashes)
-
 	fsContainsFile := false
 
-	fileRootHash, _, err := shared.CalcRootHash(oneMBHashes)
-	if err != nil {
-		http.Error(w, "Wrong file", 400)
-		return
+	var fileRootHash string
+
+	if len(oneMBHashes) == 1 {
+		fileRootHash = oneMBHashes[0]
+	} else {
+		sort.Strings(oneMBHashes)
+		fileRootHash, _, err = shared.CalcRootHash(oneMBHashes)
+		if err != nil {
+			http.Error(w, "Wrong file", 400)
+			return
+		}
 	}
 
 	for _, k := range fs {
