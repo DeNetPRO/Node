@@ -165,36 +165,16 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 		bufBytes := buf.Bytes()
 
-		for i := 0; i < len(bufBytes)-2; i += eightKB {
+		for i := 0; i < len(bufBytes)-1; i += eightKB {
 			hSum := sha256.Sum256(bufBytes[i : i+eightKB])
 			eightKBHashes = append(eightKBHashes, hex.EncodeToString(hSum[:]))
 		}
 
-		eightKBHashesLen := len(eightKBHashes)*2 - 2
-
-		for i := 0; i < eightKBHashesLen; i += 2 {
-			j := i + 1
-
-			decodedI, err := hex.DecodeString(eightKBHashes[i])
-			if err != nil {
-				http.Error(w, "File check problem", 500)
-				return
-			}
-
-			decodedJ, err := hex.DecodeString(eightKBHashes[j])
-			if err != nil {
-				http.Error(w, "File check problem", 500)
-				return
-			}
-
-			concatBytes := append(decodedI, decodedJ...)
-
-			hSum := sha256.Sum256(concatBytes)
-			eightKBHashes = append(eightKBHashes, hex.EncodeToString(hSum[:]))
-
+		oneMBHash, _, err := shared.CalcRootHash(eightKBHashes)
+		if err != nil {
+			http.Error(w, "Wrong file", 400)
+			return
 		}
-
-		oneMBHash := eightKBHashes[len(eightKBHashes)-1]
 
 		if reqFile.Filename != oneMBHash {
 			http.Error(w, "Wrong file", 400)
