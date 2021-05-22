@@ -104,7 +104,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		fsHashes = append(fsHashes, "0000000000000000000000000000000000000000000000000000000000000000")
 	}
 
-	fsRootHash, err := shared.CalcRootHash(fsHashes)
+	fsRootHash, _, err := shared.CalcRootHash(fsHashes)
 	if err != nil {
 		http.Error(w, "File saving problem", 400)
 		return
@@ -215,7 +215,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	fsContainsFile := false
 
-	fileRootHash, err := shared.CalcRootHash(oneMBHashes)
+	fileRootHash, _, err := shared.CalcRootHash(oneMBHashes)
 	if err != nil {
 		http.Error(w, "Wrong file", 400)
 		return

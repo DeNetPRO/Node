@@ -95,29 +95,41 @@ func ReadFromConsole() (string, error) {
 	return input, err
 }
 
-func CalcRootHash(hashArr []string) (string, error) {
-	hashArrLen := len(hashArr)
-	resArr := [][]string{}
-	resArr = append(resArr, hashArr)
+func CalcRootHash(hashArr []string) (string, [][]byte, error) {
+	resArr := [][]byte{}
 
-	i := 0
+	hashArrLen := len(hashArr)
+	baseLen := hashArrLen
+	base := []byte{}
 
 	lvlCount := 2
 	upperLvl := hashArrLen + hashArrLen/lvlCount
+
+	treeNodes := []byte{}
+
+	i := 0
 
 	for len(hashArr) < hashArrLen*2-1 {
 		j := i + 1
 
 		decodedI, err := hex.DecodeString(hashArr[i])
 		if err != nil {
-			return "", err
+			return "", resArr, err
 		}
 
-		if upperLvl < hashArrLen*2 && len(hashArr) == upperLvl {
+		if len(hashArr) == upperLvl {
 
 			if upperLvl%2 != 0 {
 				hashArr = append(hashArr, "0000000000000000000000000000000000000000000000000000000000000000")
 				hashArrLen += 1
+
+				decoded, err := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
+				if err != nil {
+					return "", resArr, err
+				}
+
+				treeNodes = append(treeNodes, decoded...)
+
 			}
 
 			lvlCount *= 2
@@ -126,19 +138,28 @@ func CalcRootHash(hashArr []string) (string, error) {
 
 		decodedJ, err := hex.DecodeString(hashArr[j])
 		if err != nil {
-			return "", err
+			return "", resArr, err
 		}
 
-		fmt.Println(hashArr[i], hashArr[j])
+		if j < baseLen {
+			base = append(base, decodedI...)
+			base = append(base, decodedJ...)
+		}
 
 		concatBytes := append(decodedI, decodedJ...)
 
 		hSum := sha256.Sum256(concatBytes)
+		treeNodes = append(treeNodes, hSum[:]...)
+
 		hashArr = append(hashArr, hex.EncodeToString(hSum[:]))
 
 		i += 2
 	}
 
-	return hashArr[len(hashArr)-1], nil
+	resArr = append(resArr, base)
+
+	resArr = append(resArr, treeNodes)
+
+	return hashArr[len(hashArr)-1], resArr, nil
 
 }
