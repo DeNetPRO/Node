@@ -20,8 +20,9 @@ type treeInfo struct {
 const eightKB = 8192
 
 func SendProof() {
-	file, err := os.Open("/home/r/dfile/accounts/0xA1c06ba6c5D0845727E7A2204FcF4f4C9636D8F4/storage/0xfC73A8Fe0eBcA03AE1481479C9132de97d757963/970c279ab111e55191d4e953013541e38b5f8f80e7c94ad13a9cd207ae2a5f31")
+	file, err := os.Open("/home/r/dfile/accounts/0x0F3eb0a4881F542a511154B2DF6334aB7d545753/storage/0x2839fE5865CcbB28326e6aD053af76E255B98B28/c137e04cb9b00d93a97ba50f8edfa2f9b61cf1b7f5af8517c17d2d155e5d1e1b")
 	if err != nil {
+		fmt.Println(err)
 		log.Fatal("Fatal error")
 	}
 	defer file.Close()
@@ -31,7 +32,7 @@ func SendProof() {
 		log.Fatal("Fatal error")
 	}
 
-	fileFsTree, err := os.Open("/home/r/dfile/accounts/0xA1c06ba6c5D0845727E7A2204FcF4f4C9636D8F4/storage/0xfC73A8Fe0eBcA03AE1481479C9132de97d757963/tree.json")
+	fileFsTree, err := os.Open("/home/r/dfile/accounts/0x0F3eb0a4881F542a511154B2DF6334aB7d545753/storage/0x2839fE5865CcbB28326e6aD053af76E255B98B28/tree.json")
 	if err != nil {
 		log.Fatal("Fatal error")
 	}
@@ -61,15 +62,17 @@ func SendProof() {
 		log.Fatal("Fatal error")
 	}
 
-	fmt.Println(hex.EncodeToString(fileTree[len(fileTree)-1][0]))
+	fmt.Println("fileRoot", hex.EncodeToString(fileTree[len(fileTree)-1][0]))
 
-	for _, v := range fsTreeStruct.Tree {
-		for _, l := range v {
-			fmt.Println(hex.EncodeToString(l))
-		}
-	}
+	// for _, v := range fsTreeStruct.Tree {
+	// 	for _, l := range v {
+	// 		fmt.Println(hex.EncodeToString(l))
+	// 	}
+	// }
 
-	// proof := makeProof(tree[2][0], tree)
+	proof := makeProof(fileTree[2][0], fileTree)
+
+	fmt.Println("proof", hex.EncodeToString(proof[len(proof)-1]))
 
 }
 
@@ -92,7 +95,7 @@ func makeProof(start []byte, tree [][][]byte) [][]byte {
 	var aPos int
 	var bPos int
 
-	for stage < len(tree)-1 {
+	for stage < len(tree) {
 		pos := getPos(start, tree[stage])
 		if pos == -1 {
 			stage++
@@ -107,6 +110,12 @@ func makeProof(start []byte, tree [][][]byte) [][]byte {
 			bPos = pos + 1
 		}
 
+		if len(tree[stage]) == 1 {
+			proof = append(proof, tree[stage][0])
+
+			return proof
+		}
+
 		proof = append(proof, tree[stage][aPos])
 		proof = append(proof, tree[stage][bPos])
 
@@ -117,8 +126,6 @@ func makeProof(start []byte, tree [][][]byte) [][]byte {
 		stage++
 
 	}
-
-	proof = append(proof, start)
 
 	return proof
 }
