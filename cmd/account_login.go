@@ -3,7 +3,6 @@ package cmd
 import (
 	"dfile-secondary-node/account"
 	"dfile-secondary-node/config"
-	"dfile-secondary-node/server"
 	"dfile-secondary-node/shared"
 	"encoding/json"
 	"fmt"
@@ -127,7 +126,10 @@ var accountCheckCmd = &cobra.Command{
 
 		fmt.Println("Success")
 
-		server.Start(address, portAddr)
+		account.SendProof()
+
+		// server.Start(address, portAddr)
+		fmt.Println(portAddr)
 
 	},
 }

@@ -3,13 +3,20 @@ package account
 import (
 	"bytes"
 	"crypto/sha256"
+	cryptoPOS "dfile-secondary-node/crypto_proof"
 	"dfile-secondary-node/shared"
+
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
+	"path/filepath"
+
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 type treeInfo struct {
@@ -20,9 +27,13 @@ type treeInfo struct {
 const eightKB = 8192
 
 func SendProof() {
-	file, err := os.Open("/home/r/dfile/accounts/0x546bf14Ba029D21359608182d0B9a4c9FacD7ed5/storage/0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0/338b83e118db0891ede737fc791dab8c0e95761404b9f5376cf2e70094979cb5")
+
+	pathToAcc := filepath.Join(shared.AccDir, DfileAcc.Address.String())
+
+	pathToFile := filepath.Join(pathToAcc, "storage", "0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0", "338b83e118db0891ede737fc791dab8c0e95761404b9f5376cf2e70094979cb5")
+
+	file, err := os.Open(pathToFile)
 	if err != nil {
-		fmt.Println(err)
 		log.Fatal("Fatal error")
 	}
 	defer file.Close()
@@ -32,7 +43,9 @@ func SendProof() {
 		log.Fatal("Fatal error")
 	}
 
-	fileFsTree, err := os.Open("/home/r/dfile/accounts/0x546bf14Ba029D21359608182d0B9a4c9FacD7ed5/storage/0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0/tree.json")
+	pathToFsTree := filepath.Join(pathToAcc, "storage", "0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0", "tree.json")
+
+	fileFsTree, err := os.Open(pathToFsTree)
 	if err != nil {
 		log.Fatal("Fatal error")
 	}
@@ -64,6 +77,8 @@ func SendProof() {
 
 	hashFileRoot := fileTree[len(fileTree)-1][0]
 
+	fmt.Println("fsRootHash", fsTreeStruct.Tree[len(fsTreeStruct.Tree)-1])
+
 	treeToFsRoot := [][][]byte{}
 
 	for _, baseHash := range fsTreeStruct.Tree[0] {
@@ -74,9 +89,27 @@ func SendProof() {
 		}
 	}
 
-	proof := makeProof(fileTree[2][0], treeToFsRoot)
+	proof := makeProof(hashFileRoot, fsTreeStruct.Tree)
 
-	fmt.Println("proof", proof[len(proof)-1])
+	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
+	instance, err := cryptoPOS.NewStore(tokenAddress, client)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// address := common.HexToAddress(string(DfileAcc.Address.String()))
+
+	dif, err := instance.IsValidMerkleTreeProof(&bind.CallOpts{}, proof[len(proof)-1], proof)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(dif)
 
 }
 
@@ -92,9 +125,9 @@ func getPos(hash []byte, list [][]byte) int {
 
 }
 
-func makeProof(start []byte, tree [][][]byte) [][]byte {
+func makeProof(start []byte, tree [][][]byte) [][32]byte {
 	stage := 0
-	proof := [][]byte{}
+	proof := [][32]byte{}
 
 	var aPos int
 	var bPos int
@@ -102,8 +135,7 @@ func makeProof(start []byte, tree [][][]byte) [][]byte {
 	for stage < len(tree) {
 		pos := getPos(start, tree[stage])
 		if pos == -1 {
-			stage++
-			continue
+			break
 		}
 
 		if pos%2 != 0 {
@@ -115,13 +147,30 @@ func makeProof(start []byte, tree [][][]byte) [][]byte {
 		}
 
 		if len(tree[stage]) == 1 {
-			proof = append(proof, tree[stage][0])
+			tmp := [32]byte{}
+
+			for i, v := range tree[stage][0] {
+				tmp[i] = v
+			}
+
+			proof = append(proof, tmp)
 
 			return proof
 		}
 
-		proof = append(proof, tree[stage][aPos])
-		proof = append(proof, tree[stage][bPos])
+		tmp1 := [32]byte{}
+		for i, v := range tree[stage][aPos] {
+			tmp1[i] = v
+		}
+
+		proof = append(proof, tmp1)
+
+		tmp2 := [32]byte{}
+		for i, v := range tree[stage][bPos] {
+			tmp2[i] = v
+		}
+
+		proof = append(proof, tmp2)
 
 		concatBytes := append(tree[stage][aPos], tree[stage][bPos]...)
 		hSum := sha256.Sum256(concatBytes)

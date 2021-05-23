@@ -21,7 +21,6 @@ import (
 )
 
 func main() {
-	// account.SendProof()
 	shared.CreateIfNotExistAccDirs()
 	cmd.Execute()
 }

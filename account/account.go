@@ -59,10 +59,12 @@ type DFileAccount struct {
 	PublicKey  *ecdsa.PublicKey
 }
 
+var DfileAcc DFileAccount
+
 //LoadAccount load in memory keystore file and decrypt it for further use
 func AccountLogin(blockchainAccountString, password string) error {
 
-	dfileAccount := DFileAccount{}
+	DfileAcc = DFileAccount{}
 
 	ks := keystore.NewKeyStore(shared.AccDir, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccounts := ks.Accounts()
@@ -92,16 +94,16 @@ func AccountLogin(blockchainAccountString, password string) error {
 		return err
 	}
 
-	dfileAccount.PrivateKey = key.PrivateKey
-	dfileAccount.Address = (*etherAccount).Address
-	publicKey := dfileAccount.PrivateKey.Public()
+	DfileAcc.PrivateKey = key.PrivateKey
+	DfileAcc.Address = (*etherAccount).Address
+	publicKey := DfileAcc.PrivateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	if !ok {
 		errAccountPublicKey := errors.New("account Public Key error: unable to cast from crypto to ecdsa")
 		return errAccountPublicKey
 	}
 	server.AccountAddress = etherAccount.Address.String()
-	dfileAccount.PublicKey = publicKeyECDSA
+	DfileAcc.PublicKey = publicKeyECDSA
 
 	return nil
 }
