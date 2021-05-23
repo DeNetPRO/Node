@@ -121,9 +121,9 @@ func SendProof() {
 
 	fsRHashNonce := append(fsRootHash, nonceBytes...)
 
-	hash := crypto.Keccak256Hash(fsRHashNonce)
+	hash := sha256.Sum256(fsRHashNonce)
 
-	signedFSRootHash, err := crypto.Sign(hash.Bytes(), DfileAcc.PrivateKey)
+	signedFSRootHash, err := crypto.Sign(hash[:], DfileAcc.PrivateKey)
 	if err != nil {
 		log.Fatal(err)
 	}
