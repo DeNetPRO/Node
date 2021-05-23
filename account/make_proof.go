@@ -20,7 +20,7 @@ type treeInfo struct {
 const eightKB = 8192
 
 func SendProof() {
-	file, err := os.Open("/home/r/dfile/accounts/0x0F3eb0a4881F542a511154B2DF6334aB7d545753/storage/0x2839fE5865CcbB28326e6aD053af76E255B98B28/c137e04cb9b00d93a97ba50f8edfa2f9b61cf1b7f5af8517c17d2d155e5d1e1b")
+	file, err := os.Open("/home/r/dfile/accounts/0x546bf14Ba029D21359608182d0B9a4c9FacD7ed5/storage/0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0/338b83e118db0891ede737fc791dab8c0e95761404b9f5376cf2e70094979cb5")
 	if err != nil {
 		fmt.Println(err)
 		log.Fatal("Fatal error")
@@ -32,7 +32,7 @@ func SendProof() {
 		log.Fatal("Fatal error")
 	}
 
-	fileFsTree, err := os.Open("/home/r/dfile/accounts/0x0F3eb0a4881F542a511154B2DF6334aB7d545753/storage/0x2839fE5865CcbB28326e6aD053af76E255B98B28/tree.json")
+	fileFsTree, err := os.Open("/home/r/dfile/accounts/0x546bf14Ba029D21359608182d0B9a4c9FacD7ed5/storage/0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0/tree.json")
 	if err != nil {
 		log.Fatal("Fatal error")
 	}
@@ -62,17 +62,21 @@ func SendProof() {
 		log.Fatal("Fatal error")
 	}
 
-	fmt.Println("fileRoot", hex.EncodeToString(fileTree[len(fileTree)-1][0]))
+	hashFileRoot := fileTree[len(fileTree)-1][0]
 
-	// for _, v := range fsTreeStruct.Tree {
-	// 	for _, l := range v {
-	// 		fmt.Println(hex.EncodeToString(l))
-	// 	}
-	// }
+	treeToFsRoot := [][][]byte{}
 
-	proof := makeProof(fileTree[2][0], fileTree)
+	for _, baseHash := range fsTreeStruct.Tree[0] {
+		diff := bytes.Compare(hashFileRoot, baseHash)
+		if diff == 0 {
+			treeToFsRoot = append(treeToFsRoot, fileTree[:len(fileTree)-1]...)
+			treeToFsRoot = append(treeToFsRoot, fsTreeStruct.Tree...)
+		}
+	}
 
-	fmt.Println("proof", hex.EncodeToString(proof[len(proof)-1]))
+	proof := makeProof(fileTree[2][0], treeToFsRoot)
+
+	fmt.Println("proof", proof[len(proof)-1])
 
 }
 
