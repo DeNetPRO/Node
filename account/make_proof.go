@@ -2,9 +2,11 @@ package account
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
-	cryptoPOS "dfile-secondary-node/crypto_proof"
+	POFstorage "dfile-secondary-node/POF_storage"
 	"dfile-secondary-node/shared"
+	"strconv"
 
 	"encoding/hex"
 	"encoding/json"
@@ -16,6 +18,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
@@ -65,6 +68,8 @@ func SendProof() {
 
 	eightKBHashes := []string{}
 
+	bytesToProve := fileBytes[:eightKB]
+
 	for i := 0; i < len(fileBytes); i += eightKB {
 		hSum := sha256.Sum256(fileBytes[i : i+eightKB])
 		eightKBHashes = append(eightKBHashes, hex.EncodeToString(hSum[:]))
@@ -77,7 +82,8 @@ func SendProof() {
 
 	hashFileRoot := fileTree[len(fileTree)-1][0]
 
-	fmt.Println("fsRootHash", fsTreeStruct.Tree[len(fsTreeStruct.Tree)-1])
+	fsRootHash := fsTreeStruct.Tree[len(fsTreeStruct.Tree)-1][0]
+	fmt.Println("fsRootHash", fsRootHash)
 
 	treeToFsRoot := [][][]byte{}
 
@@ -89,7 +95,7 @@ func SendProof() {
 		}
 	}
 
-	proof := makeProof(hashFileRoot, fsTreeStruct.Tree)
+	proof := makeProof(fileTree[0][0], treeToFsRoot)
 
 	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
 	if err != nil {
@@ -97,14 +103,32 @@ func SendProof() {
 	}
 
 	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
-	instance, err := cryptoPOS.NewStore(tokenAddress, client)
+	instance, err := POFstorage.NewStore(tokenAddress, client)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// address := common.HexToAddress(string(DfileAcc.Address.String()))
+	blockNum, err := client.HeaderByNumber(context.Background(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	dif, err := instance.IsValidMerkleTreeProof(&bind.CallOpts{}, proof[len(proof)-1], proof)
+	nonceHex := strconv.FormatInt(1621758724, 16)
+	nonceBytes, err := hex.DecodeString(nonceHex)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fsRHashNonce := append(fsRootHash, nonceBytes...)
+
+	hash := crypto.Keccak256Hash(fsRHashNonce)
+
+	signedFSRootHash, err := crypto.Sign(hash.Bytes(), DfileAcc.PrivateKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dif, err := instance.SendProof(&bind.TransactOpts{}, DfileAcc.Address, uint32(blockNum.Size()), proof[len(proof)-1], 1621758724, signedFSRootHash, bytesToProve, proof)
 	if err != nil {
 		log.Fatal(err)
 	}
