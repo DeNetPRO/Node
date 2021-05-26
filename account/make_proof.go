@@ -121,9 +121,21 @@ func SendProof() {
 
 	fsRHashNonce := append(fsRootHash, nonceBytes...)
 
+	encrKey := sha256.Sum256(DfileAcc.Address.Bytes())
+
+	decryptedData, err := shared.DecryptAES(encrKey[:], DfileAcc.PrivateKey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	accPrivKey, err := crypto.HexToECDSA(hex.EncodeToString(decryptedData))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	hash := sha256.Sum256(fsRHashNonce)
 
-	signedFSRootHash, err := crypto.Sign(hash[:], DfileAcc.PrivateKey)
+	signedFSRootHash, err := crypto.Sign(hash[:], accPrivKey)
 	if err != nil {
 		log.Fatal(err)
 	}

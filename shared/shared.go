@@ -2,9 +2,13 @@ package shared
 
 import (
 	"bufio"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -142,3 +146,50 @@ func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 
 	return hex.EncodeToString(resByte[len(resByte)-1][0]), resByte, nil
 }
+
+// ====================================================================================
+
+func EncryptAES(key, data []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+
+	nonce := make([]byte, gcm.NonceSize())
+	_, err = io.ReadFull(rand.Reader, nonce)
+	if err != nil {
+		return nil, err
+	}
+
+	ciphertext := gcm.Seal(nonce, nonce, data, nil)
+
+	return ciphertext, nil
+
+}
+
+// ====================================================================================
+
+func DecryptAES(key, data []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	gcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, err
+	}
+	nonce, encrData := data[:gcm.NonceSize()], data[gcm.NonceSize():]
+	decrData, err := gcm.Open(nil, nonce, encrData, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return decrData, nil
+}
+
+// ====================================================================================

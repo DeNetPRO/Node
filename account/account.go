@@ -2,6 +2,7 @@ package account
 
 import (
 	"crypto/ecdsa"
+	"crypto/sha256"
 	"dfile-secondary-node/server"
 	"dfile-secondary-node/shared"
 	"errors"
@@ -55,7 +56,7 @@ func AccountCreate(password string) (string, error) {
 //DFileAccount is simple structure with main fields for working with smart contracts and blockchain
 type DFileAccount struct {
 	Address    commonEtherium.Address
-	PrivateKey *ecdsa.PrivateKey
+	PrivateKey []byte
 	PublicKey  *ecdsa.PublicKey
 }
 
@@ -94,9 +95,15 @@ func AccountLogin(blockchainAccountString, password string) error {
 		return err
 	}
 
-	DfileAcc.PrivateKey = key.PrivateKey
+	encrKey := sha256.Sum256(etherAccount.Address.Bytes())
+	encryptedData, err := shared.EncryptAES(encrKey[:], key.PrivateKey.D.Bytes())
+	if err != nil {
+		return err
+	}
+
+	DfileAcc.PrivateKey = encryptedData
 	DfileAcc.Address = (*etherAccount).Address
-	publicKey := DfileAcc.PrivateKey.Public()
+	publicKey := key.PrivateKey.Public()
 	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
 	if !ok {
 		errAccountPublicKey := errors.New("account Public Key error: unable to cast from crypto to ecdsa")
