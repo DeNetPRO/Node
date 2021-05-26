@@ -120,9 +120,9 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	nonce := req.MultipartForm.Value["nonce"]
 
-	hash := crypto.Keccak256Hash([]byte(fsRootHash + nonce[0]))
+	hash := sha256.Sum256([]byte(fsRootHash + nonce[0]))
 
-	sigPublicKey, err := crypto.SigToPub(hash.Bytes(), signature)
+	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
 	if err != nil {
 		http.Error(w, "File saving problem", 400)
 		return
