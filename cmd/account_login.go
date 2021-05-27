@@ -74,9 +74,9 @@ var accountCheckCmd = &cobra.Command{
 
 		confFiles := []string{}
 
-		confFilePath := filepath.Join(shared.AccDir, address, shared.ConfDir)
+		pathToConfig := filepath.Join(shared.AccDir, address, shared.ConfDir)
 
-		err = filepath.WalkDir(confFilePath,
+		err = filepath.WalkDir(pathToConfig,
 			func(path string, info fs.DirEntry, err error) error {
 				if err != nil {
 					log.Fatal("Fatal error while account log in.")
@@ -102,10 +102,11 @@ var accountCheckCmd = &cobra.Command{
 
 			dFileConf = conf
 		} else {
-			confFile, err := os.Open(filepath.Join(confFilePath, confFiles[0]))
+			confFile, err := os.Open(filepath.Join(pathToConfig, confFiles[0]))
 			if err != nil {
 				log.Fatal("Fatal error while account log in.")
 			}
+			defer confFile.Close()
 
 			fileBytes, err := io.ReadAll(confFile)
 			if err != nil {

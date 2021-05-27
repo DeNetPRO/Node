@@ -13,15 +13,13 @@ import (
 
 type SecondaryNodeConfig struct {
 	HTTPPort     string `json:"portHTTP"`
-	HTTPSPort    string `json:"portHTTPS"`
 	Address      string `json:"publicAddress"`
-	PathToConfig string `json:"pathToConfig"`
 	StorageLimit int    `json:"storageLimit"`
 }
 
 func Create(address string) (SecondaryNodeConfig, error) {
 
-	config := SecondaryNodeConfig{}
+	dFileConf := SecondaryNodeConfig{}
 
 	addressIsCorrect := false
 
@@ -36,7 +34,7 @@ func Create(address string) (SecondaryNodeConfig, error) {
 		for !addressIsCorrect {
 			accountAddress, err := shared.ReadFromConsole()
 			if err != nil {
-				return config, err
+				return dFileConf, err
 			}
 
 			addressMatches := shared.ContainsAccount(accounts, accountAddress)
@@ -47,29 +45,29 @@ func Create(address string) (SecondaryNodeConfig, error) {
 			}
 
 			addressIsCorrect = true
-			config.Address = accountAddress
+			dFileConf.Address = accountAddress
 			address = accountAddress
 
 		}
 	} else {
-		config.Address = address
+		dFileConf.Address = address
 		fmt.Println("Now, a config file creation is needed.")
 	}
 
-	config.PathToConfig = filepath.Join(shared.AccDir, address, shared.ConfDir)
+	pathToConfig := filepath.Join(shared.AccDir, address, shared.ConfDir)
 
 	spaceValueIsCorrect := false
 
 	regNum := regexp.MustCompile(("[0-9]+"))
 
 	for !spaceValueIsCorrect {
-		fmt.Println("Enter disk space for usage in GB (should be positive number)")
+		fmt.Println("Please, enter disk space for usage in GB (should be positive number)")
 
-		availableSpace := shared.GetAvailableSpace(config.PathToConfig)
+		availableSpace := shared.GetAvailableSpace(pathToConfig)
 		fmt.Println("Available space:", availableSpace, "GB")
 		space, err := shared.ReadFromConsole()
 		if err != nil {
-			return config, err
+			return dFileConf, err
 		}
 
 		match := regNum.MatchString(space)
@@ -91,7 +89,7 @@ func Create(address string) (SecondaryNodeConfig, error) {
 		}
 
 		spaceValueIsCorrect = true
-		config.StorageLimit = intSpace
+		dFileConf.StorageLimit = intSpace
 
 	}
 
@@ -103,7 +101,13 @@ func Create(address string) (SecondaryNodeConfig, error) {
 
 		httpPort, err := shared.ReadFromConsole()
 		if err != nil {
-			return config, err
+			return dFileConf, err
+		}
+
+		if httpPort == "" {
+			portHTTPValueIsCorrect = true
+			dFileConf.HTTPPort = fmt.Sprint(55050)
+			continue
 		}
 
 		match := regPort.MatchString(httpPort)
@@ -111,12 +115,6 @@ func Create(address string) (SecondaryNodeConfig, error) {
 			fmt.Println("Value is incorrect, please try again")
 			continue
 
-		}
-
-		if httpPort == "" {
-			portHTTPValueIsCorrect = true
-			config.HTTPPort = fmt.Sprint(55050)
-			continue
 		}
 
 		intHttpPort, err := strconv.Atoi(httpPort)
@@ -131,62 +129,26 @@ func Create(address string) (SecondaryNodeConfig, error) {
 		}
 
 		portHTTPValueIsCorrect = true
-		config.HTTPPort = fmt.Sprint(intHttpPort)
+		dFileConf.HTTPPort = fmt.Sprint(intHttpPort)
 	}
 
-	portHTTPSValueIsCorrect := false
-
-	for !portHTTPSValueIsCorrect {
-		fmt.Println("Enter https port number (value from 49152 to 65535)  or press enter to use default port number 55051")
-
-		httpsPort, err := shared.ReadFromConsole()
-		if err != nil {
-			return config, err
-		}
-
-		match := regPort.MatchString(httpsPort)
-		if !match {
-			fmt.Println("Value is incorrect, please try again")
-			continue
-		}
-
-		if httpsPort == "" {
-			portHTTPSValueIsCorrect = true
-			config.HTTPSPort = fmt.Sprint(55051)
-			continue
-		}
-		intHttpsPort, err := strconv.Atoi(httpsPort)
-		if err != nil {
-			fmt.Println("Value is incorrect, please try again")
-			continue
-		}
-		if intHttpsPort < 49152 || intHttpsPort > 65535 {
-			fmt.Println("Value is incorrect, please try again")
-			continue
-
-		}
-		portHTTPSValueIsCorrect = true
-		config.HTTPSPort = fmt.Sprint(intHttpsPort)
-		continue
-	}
-
-	confFile, err := os.Create(filepath.Join(config.PathToConfig, "config.json"))
+	confFile, err := os.Create(filepath.Join(pathToConfig, "config.json"))
 	if err != nil {
-		return config, err
+		return dFileConf, err
 	}
 	defer confFile.Close()
 
-	confJSON, err := json.Marshal(config)
+	confJSON, err := json.Marshal(dFileConf)
 	if err != nil {
-		return config, err
+		return dFileConf, err
 	}
 
 	_, err = confFile.Write(confJSON)
 	if err != nil {
-		return config, err
+		return dFileConf, err
 	}
 
 	confFile.Sync()
 
-	return config, nil
+	return dFileConf, nil
 }

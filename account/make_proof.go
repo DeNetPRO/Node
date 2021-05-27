@@ -188,6 +188,7 @@ func getPos(hash []byte, list [][]byte) int {
 
 }
 
+// Builds merkle tree proof
 func makeProof(start []byte, tree [][][]byte) [][32]byte { // returns slice of 32 bytes array because smart contract awaits this type
 	stage := 0
 	proof := [][32]byte{}
