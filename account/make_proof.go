@@ -192,8 +192,8 @@ func makeProof(start []byte, tree [][][]byte) [][32]byte { // returns slice of 3
 	stage := 0
 	proof := [][32]byte{}
 
-	var aPos int
-	var bPos int
+	var firstNodePosition int
+	var secondNodePosition int
 
 	for stage < len(tree) {
 		pos := getPos(start, tree[stage])
@@ -202,11 +202,11 @@ func makeProof(start []byte, tree [][][]byte) [][32]byte { // returns slice of 3
 		}
 
 		if pos%2 != 0 {
-			aPos = pos - 1
-			bPos = pos
+			firstNodePosition = pos - 1
+			secondNodePosition = pos
 		} else {
-			aPos = pos
-			bPos = pos + 1
+			firstNodePosition = pos
+			secondNodePosition = pos + 1
 		}
 
 		if len(tree[stage]) == 1 {
@@ -221,20 +221,20 @@ func makeProof(start []byte, tree [][][]byte) [][32]byte { // returns slice of 3
 		}
 
 		firstNode := [32]byte{}
-		for i, v := range tree[stage][aPos] {
+		for i, v := range tree[stage][firstNodePosition] {
 			firstNode[i] = v
 		}
 
 		proof = append(proof, firstNode)
 
 		secondNode := [32]byte{}
-		for i, v := range tree[stage][bPos] {
+		for i, v := range tree[stage][secondNodePosition] {
 			secondNode[i] = v
 		}
 
 		proof = append(proof, secondNode)
 
-		concatBytes := append(tree[stage][aPos], tree[stage][bPos]...)
+		concatBytes := append(tree[stage][firstNodePosition], tree[stage][secondNodePosition]...)
 		hSum := sha256.Sum256(concatBytes)
 
 		start = hSum[:]
