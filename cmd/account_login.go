@@ -17,6 +17,8 @@ import (
 	"golang.org/x/term"
 )
 
+const accLoginFatalError = "Fatal error while account log in"
+
 // accountListCmd represents the list command
 var accountCheckCmd = &cobra.Command{
 	Use:   "login",
@@ -34,7 +36,7 @@ var accountCheckCmd = &cobra.Command{
 		for !allMatch {
 			byteAddress, err := shared.ReadFromConsole()
 			if err != nil {
-				log.Fatal("Fatal error while account log in.")
+				log.Fatal(accLoginFatalError)
 			}
 
 			address = string(byteAddress)
@@ -55,7 +57,7 @@ var accountCheckCmd = &cobra.Command{
 
 			bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
-				log.Fatal("Fatal error while account log in.")
+				log.Fatal(accLoginFatalError)
 			}
 			password = string(bytePassword)
 			if strings.Trim(password, " ") == "" {
@@ -79,7 +81,7 @@ var accountCheckCmd = &cobra.Command{
 		err = filepath.WalkDir(pathToConfig,
 			func(path string, info fs.DirEntry, err error) error {
 				if err != nil {
-					log.Fatal("Fatal error while account log in.")
+					log.Fatal(accLoginFatalError)
 				}
 
 				if info.Name() != shared.ConfDir {
@@ -89,7 +91,7 @@ var accountCheckCmd = &cobra.Command{
 				return nil
 			})
 		if err != nil {
-			log.Fatal("Fatal error while account log in.")
+			log.Fatal(accLoginFatalError)
 		}
 
 		var dFileConf config.SecondaryNodeConfig
@@ -97,29 +99,29 @@ var accountCheckCmd = &cobra.Command{
 		if len(confFiles) == 0 {
 			conf, err := config.Create(address)
 			if err != nil {
-				log.Fatal("Fatal error while account log in.")
+				log.Fatal(accLoginFatalError)
 			}
 
 			dFileConf = conf
 		} else {
 			confFile, err := os.Open(filepath.Join(pathToConfig, confFiles[0]))
 			if err != nil {
-				log.Fatal("Fatal error while account log in.")
+				log.Fatal(accLoginFatalError)
 			}
 			defer confFile.Close()
 
 			fileBytes, err := io.ReadAll(confFile)
 			if err != nil {
-				log.Fatal("Fatal error while account log in.")
+				log.Fatal(accLoginFatalError)
 			}
 
 			err = json.Unmarshal(fileBytes, &dFileConf)
 			if err != nil {
-				log.Fatal("Fatal error while account log in.")
+				log.Fatal(accLoginFatalError)
 			}
 
 			if dFileConf.StorageLimit <= 0 {
-				log.Fatal("storage limit is invalid")
+				log.Fatal(accLoginFatalError)
 			}
 		}
 

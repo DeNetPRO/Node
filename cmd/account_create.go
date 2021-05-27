@@ -13,6 +13,8 @@ import (
 	"golang.org/x/term"
 )
 
+const accCreateFatalMessage = "Fatal error while creating an account"
+
 // accountCreateCmd represents the accountCreate command
 var accountCreateCmd = &cobra.Command{
 	Use:   "create",
@@ -29,7 +31,7 @@ var accountCreateCmd = &cobra.Command{
 		for !passwordMatch {
 			bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
-				log.Fatal("Fatal error while creating an account.")
+				log.Fatal(accCreateFatalMessage)
 			}
 			password1 = string(bytePassword)
 
@@ -41,7 +43,7 @@ var accountCreateCmd = &cobra.Command{
 			fmt.Println("Enter password again: ")
 			bytePassword, err = term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
-				log.Fatal(err)
+				log.Fatal(accCreateFatalMessage)
 			}
 
 			password2 = string(bytePassword)
@@ -55,13 +57,13 @@ var accountCreateCmd = &cobra.Command{
 		}
 		accountStr, err := account.AccountCreate(password1)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(accCreateFatalMessage)
 		}
 		fmt.Println("Your new account's address is:", accountStr)
 
 		secondaryNodeConfig, err := config.Create(accountStr)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(accCreateFatalMessage)
 		}
 
 		server.Start(accountStr, secondaryNodeConfig.HTTPPort)

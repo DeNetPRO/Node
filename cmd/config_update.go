@@ -19,7 +19,7 @@ import (
 	"golang.org/x/term"
 )
 
-const fatalMessage = "Fatal error while configuration update"
+const confUpdateFatalMessage = "Fatal error while configuration update"
 
 // accountListCmd represents the list command
 var configUpdateCmd = &cobra.Command{
@@ -42,7 +42,7 @@ var configUpdateCmd = &cobra.Command{
 		for !allMatch {
 			byteAddress, err := shared.ReadFromConsole()
 			if err != nil {
-				log.Fatal(fatalMessage)
+				log.Fatal(confUpdateFatalMessage)
 			}
 
 			address = string(byteAddress)
@@ -63,7 +63,7 @@ var configUpdateCmd = &cobra.Command{
 
 			bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
-				log.Fatal(fatalMessage)
+				log.Fatal(confUpdateFatalMessage)
 			}
 			password = string(bytePassword)
 			if strings.Trim(password, " ") == "" {
@@ -81,7 +81,7 @@ var configUpdateCmd = &cobra.Command{
 		err := filepath.WalkDir(confFilePath,
 			func(path string, info fs.DirEntry, err error) error {
 				if err != nil {
-					log.Fatal(fatalMessage)
+					log.Fatal(confUpdateFatalMessage)
 				}
 
 				if info.Name() != shared.ConfDir {
@@ -91,7 +91,7 @@ var configUpdateCmd = &cobra.Command{
 				return nil
 			})
 		if err != nil {
-			log.Fatal(fatalMessage)
+			log.Fatal(confUpdateFatalMessage)
 		}
 
 		if len(confFiles) == 0 {
@@ -103,18 +103,18 @@ var configUpdateCmd = &cobra.Command{
 		pathToConfig := filepath.Join(shared.AccDir, address, shared.ConfDir)
 		confFile, err := os.OpenFile(filepath.Join(pathToConfig, confFiles[0]), os.O_RDWR, 0700)
 		if err != nil {
-			log.Fatal(fatalMessage)
+			log.Fatal(confUpdateFatalMessage)
 		}
 		defer confFile.Close()
 
 		fileBytes, err := io.ReadAll(confFile)
 		if err != nil {
-			log.Fatal(fatalMessage)
+			log.Fatal(confUpdateFatalMessage)
 		}
 
 		err = json.Unmarshal(fileBytes, &dFileConf)
 		if err != nil {
-			log.Fatal(fatalMessage)
+			log.Fatal(confUpdateFatalMessage)
 		}
 
 		fmt.Println("You can change your http port number or storage limit")
@@ -133,7 +133,7 @@ var configUpdateCmd = &cobra.Command{
 
 			space, err := shared.ReadFromConsole()
 			if err != nil {
-				log.Fatal(fatalMessage)
+				log.Fatal(confUpdateFatalMessage)
 			}
 
 			if space == "" {
@@ -173,7 +173,7 @@ var configUpdateCmd = &cobra.Command{
 
 			httpPort, err := shared.ReadFromConsole()
 			if err != nil {
-				log.Fatal(fatalMessage)
+				log.Fatal(confUpdateFatalMessage)
 			}
 
 			if httpPort == "" {
@@ -205,22 +205,22 @@ var configUpdateCmd = &cobra.Command{
 
 		confJSON, err := json.Marshal(dFileConf)
 		if err != nil {
-			log.Fatal(fatalMessage)
+			log.Fatal(confUpdateFatalMessage)
 		}
 
 		err = confFile.Truncate(0)
 		if err != nil {
-			log.Fatal(fatalMessage)
+			log.Fatal(confUpdateFatalMessage)
 		}
 
 		_, err = confFile.Seek(0, 0)
 		if err != nil {
-			log.Fatal(fatalMessage)
+			log.Fatal(confUpdateFatalMessage)
 		}
 
 		_, err = confFile.Write(confJSON)
 		if err != nil {
-			log.Fatal(fatalMessage)
+			log.Fatal(confUpdateFatalMessage)
 		}
 
 		confFile.Sync()
