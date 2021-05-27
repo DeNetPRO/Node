@@ -38,7 +38,6 @@ func GetAvailableSpace(storagePath string) int {
 
 // ====================================================================================
 
-// GetHomeDirectory return path to the home directory of dfile
 func CreateIfNotExistAccDirs() {
 
 	homeDir, err := os.UserHomeDir()
