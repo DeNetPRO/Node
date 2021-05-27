@@ -162,6 +162,8 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		errPart := strings.Split(err.Error(), ":")
 
 		if strings.Trim(errPart[1], " ") != "no such file or directory" {
+			fmt.Println(err)
+
 			http.Error(w, "File saving problem", 500)
 			return
 		}
@@ -171,6 +173,8 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	if stat == nil {
 		err = os.Mkdir(addressPath, 0700)
 		if err != nil {
+			fmt.Println(err)
+
 			http.Error(w, "File saving problem", 500)
 			return
 		}
@@ -178,6 +182,8 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	treeFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
 	if err != nil {
+		fmt.Println(err)
+
 		http.Error(w, "File saving problem", 500)
 		return
 	}

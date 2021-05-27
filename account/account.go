@@ -40,22 +40,41 @@ func GetAllAccounts() []string {
 func AccountCreate(password string) (string, error) {
 
 	ks := keystore.NewKeyStore(shared.AccDir, keystore.StandardScryptN, keystore.StandardScryptP)
-	account, err := ks.NewAccount(password)
+	etherAccount, err := ks.NewAccount(password)
 	if err != nil {
 		return "", err
 	}
 
-	err = os.MkdirAll(filepath.Join(shared.AccDir, account.Address.String(), shared.StorageDir), 0700)
+	err = os.MkdirAll(filepath.Join(shared.AccDir, etherAccount.Address.String(), shared.StorageDir), 0700)
 	if err != nil {
 		return "", err
 	}
 
-	err = os.MkdirAll(filepath.Join(shared.AccDir, account.Address.String(), shared.ConfDir), 0700)
+	err = os.MkdirAll(filepath.Join(shared.AccDir, etherAccount.Address.String(), shared.ConfDir), 0700)
 	if err != nil {
 		return "", err
 	}
 
-	return account.Address.String(), nil
+	keyJson, err := ks.Export(etherAccount, password, password)
+	if err != nil {
+		return "", err
+	}
+
+	key, err := keystore.DecryptKey(keyJson, password)
+	if err != nil {
+		return "", err
+	}
+
+	encrKey := sha256.Sum256(etherAccount.Address.Bytes())
+	encryptedData, err := shared.EncryptAES(encrKey[:], key.PrivateKey.D.Bytes())
+	if err != nil {
+		return "", err
+	}
+
+	DfileAcc.PrivateKey = encryptedData
+	DfileAcc.Address = (etherAccount).Address
+
+	return etherAccount.Address.String(), nil
 }
 
 //LoadAccount load in memory keystore file and decrypt it for further use
