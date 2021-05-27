@@ -6,7 +6,9 @@ import (
 	"crypto/sha256"
 	POFstorage "dfile-secondary-node/POF_storage"
 	"dfile-secondary-node/shared"
-	"strconv"
+	"io/fs"
+	"regexp"
+	"time"
 
 	"encoding/hex"
 	"encoding/json"
@@ -18,22 +20,71 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-type treeInfo struct {
-	Nonce string     `json:"Nonce"`
-	Tree  [][][]byte `json:"Tree"`
-}
-
 const eightKB = 8192
+
+func StartMining() {
+
+	for {
+		time.Sleep(time.Second * 1)
+		pathToAccStorage := filepath.Join(shared.AccDir, DfileAcc.Address.String(), shared.StorageDir)
+
+		storageAddresses := []string{}
+
+		re := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
+
+		err := filepath.WalkDir(pathToAccStorage,
+			func(path string, info fs.DirEntry, err error) error {
+				if err != nil {
+					log.Fatal("Fatal error")
+				}
+
+				if re.MatchString(info.Name()) {
+					storageAddresses = append(storageAddresses, info.Name())
+				}
+
+				return nil
+			})
+		if err != nil {
+			log.Fatal("Fatal error")
+		}
+
+		if len(storageAddresses) == 0 {
+			continue
+		}
+
+		client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
+		instance, err := POFstorage.NewStore(tokenAddress, client)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, v := range storageAddresses {
+			commonAddr := common.HexToAddress(v)
+			address, rew, rew1, err := instance.GetUserRewardInfo(&bind.CallOpts{}, commonAddr)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			fmt.Println(address, rew, rew1)
+		}
+
+	}
+
+}
 
 func SendProof() {
 
 	pathToAcc := filepath.Join(shared.AccDir, DfileAcc.Address.String())
 
-	pathToFile := filepath.Join(pathToAcc, "storage", "0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0", "338b83e118db0891ede737fc791dab8c0e95761404b9f5376cf2e70094979cb5")
+	pathToFile := filepath.Join(pathToAcc, shared.StorageDir, "0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0", "338b83e118db0891ede737fc791dab8c0e95761404b9f5376cf2e70094979cb5")
 
 	file, err := os.Open(pathToFile)
 	if err != nil {
@@ -47,7 +98,7 @@ func SendProof() {
 		log.Fatal("Fatal error")
 	}
 
-	pathToFsTree := filepath.Join(pathToAcc, "storage", "0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0", "tree.json")
+	pathToFsTree := filepath.Join(pathToAcc, shared.StorageDir, "0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0", "tree.json")
 
 	fileFsTree, err := os.Open(pathToFsTree)
 	if err != nil {
@@ -60,9 +111,9 @@ func SendProof() {
 		log.Fatal("Fatal error")
 	}
 
-	var fsTreeStruct treeInfo
+	var storageFsStruct shared.StorageInfo
 
-	err = json.Unmarshal(treeBytes, &fsTreeStruct)
+	err = json.Unmarshal(treeBytes, &storageFsStruct)
 	if err != nil {
 		log.Fatal("Fatal error")
 	}
@@ -83,15 +134,13 @@ func SendProof() {
 
 	hashFileRoot := fileTree[len(fileTree)-1][0]
 
-	fsRootHash := fsTreeStruct.Tree[len(fsTreeStruct.Tree)-1][0]
-
 	treeToFsRoot := [][][]byte{}
 
-	for _, baseHash := range fsTreeStruct.Tree[0] {
+	for _, baseHash := range storageFsStruct.Tree[0] {
 		diff := bytes.Compare(hashFileRoot, baseHash)
 		if diff == 0 {
 			treeToFsRoot = append(treeToFsRoot, fileTree[:len(fileTree)-1]...)
-			treeToFsRoot = append(treeToFsRoot, fsTreeStruct.Tree...)
+			treeToFsRoot = append(treeToFsRoot, storageFsStruct.Tree...)
 		}
 	}
 
@@ -113,29 +162,7 @@ func SendProof() {
 		log.Fatal(err)
 	}
 
-	nonceHex := strconv.FormatInt(1621758724, 16)
-	nonceBytes, err := hex.DecodeString(nonceHex)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fsRHashNonce := append(fsRootHash, nonceBytes...)
-
-	encrKey := sha256.Sum256(DfileAcc.Address.Bytes())
-
-	decryptedData, err := shared.DecryptAES(encrKey[:], DfileAcc.PrivateKey)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	accPrivKey, err := crypto.HexToECDSA(hex.EncodeToString(decryptedData))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	hash := sha256.Sum256(fsRHashNonce)
-
-	signedFSRootHash, err := crypto.Sign(hash[:], accPrivKey)
+	signedFSRootHash, err := hex.DecodeString(storageFsStruct.SignedFsRoot)
 	if err != nil {
 		log.Fatal(err)
 	}

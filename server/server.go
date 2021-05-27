@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"crypto/sha256"
+	"dfile-secondary-node/account"
 	"dfile-secondary-node/shared"
 	"encoding/hex"
 	"encoding/json"
@@ -20,16 +21,7 @@ import (
 	"github.com/rs/cors"
 )
 
-type treeInfo struct {
-	Nonce string     `json:"Nonce"`
-	Tree  [][][]byte `json:"Tree"`
-}
-
-var AccountAddress string
-
 func Start(address, port string) {
-
-	AccountAddress = address
 
 	r := mux.NewRouter()
 
@@ -163,7 +155,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	addressPath := filepath.Join(shared.AccDir, AccountAddress, "storage", storageProviderAddress[0])
+	addressPath := filepath.Join(shared.AccDir, account.DfileAcc.Address.String(), shared.StorageDir, storageProviderAddress[0])
 
 	stat, err := os.Stat(addressPath)
 	if err != nil {
@@ -191,9 +183,10 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	}
 	defer treeFile.Close()
 
-	tree := treeInfo{
-		Nonce: nonce[0],
-		Tree:  fsTree,
+	tree := shared.StorageInfo{
+		Nonce:        nonce[0],
+		SignedFsRoot: signedFsRootHash[0],
+		Tree:         fsTree,
 	}
 
 	js, err := json.Marshal(tree)
@@ -317,6 +310,6 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	storageProviderAddress := vars["address"]
 	name := vars["fileName"]
 
-	pathToFile := filepath.Join(shared.AccDir, AccountAddress, "storage", storageProviderAddress, name)
+	pathToFile := filepath.Join(shared.AccDir, account.DfileAcc.Address.String(), shared.StorageDir, storageProviderAddress, name)
 	http.ServeFile(w, req, pathToFile)
 }

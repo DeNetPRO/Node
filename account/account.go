@@ -1,9 +1,7 @@
 package account
 
 import (
-	"crypto/ecdsa"
 	"crypto/sha256"
-	"dfile-secondary-node/server"
 	"dfile-secondary-node/shared"
 	"errors"
 	"os"
@@ -18,7 +16,6 @@ import (
 type DFileAccount struct {
 	Address    commonEtherium.Address
 	PrivateKey []byte
-	PublicKey  *ecdsa.PublicKey
 }
 
 var DfileAcc DFileAccount
@@ -48,12 +45,12 @@ func AccountCreate(password string) (string, error) {
 		return "", err
 	}
 
-	err = os.MkdirAll(filepath.Join(shared.AccDir, account.Address.String(), "storage"), 0700)
+	err = os.MkdirAll(filepath.Join(shared.AccDir, account.Address.String(), shared.StorageDir), 0700)
 	if err != nil {
 		return "", err
 	}
 
-	err = os.MkdirAll(filepath.Join(shared.AccDir, account.Address.String(), "config"), 0700)
+	err = os.MkdirAll(filepath.Join(shared.AccDir, account.Address.String(), shared.ConfDir), 0700)
 	if err != nil {
 		return "", err
 	}
@@ -76,6 +73,7 @@ func AccountLogin(blockchainAccountString, password string) error {
 	for _, a := range etherAccounts {
 		if blockchainAccountString == a.Address.String() {
 			etherAccount = &a
+			break
 		}
 	}
 
@@ -102,14 +100,6 @@ func AccountLogin(blockchainAccountString, password string) error {
 
 	DfileAcc.PrivateKey = encryptedData
 	DfileAcc.Address = (*etherAccount).Address
-	publicKey := key.PrivateKey.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		errAccountPublicKey := errors.New("account Public Key error: unable to cast from crypto to ecdsa")
-		return errAccountPublicKey
-	}
-	server.AccountAddress = etherAccount.Address.String()
-	DfileAcc.PublicKey = publicKeyECDSA
 
 	return nil
 }

@@ -124,7 +124,8 @@ var accountCheckCmd = &cobra.Command{
 
 		fmt.Println("Success")
 
-		account.SendProof()
+		account.StartMining()
+		// account.SendProof()
 
 		// server.Start(address, dFileConf.HTTPPort)
 		fmt.Println(dFileConf.HTTPPort)

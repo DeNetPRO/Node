@@ -56,7 +56,7 @@ func Create(address string) (SecondaryNodeConfig, error) {
 		fmt.Println("Now, a config file creation is needed.")
 	}
 
-	config.PathToConfig = filepath.Join(shared.AccDir, address, "config")
+	config.PathToConfig = filepath.Join(shared.AccDir, address, shared.ConfDir)
 
 	spaceValueIsCorrect := false
 

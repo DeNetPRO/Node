@@ -17,10 +17,17 @@ import (
 	"github.com/ricochet2200/go-disk-usage/du"
 )
 
+type StorageInfo struct {
+	Nonce        string     `json:"nonce"`
+	SignedFsRoot string     `json:"signedFsRoot"`
+	Tree         [][][]byte `json:"tree"`
+}
+
 var (
-	WorkDir string
-	AccDir  string
-	ConfDir = "config"
+	WorkDir    string
+	AccDir     string
+	ConfDir    = "config"
+	StorageDir = "storage"
 )
 
 func GetAvailableSpace(storagePath string) int {
