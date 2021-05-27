@@ -188,7 +188,7 @@ func getPos(hash []byte, list [][]byte) int {
 
 }
 
-func makeProof(start []byte, tree [][][]byte) [][32]byte {
+func makeProof(start []byte, tree [][][]byte) [][32]byte { // returns slice of 32 bytes array because smart contract awaits this type
 	stage := 0
 	proof := [][32]byte{}
 
@@ -210,30 +210,29 @@ func makeProof(start []byte, tree [][][]byte) [][32]byte {
 		}
 
 		if len(tree[stage]) == 1 {
-			tmp := [32]byte{}
-
+			root := [32]byte{}
 			for i, v := range tree[stage][0] {
-				tmp[i] = v
+				root[i] = v
 			}
 
-			proof = append(proof, tmp)
+			proof = append(proof, root)
 
 			return proof
 		}
 
-		tmp1 := [32]byte{}
+		firstNode := [32]byte{}
 		for i, v := range tree[stage][aPos] {
-			tmp1[i] = v
+			firstNode[i] = v
 		}
 
-		proof = append(proof, tmp1)
+		proof = append(proof, firstNode)
 
-		tmp2 := [32]byte{}
+		secondNode := [32]byte{}
 		for i, v := range tree[stage][bPos] {
-			tmp2[i] = v
+			secondNode[i] = v
 		}
 
-		proof = append(proof, tmp2)
+		proof = append(proof, secondNode)
 
 		concatBytes := append(tree[stage][aPos], tree[stage][bPos]...)
 		hSum := sha256.Sum256(concatBytes)
