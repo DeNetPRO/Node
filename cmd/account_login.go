@@ -19,9 +19,9 @@ import (
 
 // accountListCmd represents the list command
 var accountCheckCmd = &cobra.Command{
-	Use:   "list",
-	Short: "display addresses of all blockchain accounts",
-	Long:  `display addresses of all blockchain accounts`,
+	Use:   "login",
+	Short: "log in a blockchain accounts",
+	Long:  "log in a blockchain accounts",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		allMatch := false
@@ -74,9 +74,7 @@ var accountCheckCmd = &cobra.Command{
 
 		confFiles := []string{}
 
-		confDir := "config"
-
-		confFilePath := filepath.Join(shared.AccDir, address, confDir)
+		confFilePath := filepath.Join(shared.AccDir, address, shared.ConfDir)
 
 		err = filepath.WalkDir(confFilePath,
 			func(path string, info fs.DirEntry, err error) error {
@@ -84,7 +82,7 @@ var accountCheckCmd = &cobra.Command{
 					log.Fatal("Fatal error while account log in.")
 				}
 
-				if info.Name() != confDir {
+				if info.Name() != shared.ConfDir {
 					confFiles = append(confFiles, info.Name())
 				}
 
@@ -94,15 +92,15 @@ var accountCheckCmd = &cobra.Command{
 			log.Fatal("Fatal error while account log in.")
 		}
 
-		var portAddr string
+		var dFileConf config.SecondaryNodeConfig
 
 		if len(confFiles) == 0 {
-			config, err := config.Create(address)
+			conf, err := config.Create(address)
 			if err != nil {
 				log.Fatal("Fatal error while account log in.")
 			}
 
-			portAddr = config.HTTPPort
+			dFileConf = conf
 		} else {
 			confFile, err := os.Open(filepath.Join(confFilePath, confFiles[0]))
 			if err != nil {
@@ -114,22 +112,22 @@ var accountCheckCmd = &cobra.Command{
 				log.Fatal("Fatal error while account log in.")
 			}
 
-			var conf config.SecondaryNodeConfig
-
-			err = json.Unmarshal(fileBytes, &conf)
+			err = json.Unmarshal(fileBytes, &dFileConf)
 			if err != nil {
 				log.Fatal("Fatal error while account log in.")
 			}
 
-			portAddr = conf.HTTPPort
+			if dFileConf.StorageLimit <= 0 {
+				log.Fatal("storage limit is invalid")
+			}
 		}
 
 		fmt.Println("Success")
 
 		account.SendProof()
 
-		// server.Start(address, portAddr)
-		fmt.Println(portAddr)
+		// server.Start(address, dFileConf.HTTPPort)
+		fmt.Println(dFileConf.HTTPPort)
 
 	},
 }

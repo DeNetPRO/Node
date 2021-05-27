@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -120,7 +121,32 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	nonce := req.MultipartForm.Value["nonce"]
 
-	hash := sha256.Sum256([]byte(fsRootHash + nonce[0]))
+	nonceInt, err := strconv.Atoi(nonce[0])
+	if err != nil {
+		http.Error(w, "File saving problem", 400)
+		return
+	}
+
+	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
+
+	nonceBytes, err := hex.DecodeString(nonceHex)
+	if err != nil {
+		http.Error(w, "File saving problem", 400)
+		return
+	}
+
+	nonce32 := make([]byte, 32-len(nonceBytes))
+	nonce32 = append(nonce32, nonceBytes...)
+
+	fsRootBytes, err := hex.DecodeString(fsRootHash)
+	if err != nil {
+		http.Error(w, "File saving problem", 400)
+		return
+	}
+
+	fsRootNonceBytes := append(fsRootBytes, nonce32...)
+
+	hash := sha256.Sum256(fsRootNonceBytes)
 
 	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
 	if err != nil {

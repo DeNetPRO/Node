@@ -15,6 +15,14 @@ import (
 	commonEtherium "github.com/ethereum/go-ethereum/common"
 )
 
+type DFileAccount struct {
+	Address    commonEtherium.Address
+	PrivateKey []byte
+	PublicKey  *ecdsa.PublicKey
+}
+
+var DfileAcc DFileAccount
+
 //GetAllAccounts go to the folder ~/dfile/accounts and return all accounts addresses in string format
 func GetAllAccounts() []string {
 	var blockchainAccounts []string
@@ -52,15 +60,6 @@ func AccountCreate(password string) (string, error) {
 
 	return account.Address.String(), nil
 }
-
-//DFileAccount is simple structure with main fields for working with smart contracts and blockchain
-type DFileAccount struct {
-	Address    commonEtherium.Address
-	PrivateKey []byte
-	PublicKey  *ecdsa.PublicKey
-}
-
-var DfileAcc DFileAccount
 
 //LoadAccount load in memory keystore file and decrypt it for further use
 func AccountLogin(blockchainAccountString, password string) error {

@@ -37,6 +37,7 @@ func SendProof() {
 
 	file, err := os.Open(pathToFile)
 	if err != nil {
+		fmt.Println(err)
 		log.Fatal("Fatal error")
 	}
 	defer file.Close()
@@ -83,7 +84,6 @@ func SendProof() {
 	hashFileRoot := fileTree[len(fileTree)-1][0]
 
 	fsRootHash := fsTreeStruct.Tree[len(fsTreeStruct.Tree)-1][0]
-	fmt.Println("fsRootHash", fsRootHash)
 
 	treeToFsRoot := [][][]byte{}
 

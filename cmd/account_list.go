@@ -11,7 +11,7 @@ import (
 var accountListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "display addresses of all blockchain accounts",
-	Long:  `display addresses of all blockchain accounts`,
+	Long:  "display addresses of all blockchain accounts",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Accounts:")
 		accounts := account.GetAllAccounts()

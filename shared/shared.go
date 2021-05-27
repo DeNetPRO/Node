@@ -17,16 +17,19 @@ import (
 	"github.com/ricochet2200/go-disk-usage/du"
 )
 
+var (
+	WorkDir string
+	AccDir  string
+	ConfDir = "config"
+)
+
 func GetAvailableSpace(storagePath string) int {
 	var KB = uint64(1024)
 	usage := du.NewDiskUsage(storagePath)
 	return int(usage.Free() / (KB * KB * KB))
 }
 
-var (
-	WorkDir string
-	AccDir  string
-)
+// ====================================================================================
 
 // GetHomeDirectory return path to the home directory of dfile
 func CreateIfNotExistAccDirs() {
@@ -74,6 +77,8 @@ func CreateIfNotExistAccDirs() {
 
 }
 
+// ====================================================================================
+
 func ContainsAccount(accounts []string, address string) bool {
 	for _, a := range accounts {
 		if a == address {
@@ -82,6 +87,8 @@ func ContainsAccount(accounts []string, address string) bool {
 	}
 	return false
 }
+
+// ====================================================================================
 
 func ReadFromConsole() (string, error) {
 	fmt.Print("Enter value here: ")
@@ -98,6 +105,8 @@ func ReadFromConsole() (string, error) {
 
 	return input, err
 }
+
+// ====================================================================================
 
 func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 	resByte := [][][]byte{}

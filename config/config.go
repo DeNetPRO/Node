@@ -2,7 +2,6 @@ package config
 
 import (
 	"dfile-secondary-node/account"
-	"dfile-secondary-node/crypto"
 	"dfile-secondary-node/shared"
 	"encoding/json"
 	"fmt"
@@ -18,7 +17,6 @@ type SecondaryNodeConfig struct {
 	Address      string `json:"publicAddress"`
 	PathToConfig string `json:"pathToConfig"`
 	StorageLimit int    `json:"storageLimit"`
-	AccountName  string `json:"accountName"`
 }
 
 func Create(address string) (SecondaryNodeConfig, error) {
@@ -171,8 +169,6 @@ func Create(address string) (SecondaryNodeConfig, error) {
 		config.HTTPSPort = fmt.Sprint(intHttpsPort)
 		continue
 	}
-
-	config.AccountName = crypto.Sha256String([]byte(config.Address + "config"))
 
 	confFile, err := os.Create(filepath.Join(config.PathToConfig, "config.json"))
 	if err != nil {
