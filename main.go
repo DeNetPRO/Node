@@ -18,9 +18,13 @@ package main
 import (
 	"dfile-secondary-node/cmd"
 	"dfile-secondary-node/shared"
+	"log"
 )
 
 func main() {
-	shared.InitPaths()
+	err := shared.InitPaths()
+	if err != nil {
+		log.Fatal("Fatal Error: couldn't locate home directory")
+	}
 	cmd.Execute()
 }

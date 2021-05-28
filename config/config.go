@@ -12,9 +12,10 @@ import (
 )
 
 type SecondaryNodeConfig struct {
-	HTTPPort     string `json:"portHTTP"`
-	Address      string `json:"publicAddress"`
-	StorageLimit int    `json:"storageLimit"`
+	HTTPPort         string `json:"portHTTP"`
+	Address          string `json:"publicAddress"`
+	StorageLimit     int    `json:"storageLimit"`
+	UsedStorageSpace int64  `json:"usedStorageSpace"`
 }
 
 func Create(address string) (SecondaryNodeConfig, error) {

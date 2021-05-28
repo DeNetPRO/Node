@@ -39,16 +39,18 @@ func GetAvailableSpace(storagePath string) int {
 
 // ====================================================================================
 
-func InitPaths() {
+func InitPaths() error {
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal("Fatal error")
+		return err
 	}
 
 	WorkDirPath = filepath.Join(homeDir, WorkDirName)
 
 	AccsDirPath = filepath.Join(WorkDirPath, "accounts")
+
+	return nil
 
 }
 

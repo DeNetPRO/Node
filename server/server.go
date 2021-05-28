@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"dfile-secondary-node/account"
+	"dfile-secondary-node/config"
 	"dfile-secondary-node/shared"
 	"encoding/hex"
 	"encoding/json"
@@ -20,6 +21,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 )
+
+const gbBytes = int64(1024 * 1024 * 1024)
+const oneHunderdMBBytes = int64(1024 * 1024 * 100)
 
 func Start(address, port string) {
 
@@ -88,6 +92,56 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		http.Error(w, "Parse multiform problem", 400)
 		return
+	}
+
+	pathToConfig := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String(), shared.ConfDirName, "config.js")
+
+	confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
+	if err != nil {
+		http.Error(w, "Account config problem", 500)
+		return
+	}
+	defer confFile.Close()
+
+	fileBytes, err := io.ReadAll(confFile)
+	if err != nil {
+		http.Error(w, "Account config problem", 500)
+		return
+	}
+
+	var dFileConf config.SecondaryNodeConfig
+
+	err = json.Unmarshal(fileBytes, &dFileConf)
+	if err != nil {
+		http.Error(w, "Account config problem", 500)
+		return
+	}
+
+	sharedSpaceInBytes := int64(dFileConf.StorageLimit) * gbBytes
+
+	reqFiles := req.MultipartForm.File["files"]
+
+	var filesTotalSize int64
+
+	for _, reqFile := range reqFiles {
+		filesTotalSize += reqFile.Size
+	}
+
+	dFileConf.UsedStorageSpace += filesTotalSize
+
+	if dFileConf.UsedStorageSpace > sharedSpaceInBytes {
+		if err != nil {
+			fmt.Println("Insufficient memory avaliable")
+			http.Error(w, "Insufficient memory avaliable", 400)
+			return
+		}
+	}
+
+	avaliableSpaceLeft := sharedSpaceInBytes - dFileConf.UsedStorageSpace
+
+	if avaliableSpaceLeft < oneHunderdMBBytes {
+		fmt.Println("Shared storage memory is running low", avaliableSpaceLeft/(1024*1024), "MB of space is avaliable")
+		fmt.Println("You may need additional space for mining. Total shared space can be changed in account configuration")
 	}
 
 	fs := req.MultipartForm.Value["fs"]
@@ -201,12 +255,15 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	treeFile.Write(js)
+	_, err = treeFile.Write(js)
+	if err != nil {
+		http.Error(w, "File saving problem", 500)
+		return
+	}
+
 	treeFile.Sync()
 
 	const eightKB = 8192
-
-	reqFiles := req.MultipartForm.File["files"]
 
 	oneMBHashes := []string{}
 
@@ -304,6 +361,32 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 		newFile.Sync()
 	}
+
+	configJson, err := json.Marshal(dFileConf)
+	if err != nil {
+		http.Error(w, "Couldn't update config file", 500)
+		return
+	}
+
+	err = confFile.Truncate(0)
+	if err != nil {
+		http.Error(w, "Couldn't update config file", 500)
+		return
+	}
+
+	_, err = confFile.Seek(0, 0)
+	if err != nil {
+		http.Error(w, "Couldn't update config file", 500)
+		return
+	}
+
+	_, err = confFile.Write(configJson)
+	if err != nil {
+		http.Error(w, "Couldn't update config file", 500)
+		return
+	}
+
+	confFile.Sync()
 
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "OK")
