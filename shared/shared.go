@@ -24,10 +24,11 @@ type StorageInfo struct {
 }
 
 var (
-	WorkDir    string
-	AccDir     string
-	ConfDir    = "config"
-	StorageDir = "storage"
+	WorkDirPath    string
+	AccsDirPath    string
+	WorkDirName    = "dfile"
+	ConfDirName    = "config"
+	StorageDirName = "storage"
 )
 
 func GetAvailableSpace(storagePath string) int {
@@ -38,16 +39,24 @@ func GetAvailableSpace(storagePath string) int {
 
 // ====================================================================================
 
-func CreateIfNotExistAccDirs() {
+func InitPaths() {
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal("Fatal error")
 	}
 
-	workDir := filepath.Join(homeDir, "dfile")
+	WorkDirPath = filepath.Join(homeDir, WorkDirName)
 
-	_, err = os.Stat(workDir)
+	AccsDirPath = filepath.Join(WorkDirPath, "accounts")
+
+}
+
+// ====================================================================================
+
+func CreateIfNotExistAccDirs() {
+
+	_, err := os.Stat(WorkDirPath)
 	if err != nil {
 		errPart := strings.Split(err.Error(), ":")
 
@@ -55,17 +64,13 @@ func CreateIfNotExistAccDirs() {
 			log.Fatal("Fatal error")
 		}
 
-		err = os.MkdirAll(workDir, os.ModePerm|os.ModeDir)
+		err = os.MkdirAll(WorkDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
 			log.Fatal("Fatal error")
 		}
 	}
 
-	WorkDir = workDir
-
-	accDir := filepath.Join(WorkDir, "accounts")
-
-	_, err = os.Stat(accDir)
+	_, err = os.Stat(AccsDirPath)
 	if err != nil {
 		errPart := strings.Split(err.Error(), ":")
 
@@ -73,13 +78,11 @@ func CreateIfNotExistAccDirs() {
 			log.Fatal("Fatal error")
 		}
 
-		err = os.MkdirAll(accDir, os.ModePerm|os.ModeDir)
+		err = os.MkdirAll(AccsDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
 			log.Fatal("Fatal error")
 		}
 	}
-
-	AccDir = accDir
 
 }
 

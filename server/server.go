@@ -155,7 +155,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	addressPath := filepath.Join(shared.AccDir, account.DfileAcc.Address.String(), shared.StorageDir, storageProviderAddress[0])
+	addressPath := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String(), shared.StorageDirName, storageProviderAddress[0])
 
 	stat, err := os.Stat(addressPath)
 	if err != nil {
@@ -316,6 +316,6 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	storageProviderAddress := vars["address"]
 	name := vars["fileName"]
 
-	pathToFile := filepath.Join(shared.AccDir, account.DfileAcc.Address.String(), shared.StorageDir, storageProviderAddress, name)
+	pathToFile := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String(), shared.StorageDirName, storageProviderAddress, name)
 	http.ServeFile(w, req, pathToFile)
 }

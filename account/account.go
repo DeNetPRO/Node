@@ -24,7 +24,7 @@ var DfileAcc DFileAccount
 func List() []string {
 	var blockchainAccounts []string
 
-	ks := keystore.NewKeyStore(shared.AccDir, keystore.StandardScryptN, keystore.StandardScryptP)
+	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccounts := ks.Accounts()
 
 	blockchainAccounts = make([]string, 0, 1)
@@ -39,18 +39,10 @@ func List() []string {
 // CreateAccount creates account and keystore file with encryption with password
 func Create(password string) (string, error) {
 
-	ks := keystore.NewKeyStore(shared.AccDir, keystore.StandardScryptN, keystore.StandardScryptP)
+	shared.CreateIfNotExistAccDirs()
+
+	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccount, err := ks.NewAccount(password)
-	if err != nil {
-		return "", err
-	}
-
-	err = os.MkdirAll(filepath.Join(shared.AccDir, etherAccount.Address.String(), shared.StorageDir), 0700)
-	if err != nil {
-		return "", err
-	}
-
-	err = os.MkdirAll(filepath.Join(shared.AccDir, etherAccount.Address.String(), shared.ConfDir), 0700)
 	if err != nil {
 		return "", err
 	}
@@ -65,6 +57,18 @@ func Create(password string) (string, error) {
 		return "", err
 	}
 
+	addressString := etherAccount.Address.String()
+
+	err = os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.StorageDirName), 0700)
+	if err != nil {
+		return "", err
+	}
+
+	err = os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.ConfDirName), 0700)
+	if err != nil {
+		return "", err
+	}
+
 	encrKey := sha256.Sum256(etherAccount.Address.Bytes())
 	encryptedData, err := shared.EncryptAES(encrKey[:], key.PrivateKey.D.Bytes())
 	if err != nil {
@@ -74,7 +78,7 @@ func Create(password string) (string, error) {
 	DfileAcc.PrivateKey = encryptedData
 	DfileAcc.Address = (etherAccount).Address
 
-	return etherAccount.Address.String(), nil
+	return addressString, nil
 }
 
 //LoadAccount load in memory keystore file and decrypt it for further use
@@ -82,7 +86,7 @@ func Login(blockchainAccountString, password string) error {
 
 	DfileAcc = DFileAccount{}
 
-	ks := keystore.NewKeyStore(shared.AccDir, keystore.StandardScryptN, keystore.StandardScryptP)
+	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccounts := ks.Accounts()
 
 	var etherAccount *accounts.Account
@@ -125,7 +129,7 @@ func Login(blockchainAccountString, password string) error {
 
 func CheckPassword(password string, address string) error {
 
-	ks := keystore.NewKeyStore(shared.AccDir, keystore.StandardScryptN, keystore.StandardScryptP)
+	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	acc, err := utils.MakeAddress(ks, address)
 	if err != nil {
 		return err

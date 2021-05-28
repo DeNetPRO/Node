@@ -29,7 +29,7 @@ func StartMining() {
 
 	for {
 		time.Sleep(time.Second * 1)
-		pathToAccStorage := filepath.Join(shared.AccDir, DfileAcc.Address.String(), shared.StorageDir)
+		pathToAccStorage := filepath.Join(shared.AccsDirPath, DfileAcc.Address.String(), shared.StorageDirName)
 
 		storageAddresses := []string{}
 
@@ -82,9 +82,9 @@ func StartMining() {
 
 func SendProof() {
 
-	pathToAcc := filepath.Join(shared.AccDir, DfileAcc.Address.String())
+	pathToAcc := filepath.Join(shared.AccsDirPath, DfileAcc.Address.String())
 
-	pathToFile := filepath.Join(pathToAcc, shared.StorageDir, "0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0", "338b83e118db0891ede737fc791dab8c0e95761404b9f5376cf2e70094979cb5")
+	pathToFile := filepath.Join(pathToAcc, shared.StorageDirName, "0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0", "338b83e118db0891ede737fc791dab8c0e95761404b9f5376cf2e70094979cb5")
 
 	file, err := os.Open(pathToFile)
 	if err != nil {
@@ -98,7 +98,7 @@ func SendProof() {
 		log.Fatal("Fatal error")
 	}
 
-	pathToFsTree := filepath.Join(pathToAcc, shared.StorageDir, "0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0", "tree.json")
+	pathToFsTree := filepath.Join(pathToAcc, shared.StorageDirName, "0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0", "tree.json")
 
 	fileFsTree, err := os.Open(pathToFsTree)
 	if err != nil {

@@ -21,6 +21,6 @@ import (
 )
 
 func main() {
-	shared.CreateIfNotExistAccDirs()
+	shared.InitPaths()
 	cmd.Execute()
 }

@@ -86,7 +86,7 @@ var accountLoginCmd = &cobra.Command{
 
 		confFiles := []string{}
 
-		pathToConfig := filepath.Join(shared.AccDir, address, shared.ConfDir)
+		pathToConfig := filepath.Join(shared.AccsDirPath, address, shared.ConfDirName)
 
 		err = filepath.WalkDir(pathToConfig,
 			func(path string, info fs.DirEntry, err error) error {
@@ -94,7 +94,7 @@ var accountLoginCmd = &cobra.Command{
 					log.Fatal(accLoginFatalError)
 				}
 
-				if info.Name() != shared.ConfDir {
+				if info.Name() != shared.ConfDirName {
 					confFiles = append(confFiles, info.Name())
 				}
 
@@ -141,7 +141,6 @@ var accountLoginCmd = &cobra.Command{
 		// account.SendProof()
 
 		server.Start(address, dFileConf.HTTPPort)
-		// fmt.Println(dFileConf.HTTPPort)
 
 	},
 }

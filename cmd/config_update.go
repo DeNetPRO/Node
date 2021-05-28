@@ -72,7 +72,7 @@ var configUpdateCmd = &cobra.Command{
 			allMatch = true
 		}
 
-		confFilePath := filepath.Join(shared.AccDir, address, shared.ConfDir)
+		confFilePath := filepath.Join(shared.AccsDirPath, address, shared.ConfDirName)
 
 		confFiles := []string{}
 
@@ -82,7 +82,7 @@ var configUpdateCmd = &cobra.Command{
 					log.Fatal(confUpdateFatalMessage)
 				}
 
-				if info.Name() != shared.ConfDir {
+				if info.Name() != shared.ConfDirName {
 					confFiles = append(confFiles, info.Name())
 				}
 
@@ -98,7 +98,7 @@ var configUpdateCmd = &cobra.Command{
 
 		var dFileConf config.SecondaryNodeConfig
 
-		pathToConfig := filepath.Join(shared.AccDir, address, shared.ConfDir)
+		pathToConfig := filepath.Join(shared.AccsDirPath, address, shared.ConfDirName)
 		confFile, err := os.OpenFile(filepath.Join(pathToConfig, confFiles[0]), os.O_RDWR, 0700)
 		if err != nil {
 			log.Fatal(confUpdateFatalMessage)
