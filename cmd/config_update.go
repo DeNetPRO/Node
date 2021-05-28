@@ -29,7 +29,7 @@ var configUpdateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		fmt.Println("Which account configuration would you like to change?")
-		accounts := account.GetAllAccounts()
+		accounts := account.List()
 		for i, a := range accounts {
 			fmt.Println(i+1, a)
 		}
@@ -46,8 +46,6 @@ var configUpdateCmd = &cobra.Command{
 			}
 
 			address = string(byteAddress)
-
-			accounts := account.GetAllAccounts()
 
 			addressMatches := shared.ContainsAccount(accounts, address)
 

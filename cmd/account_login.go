@@ -21,28 +21,37 @@ import (
 const accLoginFatalError = "Fatal error while account log in"
 
 // accountListCmd represents the list command
-var accountCheckCmd = &cobra.Command{
+var accountLoginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "log in a blockchain accounts",
 	Long:  "log in a blockchain accounts",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		allMatch := false
+		var accounts []string
 
-		fmt.Println("Please enter account address you want to log in:")
+		if len(args) == 1 {
+			accounts = append(accounts, args[0])
+		} else {
+			accounts = account.List()
+		}
+
+		allMatch := false
 
 		var address string
 		var password string
 
 		for !allMatch {
-			byteAddress, err := shared.ReadFromConsole()
-			if err != nil {
-				log.Fatal(accLoginFatalError)
+
+			if len(args) == 1 {
+				address = args[0]
+			} else {
+				byteAddress, err := shared.ReadFromConsole()
+				if err != nil {
+					log.Fatal(accLoginFatalError)
+				}
+
+				address = string(byteAddress)
 			}
-
-			address = string(byteAddress)
-
-			accounts := account.GetAllAccounts()
 
 			addressMatches := shared.ContainsAccount(accounts, address)
 
@@ -69,7 +78,7 @@ var accountCheckCmd = &cobra.Command{
 			allMatch = true
 		}
 
-		err := account.AccountLogin(address, password)
+		err := account.Login(address, password)
 		if err != nil {
 			fmt.Println("Wrong password")
 			return
@@ -138,5 +147,5 @@ var accountCheckCmd = &cobra.Command{
 }
 
 func init() {
-	accountCmd.AddCommand(accountCheckCmd)
+	accountCmd.AddCommand(accountLoginCmd)
 }

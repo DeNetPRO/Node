@@ -25,7 +25,7 @@ func Create(address string) (SecondaryNodeConfig, error) {
 
 	if address == "" {
 		fmt.Println("Please select one of account addresses")
-		accounts := account.GetAllAccounts()
+		accounts := account.List()
 
 		for i, a := range accounts {
 			fmt.Println(i+1, a)

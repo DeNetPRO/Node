@@ -21,7 +21,7 @@ type DFileAccount struct {
 var DfileAcc DFileAccount
 
 //GetAllAccounts go to the folder ~/dfile/accounts and return all accounts addresses in string format
-func GetAllAccounts() []string {
+func List() []string {
 	var blockchainAccounts []string
 
 	ks := keystore.NewKeyStore(shared.AccDir, keystore.StandardScryptN, keystore.StandardScryptP)
@@ -37,7 +37,7 @@ func GetAllAccounts() []string {
 }
 
 // CreateAccount creates account and keystore file with encryption with password
-func AccountCreate(password string) (string, error) {
+func Create(password string) (string, error) {
 
 	ks := keystore.NewKeyStore(shared.AccDir, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccount, err := ks.NewAccount(password)
@@ -78,7 +78,7 @@ func AccountCreate(password string) (string, error) {
 }
 
 //LoadAccount load in memory keystore file and decrypt it for further use
-func AccountLogin(blockchainAccountString, password string) error {
+func Login(blockchainAccountString, password string) error {
 
 	DfileAcc = DFileAccount{}
 

@@ -55,7 +55,7 @@ var accountCreateCmd = &cobra.Command{
 			}
 
 		}
-		accountStr, err := account.AccountCreate(password1)
+		accountStr, err := account.Create(password1)
 		if err != nil {
 			log.Fatal(accCreateFatalMessage)
 		}
