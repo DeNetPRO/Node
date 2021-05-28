@@ -94,7 +94,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pathToConfig := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String(), shared.ConfDirName, "config.js")
+	pathToConfig := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String(), shared.ConfDirName, "config.json")
 
 	confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
 	if err != nil {
