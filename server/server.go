@@ -243,7 +243,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	}
 	defer treeFile.Close()
 
-	tree := shared.StorageInfo{
+	tree := account.StorageInfo{
 		Nonce:        nonce[0],
 		SignedFsRoot: signedFsRootHash[0],
 		Tree:         fsTree,

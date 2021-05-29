@@ -23,6 +23,12 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
+type StorageInfo struct {
+	Nonce        string     `json:"nonce"`
+	SignedFsRoot string     `json:"signedFsRoot"`
+	Tree         [][][]byte `json:"tree"`
+}
+
 const eightKB = 8192
 
 func StartMining() {
@@ -111,7 +117,7 @@ func SendProof() {
 		log.Fatal("Fatal error")
 	}
 
-	var storageFsStruct shared.StorageInfo
+	var storageFsStruct StorageInfo
 
 	err = json.Unmarshal(treeBytes, &storageFsStruct)
 	if err != nil {
