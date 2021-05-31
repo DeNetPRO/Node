@@ -3,6 +3,7 @@ package cmd
 import (
 	"dfile-secondary-node/account"
 	"dfile-secondary-node/config"
+	"dfile-secondary-node/mining"
 	"dfile-secondary-node/server"
 	"dfile-secondary-node/shared"
 	"encoding/json"
@@ -138,7 +139,7 @@ var accountLoginCmd = &cobra.Command{
 		fmt.Println("Success")
 
 		// account.StartMining()
-		// account.SendProof()
+		mining.SendProof()
 
 		server.Start(address, dFileConf.HTTPPort)
 

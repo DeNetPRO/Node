@@ -91,7 +91,7 @@ func SendProof() {
 
 	pathToAcc := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String())
 
-	pathToFile := filepath.Join(pathToAcc, shared.StorageDirName, "0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0", "338b83e118db0891ede737fc791dab8c0e95761404b9f5376cf2e70094979cb5")
+	pathToFile := filepath.Join(pathToAcc, shared.StorageDirName, "0x537F6af3A07e58986Bb5041c304e9Eb2283396CD", "123d6ef8c1bb2cb4cd9f59f34779eed7d02e359778547ef828aba0a46ab4d54d")
 
 	file, err := os.Open(pathToFile)
 	if err != nil {
@@ -105,7 +105,7 @@ func SendProof() {
 		log.Fatal("Fatal error")
 	}
 
-	pathToFsTree := filepath.Join(pathToAcc, shared.StorageDirName, "0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0", "tree.json")
+	pathToFsTree := filepath.Join(pathToAcc, shared.StorageDirName, "0x537F6af3A07e58986Bb5041c304e9Eb2283396CD", "tree.json")
 
 	fileFsTree, err := os.Open(pathToFsTree)
 	if err != nil {
