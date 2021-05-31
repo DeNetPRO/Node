@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"dfile-secondary-node/account"
 	"dfile-secondary-node/config"
+	"dfile-secondary-node/mining"
 	"dfile-secondary-node/shared"
 	"encoding/hex"
 	"encoding/json"
@@ -243,7 +244,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	}
 	defer treeFile.Close()
 
-	tree := account.StorageInfo{
+	tree := mining.StorageInfo{
 		Nonce:        nonce[0],
 		SignedFsRoot: signedFsRootHash[0],
 		Tree:         fsTree,

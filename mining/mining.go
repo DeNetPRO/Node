@@ -1,10 +1,11 @@
-package account
+package mining
 
 import (
 	"bytes"
 	"context"
 	"crypto/sha256"
 	POFstorage "dfile-secondary-node/POF_storage"
+	"dfile-secondary-node/account"
 	"dfile-secondary-node/shared"
 	"io/fs"
 	"regexp"
@@ -35,7 +36,7 @@ func StartMining() {
 
 	for {
 		time.Sleep(time.Second * 1)
-		pathToAccStorage := filepath.Join(shared.AccsDirPath, DfileAcc.Address.String(), shared.StorageDirName)
+		pathToAccStorage := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String(), shared.StorageDirName)
 
 		storageAddresses := []string{}
 
@@ -88,7 +89,7 @@ func StartMining() {
 
 func SendProof() {
 
-	pathToAcc := filepath.Join(shared.AccsDirPath, DfileAcc.Address.String())
+	pathToAcc := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String())
 
 	pathToFile := filepath.Join(pathToAcc, shared.StorageDirName, "0x9c20A547Ea5347e8a9AaC1A8f3e81D9C6600E4E0", "338b83e118db0891ede737fc791dab8c0e95761404b9f5376cf2e70094979cb5")
 
@@ -173,7 +174,7 @@ func SendProof() {
 		log.Fatal(err)
 	}
 
-	dif, err := instance.SendProof(&bind.TransactOpts{}, DfileAcc.Address, uint32(blockNum.Size()), proof[len(proof)-1], 1621758724, signedFSRootHash, bytesToProve, proof)
+	dif, err := instance.SendProof(&bind.TransactOpts{}, account.DfileAcc.Address, uint32(blockNum.Size()), proof[len(proof)-1], 1621758724, signedFSRootHash, bytesToProve, proof)
 	if err != nil {
 		log.Fatal(err)
 	}
