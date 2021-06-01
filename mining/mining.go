@@ -5,12 +5,8 @@ import (
 	"context"
 	"crypto/sha256"
 	POFstorage "dfile-secondary-node/POF_storage"
-	"dfile-secondary-node/account"
 	"dfile-secondary-node/shared"
-	"io/fs"
 	"math/big"
-	"regexp"
-	"time"
 
 	"encoding/hex"
 	"encoding/json"
@@ -35,77 +31,82 @@ type StorageInfo struct {
 
 const eightKB = 8192
 
-func StartMining() {
+// func StartMining() {
 
-	for {
-		time.Sleep(time.Second * 1)
-		pathToAccStorage := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String(), shared.StorageDirName)
+// 	for {
+// 		time.Sleep(time.Second * 1)
+// 		pathToAccStorage := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String(), shared.StorageDirName)
 
-		storageAddresses := []string{}
+// 		storageAddresses := []string{}
 
-		re := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
+// 		re := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 
-		err := filepath.WalkDir(pathToAccStorage,
-			func(path string, info fs.DirEntry, err error) error {
-				if err != nil {
-					log.Fatal("Fatal error")
-				}
+// 		err := filepath.WalkDir(pathToAccStorage,
+// 			func(path string, info fs.DirEntry, err error) error {
+// 				if err != nil {
+// 					log.Fatal("Fatal error")
+// 				}
 
-				if re.MatchString(info.Name()) {
-					storageAddresses = append(storageAddresses, info.Name())
-				}
+// 				if re.MatchString(info.Name()) {
+// 					storageAddresses = append(storageAddresses, info.Name())
+// 				}
 
-				return nil
-			})
-		if err != nil {
-			log.Fatal("Fatal error")
-		}
+// 				return nil
+// 			})
+// 		if err != nil {
+// 			log.Fatal("Fatal error")
+// 		}
 
-		if len(storageAddresses) == 0 {
-			continue
-		}
+// 		if len(storageAddresses) == 0 {
+// 			continue
+// 		}
 
-		client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
-		if err != nil {
-			log.Fatal(err)
-		}
+// 		client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
 
-		tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
-		instance, err := POFstorage.NewStore(tokenAddress, client)
-		if err != nil {
-			log.Fatal(err)
-		}
+// 		tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
+// 		instance, err := POFstorage.NewStore(tokenAddress, client)
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
 
-		for _, v := range storageAddresses {
-			commonAddr := common.HexToAddress(v)
-			address, rew, rew1, err := instance.GetUserRewardInfo(&bind.CallOpts{}, commonAddr)
-			if err != nil {
-				log.Fatal(err)
-			}
+// 		for _, v := range storageAddresses {
+// 			commonAddr := common.HexToAddress(v)
+// 			address, rew, rew1, err := instance.GetUserRewardInfo(&bind.CallOpts{}, commonAddr)
+// 			if err != nil {
+// 				log.Fatal(err)
+// 			}
 
-			fmt.Println(address, rew, rew1)
-		}
+// 			fmt.Println(address, rew, rew1)
+// 		}
 
-	}
+// 	}
 
-}
+// }
 
 func SendProof(password string) {
 
-	pathToAcc := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String())
+	nodeAddr, err := shared.DecryptNodeAddr()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pathToAcc := filepath.Join(shared.AccsDirPath, nodeAddr.String())
 
 	pathToFile := filepath.Join(pathToAcc, shared.StorageDirName, "0x537F6af3A07e58986Bb5041c304e9Eb2283396CD", "123d6ef8c1bb2cb4cd9f59f34779eed7d02e359778547ef828aba0a46ab4d54d")
 
 	file, err := os.Open(pathToFile)
 	if err != nil {
 		fmt.Println(err)
-		log.Fatal("Fatal error")
+		log.Fatal(err)
 	}
 	defer file.Close()
 
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		log.Fatal("Fatal error")
+		log.Fatal(err)
 	}
 
 	pathToFsTree := filepath.Join(pathToAcc, shared.StorageDirName, "0x537F6af3A07e58986Bb5041c304e9Eb2283396CD", "tree.json")
@@ -183,7 +184,7 @@ func SendProof(password string) {
 	}
 
 	opts := &bind.TransactOpts{
-		From:  account.DfileAcc.Address,
+		From:  nodeAddr,
 		Nonce: big.NewInt(0),
 		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
 			ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)

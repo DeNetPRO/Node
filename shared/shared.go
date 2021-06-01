@@ -2,6 +2,7 @@ package shared
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -10,16 +11,23 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ricochet2200/go-disk-usage/du"
 )
+
+type DFileAccount struct {
+	Address []byte
+}
 
 var (
 	WorkDirPath    string
 	AccsDirPath    string
+	DfileAcc       DFileAccount
 	WorkDirName    = "dfile"
 	ConfDirName    = "config"
 	StorageDirName = "storage"
@@ -207,3 +215,40 @@ func DecryptAES(key, data []byte) ([]byte, error) {
 }
 
 // ====================================================================================
+
+func GetDeviceMacAddr() (string, error) {
+	var addr string
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+
+	for _, i := range interfaces {
+		if !bytes.Equal(i.HardwareAddr, nil) {
+			addr = i.HardwareAddr.String()
+			break
+		}
+	}
+
+	return addr, nil
+}
+
+// ====================================================================================
+
+func DecryptNodeAddr() (common.Address, error) {
+	var nodeAddr common.Address
+
+	macAddr, err := GetDeviceMacAddr()
+	if err != nil {
+		return nodeAddr, err
+	}
+
+	encrKey := sha256.Sum256([]byte(macAddr))
+
+	accAddr, err := DecryptAES(encrKey[:], DfileAcc.Address)
+	if err != nil {
+		return nodeAddr, err
+	}
+
+	return common.BytesToAddress(accAddr), nil
+}

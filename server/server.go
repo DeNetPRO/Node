@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"crypto/sha256"
-	"dfile-secondary-node/account"
 	"dfile-secondary-node/config"
 	"dfile-secondary-node/mining"
 	"dfile-secondary-node/shared"
@@ -95,7 +94,13 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pathToConfig := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String(), shared.ConfDirName, "config.json")
+	nodeAddr, err := shared.DecryptNodeAddr()
+	if err != nil {
+		http.Error(w, "Couldn't parse address", 500)
+		return
+	}
+
+	pathToConfig := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.ConfDirName, "config.json")
 
 	confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
 	if err != nil {
@@ -210,7 +215,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	addressPath := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String(), shared.StorageDirName, storageProviderAddress[0])
+	addressPath := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, storageProviderAddress[0])
 
 	stat, err := os.Stat(addressPath)
 	if err != nil {
@@ -396,10 +401,17 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 // ====================================================================================
 
 func ServeFiles(w http.ResponseWriter, req *http.Request) {
+
+	nodeAddr, err := shared.DecryptNodeAddr()
+	if err != nil {
+		http.Error(w, "Couldn't parse address", 500)
+		return
+	}
+
 	vars := mux.Vars(req)
 	storageProviderAddress := vars["address"]
 	name := vars["fileName"]
 
-	pathToFile := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String(), shared.StorageDirName, storageProviderAddress, name)
+	pathToFile := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, storageProviderAddress, name)
 	http.ServeFile(w, req, pathToFile)
 }

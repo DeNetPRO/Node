@@ -10,15 +10,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/cmd/utils"
-	commonEtherium "github.com/ethereum/go-ethereum/common"
 )
-
-type DFileAccount struct {
-	Address    commonEtherium.Address
-	PrivateKey []byte
-}
-
-var DfileAcc DFileAccount
 
 //GetAllAccounts go to the folder ~/dfile/accounts and return all accounts addresses in string format
 func List() []string {
@@ -69,22 +61,24 @@ func Create(password string) (string, error) {
 		return "", err
 	}
 
-	encrKey := sha256.Sum256(etherAccount.Address.Bytes())
-	encryptedData, err := shared.EncryptAES(encrKey[:], key.PrivateKey.D.Bytes())
+	macAddr, err := shared.GetDeviceMacAddr()
 	if err != nil {
 		return "", err
 	}
 
-	DfileAcc.PrivateKey = encryptedData
-	DfileAcc.Address = (etherAccount).Address
+	encrForAddr := sha256.Sum256([]byte(macAddr))
+	encryptedAddr, err := shared.EncryptAES(encrForAddr[:], key.Address.Bytes())
+	if err != nil {
+		return "", err
+	}
+
+	shared.DfileAcc.Address = encryptedAddr
 
 	return addressString, nil
 }
 
 //LoadAccount load in memory keystore file and decrypt it for further use
 func Login(blockchainAccountString, password string) error {
-
-	DfileAcc = DFileAccount{}
 
 	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccounts := ks.Accounts()
@@ -115,14 +109,18 @@ func Login(blockchainAccountString, password string) error {
 		return err
 	}
 
-	encrKey := sha256.Sum256(etherAccount.Address.Bytes())
-	encryptedData, err := shared.EncryptAES(encrKey[:], key.PrivateKey.D.Bytes())
+	macAddr, err := shared.GetDeviceMacAddr()
 	if err != nil {
 		return err
 	}
 
-	DfileAcc.PrivateKey = encryptedData
-	DfileAcc.Address = (*etherAccount).Address
+	encrForAddr := sha256.Sum256([]byte(macAddr))
+	encryptedAddr, err := shared.EncryptAES(encrForAddr[:], key.Address.Bytes())
+	if err != nil {
+		return err
+	}
+
+	shared.DfileAcc.Address = encryptedAddr
 
 	return nil
 }
