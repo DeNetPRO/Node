@@ -20,14 +20,10 @@ import (
 	"github.com/ricochet2200/go-disk-usage/du"
 )
 
-type DFileAccount struct {
-	Address []byte
-}
-
 var (
 	WorkDirPath    string
 	AccsDirPath    string
-	DfileAcc       DFileAccount
+	NodeAddr       []byte
 	WorkDirName    = "dfile"
 	ConfDirName    = "config"
 	StorageDirName = "storage"
@@ -235,6 +231,26 @@ func GetDeviceMacAddr() (string, error) {
 
 // ====================================================================================
 
+func EncryptNodeAddr(addr common.Address) ([]byte, error) {
+	var nodeAddr []byte
+
+	macAddr, err := GetDeviceMacAddr()
+	if err != nil {
+		return nodeAddr, err
+	}
+
+	encrKey := sha256.Sum256([]byte(macAddr))
+
+	encryptedAddr, err := EncryptAES(encrKey[:], addr.Bytes())
+	if err != nil {
+		return nodeAddr, err
+	}
+
+	return encryptedAddr, nil
+}
+
+// ====================================================================================
+
 func DecryptNodeAddr() (common.Address, error) {
 	var nodeAddr common.Address
 
@@ -245,10 +261,12 @@ func DecryptNodeAddr() (common.Address, error) {
 
 	encrKey := sha256.Sum256([]byte(macAddr))
 
-	accAddr, err := DecryptAES(encrKey[:], DfileAcc.Address)
+	accAddr, err := DecryptAES(encrKey[:], NodeAddr)
 	if err != nil {
 		return nodeAddr, err
 	}
 
 	return common.BytesToAddress(accAddr), nil
 }
+
+// ====================================================================================

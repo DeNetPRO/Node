@@ -1,7 +1,6 @@
 package account
 
 import (
-	"crypto/sha256"
 	"dfile-secondary-node/shared"
 	"errors"
 	"os"
@@ -61,18 +60,12 @@ func Create(password string) (string, error) {
 		return "", err
 	}
 
-	macAddr, err := shared.GetDeviceMacAddr()
+	encryptedAddr, err := shared.EncryptNodeAddr(key.Address)
 	if err != nil {
 		return "", err
 	}
 
-	encrForAddr := sha256.Sum256([]byte(macAddr))
-	encryptedAddr, err := shared.EncryptAES(encrForAddr[:], key.Address.Bytes())
-	if err != nil {
-		return "", err
-	}
-
-	shared.DfileAcc.Address = encryptedAddr
+	shared.NodeAddr = encryptedAddr
 
 	return addressString, nil
 }
@@ -109,18 +102,12 @@ func Login(blockchainAccountString, password string) error {
 		return err
 	}
 
-	macAddr, err := shared.GetDeviceMacAddr()
+	encryptedAddr, err := shared.EncryptNodeAddr(key.Address)
 	if err != nil {
 		return err
 	}
 
-	encrForAddr := sha256.Sum256([]byte(macAddr))
-	encryptedAddr, err := shared.EncryptAES(encrForAddr[:], key.Address.Bytes())
-	if err != nil {
-		return err
-	}
-
-	shared.DfileAcc.Address = encryptedAddr
+	shared.NodeAddr = encryptedAddr
 
 	return nil
 }
