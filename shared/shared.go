@@ -167,7 +167,7 @@ func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 
 // ====================================================================================
 
-func EncryptAES(key, data []byte) ([]byte, error) {
+func encryptAES(key, data []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -192,7 +192,7 @@ func EncryptAES(key, data []byte) ([]byte, error) {
 
 // ====================================================================================
 
-func DecryptAES(key, data []byte) ([]byte, error) {
+func decryptAES(key, data []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -241,7 +241,7 @@ func EncryptNodeAddr(addr common.Address) ([]byte, error) {
 
 	encrKey := sha256.Sum256([]byte(macAddr))
 
-	encryptedAddr, err := EncryptAES(encrKey[:], addr.Bytes())
+	encryptedAddr, err := encryptAES(encrKey[:], addr.Bytes())
 	if err != nil {
 		return nodeAddr, err
 	}
@@ -261,7 +261,7 @@ func DecryptNodeAddr() (common.Address, error) {
 
 	encrKey := sha256.Sum256([]byte(macAddr))
 
-	accAddr, err := DecryptAES(encrKey[:], NodeAddr)
+	accAddr, err := decryptAES(encrKey[:], NodeAddr)
 	if err != nil {
 		return nodeAddr, err
 	}
