@@ -8,6 +8,7 @@ import (
 	"dfile-secondary-node/account"
 	"dfile-secondary-node/shared"
 	"io/fs"
+	"math/big"
 	"regexp"
 	"time"
 
@@ -20,7 +21,9 @@ import (
 	"path/filepath"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
@@ -164,7 +167,7 @@ func SendProof() {
 		log.Fatal(err)
 	}
 
-	blockNum, err := client.HeaderByNumber(context.Background(), nil)
+	blockNum, err := client.BlockNumber(context.Background())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -174,7 +177,27 @@ func SendProof() {
 		log.Fatal(err)
 	}
 
-	dif, err := instance.SendProof(&bind.TransactOpts{}, account.DfileAcc.Address, uint32(blockNum.Size()), proof[len(proof)-1], 1621758724, signedFSRootHash, bytesToProve, proof)
+	opts := &bind.TransactOpts{
+		From:     account.DfileAcc.Address,
+		GasLimit: 1000000,
+		Nonce:    big.NewInt(0),
+		Value:    big.NewInt(0),
+		GasPrice: big.NewInt(5),
+		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
+			ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+
+			acs := ks.Accounts()
+			for _, ac := range acs {
+				if ac.Address == a {
+					ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+					return ks.SignTxWithPassphrase(ac, "kopte32", t, big.NewInt(3))
+				}
+			}
+			return t, nil
+		},
+	}
+
+	dif, err := instance.SendProof(opts, common.HexToAddress("0x537F6af3A07e58986Bb5041c304e9Eb2283396CD"), uint32(blockNum), proof[len(proof)-1], 1621758724, signedFSRootHash, bytesToProve, proof)
 	if err != nil {
 		log.Fatal(err)
 	}
