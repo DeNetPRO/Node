@@ -90,7 +90,7 @@ func StartMining() {
 
 }
 
-func SendProof() {
+func SendProof(password string) {
 
 	pathToAcc := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String())
 
@@ -191,7 +191,7 @@ func SendProof() {
 			for _, ac := range acs {
 				if ac.Address == a {
 					ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
-					ks.TimedUnlock(ac, "kopte32", 1)
+					ks.TimedUnlock(ac, password, 1)
 					return ks.SignTx(ac, t, chnID)
 				}
 			}
@@ -208,6 +208,8 @@ func SendProof() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	password = ""
 
 	fmt.Println(dif)
 

@@ -4,7 +4,6 @@ import (
 	"dfile-secondary-node/account"
 	"dfile-secondary-node/config"
 	"dfile-secondary-node/mining"
-	"dfile-secondary-node/server"
 	"dfile-secondary-node/shared"
 	"encoding/json"
 	"fmt"
@@ -139,9 +138,10 @@ var accountLoginCmd = &cobra.Command{
 		fmt.Println("Success")
 
 		// account.StartMining()
-		mining.SendProof()
+		mining.SendProof(password)
+		password = ""
 
-		server.Start(address, dFileConf.HTTPPort)
+		// server.Start(address, dFileConf.HTTPPort)
 
 	},
 }
