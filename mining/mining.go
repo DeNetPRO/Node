@@ -177,6 +177,11 @@ func SendProof() {
 		log.Fatal(err)
 	}
 
+	chnID, err := client.ChainID(context.Background())
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	opts := &bind.TransactOpts{
 		From:  account.DfileAcc.Address,
 		Nonce: big.NewInt(0),
@@ -186,7 +191,8 @@ func SendProof() {
 			for _, ac := range acs {
 				if ac.Address == a {
 					ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
-					return ks.SignTxWithPassphrase(ac, "kopte32", t, big.NewInt(3))
+					ks.TimedUnlock(ac, "kopte32", 1)
+					return ks.SignTx(ac, t, chnID)
 				}
 			}
 			return t, nil
