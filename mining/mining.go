@@ -178,14 +178,10 @@ func SendProof() {
 	}
 
 	opts := &bind.TransactOpts{
-		From:     account.DfileAcc.Address,
-		GasLimit: 1000000,
-		Nonce:    big.NewInt(0),
-		Value:    big.NewInt(0),
-		GasPrice: big.NewInt(5),
+		From:  account.DfileAcc.Address,
+		Nonce: big.NewInt(0),
 		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
 			ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
-
 			acs := ks.Accounts()
 			for _, ac := range acs {
 				if ac.Address == a {
@@ -195,6 +191,11 @@ func SendProof() {
 			}
 			return t, nil
 		},
+		Value:    big.NewInt(0),
+		GasPrice: big.NewInt(5),
+		GasLimit: 1000000,
+		Context:  nil,
+		NoSend:   false,
 	}
 
 	dif, err := instance.SendProof(opts, common.HexToAddress("0x537F6af3A07e58986Bb5041c304e9Eb2283396CD"), uint32(blockNum), proof[len(proof)-1], 1621758724, signedFSRootHash, bytesToProve, proof)
