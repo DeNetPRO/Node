@@ -189,11 +189,9 @@ func SendProof(password string) {
 		log.Fatal(err)
 	}
 
-	fmt.Println(transactNonce)
-
 	opts := &bind.TransactOpts{
 		From:  nodeAddr,
-		Nonce: big.NewInt(4),
+		Nonce: big.NewInt(int64(transactNonce)),
 		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
 			ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 			acs := ks.Accounts()
@@ -210,7 +208,7 @@ func SendProof(password string) {
 		GasPrice: big.NewInt(5000000000),
 		GasLimit: 1000000,
 		Context:  nil,
-		NoSend:   false,
+		NoSend:   true,
 	}
 
 	intNonce, err := strconv.Atoi(storageFsStruct.Nonce)
