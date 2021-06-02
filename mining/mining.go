@@ -208,7 +208,7 @@ func SendProof(password string) {
 		GasPrice: big.NewInt(5000000000),
 		GasLimit: 1000000,
 		Context:  nil,
-		NoSend:   true,
+		NoSend:   false,
 	}
 
 	intNonce, err := strconv.Atoi(storageFsStruct.Nonce)
