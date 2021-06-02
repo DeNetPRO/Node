@@ -184,9 +184,16 @@ func SendProof(password string) {
 		log.Fatal(err)
 	}
 
+	transactNonce, err := client.NonceAt(context.Background(), nodeAddr, big.NewInt(int64(blockNum)))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(transactNonce)
+
 	opts := &bind.TransactOpts{
 		From:  nodeAddr,
-		Nonce: big.NewInt(3),
+		Nonce: big.NewInt(4),
 		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
 			ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 			acs := ks.Accounts()
