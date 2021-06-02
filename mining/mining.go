@@ -185,7 +185,7 @@ func SendProof(password string) {
 
 	opts := &bind.TransactOpts{
 		From:  nodeAddr,
-		Nonce: big.NewInt(0),
+		Nonce: big.NewInt(2),
 		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
 			ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 			acs := ks.Accounts()
@@ -199,13 +199,13 @@ func SendProof(password string) {
 			return t, nil
 		},
 		Value:    big.NewInt(0),
-		GasPrice: big.NewInt(5),
+		GasPrice: big.NewInt(5000000000),
 		GasLimit: 1000000,
 		Context:  nil,
 		NoSend:   false,
 	}
 
-	dif, err := instance.SendProof(opts, common.HexToAddress("0x537F6af3A07e58986Bb5041c304e9Eb2283396CD"), uint32(blockNum), proof[len(proof)-1], 1621758724, signedFSRootHash, bytesToProve, proof)
+	dif, err := instance.SendProof(opts, common.HexToAddress("0x537F6af3A07e58986Bb5041c304e9Eb2283396CD"), uint32(blockNum), proof[len(proof)-1], 1621758724, signedFSRootHash[:64], bytesToProve, proof)
 	if err != nil {
 		log.Fatal(err)
 	}
