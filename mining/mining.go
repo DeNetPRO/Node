@@ -7,6 +7,7 @@ import (
 	POFstorage "dfile-secondary-node/POF_storage"
 	"dfile-secondary-node/shared"
 	"math/big"
+	"strconv"
 
 	"encoding/hex"
 	"encoding/json"
@@ -185,7 +186,7 @@ func SendProof(password string) {
 
 	opts := &bind.TransactOpts{
 		From:  nodeAddr,
-		Nonce: big.NewInt(2),
+		Nonce: big.NewInt(3),
 		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
 			ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 			acs := ks.Accounts()
@@ -205,7 +206,12 @@ func SendProof(password string) {
 		NoSend:   false,
 	}
 
-	dif, err := instance.SendProof(opts, common.HexToAddress("0x537F6af3A07e58986Bb5041c304e9Eb2283396CD"), uint32(blockNum), proof[len(proof)-1], 1621758724, signedFSRootHash[:64], bytesToProve, proof)
+	intNonce, err := strconv.Atoi(storageFsStruct.Nonce)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	dif, err := instance.SendProof(opts, common.HexToAddress("0x537F6af3A07e58986Bb5041c304e9Eb2283396CD"), uint32(blockNum), proof[len(proof)-1], uint64(intNonce), signedFSRootHash[:64], bytesToProve, proof)
 	if err != nil {
 		log.Fatal(err)
 	}
