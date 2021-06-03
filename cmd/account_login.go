@@ -137,8 +137,8 @@ var accountLoginCmd = &cobra.Command{
 
 		fmt.Println("Success")
 
-		// account.StartMining()
-		mining.SendProof(password)
+		mining.Start()
+		// mining.SendProof(password)
 		password = ""
 
 		// server.Start(address, dFileConf.HTTPPort)

@@ -6,8 +6,11 @@ import (
 	"crypto/sha256"
 	POFstorage "dfile-secondary-node/POF_storage"
 	"dfile-secondary-node/shared"
+	"io/fs"
 	"math/big"
+	"regexp"
 	"strconv"
+	"time"
 
 	"encoding/hex"
 	"encoding/json"
@@ -32,60 +35,129 @@ type StorageInfo struct {
 
 const eightKB = 8192
 
-// func StartMining() {
+func Start() {
 
-// 	for {
-// 		time.Sleep(time.Second * 1)
-// 		pathToAccStorage := filepath.Join(shared.AccsDirPath, account.DfileAcc.Address.String(), shared.StorageDirName)
+	nodeAddr, err := shared.DecryptNodeAddr()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 		storageAddresses := []string{}
+	pathToAccStorage := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName)
 
-// 		re := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
+	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
+	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
 
-// 		err := filepath.WalkDir(pathToAccStorage,
-// 			func(path string, info fs.DirEntry, err error) error {
-// 				if err != nil {
-// 					log.Fatal("Fatal error")
-// 				}
+	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 				if re.MatchString(info.Name()) {
-// 					storageAddresses = append(storageAddresses, info.Name())
-// 				}
+	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
+	instance, err := POFstorage.NewStore(tokenAddress, client)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 				return nil
-// 			})
-// 		if err != nil {
-// 			log.Fatal("Fatal error")
-// 		}
+	baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 		if len(storageAddresses) == 0 {
-// 			continue
-// 		}
+	for {
+		storageProviderAddresses := []string{}
 
-// 		client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
+		err := filepath.WalkDir(pathToAccStorage,
+			func(path string, info fs.DirEntry, err error) error {
+				if err != nil {
+					log.Fatal("Fatal error")
+				}
 
-// 		tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
-// 		instance, err := POFstorage.NewStore(tokenAddress, client)
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
+				if regAddr.MatchString(info.Name()) {
+					storageProviderAddresses = append(storageProviderAddresses, info.Name())
+				}
 
-// 		for _, v := range storageAddresses {
-// 			commonAddr := common.HexToAddress(v)
-// 			address, rew, rew1, err := instance.GetUserRewardInfo(&bind.CallOpts{}, commonAddr)
-// 			if err != nil {
-// 				log.Fatal(err)
-// 			}
+				return nil
+			})
+		if err != nil {
+			log.Fatal("Fatal error")
+		}
 
-// 			fmt.Println(address, rew, rew1)
-// 		}
+		if len(storageProviderAddresses) == 0 {
+			continue
+		}
 
-// 	}
+		fmt.Println(baseDfficulty)
 
-// }
+		for _, address := range storageProviderAddresses {
+			storageProviderAddr := common.HexToAddress(address)
+			paymentToken, rew, rew1, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			fmt.Println(paymentToken, rew, rew1)
+
+			fileNames := []string{}
+
+			pathToStorProviderFiles := filepath.Join(pathToAccStorage, storageProviderAddr.String())
+
+			err = filepath.WalkDir(pathToStorProviderFiles,
+				func(path string, info fs.DirEntry, err error) error {
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					if regFileName.MatchString(info.Name()) && len(info.Name()) == 64 {
+						fileNames = append(fileNames, info.Name())
+
+					}
+
+					return nil
+				})
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			for _, fileName := range fileNames {
+				storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				storedFileBytes, err := io.ReadAll(storedFile)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				storedFile.Close()
+
+				blockNum, err := client.BlockNumber(context.Background()) // TODO change contexts
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum))
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				fileBytesWithBlockHash := append(storedFileBytes, blockHash[:]...)
+
+				h := sha256.Sum256(fileBytesWithBlockHash)
+
+				fmt.Println(h)
+
+				fmt.Println(fileName, len(storedFileBytes))
+
+			}
+
+		}
+
+		time.Sleep(time.Second * 10)
+
+	}
+
+}
 
 func SendProof(password string) {
 
