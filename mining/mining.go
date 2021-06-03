@@ -96,11 +96,10 @@ func SendProof(password string) {
 
 	pathToAcc := filepath.Join(shared.AccsDirPath, nodeAddr.String())
 
-	pathToFile := filepath.Join(pathToAcc, shared.StorageDirName, "0x537F6af3A07e58986Bb5041c304e9Eb2283396CD", "123d6ef8c1bb2cb4cd9f59f34779eed7d02e359778547ef828aba0a46ab4d54d")
+	pathToFile := filepath.Join(pathToAcc, shared.StorageDirName, "0x537F6af3A07e58986Bb5041c304e9Eb2283396CD", "1ab3a0828b5e6b50ac9a3e76b1b33f49587ecf8ea5a58e2fde0429cc11f02342")
 
 	file, err := os.Open(pathToFile)
 	if err != nil {
-		fmt.Println(err)
 		log.Fatal(err)
 	}
 	defer file.Close()
@@ -169,7 +168,7 @@ func SendProof(password string) {
 		log.Fatal(err)
 	}
 
-	blockNum, err := client.BlockNumber(context.Background())
+	blockNum, err := client.BlockNumber(context.Background()) // TODO change contexts
 	if err != nil {
 		log.Fatal(err)
 	}
