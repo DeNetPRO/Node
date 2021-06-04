@@ -23,6 +23,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -38,11 +39,6 @@ const eightKB = 8192
 func Start() {
 
 	nodeAddr, err := shared.DecryptNodeAddr()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	nodeAddrBytes, err := hex.DecodeString(nodeAddr.String())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -91,16 +87,14 @@ func Start() {
 			continue
 		}
 
-		fmt.Println(baseDfficulty)
-
 		for _, address := range storageProviderAddresses {
 			storageProviderAddr := common.HexToAddress(address)
-			paymentToken, rew, rew1, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr)
+			paymentToken, rew, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr)
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			fmt.Println(paymentToken, rew, rew1)
+			fmt.Println(paymentToken, rew, userDifficulty)
 
 			fileNames := []string{}
 
@@ -146,12 +140,24 @@ func Start() {
 					log.Fatal(err)
 				}
 
-				fileBytesAddrBlockHash := append(storedFileBytes, nodeAddrBytes...)
+				fileBytesAddrBlockHash := append(storedFileBytes, nodeAddr.Bytes()...)
 				fileBytesAddrBlockHash = append(fileBytesAddrBlockHash, blockHash[:]...)
 
 				hashedFileAddrBlock := sha256.Sum256(fileBytesAddrBlockHash)
 
-				fmt.Println(hashedFileAddrBlock)
+				hexFileAddrBlock := "0x" + hex.EncodeToString(hashedFileAddrBlock[:])
+
+				decodedBigInt, err := hexutil.DecodeBig(hexFileAddrBlock)
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				remainder := decodedBigInt.Mod(decodedBigInt, baseDfficulty)
+
+				fmt.Println("x", remainder)
+				fmt.Println("y", userDifficulty)
+
+				fmt.Println(remainder.CmpAbs(userDifficulty))
 
 			}
 
