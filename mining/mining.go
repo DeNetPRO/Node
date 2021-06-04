@@ -64,14 +64,18 @@ func Start() {
 		log.Fatal(err)
 	}
 
+	ctx, _ := context.WithTimeout(context.Background(), 2*time.Minute)
+
 	for {
 
-		blockNum, err := client.BlockNumber(context.Background()) // TODO change contexts
+		blockNum, err := client.BlockNumber(ctx)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		nodeBalance, err := client.BalanceAt(context.Background(), nodeAddr, big.NewInt(int64(blockNum)))
+		fmt.Println(blockNum, "!!!!!")
+
+		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -143,7 +147,7 @@ func Start() {
 
 				storedFile.Close()
 
-				blockNum, err := client.BlockNumber(context.Background()) // TODO change contexts
+				blockNum, err := client.BlockNumber(ctx)
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -183,6 +187,8 @@ func Start() {
 }
 
 func SendProof(password string) {
+
+	ctx, _ := context.WithTimeout(context.Background(), 2*time.Minute)
 
 	nodeAddr, err := shared.DecryptNodeAddr()
 	if err != nil {
@@ -263,7 +269,7 @@ func SendProof(password string) {
 		log.Fatal(err)
 	}
 
-	blockNum, err := client.BlockNumber(context.Background()) // TODO change contexts
+	blockNum, err := client.BlockNumber(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -273,12 +279,12 @@ func SendProof(password string) {
 		log.Fatal(err)
 	}
 
-	chnID, err := client.ChainID(context.Background())
+	chnID, err := client.ChainID(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	transactNonce, err := client.NonceAt(context.Background(), nodeAddr, big.NewInt(int64(blockNum)))
+	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -301,7 +307,7 @@ func SendProof(password string) {
 		Value:    big.NewInt(0),
 		GasPrice: big.NewInt(5000000000),
 		GasLimit: 1000000,
-		Context:  nil,
+		Context:  ctx,
 		NoSend:   false,
 	}
 
