@@ -42,6 +42,11 @@ func Start() {
 		log.Fatal(err)
 	}
 
+	nodeAddrBytes, err := hex.DecodeString(nodeAddr.String())
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	pathToAccStorage := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName)
 
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
@@ -141,13 +146,12 @@ func Start() {
 					log.Fatal(err)
 				}
 
-				fileBytesWithBlockHash := append(storedFileBytes, blockHash[:]...)
+				fileBytesAddrBlockHash := append(storedFileBytes, nodeAddrBytes...)
+				fileBytesAddrBlockHash = append(fileBytesAddrBlockHash, blockHash[:]...)
 
-				h := sha256.Sum256(fileBytesWithBlockHash)
+				hashedFileAddrBlock := sha256.Sum256(fileBytesAddrBlockHash)
 
-				fmt.Println(h)
-
-				fmt.Println(fileName, len(storedFileBytes))
+				fmt.Println(hashedFileAddrBlock)
 
 			}
 
