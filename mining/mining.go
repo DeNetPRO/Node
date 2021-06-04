@@ -65,9 +65,22 @@ func Start() {
 	}
 
 	for {
+
+		blockNum, err := client.BlockNumber(context.Background()) // TODO change contexts
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		nodeBalance, err := client.BalanceAt(context.Background(), nodeAddr, big.NewInt(int64(blockNum)))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Println("Balance", nodeBalance)
+
 		storageProviderAddresses := []string{}
 
-		err := filepath.WalkDir(pathToAccStorage,
+		err = filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
 				if err != nil {
 					log.Fatal("Fatal error")
