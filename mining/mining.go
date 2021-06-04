@@ -73,8 +73,6 @@ func Start() {
 			log.Fatal(err)
 		}
 
-		fmt.Println(blockNum, "!!!!!")
-
 		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
 		if err != nil {
 			log.Fatal(err)
