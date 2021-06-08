@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
-	POFstorage "dfile-secondary-node/POF_storage"
+	abiPOS "dfile-secondary-node/POS_abi"
 	"dfile-secondary-node/shared"
 	"io/fs"
 	"math/big"
@@ -54,7 +54,7 @@ func Start() {
 	}
 
 	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
-	instance, err := POFstorage.NewStore(tokenAddress, client)
+	instance, err := abiPOS.NewStore(tokenAddress, client)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -262,7 +262,7 @@ func SendProof(password string) {
 	}
 
 	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
-	instance, err := POFstorage.NewStore(tokenAddress, client)
+	instance, err := abiPOS.NewStore(tokenAddress, client)
 	if err != nil {
 		log.Fatal(err)
 	}
