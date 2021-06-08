@@ -34,7 +34,8 @@ func RegisterNode(password string, ip []string, port int) error {
 		return err
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
 
 	blockNum, err := client.BlockNumber(ctx)
 	if err != nil {

@@ -167,12 +167,18 @@ func Start() {
 					log.Fatal(err)
 				}
 
-				remainder := decodedBigInt.Mod(decodedBigInt, baseDfficulty)
+				fmt.Println(decodedBigInt)
+				fmt.Println(baseDfficulty)
 
-				fmt.Println("x", remainder)
-				fmt.Println("y", userDifficulty)
+				remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
 
-				fmt.Println(remainder.CmpAbs(userDifficulty))
+				lessThanUserDifficulty := -1
+
+				compareResult := remainder.CmpAbs(userDifficulty)
+
+				if compareResult == lessThanUserDifficulty {
+
+				}
 
 			}
 

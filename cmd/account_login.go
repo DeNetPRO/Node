@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -84,37 +83,29 @@ var accountLoginCmd = &cobra.Command{
 			return
 		}
 
-		confFiles := []string{}
-
-		pathToConfig := filepath.Join(shared.AccsDirPath, address, shared.ConfDirName)
-
-		err = filepath.WalkDir(pathToConfig,
-			func(path string, info fs.DirEntry, err error) error {
-				if err != nil {
-					log.Fatal(accLoginFatalError)
-				}
-
-				if info.Name() != shared.ConfDirName {
-					confFiles = append(confFiles, info.Name())
-				}
-
-				return nil
-			})
-		if err != nil {
-			log.Fatal(accLoginFatalError)
-		}
+		pathToConfigDir := filepath.Join(shared.AccsDirPath, address, shared.ConfDirName)
 
 		var dFileConf config.SecondaryNodeConfig
 
-		if len(confFiles) == 0 {
-			conf, err := config.Create(address, password)
+		pathToConfigFile := filepath.Join(pathToConfigDir, "config.json")
+
+		stat, err := os.Stat(pathToConfigFile)
+
+		if err != nil {
+			errPart := strings.Split(err.Error(), ":")
+
+			if strings.Trim(errPart[1], " ") != "no such file or directory" {
+				log.Fatal(accLoginFatalError)
+			}
+		}
+
+		if stat == nil {
+			dFileConf, err = config.Create(address, password)
 			if err != nil {
 				log.Fatal(accLoginFatalError)
 			}
-
-			dFileConf = conf
 		} else {
-			confFile, err := os.Open(filepath.Join(pathToConfig, confFiles[0]))
+			confFile, err := os.Open(pathToConfigFile)
 			if err != nil {
 				log.Fatal(accLoginFatalError)
 			}

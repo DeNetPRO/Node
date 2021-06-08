@@ -3,6 +3,7 @@ package config
 import (
 	"dfile-secondary-node/account"
 	blockchainprovider "dfile-secondary-node/blockchain_provider"
+
 	"dfile-secondary-node/shared"
 	"encoding/json"
 	"fmt"
@@ -197,7 +198,6 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	err := blockchainprovider.RegisterNode(password, splittedAddr, intHttpPort)
 	if err != nil {
-		fmt.Println(err)
 		log.Fatal("Couldn't register node in network")
 	}
 
