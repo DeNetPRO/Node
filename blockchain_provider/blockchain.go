@@ -36,44 +36,25 @@ type StorageInfo struct {
 
 const eightKB = 8192
 
-func RegisterNode(password string, ip []string, port int) error {
-
-	nodeAddr, err := shared.DecryptNodeAddr()
-	if err != nil {
-		return err
-	}
-
-	nftAddr := common.HexToAddress("0xBfAfdaE6B77a02A4684D39D1528c873961528342")
-
-	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
-	if err != nil {
-		return err
-	}
-
-	node, err := nodeNFT.NewNodeNft(nftAddr, client)
-	if err != nil {
-		return err
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
+func initOpts(client *ethclient.Client, nodeAddr common.Address, password string) (*bind.TransactOpts, uint64, error) {
+	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
 	blockNum, err := client.BlockNumber(ctx)
 	if err != nil {
-		return err
+		return nil, 0, err
 	}
 
 	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
 	if err != nil {
-		return err
+		return nil, 0, err
 	}
 
 	chnID, err := client.ChainID(ctx)
 	if err != nil {
-		return err
+		return nil, 0, err
 	}
 
-	var opts = &bind.TransactOpts{
+	opts := &bind.TransactOpts{
 		From:  nodeAddr,
 		Nonce: big.NewInt(int64(transactNonce)),
 		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
@@ -95,6 +76,30 @@ func RegisterNode(password string, ip []string, port int) error {
 		NoSend:   false,
 	}
 
+	return opts, blockNum, nil
+}
+
+func RegisterNode(password string, ip []string, port int) error {
+
+	nodeAddr, err := shared.DecryptNodeAddr()
+	if err != nil {
+		return err
+	}
+
+	nftAddr := common.HexToAddress("0xBfAfdaE6B77a02A4684D39D1528c873961528342")
+
+	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
+	if err != nil {
+		return err
+	}
+
+	defer client.Close()
+
+	node, err := nodeNFT.NewNodeNft(nftAddr, client)
+	if err != nil {
+		return err
+	}
+
 	ipAddr := [4]uint8{}
 
 	for i, v := range ip {
@@ -106,6 +111,11 @@ func RegisterNode(password string, ip []string, port int) error {
 		ipAddr[i] = uint8(intIPPart)
 	}
 
+	opts, _, err := initOpts(client, nodeAddr, password)
+	if err != nil {
+		return err
+	}
+
 	_, err = node.CreateNode(opts, ipAddr, uint16(port))
 	if err != nil {
 		return err
@@ -114,7 +124,7 @@ func RegisterNode(password string, ip []string, port int) error {
 	return nil
 }
 
-func StartMining() {
+func StartMining(password string) {
 
 	nodeAddr, err := shared.DecryptNodeAddr()
 	if err != nil {
@@ -142,9 +152,9 @@ func StartMining() {
 		log.Fatal(err)
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), 2*time.Minute)
-
 	for {
+
+		ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
 		blockNum, err := client.BlockNumber(ctx)
 		if err != nil {
@@ -180,14 +190,19 @@ func StartMining() {
 			continue
 		}
 
-		for _, address := range storageProviderAddresses {
-			storageProviderAddr := common.HexToAddress(address)
-			paymentToken, rew, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr)
+		client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for _, spAddress := range storageProviderAddresses {
+			storageProviderAddr := common.HexToAddress(spAddress)
+			paymentToken, reward, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr)
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			fmt.Println(paymentToken, rew, userDifficulty)
+			fmt.Println(paymentToken, reward, userDifficulty)
 
 			fileNames := []string{}
 
@@ -245,54 +260,32 @@ func StartMining() {
 					log.Fatal(err)
 				}
 
-				fmt.Println(decodedBigInt)
-				fmt.Println(baseDfficulty)
-
 				remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
 
-				lessThanUserDifficulty := -1
+				compareResultIsLessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
 
-				compareResult := remainder.CmpAbs(userDifficulty)
+				fmt.Println("checked", fileName)
 
-				if compareResult == lessThanUserDifficulty {
+				rewardisEnough := reward.Cmp(big.NewInt(3000000000000000)) == 1
 
+				if compareResultIsLessUserDifficulty && rewardisEnough {
+					fmt.Println("Sending Proof for reward", reward)
+					sendProof(client, password, storedFileBytes, nodeAddr, spAddress)
 				}
 
 			}
 
 		}
 
-		time.Sleep(time.Second * 30)
+		time.Sleep(time.Second * 15)
 
 	}
 
 }
 
-func SendProof(password string) {
+func sendProof(client *ethclient.Client, password string, fileBytes []byte, nodeAddr common.Address, spAddr string) {
 
-	ctx, _ := context.WithTimeout(context.Background(), 2*time.Minute)
-
-	nodeAddr, err := shared.DecryptNodeAddr()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	pathToAcc := filepath.Join(shared.AccsDirPath, nodeAddr.String())
-
-	pathToFile := filepath.Join(pathToAcc, shared.StorageDirName, "0x537F6af3A07e58986Bb5041c304e9Eb2283396CD", "1ab3a0828b5e6b50ac9a3e76b1b33f49587ecf8ea5a58e2fde0429cc11f02342")
-
-	file, err := os.Open(pathToFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	fileBytes, err := io.ReadAll(file)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	pathToFsTree := filepath.Join(pathToAcc, shared.StorageDirName, "0x537F6af3A07e58986Bb5041c304e9Eb2283396CD", "tree.json")
+	pathToFsTree := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, spAddr, "tree.json")
 
 	fileFsTree, err := os.Open(pathToFsTree)
 	if err != nil {
@@ -340,18 +333,8 @@ func SendProof(password string) {
 
 	proof := makeProof(fileTree[0][0], treeToFsRoot)
 
-	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
 	instance, err := abiPOS.NewStore(tokenAddress, client)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	blockNum, err := client.BlockNumber(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -361,36 +344,9 @@ func SendProof(password string) {
 		log.Fatal(err)
 	}
 
-	chnID, err := client.ChainID(ctx)
+	opts, blockNum, err := initOpts(client, nodeAddr, password)
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	opts := &bind.TransactOpts{
-		From:  nodeAddr,
-		Nonce: big.NewInt(int64(transactNonce)),
-		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
-			ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
-			acs := ks.Accounts()
-			for _, ac := range acs {
-				if ac.Address == a {
-					ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
-					ks.TimedUnlock(ac, password, 1)
-					return ks.SignTx(ac, t, chnID)
-				}
-			}
-			return t, nil
-		},
-		Value:    big.NewInt(0),
-		GasPrice: big.NewInt(5000000000),
-		GasLimit: 1000000,
-		Context:  ctx,
-		NoSend:   false,
 	}
 
 	intNonce, err := strconv.Atoi(storageFsStruct.Nonce)
@@ -398,14 +354,12 @@ func SendProof(password string) {
 		log.Fatal(err)
 	}
 
-	dif, err := instance.SendProof(opts, common.HexToAddress("0x537F6af3A07e58986Bb5041c304e9Eb2283396CD"), uint32(blockNum), proof[len(proof)-1], uint64(intNonce), signedFSRootHash[:64], bytesToProve, proof)
+	_, err = instance.SendProof(opts, common.HexToAddress("0x537F6af3A07e58986Bb5041c304e9Eb2283396CD"), uint32(blockNum), proof[len(proof)-1], uint64(intNonce), signedFSRootHash[:64], bytesToProve, proof)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	password = ""
-
-	fmt.Println(dif)
+	fmt.Println("Got some cash 0_o")
 
 }
 
