@@ -5,7 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	abiPOS "dfile-secondary-node/POS_abi"
-	nodeNFT "dfile-secondary-node/node_nft_abi"
+	nodeNFT "dfile-secondary-node/node_abi"
 	"dfile-secondary-node/shared"
 	"encoding/hex"
 	"encoding/json"
