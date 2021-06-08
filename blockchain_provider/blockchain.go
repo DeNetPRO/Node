@@ -5,7 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	abiPOS "dfile-secondary-node/POS_abi"
-	nodeNFT "dfile-secondary-node/node_abi"
+	nodeApi "dfile-secondary-node/node_abi"
 	"dfile-secondary-node/shared"
 	"encoding/hex"
 	"encoding/json"
@@ -57,7 +57,7 @@ func RegisterNode(password string, ip []string, port string) error {
 
 	defer client.Close()
 
-	node, err := nodeNFT.NewNodeNft(nftAddr, client)
+	node, err := nodeApi.NewNodeNft(nftAddr, client)
 	if err != nil {
 		return err
 	}
@@ -262,7 +262,7 @@ func GetNodeInfo() error {
 
 	defer client.Close()
 
-	node, err := nodeNFT.NewNodeNft(nftAddr, client)
+	node, err := nodeApi.NewNodeNft(nftAddr, client)
 	if err != nil {
 		return err
 	}
@@ -289,7 +289,7 @@ func UpdateNodeInfo(addr, password string, newIP [4]uint8, newPort uint16) error
 
 	defer client.Close()
 
-	node, err := nodeNFT.NewNodeNft(nftAddr, client)
+	node, err := nodeApi.NewNodeNft(nftAddr, client)
 	if err != nil {
 		return err
 	}
