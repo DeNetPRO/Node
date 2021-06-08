@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"dfile-secondary-node/account"
+	blockchainprovider "dfile-secondary-node/blockchain_provider"
 	"dfile-secondary-node/config"
-	"dfile-secondary-node/mining"
 	"dfile-secondary-node/shared"
 	"encoding/json"
 	"fmt"
@@ -128,7 +128,7 @@ var accountLoginCmd = &cobra.Command{
 
 		fmt.Println("Logged in")
 
-		mining.Start()
+		blockchainprovider.StartMining()
 		// mining.SendProof(password)
 		password = ""
 

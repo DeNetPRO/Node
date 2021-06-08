@@ -3,8 +3,8 @@ package server
 import (
 	"bytes"
 	"crypto/sha256"
+	blockchainprovider "dfile-secondary-node/blockchain_provider"
 	"dfile-secondary-node/config"
-	"dfile-secondary-node/mining"
 	"dfile-secondary-node/shared"
 	"encoding/hex"
 	"encoding/json"
@@ -249,7 +249,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	}
 	defer treeFile.Close()
 
-	tree := mining.StorageInfo{
+	tree := blockchainprovider.StorageInfo{
 		Nonce:        nonce[0],
 		SignedFsRoot: signedFsRootHash[0],
 		Tree:         fsTree,
