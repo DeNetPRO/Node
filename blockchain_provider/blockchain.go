@@ -36,49 +36,6 @@ type StorageInfo struct {
 
 const eightKB = 8192
 
-func initTrxOpts(client *ethclient.Client, nodeAddr common.Address, password string) (*bind.TransactOpts, uint64, error) {
-	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
-
-	blockNum, err := client.BlockNumber(ctx)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
-	if err != nil {
-		return nil, 0, err
-	}
-
-	chnID, err := client.ChainID(ctx)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	opts := &bind.TransactOpts{
-		From:  nodeAddr,
-		Nonce: big.NewInt(int64(transactNonce)),
-		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
-			ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
-			acs := ks.Accounts()
-			for _, ac := range acs {
-				if ac.Address == a {
-					ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
-					ks.TimedUnlock(ac, password, 1)
-					return ks.SignTx(ac, t, chnID)
-				}
-			}
-			return t, nil
-		},
-		Value:    big.NewInt(0),
-		GasPrice: big.NewInt(5000000000),
-		GasLimit: 1000000,
-		Context:  ctx,
-		NoSend:   false,
-	}
-
-	return opts, blockNum, nil
-}
-
 func RegisterNode(password string, ip []string, port int) error {
 
 	nodeAddr, err := shared.DecryptNodeAddr()
@@ -287,6 +244,75 @@ func StartMining(password string) {
 
 	}
 
+}
+
+func GetNodeInfo() error {
+
+	nftAddr := common.HexToAddress("0xBfAfdaE6B77a02A4684D39D1528c873961528342")
+
+	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
+	if err != nil {
+		return err
+	}
+
+	defer client.Close()
+
+	node, err := nodeNFT.NewNodeNft(nftAddr, client)
+	if err != nil {
+		return err
+	}
+
+	nodeInfo, err := node.GetNodeById(&bind.CallOpts{}, big.NewInt(2))
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(nodeInfo)
+
+	return nil
+}
+
+func initTrxOpts(client *ethclient.Client, nodeAddr common.Address, password string) (*bind.TransactOpts, uint64, error) {
+	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
+
+	blockNum, err := client.BlockNumber(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
+	if err != nil {
+		return nil, 0, err
+	}
+
+	chnID, err := client.ChainID(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	opts := &bind.TransactOpts{
+		From:  nodeAddr,
+		Nonce: big.NewInt(int64(transactNonce)),
+		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
+			ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+			acs := ks.Accounts()
+			for _, ac := range acs {
+				if ac.Address == a {
+					ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+					ks.TimedUnlock(ac, password, 1)
+					return ks.SignTx(ac, t, chnID)
+				}
+			}
+			return t, nil
+		},
+		Value:    big.NewInt(0),
+		GasPrice: big.NewInt(5000000000),
+		GasLimit: 1000000,
+		Context:  ctx,
+		NoSend:   false,
+	}
+
+	return opts, blockNum, nil
 }
 
 func sendProof(client *ethclient.Client, password string, fileBytes []byte, nodeAddr common.Address, spAddr string) error {
