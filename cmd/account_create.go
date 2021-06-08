@@ -61,7 +61,7 @@ var accountCreateCmd = &cobra.Command{
 		}
 		fmt.Println("Your new account's address is:", accountStr)
 
-		secondaryNodeConfig, err := config.Create(accountStr)
+		secondaryNodeConfig, err := config.Create(accountStr, password1)
 		if err != nil {
 			log.Fatal(accCreateFatalMessage)
 		}

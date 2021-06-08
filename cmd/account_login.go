@@ -107,7 +107,7 @@ var accountLoginCmd = &cobra.Command{
 		var dFileConf config.SecondaryNodeConfig
 
 		if len(confFiles) == 0 {
-			conf, err := config.Create(address)
+			conf, err := config.Create(address, password)
 			if err != nil {
 				log.Fatal(accLoginFatalError)
 			}
@@ -135,7 +135,7 @@ var accountLoginCmd = &cobra.Command{
 			}
 		}
 
-		fmt.Println("Success")
+		fmt.Println("Logged in")
 
 		mining.Start()
 		// mining.SendProof(password)
