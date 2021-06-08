@@ -128,8 +128,7 @@ var accountLoginCmd = &cobra.Command{
 
 		fmt.Println("Logged in")
 
-		// blockchainprovider.StartMining(password)
-		blockchainprovider.GetNodeInfo()
+		blockchainprovider.StartMining(password)
 
 		// server.Start(address, dFileConf.HTTPPort)
 

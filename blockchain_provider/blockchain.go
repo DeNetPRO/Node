@@ -36,7 +36,12 @@ type StorageInfo struct {
 
 const eightKB = 8192
 
-func RegisterNode(password string, ip []string, port int) error {
+func RegisterNode(password string, ip []string, port string) error {
+
+	intPort, err := strconv.Atoi(port)
+	if err != nil {
+		return err
+	}
 
 	nodeAddr, err := shared.DecryptNodeAddr()
 	if err != nil {
@@ -73,7 +78,7 @@ func RegisterNode(password string, ip []string, port int) error {
 		return err
 	}
 
-	_, err = node.CreateNode(opts, ipAddr, uint16(port))
+	_, err = node.CreateNode(opts, ipAddr, uint16(intPort))
 	if err != nil {
 		return err
 	}
@@ -263,6 +268,38 @@ func GetNodeInfo() error {
 	}
 
 	nodeInfo, err := node.GetNodeById(&bind.CallOpts{}, big.NewInt(2))
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(nodeInfo)
+
+	return nil
+}
+
+func UpdateNodeInfo(addr, password string, newIP [4]uint8, newPort uint16) error {
+
+	nodeAddr := common.HexToAddress(addr)
+	nftAddr := common.HexToAddress("0xBfAfdaE6B77a02A4684D39D1528c873961528342")
+
+	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
+	if err != nil {
+		return err
+	}
+
+	defer client.Close()
+
+	node, err := nodeNFT.NewNodeNft(nftAddr, client)
+	if err != nil {
+		return err
+	}
+
+	opts, _, err := initTrxOpts(client, nodeAddr, password)
+	if err != nil {
+		return err
+	}
+
+	nodeInfo, err := node.UpdateNode(opts, big.NewInt(2), newIP, newPort)
 	if err != nil {
 		return err
 	}

@@ -3,11 +3,11 @@ package config
 import (
 	"dfile-secondary-node/account"
 	blockchainprovider "dfile-secondary-node/blockchain_provider"
+	"log"
 
 	"dfile-secondary-node/shared"
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -158,7 +158,6 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 	}
 
 	portHTTPValueIsCorrect := false
-	var intHttpPort int
 	regPort := regexp.MustCompile("[0-9]+|")
 
 	for !portHTTPValueIsCorrect {
@@ -182,11 +181,12 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 		}
 
-		intHttpPort, err = strconv.Atoi(httpPort)
+		intHttpPort, err := strconv.Atoi(httpPort)
 		if err != nil {
 			fmt.Println("Value is incorrect, please try again")
 			continue
 		}
+
 		if intHttpPort < 49152 || intHttpPort > 65535 {
 			fmt.Println("Value is incorrect, please try again")
 			continue
@@ -196,7 +196,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		dFileConf.HTTPPort = fmt.Sprint(intHttpPort)
 	}
 
-	err := blockchainprovider.RegisterNode(password, splittedAddr, intHttpPort)
+	err := blockchainprovider.RegisterNode(password, splittedAddr, dFileConf.HTTPPort)
 	if err != nil {
 		log.Fatal("Couldn't register node in network")
 	}
