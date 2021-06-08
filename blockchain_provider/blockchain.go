@@ -36,7 +36,7 @@ type StorageInfo struct {
 
 const eightKB = 8192
 
-func initOpts(client *ethclient.Client, nodeAddr common.Address, password string) (*bind.TransactOpts, uint64, error) {
+func initTrxOpts(client *ethclient.Client, nodeAddr common.Address, password string) (*bind.TransactOpts, uint64, error) {
 	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
 	blockNum, err := client.BlockNumber(ctx)
@@ -111,7 +111,7 @@ func RegisterNode(password string, ip []string, port int) error {
 		ipAddr[i] = uint8(intIPPart)
 	}
 
-	opts, _, err := initOpts(client, nodeAddr, password)
+	opts, _, err := initTrxOpts(client, nodeAddr, password)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,6 @@ func StartMining(password string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	defer client.Close()
 
 	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
@@ -197,11 +196,6 @@ func StartMining(password string) {
 
 		if len(storageProviderAddresses) == 0 {
 			continue
-		}
-
-		client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
-		if err != nil {
-			log.Fatal(err)
 		}
 
 		for _, spAddress := range storageProviderAddresses {
@@ -279,7 +273,10 @@ func StartMining(password string) {
 
 				if compareResultIsLessUserDifficulty && rewardisEnough {
 					fmt.Println("Sending Proof for reward", reward)
-					sendProof(client, password, storedFileBytes, nodeAddr, spAddress)
+					err := sendProof(client, password, storedFileBytes, nodeAddr, spAddress)
+					if err != nil {
+						log.Fatal(err)
+					}
 				}
 
 			}
@@ -292,26 +289,26 @@ func StartMining(password string) {
 
 }
 
-func sendProof(client *ethclient.Client, password string, fileBytes []byte, nodeAddr common.Address, spAddr string) {
+func sendProof(client *ethclient.Client, password string, fileBytes []byte, nodeAddr common.Address, spAddr string) error {
 
 	pathToFsTree := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, spAddr, "tree.json")
 
 	fileFsTree, err := os.Open(pathToFsTree)
 	if err != nil {
-		log.Fatal("Fatal error")
+		return err
 	}
 	defer fileFsTree.Close()
 
 	treeBytes, err := io.ReadAll(fileFsTree)
 	if err != nil {
-		log.Fatal("Fatal error")
+		return err
 	}
 
 	var storageFsStruct StorageInfo
 
 	err = json.Unmarshal(treeBytes, &storageFsStruct)
 	if err != nil {
-		log.Fatal("Fatal error")
+		return err
 	}
 
 	eightKBHashes := []string{}
@@ -325,7 +322,7 @@ func sendProof(client *ethclient.Client, password string, fileBytes []byte, node
 
 	_, fileTree, err := shared.CalcRootHash(eightKBHashes)
 	if err != nil {
-		log.Fatal("Fatal error")
+		return err
 	}
 
 	hashFileRoot := fileTree[len(fileTree)-1][0]
@@ -345,30 +342,32 @@ func sendProof(client *ethclient.Client, password string, fileBytes []byte, node
 	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
 	instance, err := abiPOS.NewStore(tokenAddress, client)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	signedFSRootHash, err := hex.DecodeString(storageFsStruct.SignedFsRoot)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	opts, blockNum, err := initOpts(client, nodeAddr, password)
+	opts, blockNum, err := initTrxOpts(client, nodeAddr, password)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	intNonce, err := strconv.Atoi(storageFsStruct.Nonce)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	_, err = instance.SendProof(opts, common.HexToAddress("0x537F6af3A07e58986Bb5041c304e9Eb2283396CD"), uint32(blockNum), proof[len(proof)-1], uint64(intNonce), signedFSRootHash[:64], bytesToProve, proof)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	fmt.Println("Got some cash 0_o")
+
+	return nil
 
 }
 
