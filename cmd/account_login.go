@@ -71,7 +71,7 @@ var accountLoginCmd = &cobra.Command{
 			}
 			password = string(bytePassword)
 			if strings.Trim(password, " ") == "" {
-				fmt.Println("Empty string can't be used as a password. Please, enter passwords again.")
+				fmt.Println("Empty string can't be used as a password. Please enter passwords again.")
 				continue
 			}
 

@@ -65,7 +65,7 @@ var configUpdateCmd = &cobra.Command{
 			}
 			password = string(bytePassword)
 			if strings.Trim(password, " ") == "" {
-				fmt.Println("Empty string can't be used as a password. Please, enter passwords again")
+				fmt.Println("Empty string can't be used as a password. Please enter passwords again")
 				continue
 			}
 
@@ -117,7 +117,7 @@ var configUpdateCmd = &cobra.Command{
 
 		fmt.Println("You can change your http port number or storage limit")
 
-		fmt.Println("Please, enter disk space for usage in GB (should be positive number), or just press enter button to skip")
+		fmt.Println("Please enter disk space for usage in GB (should be positive number), or just press enter button to skip")
 
 		spaceValueIsCorrect := false
 
@@ -162,7 +162,7 @@ var configUpdateCmd = &cobra.Command{
 
 		}
 
-		fmt.Println("Please, enter new http port address, or just press enter button to skip")
+		fmt.Println("Please enter new http port address, or just press enter button to skip")
 
 		portHTTPValueIsCorrect := false
 		regPort := regexp.MustCompile("[0-9]+|")

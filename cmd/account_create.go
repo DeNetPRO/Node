@@ -25,8 +25,8 @@ var accountCreateCmd = &cobra.Command{
 		var password1, password2 string
 		passwordMatch := false
 
-		fmt.Println("Password is required for account creation. It can't be restored so please save it in a safe place.")
-		fmt.Println("Please, enter password: ")
+		fmt.Println("Password is required for account creation. It can't be restored, please save it in a safe place.")
+		fmt.Println("Please enter your new password: ")
 
 		for !passwordMatch {
 			bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
@@ -36,7 +36,7 @@ var accountCreateCmd = &cobra.Command{
 			password1 = string(bytePassword)
 
 			if strings.Trim(password1, " ") == "" {
-				fmt.Println("Empty string can't be used as a password. Please, enter passwords again.")
+				fmt.Println("Empty string can't be used as a password. Please enter passwords again.")
 				continue
 			}
 
@@ -51,7 +51,7 @@ var accountCreateCmd = &cobra.Command{
 			if password1 == password2 {
 				passwordMatch = true
 			} else {
-				fmt.Println("Passwords do not match. Please, enter passwords again.")
+				fmt.Println("Passwords do not match. Please enter passwords again.")
 			}
 
 		}

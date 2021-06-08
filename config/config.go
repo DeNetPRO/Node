@@ -62,7 +62,7 @@ func Create(address string) (SecondaryNodeConfig, error) {
 	regNum := regexp.MustCompile(("[0-9]+"))
 
 	for !spaceValueIsCorrect {
-		fmt.Println("Please, enter disk space for usage in GB (should be positive number)")
+		fmt.Println("Please enter disk space for usage in GB (should be positive number)")
 
 		availableSpace := shared.GetAvailableSpace(pathToConfig)
 		fmt.Println("Available space:", availableSpace, "GB")
