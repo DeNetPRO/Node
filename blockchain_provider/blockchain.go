@@ -141,6 +141,8 @@ func StartMining(password string) {
 		log.Fatal(err)
 	}
 
+	defer client.Close()
+
 	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
 	instance, err := abiPOS.NewStore(tokenAddress, client)
 	if err != nil {
@@ -166,7 +168,14 @@ func StartMining(password string) {
 			log.Fatal(err)
 		}
 
-		fmt.Println("Balance", nodeBalance)
+		nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
+
+		if nodeBalanceIsLow {
+			fmt.Println("Your account has insufficient funds:", nodeBalance, "wei")
+			fmt.Println("Please top up your balance")
+			time.Sleep(time.Second * 15)
+			continue
+		}
 
 		storageProviderAddresses := []string{}
 
