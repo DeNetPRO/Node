@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ricochet2200/go-disk-usage/du"
@@ -267,6 +268,28 @@ func DecryptNodeAddr() (common.Address, error) {
 	}
 
 	return common.BytesToAddress(accAddr), nil
+}
+
+// ====================================================================================
+
+func LogError(errMsg string) error {
+	logsFile, err := os.OpenFile("./errorLogs", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0700)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	defer logsFile.Close()
+
+	currentTime := time.Now().Local()
+
+	_, err = logsFile.WriteString(currentTime.String() + ": " + errMsg + "\n")
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
 }
 
 // ====================================================================================

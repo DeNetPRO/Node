@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -90,6 +91,7 @@ func StartMining(password string) {
 
 	nodeAddr, err := shared.DecryptNodeAddr()
 	if err != nil {
+		shared.LogError(err.Error())
 		fmt.Println(err)
 	}
 
@@ -100,6 +102,7 @@ func StartMining(password string) {
 
 	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
 	if err != nil {
+		shared.LogError(err.Error())
 		fmt.Println(err)
 	}
 	defer client.Close()
@@ -107,11 +110,13 @@ func StartMining(password string) {
 	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
 	instance, err := abiPOS.NewStore(tokenAddress, client)
 	if err != nil {
+		shared.LogError(err.Error())
 		fmt.Println(err)
 	}
 
 	baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
 	if err != nil {
+		shared.LogError(err.Error())
 		fmt.Println(err)
 	}
 
@@ -119,13 +124,15 @@ func StartMining(password string) {
 
 		ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
-		blockNum, err := client.BlockNumber(ctx)
+		blockNum, err := getBlockNum(ctx, client)
 		if err != nil {
-			fmt.Println(err)
+			shared.LogError(err.Error())
+			log.Fatal(err)
 		}
 
 		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
 		if err != nil {
+			shared.LogError(err.Error())
 			fmt.Println(err)
 		}
 
@@ -143,6 +150,7 @@ func StartMining(password string) {
 		err = filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
 				if err != nil {
+					shared.LogError(err.Error())
 					fmt.Println(err)
 				}
 
@@ -153,6 +161,7 @@ func StartMining(password string) {
 				return nil
 			})
 		if err != nil {
+			shared.LogError(err.Error())
 			fmt.Println(err)
 		}
 
@@ -164,6 +173,7 @@ func StartMining(password string) {
 			storageProviderAddr := common.HexToAddress(spAddress)
 			paymentToken, reward, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr)
 			if err != nil {
+				shared.LogError(err.Error())
 				fmt.Println(err)
 			}
 
@@ -176,6 +186,7 @@ func StartMining(password string) {
 			err = filepath.WalkDir(pathToStorProviderFiles,
 				func(path string, info fs.DirEntry, err error) error {
 					if err != nil {
+						shared.LogError(err.Error())
 						fmt.Println(err)
 					}
 
@@ -187,29 +198,34 @@ func StartMining(password string) {
 					return nil
 				})
 			if err != nil {
+				shared.LogError(err.Error())
 				fmt.Println(err)
 			}
 
 			for _, fileName := range fileNames {
 				storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
 				if err != nil {
+					shared.LogError(err.Error())
 					fmt.Println(err)
 				}
 
 				storedFileBytes, err := io.ReadAll(storedFile)
 				if err != nil {
+					shared.LogError(err.Error())
 					fmt.Println(err)
 				}
 
 				storedFile.Close()
 
-				blockNum, err := client.BlockNumber(ctx)
+				blockNum, err := getBlockNum(ctx, client)
 				if err != nil {
-					fmt.Println(err)
+					shared.LogError(err.Error())
+					log.Fatal(err)
 				}
 
 				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum))
 				if err != nil {
+					shared.LogError(err.Error())
 					fmt.Println(err)
 				}
 
@@ -222,9 +238,11 @@ func StartMining(password string) {
 
 				decodedBigInt, err := hexutil.DecodeBig(hexFileAddrBlock)
 				if err != nil {
+					shared.LogError(err.Error())
 					fmt.Println(hexFileAddrBlock, err)
 				}
 
+				fmt.Println("calculating rem:", "decodedBigInt:", decodedBigInt)
 				remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
 
 				compareResultIsLessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
@@ -237,6 +255,7 @@ func StartMining(password string) {
 					fmt.Println("Sending Proof for reward", reward)
 					err := sendProof(client, password, storedFileBytes, nodeAddr, spAddress)
 					if err != nil {
+						shared.LogError(err.Error())
 						fmt.Println(err)
 					}
 				}
@@ -265,9 +284,10 @@ func CheckBalance(addr common.Address) (*big.Int, error) {
 
 	defer client.Close()
 
-	blockNum, err := client.BlockNumber(ctx)
+	blockNum, err := getBlockNum(ctx, client)
 	if err != nil {
-		return nil, err
+		shared.LogError(err.Error())
+		log.Fatal(err)
 	}
 
 	balance, err := client.BalanceAt(ctx, addr, big.NewInt(int64(blockNum)))
@@ -366,9 +386,10 @@ func UpdateNodeInfo(nodeAddr common.Address, password string, newIP [4]uint8, ne
 func initTrxOpts(client *ethclient.Client, nodeAddr common.Address, password string) (*bind.TransactOpts, uint64, error) {
 	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
-	blockNum, err := client.BlockNumber(ctx)
+	blockNum, err := getBlockNum(ctx, client)
 	if err != nil {
-		return nil, 0, err
+		shared.LogError(err.Error())
+		log.Fatal(err)
 	}
 
 	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
@@ -404,6 +425,32 @@ func initTrxOpts(client *ethclient.Client, nodeAddr common.Address, password str
 	}
 
 	return opts, blockNum, nil
+}
+
+func getBlockNum(ctx context.Context, client *ethclient.Client) (uint64, error) {
+	blockNum, err := client.BlockNumber(ctx)
+	if err != nil {
+		if err.Error() == "Unknown block number" {
+			for i := 0; i <= 3; i++ {
+				fmt.Println("Attempt #", i)
+				bN, r := client.BlockNumber(ctx)
+				if r == nil {
+					blockNum = bN
+					err = nil
+				}
+
+				time.Sleep(time.Second)
+			}
+		}
+
+		if err != nil {
+			shared.LogError(err.Error())
+			return 0, err
+		}
+
+	}
+
+	return blockNum, nil
 }
 
 // ====================================================================================

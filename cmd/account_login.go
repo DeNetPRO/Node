@@ -3,6 +3,7 @@ package cmd
 import (
 	"dfile-secondary-node/account"
 	bcProvider "dfile-secondary-node/blockchain_provider"
+	"dfile-secondary-node/server"
 
 	"dfile-secondary-node/config"
 	"dfile-secondary-node/shared"
@@ -137,9 +138,9 @@ var accountLoginCmd = &cobra.Command{
 
 		fmt.Println("nodeBalance", nodeBalance)
 
-		bcProvider.StartMining(password)
+		go bcProvider.StartMining(password)
 
-		// server.Start(address, dFileConf.HTTPPort)
+		server.Start(address, dFileConf.HTTPPort)
 
 	},
 }
