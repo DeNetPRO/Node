@@ -242,7 +242,6 @@ func StartMining(password string) {
 					fmt.Println(hexFileAddrBlock, err)
 				}
 
-				fmt.Println("calculating rem:", "decodedBigInt:", decodedBigInt)
 				remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
 
 				compareResultIsLessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
