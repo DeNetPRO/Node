@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -35,6 +34,7 @@ type StorageInfo struct {
 }
 
 const eightKB = 8192
+const NFT = "0xBfAfdaE6B77a02A4684D39D1528c873961528342"
 
 func RegisterNode(password string, ip []string, port string) error {
 
@@ -48,8 +48,6 @@ func RegisterNode(password string, ip []string, port string) error {
 		return err
 	}
 
-	nftAddr := common.HexToAddress("0xBfAfdaE6B77a02A4684D39D1528c873961528342")
-
 	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
 	if err != nil {
 		return err
@@ -57,7 +55,7 @@ func RegisterNode(password string, ip []string, port string) error {
 
 	defer client.Close()
 
-	node, err := nodeApi.NewNodeNft(nftAddr, client)
+	node, err := nodeApi.NewNodeNft(common.HexToAddress(NFT), client)
 	if err != nil {
 		return err
 	}
@@ -86,11 +84,13 @@ func RegisterNode(password string, ip []string, port string) error {
 	return nil
 }
 
+// ====================================================================================
+
 func StartMining(password string) {
 
 	nodeAddr, err := shared.DecryptNodeAddr()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 
 	pathToAccStorage := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName)
@@ -100,19 +100,19 @@ func StartMining(password string) {
 
 	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 	defer client.Close()
 
 	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
 	instance, err := abiPOS.NewStore(tokenAddress, client)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 
 	baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 
 	for {
@@ -121,12 +121,12 @@ func StartMining(password string) {
 
 		blockNum, err := client.BlockNumber(ctx)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
 		}
 
 		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
 		}
 
 		nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
@@ -143,7 +143,7 @@ func StartMining(password string) {
 		err = filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
 				if err != nil {
-					log.Fatal("Fatal error")
+					fmt.Println(err)
 				}
 
 				if regAddr.MatchString(info.Name()) {
@@ -153,7 +153,7 @@ func StartMining(password string) {
 				return nil
 			})
 		if err != nil {
-			log.Fatal("Fatal error")
+			fmt.Println(err)
 		}
 
 		if len(storageProviderAddresses) == 0 {
@@ -164,7 +164,7 @@ func StartMining(password string) {
 			storageProviderAddr := common.HexToAddress(spAddress)
 			paymentToken, reward, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr)
 			if err != nil {
-				log.Fatal(err)
+				fmt.Println(err)
 			}
 
 			fmt.Println(paymentToken, reward, userDifficulty)
@@ -176,7 +176,7 @@ func StartMining(password string) {
 			err = filepath.WalkDir(pathToStorProviderFiles,
 				func(path string, info fs.DirEntry, err error) error {
 					if err != nil {
-						log.Fatal(err)
+						fmt.Println(err)
 					}
 
 					if regFileName.MatchString(info.Name()) && len(info.Name()) == 64 {
@@ -187,30 +187,30 @@ func StartMining(password string) {
 					return nil
 				})
 			if err != nil {
-				log.Fatal(err)
+				fmt.Println(err)
 			}
 
 			for _, fileName := range fileNames {
 				storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
 				if err != nil {
-					log.Fatal(err)
+					fmt.Println(err)
 				}
 
 				storedFileBytes, err := io.ReadAll(storedFile)
 				if err != nil {
-					log.Fatal(err)
+					fmt.Println(err)
 				}
 
 				storedFile.Close()
 
 				blockNum, err := client.BlockNumber(ctx)
 				if err != nil {
-					log.Fatal(err)
+					fmt.Println(err)
 				}
 
 				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum))
 				if err != nil {
-					log.Fatal(err)
+					fmt.Println(err)
 				}
 
 				fileBytesAddrBlockHash := append(storedFileBytes, nodeAddr.Bytes()...)
@@ -222,14 +222,14 @@ func StartMining(password string) {
 
 				decodedBigInt, err := hexutil.DecodeBig(hexFileAddrBlock)
 				if err != nil {
-					log.Fatal(err)
+					fmt.Println(hexFileAddrBlock, err)
 				}
 
 				remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
 
 				compareResultIsLessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
 
-				fmt.Println("checked", fileName)
+				fmt.Println("checked file:", fileName)
 
 				rewardisEnough := reward.Cmp(big.NewInt(3000000000000000)) == 1
 
@@ -237,7 +237,7 @@ func StartMining(password string) {
 					fmt.Println("Sending Proof for reward", reward)
 					err := sendProof(client, password, storedFileBytes, nodeAddr, spAddress)
 					if err != nil {
-						log.Fatal(err)
+						fmt.Println(err)
 					}
 				}
 
@@ -245,42 +245,94 @@ func StartMining(password string) {
 
 		}
 
+		fmt.Println("Sleeping...")
 		time.Sleep(time.Second * 15)
 
 	}
 
 }
 
-func GetNodeInfo() error {
+// ====================================================================================
 
-	nftAddr := common.HexToAddress("0xBfAfdaE6B77a02A4684D39D1528c873961528342")
+func CheckBalance(addr common.Address) (*big.Int, error) {
+
+	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
 	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer client.Close()
 
-	node, err := nodeApi.NewNodeNft(nftAddr, client)
+	blockNum, err := client.BlockNumber(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	nodeInfo, err := node.GetNodeById(&bind.CallOpts{}, big.NewInt(2))
+	balance, err := client.BalanceAt(ctx, addr, big.NewInt(int64(blockNum)))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	fmt.Println(nodeInfo)
-
-	return nil
+	return balance, nil
 }
 
-func UpdateNodeInfo(addr, password string, newIP [4]uint8, newPort uint16) error {
+// ====================================================================================
 
-	nodeAddr := common.HexToAddress(addr)
-	nftAddr := common.HexToAddress("0xBfAfdaE6B77a02A4684D39D1528c873961528342")
+func GetSelfInfo() (nodeApi.SimpleMetaDataDeNetNode, error) {
+
+	var nodeInfo nodeApi.SimpleMetaDataDeNetNode
+
+	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
+	if err != nil {
+		return nodeInfo, err
+	}
+
+	defer client.Close()
+
+	node, err := nodeApi.NewNodeNft(common.HexToAddress(NFT), client)
+	if err != nil {
+		return nodeInfo, err
+	}
+
+	nodeInfo, err = node.NodeInfo(&bind.CallOpts{}, big.NewInt(1)) // ???
+	if err != nil {
+		return nodeInfo, err
+	}
+
+	return nodeInfo, nil
+}
+
+// ====================================================================================
+
+func GetNodeInfoByID() (nodeApi.SimpleMetaDataDeNetNode, error) {
+
+	var nodeInfo nodeApi.SimpleMetaDataDeNetNode
+
+	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
+	if err != nil {
+		return nodeInfo, err
+	}
+
+	defer client.Close()
+
+	node, err := nodeApi.NewNodeNft(common.HexToAddress(NFT), client)
+	if err != nil {
+		return nodeInfo, err
+	}
+
+	nodeInfo, err = node.GetNodeById(&bind.CallOpts{}, big.NewInt(2))
+	if err != nil {
+		return nodeInfo, err
+	}
+
+	return nodeInfo, nil
+}
+
+// ====================================================================================
+
+func UpdateNodeInfo(nodeAddr common.Address, password string, newIP [4]uint8, newPort uint16) error {
 
 	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
 	if err != nil {
@@ -289,7 +341,7 @@ func UpdateNodeInfo(addr, password string, newIP [4]uint8, newPort uint16) error
 
 	defer client.Close()
 
-	node, err := nodeApi.NewNodeNft(nftAddr, client)
+	node, err := nodeApi.NewNodeNft(common.HexToAddress(NFT), client)
 	if err != nil {
 		return err
 	}
@@ -308,6 +360,8 @@ func UpdateNodeInfo(addr, password string, newIP [4]uint8, newPort uint16) error
 
 	return nil
 }
+
+// ====================================================================================
 
 func initTrxOpts(client *ethclient.Client, nodeAddr common.Address, password string) (*bind.TransactOpts, uint64, error) {
 	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
@@ -351,6 +405,8 @@ func initTrxOpts(client *ethclient.Client, nodeAddr common.Address, password str
 
 	return opts, blockNum, nil
 }
+
+// ====================================================================================
 
 func sendProof(client *ethclient.Client, password string, fileBytes []byte, nodeAddr common.Address, spAddr string) error {
 
@@ -434,6 +490,8 @@ func sendProof(client *ethclient.Client, password string, fileBytes []byte, node
 
 }
 
+// ====================================================================================
+
 func getPos(hash []byte, list [][]byte) int {
 	for i, v := range list {
 		diff := bytes.Compare(v, hash)
@@ -445,6 +503,8 @@ func getPos(hash []byte, list [][]byte) int {
 	return -1
 
 }
+
+// ====================================================================================
 
 // Builds merkle tree proof
 func makeProof(start []byte, tree [][][]byte) [][32]byte { // returns slice of 32 bytes array because smart contract awaits this type

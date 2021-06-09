@@ -112,8 +112,8 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 	ipAddrIsCorrect := false
 	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
 
-	fmt.Println("Please enter your public IP address. Remember if you don't have a static ip address it can be different every time you connect to Internet")
-	fmt.Println("After loss of Internet connection ip address info update may be needed")
+	fmt.Println("Please enter your public IP address. Remember if you don't have a static ip address it may change")
+	fmt.Println("After router reset ip address info update may be needed")
 	fmt.Println("You can check your public ip address by using various online services")
 
 	var splittedAddr []string
@@ -195,6 +195,8 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		portHTTPValueIsCorrect = true
 		dFileConf.HTTPPort = fmt.Sprint(intHttpPort)
 	}
+
+	//TODO add blockchain request
 
 	err := blockchainprovider.RegisterNode(password, splittedAddr, dFileConf.HTTPPort)
 	if err != nil {

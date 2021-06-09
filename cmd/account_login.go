@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"dfile-secondary-node/account"
-	blockchainprovider "dfile-secondary-node/blockchain_provider"
+	bcProvider "dfile-secondary-node/blockchain_provider"
+
 	"dfile-secondary-node/config"
 	"dfile-secondary-node/shared"
 	"encoding/json"
@@ -13,6 +14,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
@@ -128,7 +130,14 @@ var accountLoginCmd = &cobra.Command{
 
 		fmt.Println("Logged in")
 
-		blockchainprovider.StartMining(password)
+		nodeBalance, err := bcProvider.CheckBalance(common.HexToAddress(address))
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		fmt.Println("nodeBalance", nodeBalance)
+
+		bcProvider.StartMining(password)
 
 		// server.Start(address, dFileConf.HTTPPort)
 
