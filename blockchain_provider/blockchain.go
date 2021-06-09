@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -36,8 +35,11 @@ type StorageInfo struct {
 
 const eightKB = 8192
 const NFT = "0xBfAfdaE6B77a02A4684D39D1528c873961528342"
+const ethClientAddr = "https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2"
 
-func RegisterNode(password string, ip []string, port string) error {
+func RegisterNode(address, password string, ip []string, port string) error {
+
+	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
 	intPort, err := strconv.Atoi(port)
 	if err != nil {
@@ -49,12 +51,27 @@ func RegisterNode(password string, ip []string, port string) error {
 		return err
 	}
 
-	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
+	client, err := ethclient.Dial(ethClientAddr)
 	if err != nil {
 		return err
 	}
 
 	defer client.Close()
+
+	blockNum := getBlockNum(ctx, client)
+
+	balance, err := client.BalanceAt(ctx, common.HexToAddress(address), big.NewInt(int64(blockNum)))
+	if err != nil {
+		return err
+	}
+
+	balanceIsInsufficient := balance.Cmp(big.NewInt(200000000000000)) == -1
+
+	if balanceIsInsufficient {
+		fmt.Println("Your account has insufficient funds for registering in net. Balance:", balance, "wei")
+		fmt.Println("Please top up your balance")
+		os.Exit(0)
+	}
 
 	node, err := nodeApi.NewNodeNft(common.HexToAddress(NFT), client)
 	if err != nil {
@@ -100,7 +117,7 @@ func StartMining(password string) {
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
 
-	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
+	client, err := ethclient.Dial(ethClientAddr)
 	if err != nil {
 		shared.LogError(err.Error())
 		fmt.Println(err)
@@ -124,11 +141,7 @@ func StartMining(password string) {
 
 		ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
-		blockNum, err := getBlockNum(ctx, client)
-		if err != nil {
-			shared.LogError(err.Error())
-			log.Fatal(err)
-		}
+		blockNum := getBlockNum(ctx, client)
 
 		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
 		if err != nil {
@@ -139,7 +152,7 @@ func StartMining(password string) {
 		nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
 
 		if nodeBalanceIsLow {
-			fmt.Println("Your account has insufficient funds:", nodeBalance, "wei")
+			fmt.Println("Your account has insufficient funds for paying transaction fee. Balance:", nodeBalance, "wei")
 			fmt.Println("Please top up your balance")
 			time.Sleep(time.Second * 15)
 			continue
@@ -171,13 +184,11 @@ func StartMining(password string) {
 
 		for _, spAddress := range storageProviderAddresses {
 			storageProviderAddr := common.HexToAddress(spAddress)
-			paymentToken, reward, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr)
+			_, reward, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
 			if err != nil {
 				shared.LogError(err.Error())
 				fmt.Println(err)
 			}
-
-			fmt.Println(paymentToken, reward, userDifficulty)
 
 			fileNames := []string{}
 
@@ -217,11 +228,7 @@ func StartMining(password string) {
 
 				storedFile.Close()
 
-				blockNum, err := getBlockNum(ctx, client)
-				if err != nil {
-					shared.LogError(err.Error())
-					log.Fatal(err)
-				}
+				blockNum := getBlockNum(ctx, client)
 
 				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum))
 				if err != nil {
@@ -248,7 +255,7 @@ func StartMining(password string) {
 
 				fmt.Println("checked file:", fileName)
 
-				rewardisEnough := reward.Cmp(big.NewInt(3000000000000000)) == 1
+				rewardisEnough := reward.Cmp(big.NewInt(3000000000000000000)) == 1
 
 				if compareResultIsLessUserDifficulty && rewardisEnough {
 					fmt.Println("Sending Proof for reward", reward)
@@ -272,64 +279,11 @@ func StartMining(password string) {
 
 // ====================================================================================
 
-func CheckBalance(addr common.Address) (*big.Int, error) {
-
-	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
-
-	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
-	if err != nil {
-		return nil, err
-	}
-
-	defer client.Close()
-
-	blockNum, err := getBlockNum(ctx, client)
-	if err != nil {
-		shared.LogError(err.Error())
-		log.Fatal(err)
-	}
-
-	balance, err := client.BalanceAt(ctx, addr, big.NewInt(int64(blockNum)))
-	if err != nil {
-		return nil, err
-	}
-
-	return balance, nil
-}
-
-// ====================================================================================
-
-func GetSelfInfo() (nodeApi.SimpleMetaDataDeNetNode, error) {
-
-	var nodeInfo nodeApi.SimpleMetaDataDeNetNode
-
-	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
-	if err != nil {
-		return nodeInfo, err
-	}
-
-	defer client.Close()
-
-	node, err := nodeApi.NewNodeNft(common.HexToAddress(NFT), client)
-	if err != nil {
-		return nodeInfo, err
-	}
-
-	nodeInfo, err = node.NodeInfo(&bind.CallOpts{}, big.NewInt(1)) // ???
-	if err != nil {
-		return nodeInfo, err
-	}
-
-	return nodeInfo, nil
-}
-
-// ====================================================================================
-
 func GetNodeInfoByID() (nodeApi.SimpleMetaDataDeNetNode, error) {
 
 	var nodeInfo nodeApi.SimpleMetaDataDeNetNode
 
-	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
+	client, err := ethclient.Dial(ethClientAddr)
 	if err != nil {
 		return nodeInfo, err
 	}
@@ -353,7 +307,7 @@ func GetNodeInfoByID() (nodeApi.SimpleMetaDataDeNetNode, error) {
 
 func UpdateNodeInfo(nodeAddr common.Address, password string, newIP [4]uint8, newPort uint16) error {
 
-	client, err := ethclient.Dial("https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2")
+	client, err := ethclient.Dial(ethClientAddr)
 	if err != nil {
 		return err
 	}
@@ -385,11 +339,7 @@ func UpdateNodeInfo(nodeAddr common.Address, password string, newIP [4]uint8, ne
 func initTrxOpts(client *ethclient.Client, nodeAddr common.Address, password string) (*bind.TransactOpts, uint64, error) {
 	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
-	blockNum, err := getBlockNum(ctx, client)
-	if err != nil {
-		shared.LogError(err.Error())
-		log.Fatal(err)
-	}
+	blockNum := getBlockNum(ctx, client)
 
 	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
 	if err != nil {
@@ -417,7 +367,7 @@ func initTrxOpts(client *ethclient.Client, nodeAddr common.Address, password str
 			return t, nil
 		},
 		Value:    big.NewInt(0),
-		GasPrice: big.NewInt(5000000000),
+		GasPrice: big.NewInt(1000000000),
 		GasLimit: 1000000,
 		Context:  ctx,
 		NoSend:   false,
@@ -426,9 +376,12 @@ func initTrxOpts(client *ethclient.Client, nodeAddr common.Address, password str
 	return opts, blockNum, nil
 }
 
-func getBlockNum(ctx context.Context, client *ethclient.Client) (uint64, error) {
+func getBlockNum(ctx context.Context, client *ethclient.Client) uint64 {
 	blockNum, err := client.BlockNumber(ctx)
 	if err != nil {
+		fmt.Println(err)
+		fmt.Println(err.Error() == "Unknown block number")
+
 		if err.Error() == "Unknown block number" {
 			for i := 0; i <= 3; i++ {
 				fmt.Println("Attempt #", i)
@@ -440,16 +393,17 @@ func getBlockNum(ctx context.Context, client *ethclient.Client) (uint64, error) 
 
 				time.Sleep(time.Second)
 			}
+
 		}
 
 		if err != nil {
 			shared.LogError(err.Error())
-			return 0, err
+			os.Exit(1)
 		}
 
 	}
 
-	return blockNum, nil
+	return blockNum
 }
 
 // ====================================================================================

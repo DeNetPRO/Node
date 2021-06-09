@@ -15,7 +15,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
@@ -130,13 +129,6 @@ var accountLoginCmd = &cobra.Command{
 		}
 
 		fmt.Println("Logged in")
-
-		nodeBalance, err := bcProvider.CheckBalance(common.HexToAddress(address))
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		fmt.Println("nodeBalance", nodeBalance)
 
 		go bcProvider.StartMining(password)
 
