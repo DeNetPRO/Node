@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -58,9 +59,12 @@ func RegisterNode(address, password string, ip []string, port string) error {
 
 	defer client.Close()
 
-	blockNum := getBlockNum(ctx, client)
+	blockNum, err := client.BlockNumber(ctx)
+	if err != nil {
+		return err
+	}
 
-	balance, err := client.BalanceAt(ctx, common.HexToAddress(address), big.NewInt(int64(blockNum)))
+	balance, err := client.BalanceAt(ctx, common.HexToAddress(address), big.NewInt(int64(blockNum-1)))
 	if err != nil {
 		return err
 	}
@@ -141,9 +145,13 @@ func StartMining(password string) {
 
 		ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
-		blockNum := getBlockNum(ctx, client)
+		blockNum, err := client.BlockNumber(ctx)
+		if err != nil {
+			shared.LogError(err.Error())
+			fmt.Println(err)
+		}
 
-		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
+		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum-1)))
 		if err != nil {
 			shared.LogError(err.Error())
 			fmt.Println(err)
@@ -228,9 +236,13 @@ func StartMining(password string) {
 
 				storedFile.Close()
 
-				blockNum := getBlockNum(ctx, client)
+				blockNum, err := client.BlockNumber(ctx)
+				if err != nil {
+					shared.LogError(err.Error())
+					fmt.Println(err)
+				}
 
-				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum))
+				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-1))
 				if err != nil {
 					shared.LogError(err.Error())
 					fmt.Println(err)
@@ -241,13 +253,16 @@ func StartMining(password string) {
 
 				hashedFileAddrBlock := sha256.Sum256(fileBytesAddrBlockHash)
 
-				hexFileAddrBlock := "0x" + hex.EncodeToString(hashedFileAddrBlock[:])
+				stringFileAddrBlock := hex.EncodeToString(hashedFileAddrBlock[:])
 
-				decodedBigInt, err := hexutil.DecodeBig(hexFileAddrBlock)
+				stringFileAddrBlock = strings.TrimPrefix(stringFileAddrBlock, "0")
+
+				decodedBigInt, err := hexutil.DecodeBig("0x" + stringFileAddrBlock)
 				if err != nil {
 					shared.LogError(err.Error())
-					fmt.Println(hexFileAddrBlock, err)
 				}
+
+				fmt.Println(decodedBigInt, "/", baseDfficulty)
 
 				remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
 
@@ -324,12 +339,10 @@ func UpdateNodeInfo(nodeAddr common.Address, password string, newIP [4]uint8, ne
 		return err
 	}
 
-	nodeInfo, err := node.UpdateNode(opts, big.NewInt(2), newIP, newPort)
+	_, err = node.UpdateNode(opts, big.NewInt(2), newIP, newPort)
 	if err != nil {
 		return err
 	}
-
-	fmt.Println(nodeInfo)
 
 	return nil
 }
@@ -339,9 +352,13 @@ func UpdateNodeInfo(nodeAddr common.Address, password string, newIP [4]uint8, ne
 func initTrxOpts(client *ethclient.Client, nodeAddr common.Address, password string) (*bind.TransactOpts, uint64, error) {
 	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
-	blockNum := getBlockNum(ctx, client)
+	blockNum, err := client.BlockNumber(ctx)
+	if err != nil {
+		shared.LogError(err.Error())
+		fmt.Println(err)
+	}
 
-	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
+	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum-1)))
 	if err != nil {
 		return nil, 0, err
 	}
@@ -374,36 +391,6 @@ func initTrxOpts(client *ethclient.Client, nodeAddr common.Address, password str
 	}
 
 	return opts, blockNum, nil
-}
-
-func getBlockNum(ctx context.Context, client *ethclient.Client) uint64 {
-	blockNum, err := client.BlockNumber(ctx)
-	if err != nil {
-		fmt.Println(err)
-		fmt.Println(err.Error() == "Unknown block number")
-
-		if err.Error() == "Unknown block number" {
-			for i := 0; i <= 3; i++ {
-				fmt.Println("Attempt #", i)
-				bN, r := client.BlockNumber(ctx)
-				if r == nil {
-					blockNum = bN
-					err = nil
-				}
-
-				time.Sleep(time.Second)
-			}
-
-		}
-
-		if err != nil {
-			shared.LogError(err.Error())
-			os.Exit(1)
-		}
-
-	}
-
-	return blockNum
 }
 
 // ====================================================================================
@@ -479,7 +466,7 @@ func sendProof(client *ethclient.Client, password string, fileBytes []byte, node
 		return err
 	}
 
-	_, err = instance.SendProof(opts, common.HexToAddress("0x537F6af3A07e58986Bb5041c304e9Eb2283396CD"), uint32(blockNum), proof[len(proof)-1], uint64(intNonce), signedFSRootHash[:64], bytesToProve, proof)
+	_, err = instance.SendProof(opts, common.HexToAddress("0x537F6af3A07e58986Bb5041c304e9Eb2283396CD"), uint32(blockNum-1), proof[len(proof)-1], uint64(intNonce), signedFSRootHash[:64], bytesToProve, proof)
 	if err != nil {
 		return err
 	}
