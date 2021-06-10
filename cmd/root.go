@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"dfile-secondary-node/account"
-	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -21,8 +20,6 @@ var rootCmd = &cobra.Command{
 		} else if len(accs) == 1 {
 			accountLoginCmd.Run(accountLoginCmd, []string{accs[0]})
 		} else {
-			fmt.Println("Please enter account address you want to log in:")
-			accountListCmd.Run(accountListCmd, []string{})
 			accountLoginCmd.Run(accountLoginCmd, []string{})
 		}
 

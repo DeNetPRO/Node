@@ -165,6 +165,7 @@ func CheckPassword(password, address string) error {
 func ValidateUser() (*accounts.Account, string, error) {
 	var address, password string
 	var etherAccount *accounts.Account
+
 	accounts := List()
 
 	if len(accounts) > 1 {
