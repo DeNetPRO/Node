@@ -115,8 +115,6 @@ func StartMining(password string) {
 		shared.LogError(err.Error())
 	}
 
-	fmt.Println(nodeAddr)
-
 	pathToAccStorage := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName)
 
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")

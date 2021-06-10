@@ -109,7 +109,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 	fmt.Println("After router reset ip address info update may be needed")
 	fmt.Println("You can check your public ip address by using various online services")
 
-	var splittedAddr []string
+	var splitIPAddr []string
 
 	for {
 
@@ -125,17 +125,17 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 			continue
 		}
 
-		splittedAddr = strings.Split(ipAddr, ".")
+		splitIPAddr = strings.Split(ipAddr, ".")
 
-		if fullyReservedIPs[splittedAddr[0]] {
+		if fullyReservedIPs[splitIPAddr[0]] {
 			fmt.Println("Address", ipAddr, "can't be used as a public ip address")
 			continue
 		}
 
-		reservedSecAddrPart, isReserved := partiallyReservedIPs[splittedAddr[0]]
+		reservedSecAddrPart, isReserved := partiallyReservedIPs[splitIPAddr[0]]
 
 		if isReserved {
-			secondAddrPart, err := strconv.Atoi(splittedAddr[1])
+			secondAddrPart, err := strconv.Atoi(splitIPAddr[1])
 			if err != nil {
 				return dFileConf, err
 			}
@@ -186,7 +186,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		break
 	}
 
-	err := blockchainprovider.RegisterNode(address, password, splittedAddr, dFileConf.HTTPPort)
+	err := blockchainprovider.RegisterNode(address, password, splitIPAddr, dFileConf.HTTPPort)
 	if err != nil {
 		shared.LogError(err.Error())
 		log.Fatal("Couldn't register node in network")

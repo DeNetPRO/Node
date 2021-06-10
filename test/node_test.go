@@ -161,7 +161,7 @@ func createConfigForTests(address, password, ipAddress, storageLimit, port strin
 
 	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
 
-	var splittedAddr []string
+	var splitIPAddr []string
 	ipAddr := ipAddress
 	match = regIp.MatchString(ipAddr)
 
@@ -169,16 +169,16 @@ func createConfigForTests(address, password, ipAddress, storageLimit, port strin
 		return nil, fmt.Errorf("ip is incorrect, please try again")
 	}
 
-	splittedAddr = strings.Split(ipAddr, ".")
+	splitIPAddr = strings.Split(ipAddr, ".")
 
-	if fullyReservedIPs[splittedAddr[0]] {
+	if fullyReservedIPs[splitIPAddr[0]] {
 		return nil, errors.New("Address" + ipAddr + "can't be used as a public ip address")
 	}
 
-	reservedSecAddrPart, isReserved := partiallyReservedIPs[splittedAddr[0]]
+	reservedSecAddrPart, isReserved := partiallyReservedIPs[splitIPAddr[0]]
 
 	if isReserved {
-		secondAddrPart, err := strconv.Atoi(splittedAddr[1])
+		secondAddrPart, err := strconv.Atoi(splitIPAddr[1])
 		if err != nil {
 			return dFileConf, fmt.Errorf("ip  part is incorrect, please try again")
 		}

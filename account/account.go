@@ -2,7 +2,9 @@ package account
 
 import (
 	"dfile-secondary-node/shared"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -40,15 +42,17 @@ func Create(password string) (string, error) {
 		return "", err
 	}
 
-	keyJson, err := ks.Export(etherAccount, password, password)
+	keyJson, err := ks.Export(etherAccount, password, password) // TODO remove
 	if err != nil {
 		return "", err
 	}
 
-	key, err := keystore.DecryptKey(keyJson, password)
+	key, err := keystore.DecryptKey(keyJson, password) // TODO remove
 	if err != nil {
 		return "", err
 	}
+
+	fmt.Println("Private Key:", hex.EncodeToString(key.PrivateKey.D.Bytes())) // TODO remove
 
 	addressString := etherAccount.Address.String()
 
@@ -62,7 +66,7 @@ func Create(password string) (string, error) {
 		return "", err
 	}
 
-	encryptedAddr, err := shared.EncryptNodeAddr(key.Address)
+	encryptedAddr, err := shared.EncryptNodeAddr(etherAccount.Address)
 	if err != nil {
 		return "", err
 	}
@@ -78,27 +82,18 @@ func Import(privKey, password string) (string, error) {
 
 	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 
-	ecdsaKey, err := crypto.HexToECDSA(privKey)
+	ecdsaPrivKey, err := crypto.HexToECDSA(privKey)
 	if err != nil {
 		return "", err
 	}
 
-	etherAccount, err := ks.ImportECDSA(ecdsaKey, password)
+	etherAccount, err := ks.ImportECDSA(ecdsaPrivKey, password)
 	if err != nil {
+		fmt.Println(err)
 		return "", err
 	}
 
-	keyJson, err := ks.Export(etherAccount, password, password)
-	if err != nil {
-		return "", err
-	}
-
-	key, err := keystore.DecryptKey(keyJson, password)
-	if err != nil {
-		return "", err
-	}
-
-	addressString := key.Address.String()
+	addressString := etherAccount.Address.String()
 
 	err = os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.StorageDirName), 0700)
 	if err != nil {
@@ -110,7 +105,7 @@ func Import(privKey, password string) (string, error) {
 		return "", err
 	}
 
-	encryptedAddr, err := shared.EncryptNodeAddr(key.Address)
+	encryptedAddr, err := shared.EncryptNodeAddr(etherAccount.Address)
 	if err != nil {
 		return "", err
 	}
