@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/cmd/utils"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 //GetAllAccounts go to the folder ~/dfile/accounts and return all accounts addresses in string format
@@ -33,6 +34,7 @@ func Create(password string) (string, error) {
 	shared.CreateIfNotExistAccDirs()
 
 	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+
 	etherAccount, err := ks.NewAccount(password)
 	if err != nil {
 		return "", err
@@ -49,6 +51,54 @@ func Create(password string) (string, error) {
 	}
 
 	addressString := etherAccount.Address.String()
+
+	err = os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.StorageDirName), 0700)
+	if err != nil {
+		return "", err
+	}
+
+	err = os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.ConfDirName), 0700)
+	if err != nil {
+		return "", err
+	}
+
+	encryptedAddr, err := shared.EncryptNodeAddr(key.Address)
+	if err != nil {
+		return "", err
+	}
+
+	shared.NodeAddr = encryptedAddr
+
+	return addressString, nil
+}
+
+func Import(privKey, password string) (string, error) {
+
+	shared.CreateIfNotExistAccDirs()
+
+	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+
+	ecdsaKey, err := crypto.HexToECDSA(privKey)
+	if err != nil {
+		return "", err
+	}
+
+	etherAccount, err := ks.ImportECDSA(ecdsaKey, password)
+	if err != nil {
+		return "", err
+	}
+
+	keyJson, err := ks.Export(etherAccount, password, password)
+	if err != nil {
+		return "", err
+	}
+
+	key, err := keystore.DecryptKey(keyJson, password)
+	if err != nil {
+		return "", err
+	}
+
+	addressString := key.Address.String()
 
 	err = os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.StorageDirName), 0700)
 	if err != nil {

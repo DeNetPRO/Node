@@ -188,6 +188,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	err := blockchainprovider.RegisterNode(address, password, splittedAddr, dFileConf.HTTPPort)
 	if err != nil {
+		shared.LogError(err.Error())
 		log.Fatal("Couldn't register node in network")
 	}
 
