@@ -100,6 +100,7 @@ func RegisterNode(address, password string, ip []string, port string) error {
 
 	_, err = node.CreateNode(opts, ipAddr, uint16(intPort))
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 
@@ -255,14 +256,12 @@ func StartMining(password string) {
 
 				stringFileAddrBlock := hex.EncodeToString(hashedFileAddrBlock[:])
 
-				stringFileAddrBlock = strings.TrimPrefix(stringFileAddrBlock, "0")
+				stringFileAddrBlock = strings.TrimLeft(stringFileAddrBlock, "0")
 
 				decodedBigInt, err := hexutil.DecodeBig("0x" + stringFileAddrBlock)
 				if err != nil {
 					shared.LogError(err.Error())
 				}
-
-				fmt.Println(decodedBigInt, "/", baseDfficulty)
 
 				remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
 
