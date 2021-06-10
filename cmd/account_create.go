@@ -23,12 +23,11 @@ var accountCreateCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		var password1, password2 string
-		passwordMatch := false
 
 		fmt.Println("Password is required for account creation. It can't be restored, please save it in a safe place.")
 		fmt.Println("Please enter your new password: ")
 
-		for !passwordMatch {
+		for {
 			bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
 				log.Fatal(accCreateFatalMessage)
@@ -49,11 +48,10 @@ var accountCreateCmd = &cobra.Command{
 			password2 = string(bytePassword)
 
 			if password1 == password2 {
-				passwordMatch = true
-			} else {
-				fmt.Println("Passwords do not match. Please enter passwords again.")
+				break
 			}
 
+			fmt.Println("Passwords do not match. Please enter passwords again.")
 		}
 		accountStr, err := account.Create(password1)
 		if err != nil {

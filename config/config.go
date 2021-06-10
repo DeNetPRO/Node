@@ -37,8 +37,6 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	dFileConf := SecondaryNodeConfig{}
 
-	addressIsCorrect := false
-
 	if address == "" {
 		fmt.Println("Please select one of account addresses")
 		accounts := account.List()
@@ -47,7 +45,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 			fmt.Println(i+1, a)
 		}
 
-		for !addressIsCorrect {
+		for {
 			accountAddress, err := shared.ReadFromConsole()
 			if err != nil {
 				return dFileConf, err
@@ -60,10 +58,9 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 				continue
 			}
 
-			addressIsCorrect = true
 			dFileConf.Address = accountAddress
 			address = accountAddress
-
+			break
 		}
 	} else {
 		dFileConf.Address = address
@@ -72,11 +69,9 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	pathToConfig := filepath.Join(shared.AccsDirPath, address, shared.ConfDirName)
 
-	spaceValueIsCorrect := false
-
 	regNum := regexp.MustCompile(("[0-9]+"))
 
-	for !spaceValueIsCorrect {
+	for {
 		fmt.Println("Please enter disk space for usage in GB (should be positive number)")
 
 		availableSpace := shared.GetAvailableSpace(pathToConfig)
@@ -104,12 +99,10 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 			continue
 		}
 
-		spaceValueIsCorrect = true
 		dFileConf.StorageLimit = intSpace
-
+		break
 	}
 
-	ipAddrIsCorrect := false
 	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
 
 	fmt.Println("Please enter your public IP address. Remember if you don't have a static ip address it may change")
@@ -118,7 +111,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	var splittedAddr []string
 
-	for !ipAddrIsCorrect {
+	for {
 
 		ipAddr, err := shared.ReadFromConsole()
 		if err != nil {
@@ -153,14 +146,12 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 			}
 		}
 
-		ipAddrIsCorrect = true
-
+		break
 	}
 
-	portHTTPValueIsCorrect := false
 	regPort := regexp.MustCompile("[0-9]+|")
 
-	for !portHTTPValueIsCorrect {
+	for {
 		fmt.Println("Enter http port number (value from 49152 to 65535) or press enter to use default port number 55050")
 
 		httpPort, err := shared.ReadFromConsole()
@@ -169,9 +160,8 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		}
 
 		if httpPort == "" {
-			portHTTPValueIsCorrect = true
 			dFileConf.HTTPPort = fmt.Sprint(55050)
-			continue
+			break
 		}
 
 		match := regPort.MatchString(httpPort)
@@ -192,8 +182,8 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 			continue
 		}
 
-		portHTTPValueIsCorrect = true
 		dFileConf.HTTPPort = fmt.Sprint(intHttpPort)
+		break
 	}
 
 	//TODO add blockchain request

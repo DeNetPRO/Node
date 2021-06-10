@@ -36,12 +36,10 @@ var accountLoginCmd = &cobra.Command{
 			accounts = account.List()
 		}
 
-		allMatch := false
-
 		var address string
 		var password string
 
-		for !allMatch {
+		for {
 
 			if len(args) == 1 {
 				address = args[0]
@@ -76,7 +74,7 @@ var accountLoginCmd = &cobra.Command{
 				continue
 			}
 
-			allMatch = true
+			break
 		}
 
 		err := account.Login(address, password)
