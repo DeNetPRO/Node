@@ -34,12 +34,10 @@ var configUpdateCmd = &cobra.Command{
 			fmt.Println(i+1, a)
 		}
 
-		allMatch := false
-
 		var address string
 		var password string
 
-		for !allMatch {
+		for {
 			byteAddress, err := shared.ReadFromConsole()
 			if err != nil {
 				log.Fatal(confUpdateFatalMessage)
@@ -69,7 +67,7 @@ var configUpdateCmd = &cobra.Command{
 				continue
 			}
 
-			allMatch = true
+			break
 		}
 
 		confFilePath := filepath.Join(shared.AccsDirPath, address, shared.ConfDirName)
@@ -119,11 +117,9 @@ var configUpdateCmd = &cobra.Command{
 
 		fmt.Println("Please enter disk space for usage in GB (should be positive number), or just press enter button to skip")
 
-		spaceValueIsCorrect := false
-
 		regNum := regexp.MustCompile(("[0-9]+"))
 
-		for !spaceValueIsCorrect {
+		for {
 
 			availableSpace := shared.GetAvailableSpace(pathToConfig)
 
@@ -135,7 +131,6 @@ var configUpdateCmd = &cobra.Command{
 			}
 
 			if space == "" {
-				spaceValueIsCorrect = true
 				continue
 			}
 
@@ -157,17 +152,15 @@ var configUpdateCmd = &cobra.Command{
 				continue
 			}
 
-			spaceValueIsCorrect = true
 			dFileConf.StorageLimit = intSpace
-
+			break
 		}
 
 		fmt.Println("Please enter new http port address, or just press enter button to skip")
 
-		portHTTPValueIsCorrect := false
 		regPort := regexp.MustCompile("[0-9]+|")
 
-		for !portHTTPValueIsCorrect {
+		for {
 
 			httpPort, err := shared.ReadFromConsole()
 			if err != nil {
@@ -175,7 +168,6 @@ var configUpdateCmd = &cobra.Command{
 			}
 
 			if httpPort == "" {
-				portHTTPValueIsCorrect = true
 				continue
 			}
 
@@ -197,8 +189,8 @@ var configUpdateCmd = &cobra.Command{
 
 			}
 
-			portHTTPValueIsCorrect = true
 			dFileConf.HTTPPort = fmt.Sprint(intHttpPort)
+			break
 		}
 
 		confJSON, err := json.Marshal(dFileConf)

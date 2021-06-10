@@ -78,8 +78,6 @@ func Login(blockchainAccountString, password string) error {
 
 	var etherAccount *accounts.Account
 
-	etherAccount = nil
-
 	for _, a := range etherAccounts {
 		if blockchainAccountString == a.Address.String() {
 			etherAccount = &a
@@ -88,8 +86,7 @@ func Login(blockchainAccountString, password string) error {
 	}
 
 	if etherAccount == nil {
-		errAccountNotFound := errors.New("Account Not Found Error: cannot find account for " + blockchainAccountString)
-		return errAccountNotFound
+		return errors.New("Account Not Found Error: cannot find account for " + blockchainAccountString)
 	}
 
 	keyJson, err := ks.Export(*etherAccount, password, password)
@@ -112,7 +109,7 @@ func Login(blockchainAccountString, password string) error {
 	return nil
 }
 
-func CheckPassword(password string, address string) error {
+func CheckPassword(password, address string) error {
 
 	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	acc, err := utils.MakeAddress(ks, address)
