@@ -23,19 +23,19 @@ var showKeyCmd = &cobra.Command{
 
 		etherAccount, password, err := account.ValidateUser()
 		if err != nil {
-			log.Fatal(confUpdateFatalMessage)
+			log.Fatal(showKeyFatalMessage)
 		}
 
 		ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 
 		keyJson, err := ks.Export(*etherAccount, password, password)
 		if err != nil {
-			log.Fatal(confUpdateFatalMessage)
+			log.Fatal(showKeyFatalMessage)
 		}
 
 		key, err := keystore.DecryptKey(keyJson, password)
 		if err != nil {
-			log.Fatal(confUpdateFatalMessage)
+			log.Fatal(showKeyFatalMessage)
 		}
 
 		fmt.Println("Private Key:", hex.EncodeToString(key.PrivateKey.D.Bytes()))

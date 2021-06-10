@@ -125,6 +125,7 @@ func Login(blockchainAccountString, password string) (*accounts.Account, error) 
 
 	keyJson, err := ks.Export(*etherAccount, password, password)
 	if err != nil {
+		fmt.Println("Wrong password")
 		return nil, err
 	}
 
