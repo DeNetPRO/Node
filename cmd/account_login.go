@@ -77,7 +77,7 @@ var accountLoginCmd = &cobra.Command{
 			break
 		}
 
-		err := account.Login(address, password)
+		_, err := account.Login(address, password)
 		if err != nil {
 			fmt.Println("Wrong password")
 			return

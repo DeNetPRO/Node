@@ -2,16 +2,17 @@ package account
 
 import (
 	"dfile-secondary-node/shared"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/crypto"
+	"golang.org/x/term"
 )
 
 //GetAllAccounts go to the folder ~/dfile/accounts and return all accounts addresses in string format
@@ -41,18 +42,6 @@ func Create(password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	keyJson, err := ks.Export(etherAccount, password, password) // TODO remove
-	if err != nil {
-		return "", err
-	}
-
-	key, err := keystore.DecryptKey(keyJson, password) // TODO remove
-	if err != nil {
-		return "", err
-	}
-
-	fmt.Println("Private Key:", hex.EncodeToString(key.PrivateKey.D.Bytes())) // TODO remove
 
 	addressString := etherAccount.Address.String()
 
@@ -116,7 +105,7 @@ func Import(privKey, password string) (string, error) {
 }
 
 //LoadAccount load in memory keystore file and decrypt it for further use
-func Login(blockchainAccountString, password string) error {
+func Login(blockchainAccountString, password string) (*accounts.Account, error) {
 
 	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccounts := ks.Accounts()
@@ -131,27 +120,27 @@ func Login(blockchainAccountString, password string) error {
 	}
 
 	if etherAccount == nil {
-		return errors.New("Account Not Found Error: cannot find account for " + blockchainAccountString)
+		return nil, errors.New("Account Not Found Error: cannot find account for " + blockchainAccountString)
 	}
 
 	keyJson, err := ks.Export(*etherAccount, password, password)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	key, err := keystore.DecryptKey(keyJson, password)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	encryptedAddr, err := shared.EncryptNodeAddr(key.Address)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	shared.NodeAddr = encryptedAddr
 
-	return nil
+	return etherAccount, nil
 }
 
 func CheckPassword(password, address string) error {
@@ -170,4 +159,61 @@ func CheckPassword(password, address string) error {
 		return err
 	}
 	return nil
+}
+
+func ValidateUser() (*accounts.Account, string, error) {
+	var address, password string
+	var etherAccount *accounts.Account
+	accounts := List()
+
+	if len(accounts) > 1 {
+		fmt.Println("Please choose an account")
+		for i, a := range accounts {
+			fmt.Println(i+1, a)
+		}
+	}
+
+	for {
+
+		if len(accounts) == 1 {
+			address = accounts[0]
+		} else {
+			byteAddress, err := shared.ReadFromConsole()
+			if err != nil {
+				return nil, "", err
+			}
+			address = string(byteAddress)
+		}
+
+		addressMatches := shared.ContainsAccount(accounts, address)
+
+		if !addressMatches {
+			fmt.Println("There is no such account address:")
+			for i, a := range accounts {
+				fmt.Println(i+1, a)
+			}
+			continue
+		}
+
+		fmt.Println("Please enter your password:")
+
+		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
+		if err != nil {
+			return nil, "", err
+		}
+		password = string(bytePassword)
+		if strings.Trim(password, " ") == "" {
+			fmt.Println("Empty string can't be used as a password. Please enter passwords again")
+			continue
+		}
+
+		etherAccount, err = Login(address, password)
+		if err != nil {
+			return nil, "", err
+		}
+
+		break
+	}
+
+	return etherAccount, password, nil
 }

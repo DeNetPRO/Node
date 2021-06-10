@@ -11,11 +11,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
-	"golang.org/x/term"
 )
 
 const confUpdateFatalMessage = "Fatal error while configuration update"
@@ -36,52 +33,12 @@ var configUpdateCmd = &cobra.Command{
 			}
 		}
 
-		var address string
-		var password string
-
-		for {
-
-			if len(accounts) == 1 {
-				address = accounts[0]
-			} else {
-				byteAddress, err := shared.ReadFromConsole()
-				if err != nil {
-					log.Fatal(confUpdateFatalMessage)
-				}
-				address = string(byteAddress)
-			}
-
-			addressMatches := shared.ContainsAccount(accounts, address)
-
-			if !addressMatches {
-				fmt.Println("There is no such account address:")
-				for i, a := range accounts {
-					fmt.Println(i+1, a)
-				}
-				continue
-			}
-
-			fmt.Println("Please enter your password:")
-
-			bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
-			if err != nil {
-				log.Fatal(confUpdateFatalMessage)
-			}
-			password = string(bytePassword)
-			if strings.Trim(password, " ") == "" {
-				fmt.Println("Empty string can't be used as a password. Please enter passwords again")
-				continue
-			}
-
-			err = account.Login(address, password)
-			if err != nil {
-				log.Fatal("Wrong password")
-			}
-
-			break
+		etherAccount, password, err := account.ValidateUser()
+		if err != nil {
+			log.Fatal(confUpdateFatalMessage)
 		}
 
-		pathToConfigDir := filepath.Join(shared.AccsDirPath, address, shared.ConfDirName)
+		pathToConfigDir := filepath.Join(shared.AccsDirPath, etherAccount.Address.String(), shared.ConfDirName)
 		pathToConfigFile := filepath.Join(pathToConfigDir, "config.json")
 
 		var dFileConf config.SecondaryNodeConfig
@@ -133,7 +90,7 @@ var configUpdateCmd = &cobra.Command{
 		}
 
 		if stateBefore.IpAddress != dFileConf.IpAddress || stateBefore.HTTPPort != dFileConf.HTTPPort {
-			blockchainprovider.UpdateNodeInfo(common.HexToAddress(address), password, dFileConf.HTTPPort, splitIPAddr)
+			blockchainprovider.UpdateNodeInfo(etherAccount.Address, password, dFileConf.HTTPPort, splitIPAddr)
 		}
 
 		confJSON, err := json.Marshal(dFileConf)
