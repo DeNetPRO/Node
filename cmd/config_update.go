@@ -2,19 +2,18 @@ package cmd
 
 import (
 	"dfile-secondary-node/account"
+	blockchainprovider "dfile-secondary-node/blockchain_provider"
 	"dfile-secondary-node/config"
 	"dfile-secondary-node/shared"
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strconv"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
@@ -28,22 +27,29 @@ var configUpdateCmd = &cobra.Command{
 	Long:  "updates your account configuration",
 	Run: func(cmd *cobra.Command, args []string) {
 
-		fmt.Println("Which account configuration would you like to change?")
 		accounts := account.List()
-		for i, a := range accounts {
-			fmt.Println(i+1, a)
+
+		if len(accounts) > 1 {
+			fmt.Println("Which account configuration would you like to change?")
+			for i, a := range accounts {
+				fmt.Println(i+1, a)
+			}
 		}
 
 		var address string
 		var password string
 
 		for {
-			byteAddress, err := shared.ReadFromConsole()
-			if err != nil {
-				log.Fatal(confUpdateFatalMessage)
-			}
 
-			address = string(byteAddress)
+			if len(accounts) == 1 {
+				address = accounts[0]
+			} else {
+				byteAddress, err := shared.ReadFromConsole()
+				if err != nil {
+					log.Fatal(confUpdateFatalMessage)
+				}
+				address = string(byteAddress)
+			}
 
 			addressMatches := shared.ContainsAccount(accounts, address)
 
@@ -67,37 +73,20 @@ var configUpdateCmd = &cobra.Command{
 				continue
 			}
 
+			err = account.Login(address, password)
+			if err != nil {
+				log.Fatal("Wrong password")
+			}
+
 			break
 		}
 
-		confFilePath := filepath.Join(shared.AccsDirPath, address, shared.ConfDirName)
-
-		confFiles := []string{}
-
-		err := filepath.WalkDir(confFilePath,
-			func(path string, info fs.DirEntry, err error) error {
-				if err != nil {
-					log.Fatal(confUpdateFatalMessage)
-				}
-
-				if info.Name() != shared.ConfDirName {
-					confFiles = append(confFiles, info.Name())
-				}
-
-				return nil
-			})
-		if err != nil {
-			log.Fatal(confUpdateFatalMessage)
-		}
-
-		if len(confFiles) == 0 {
-			log.Fatal("Config file is not found in your account directory")
-		}
+		pathToConfigDir := filepath.Join(shared.AccsDirPath, address, shared.ConfDirName)
+		pathToConfigFile := filepath.Join(pathToConfigDir, "config.json")
 
 		var dFileConf config.SecondaryNodeConfig
 
-		pathToConfig := filepath.Join(shared.AccsDirPath, address, shared.ConfDirName)
-		confFile, err := os.OpenFile(filepath.Join(pathToConfig, confFiles[0]), os.O_RDWR, 0700)
+		confFile, err := os.OpenFile(pathToConfigFile, os.O_RDWR, 0700)
 		if err != nil {
 			log.Fatal(confUpdateFatalMessage)
 		}
@@ -113,84 +102,38 @@ var configUpdateCmd = &cobra.Command{
 			log.Fatal(confUpdateFatalMessage)
 		}
 
-		fmt.Println("You can change your http port number or storage limit")
+		stateBefore := dFileConf
 
 		fmt.Println("Please enter disk space for usage in GB (should be positive number), or just press enter button to skip")
 
-		regNum := regexp.MustCompile(("[0-9]+"))
-
-		for {
-
-			availableSpace := shared.GetAvailableSpace(pathToConfig)
-
-			fmt.Println("Available space:", availableSpace, "GB")
-
-			space, err := shared.ReadFromConsole()
-			if err != nil {
-				log.Fatal(confUpdateFatalMessage)
-			}
-
-			if space == "" {
-				continue
-			}
-
-			match := regNum.MatchString(space)
-
-			if !match {
-				fmt.Println("Value is incorrect, please try again")
-				continue
-			}
-
-			intSpace, err := strconv.Atoi(space)
-			if err != nil {
-				fmt.Println("Value is incorrect, please try again")
-				continue
-			}
-
-			if intSpace < 0 || intSpace >= availableSpace {
-				fmt.Println("Value is incorrect, please try again")
-				continue
-			}
-
-			dFileConf.StorageLimit = intSpace
-			break
+		err = config.SetStorageLimit(pathToConfigDir, config.State.Update, &dFileConf)
+		if err != nil {
+			log.Fatal(confUpdateFatalMessage)
 		}
 
-		fmt.Println("Please enter new http port address, or just press enter button to skip")
+		fmt.Println("Please enter new ip address, or just press enter button to skip")
 
-		regPort := regexp.MustCompile("[0-9]+|")
+		splitIPAddr, err := config.SetIpAddr(&dFileConf, config.State.Update)
+		if err != nil {
+			log.Fatal(confUpdateFatalMessage)
+		}
 
-		for {
+		fmt.Println("Please enter new http port number, or just press enter button to skip")
 
-			httpPort, err := shared.ReadFromConsole()
-			if err != nil {
-				log.Fatal(confUpdateFatalMessage)
-			}
+		err = config.SetPort(&dFileConf, config.State.Update)
+		if err != nil {
+			log.Fatal(confUpdateFatalMessage)
+		}
 
-			if httpPort == "" {
-				continue
-			}
+		if stateBefore.IpAddress == dFileConf.IpAddress &&
+			stateBefore.HTTPPort == dFileConf.HTTPPort &&
+			stateBefore.StorageLimit == dFileConf.StorageLimit {
+			fmt.Println("Nothing was changed")
+			return
+		}
 
-			match := regPort.MatchString(httpPort)
-			if !match {
-				fmt.Println("Value is incorrect, please try again")
-				continue
-
-			}
-
-			intHttpPort, err := strconv.Atoi(httpPort)
-			if err != nil {
-				fmt.Println("Value is incorrect, please try again")
-				continue
-			}
-			if intHttpPort < 49152 || intHttpPort > 65535 {
-				fmt.Println("Value is incorrect, please try again")
-				continue
-
-			}
-
-			dFileConf.HTTPPort = fmt.Sprint(intHttpPort)
-			break
+		if stateBefore.IpAddress != dFileConf.IpAddress || stateBefore.HTTPPort != dFileConf.HTTPPort {
+			blockchainprovider.UpdateNodeInfo(common.HexToAddress(address), password, dFileConf.HTTPPort, splitIPAddr)
 		}
 
 		confJSON, err := json.Marshal(dFileConf)

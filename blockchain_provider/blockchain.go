@@ -134,7 +134,7 @@ func GetNodeInfoByID() (nodeApi.SimpleMetaDataDeNetNode, error) {
 
 // ====================================================================================
 
-func UpdateNodeInfo(nodeAddr common.Address, password string, newIP []string, newPort string) error {
+func UpdateNodeInfo(nodeAddr common.Address, password, newPort string, newIP []string) error {
 
 	ipInfo := [4]uint8{}
 
