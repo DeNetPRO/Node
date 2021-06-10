@@ -152,30 +152,27 @@ func UpdateNodeInfo(nodeAddr common.Address, password, newPort string, newIP []s
 		return err
 	}
 
-	fmt.Println(ipInfo)
-	fmt.Println(intPort)
+	client, err := ethclient.Dial(ethClientAddr)
+	if err != nil {
+		return err
+	}
 
-	// client, err := ethclient.Dial(ethClientAddr)
-	// if err != nil {
-	// 	return err
-	// }
+	defer client.Close()
 
-	// defer client.Close()
+	node, err := nodeApi.NewNodeNft(common.HexToAddress(NFT), client)
+	if err != nil {
+		return err
+	}
 
-	// node, err := nodeApi.NewNodeNft(common.HexToAddress(NFT), client)
-	// if err != nil {
-	// 	return err
-	// }
+	opts, _, err := initTrxOpts(client, nodeAddr, password)
+	if err != nil {
+		return err
+	}
 
-	// opts, _, err := initTrxOpts(client, nodeAddr, password)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// _, err = node.UpdateNode(opts, big.NewInt(2), ipInfo, uint16(intPort))
-	// if err != nil {
-	// 	return err
-	// }
+	_, err = node.UpdateNode(opts, big.NewInt(2), ipInfo, uint16(intPort))
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
