@@ -40,12 +40,23 @@ const ethClientAddr = "https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322
 
 func RegisterNode(address, password string, ip []string, port string) error {
 
-	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
+	ipAddr := [4]uint8{}
+
+	for i, v := range ip {
+		intIPPart, err := strconv.Atoi(v)
+		if err != nil {
+			return err
+		}
+
+		ipAddr[i] = uint8(intIPPart)
+	}
 
 	intPort, err := strconv.Atoi(port)
 	if err != nil {
 		return err
 	}
+
+	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
 	nodeAddr, err := shared.DecryptNodeAddr()
 	if err != nil {
@@ -82,17 +93,6 @@ func RegisterNode(address, password string, ip []string, port string) error {
 		return err
 	}
 
-	ipAddr := [4]uint8{}
-
-	for i, v := range ip {
-		intIPPart, err := strconv.Atoi(v)
-		if err != nil {
-			return err
-		}
-
-		ipAddr[i] = uint8(intIPPart)
-	}
-
 	opts, _, err := initTrxOpts(client, nodeAddr, password)
 	if err != nil {
 		return err
@@ -102,6 +102,80 @@ func RegisterNode(address, password string, ip []string, port string) error {
 	if err != nil {
 		return err
 	}
+
+	return nil
+}
+
+// ====================================================================================
+
+func GetNodeInfoByID() (nodeApi.SimpleMetaDataDeNetNode, error) {
+
+	var nodeInfo nodeApi.SimpleMetaDataDeNetNode
+
+	client, err := ethclient.Dial(ethClientAddr)
+	if err != nil {
+		return nodeInfo, err
+	}
+
+	defer client.Close()
+
+	node, err := nodeApi.NewNodeNft(common.HexToAddress(NFT), client)
+	if err != nil {
+		return nodeInfo, err
+	}
+
+	nodeInfo, err = node.GetNodeById(&bind.CallOpts{}, big.NewInt(2))
+	if err != nil {
+		return nodeInfo, err
+	}
+
+	return nodeInfo, nil
+}
+
+// ====================================================================================
+
+func UpdateNodeInfo(nodeAddr common.Address, password string, newIP []string, newPort string) error {
+
+	ipInfo := [4]uint8{}
+
+	for i, v := range newIP {
+		intPart, err := strconv.Atoi(v)
+		if err != nil {
+			return err
+		}
+
+		ipInfo[i] = uint8(intPart)
+	}
+
+	intPort, err := strconv.Atoi(newPort)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(ipInfo)
+	fmt.Println(intPort)
+
+	// client, err := ethclient.Dial(ethClientAddr)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// defer client.Close()
+
+	// node, err := nodeApi.NewNodeNft(common.HexToAddress(NFT), client)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// opts, _, err := initTrxOpts(client, nodeAddr, password)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// _, err = node.UpdateNode(opts, big.NewInt(2), ipInfo, uint16(intPort))
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
@@ -274,61 +348,6 @@ func StartMining(password string) {
 
 	}
 
-}
-
-// ====================================================================================
-
-func GetNodeInfoByID() (nodeApi.SimpleMetaDataDeNetNode, error) {
-
-	var nodeInfo nodeApi.SimpleMetaDataDeNetNode
-
-	client, err := ethclient.Dial(ethClientAddr)
-	if err != nil {
-		return nodeInfo, err
-	}
-
-	defer client.Close()
-
-	node, err := nodeApi.NewNodeNft(common.HexToAddress(NFT), client)
-	if err != nil {
-		return nodeInfo, err
-	}
-
-	nodeInfo, err = node.GetNodeById(&bind.CallOpts{}, big.NewInt(2))
-	if err != nil {
-		return nodeInfo, err
-	}
-
-	return nodeInfo, nil
-}
-
-// ====================================================================================
-
-func UpdateNodeInfo(nodeAddr common.Address, password string, newIP [4]uint8, newPort uint16) error {
-
-	client, err := ethclient.Dial(ethClientAddr)
-	if err != nil {
-		return err
-	}
-
-	defer client.Close()
-
-	node, err := nodeApi.NewNodeNft(common.HexToAddress(NFT), client)
-	if err != nil {
-		return err
-	}
-
-	opts, _, err := initTrxOpts(client, nodeAddr, password)
-	if err != nil {
-		return err
-	}
-
-	_, err = node.UpdateNode(opts, big.NewInt(2), newIP, newPort)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // ====================================================================================
