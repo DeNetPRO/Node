@@ -262,6 +262,9 @@ func StartMining(password string) {
 				shared.LogError(err.Error())
 			}
 
+			fmt.Println("reward is", reward) //TODO remove
+			fmt.Println("Min reward value:", 3000000000000000000)
+
 			fileNames := []string{}
 
 			pathToStorProviderFiles := filepath.Join(pathToAccStorage, storageProviderAddr.String())
@@ -284,6 +287,7 @@ func StartMining(password string) {
 			}
 
 			for _, fileName := range fileNames {
+				time.Sleep(time.Second) // allowed rps is 1 TODO?
 				storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
 				if err != nil {
 					shared.LogError(err.Error())
