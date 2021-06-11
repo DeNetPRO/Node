@@ -70,25 +70,26 @@ func TestCreateAccount(t *testing.T) {
 	configPath := filepath.Join(shared.AccsDirPath, accountAddress, shared.ConfDirName)
 
 	if _, err := os.Stat(storagePath); err != nil {
-		t.Error("storage directory is not exist")
+		t.Error(err)
 	}
 
 	if _, err := os.Stat(configPath); err != nil {
-		t.Error("config directory is not exist")
+		t.Error(err)
 	}
 
 	nodeAddress = shared.NodeAddr
 }
 
 func TestLoginAccountWithCorrectAddressAndPassword(t *testing.T) {
-	err := account.Login(accountAddress, accountPassword)
+	account, err := account.Login(accountAddress, accountPassword)
 	if err != nil {
 		t.Error(err)
 	}
+	require.Equal(t, accountAddress, account.Address.String())
 }
 
 func TestLoginAccountWithInvalidPassword(t *testing.T) {
-	err := account.Login(accountAddress, "invalid")
+	_, err := account.Login(accountAddress, "invalid")
 	want := ErrorInvalidPassword
 
 	require.EqualError(t, want, err.Error())
@@ -96,7 +97,7 @@ func TestLoginAccountWithInvalidPassword(t *testing.T) {
 
 func TestLoginAccountWithUnknownAddress(t *testing.T) {
 	unknownAddress := "accountAddress"
-	err := account.Login(unknownAddress, accountPassword)
+	_, err := account.Login(unknownAddress, accountPassword)
 	want := errors.New("Account Not Found Error: cannot find account for " + unknownAddress)
 
 	require.EqualError(t, want, err.Error())
@@ -124,7 +125,7 @@ func TestCreateConfig(t *testing.T) {
 
 	configPath := filepath.Join(shared.AccsDirPath, accountAddress, shared.ConfDirName, configName)
 	if _, err := os.Stat(configPath); err != nil {
-		t.Error("config not found")
+		t.Error(err)
 	}
 
 	configAddress = config.Address

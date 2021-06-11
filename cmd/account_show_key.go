@@ -18,8 +18,7 @@ var showKeyCmd = &cobra.Command{
 	Short: "reveals you the private key",
 	Long:  "reveals you the private key",
 	Run: func(cmd *cobra.Command, args []string) {
-
-		fmt.Println("Never disclose this key. Anyone with your private keys can steal any assets held in your account\n")
+		fmt.Println("Never disclose this key. Anyone with your private keys can steal any assets held in your account")
 
 		etherAccount, password, err := account.ValidateUser()
 		if err != nil {
@@ -39,7 +38,6 @@ var showKeyCmd = &cobra.Command{
 		}
 
 		fmt.Println("Private Key:", hex.EncodeToString(key.PrivateKey.D.Bytes()))
-
 	},
 }
 
