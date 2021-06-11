@@ -81,14 +81,14 @@ func TestCreateAccount(t *testing.T) {
 }
 
 func TestLoginAccountWithCorrectAddressAndPassword(t *testing.T) {
-	err := account.Login(accountAddress, accountPassword)
+	_, err := account.Login(accountAddress, accountPassword)
 	if err != nil {
 		t.Error(err)
 	}
 }
 
 func TestLoginAccountWithInvalidPassword(t *testing.T) {
-	err := account.Login(accountAddress, "invalid")
+	_, err := account.Login(accountAddress, "invalid")
 	want := ErrorInvalidPassword
 
 	require.EqualError(t, want, err.Error())
@@ -96,7 +96,7 @@ func TestLoginAccountWithInvalidPassword(t *testing.T) {
 
 func TestLoginAccountWithUnknownAddress(t *testing.T) {
 	unknownAddress := "accountAddress"
-	err := account.Login(unknownAddress, accountPassword)
+	_, err := account.Login(unknownAddress, accountPassword)
 	want := errors.New("Account Not Found Error: cannot find account for " + unknownAddress)
 
 	require.EqualError(t, want, err.Error())

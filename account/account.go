@@ -65,43 +65,69 @@ func Create(password string) (string, error) {
 	return addressString, nil
 }
 
-func Import(privKey, password string) (string, error) {
+func Import() error {
+
+	fmt.Println("Please enter private key of the account you want to import:")
+
+	privKey, err := shared.ReadFromConsole()
+	if err != nil {
+		return err
+	}
+
+	ecdsaPrivKey, err := crypto.HexToECDSA(privKey)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Please enter new password:")
+
+	var password string
+
+	for {
+		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
+		if err != nil {
+			return err
+		}
+
+		password = string(bytePassword)
+		if strings.Trim(password, " ") == "" {
+			fmt.Println("Empty string can't be used as a password. Please try again")
+			continue
+		}
+
+		break
+	}
 
 	shared.CreateIfNotExistAccDirs()
 
 	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 
-	ecdsaPrivKey, err := crypto.HexToECDSA(privKey)
-	if err != nil {
-		return "", err
-	}
-
 	etherAccount, err := ks.ImportECDSA(ecdsaPrivKey, password)
 	if err != nil {
 		fmt.Println(err)
-		return "", err
+		return err
 	}
 
 	addressString := etherAccount.Address.String()
 
 	err = os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.StorageDirName), 0700)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	err = os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.ConfDirName), 0700)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	encryptedAddr, err := shared.EncryptNodeAddr(etherAccount.Address)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	shared.NodeAddr = encryptedAddr
 
-	return addressString, nil
+	return nil
 }
 
 //LoadAccount load in memory keystore file and decrypt it for further use
@@ -163,8 +189,9 @@ func CheckPassword(password, address string) error {
 }
 
 func ValidateUser() (*accounts.Account, string, error) {
-	var address, password string
+	var accountAddress, password string
 	var etherAccount *accounts.Account
+	var err error
 
 	accounts := List()
 
@@ -178,16 +205,15 @@ func ValidateUser() (*accounts.Account, string, error) {
 	for {
 
 		if len(accounts) == 1 {
-			address = accounts[0]
+			accountAddress = accounts[0]
 		} else {
-			byteAddress, err := shared.ReadFromConsole()
+			accountAddress, err = shared.ReadFromConsole()
 			if err != nil {
 				return nil, "", err
 			}
-			address = string(byteAddress)
 		}
 
-		addressMatches := shared.ContainsAccount(accounts, address)
+		addressMatches := shared.ContainsAccount(accounts, accountAddress)
 
 		if !addressMatches {
 			fmt.Println("There is no such account address:")
@@ -209,7 +235,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 			continue
 		}
 
-		etherAccount, err = Login(address, password)
+		etherAccount, err = Login(accountAddress, password)
 		if err != nil {
 			return nil, "", err
 		}
