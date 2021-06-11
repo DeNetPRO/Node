@@ -10,7 +10,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -55,19 +54,20 @@ func InitPaths() error {
 
 // ====================================================================================
 
-func CreateIfNotExistAccDirs() {
+func CreateIfNotExistAccDirs() error {
 
 	_, err := os.Stat(WorkDirPath)
 	if err != nil {
 		errPart := strings.Split(err.Error(), ":")
 
 		if strings.Trim(errPart[1], " ") != "no such file or directory" {
-			log.Fatal("Fatal error")
+			return err
 		}
 
 		err = os.MkdirAll(WorkDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
-			log.Fatal("Fatal error")
+			return err
+
 		}
 	}
 
@@ -76,14 +76,17 @@ func CreateIfNotExistAccDirs() {
 		errPart := strings.Split(err.Error(), ":")
 
 		if strings.Trim(errPart[1], " ") != "no such file or directory" {
-			log.Fatal("Fatal error")
+			return err
 		}
 
 		err = os.MkdirAll(AccsDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
-			log.Fatal("Fatal error")
+			return err
+
 		}
 	}
+
+	return nil
 
 }
 

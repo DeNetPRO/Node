@@ -35,7 +35,10 @@ func List() []string {
 // CreateAccount creates account and keystore file with encryption with password
 func Create(password string) (string, error) {
 
-	shared.CreateIfNotExistAccDirs()
+	err := shared.CreateIfNotExistAccDirs()
+	if err != nil {
+		return "", err
+	}
 
 	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 
@@ -99,7 +102,10 @@ func Import() error {
 		break
 	}
 
-	shared.CreateIfNotExistAccDirs()
+	err = shared.CreateIfNotExistAccDirs()
+	if err != nil {
+		return err
+	}
 
 	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 
