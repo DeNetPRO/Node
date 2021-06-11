@@ -282,7 +282,11 @@ func LogError(errMsg string) error {
 
 	currentTime := time.Now().Local()
 
-	_, err = logsFile.WriteString(currentTime.String() + ": " + errMsg + "\n")
+	logMsg := currentTime.String() + ": " + errMsg + "\n"
+
+	fmt.Println(logMsg) //TODO remove
+
+	_, err = logsFile.WriteString(logMsg)
 	if err != nil {
 		return err
 	}
