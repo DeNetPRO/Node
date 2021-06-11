@@ -230,7 +230,7 @@ func StartMining(password string) {
 
 		if len(storageProviderAddresses) == 0 {
 			fmt.Println("Sleeping...")
-			time.Sleep(time.Second * 15)
+			time.Sleep(time.Second * 60)
 			continue
 		}
 
@@ -251,7 +251,7 @@ func StartMining(password string) {
 		if nodeBalanceIsLow {
 			fmt.Println("Your account has insufficient funds for paying transaction fee. Balance:", nodeBalance, "wei")
 			fmt.Println("Please top up your balance")
-			time.Sleep(time.Second * 15)
+			time.Sleep(time.Second * 60)
 			continue
 		}
 
@@ -341,7 +341,7 @@ func StartMining(password string) {
 		}
 
 		fmt.Println("Sleeping...")
-		time.Sleep(time.Second * 15)
+		time.Sleep(time.Second * 60)
 
 	}
 

@@ -35,6 +35,7 @@ var configUpdateCmd = &cobra.Command{
 
 		etherAccount, password, err := account.ValidateUser()
 		if err != nil {
+			shared.LogError(err.Error())
 			log.Fatal(confUpdateFatalMessage)
 		}
 

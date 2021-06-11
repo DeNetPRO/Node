@@ -275,7 +275,6 @@ func DecryptNodeAddr() (common.Address, error) {
 func LogError(errMsg string) error {
 	logsFile, err := os.OpenFile("./errorLogs", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0700)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
@@ -285,7 +284,6 @@ func LogError(errMsg string) error {
 
 	_, err = logsFile.WriteString(currentTime.String() + ": " + errMsg + "\n")
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
