@@ -1,6 +1,7 @@
 package account
 
 import (
+	"dfile-secondary-node/config"
 	"dfile-secondary-node/shared"
 	"errors"
 	"fmt"
@@ -126,6 +127,8 @@ func Import() error {
 	}
 
 	shared.NodeAddr = encryptedAddr
+
+	config.Create(addressString, config.State.Create)
 
 	return nil
 }
