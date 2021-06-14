@@ -38,7 +38,7 @@ const eightKB = 8192
 const NFT = "0xBfAfdaE6B77a02A4684D39D1528c873961528342"
 const ethClientAddr = "https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2"
 
-func RegisterNode(address, password string, ip []string, port string) error {
+func RegisterNode(ctx context.Context, address, password string, ip []string, port string) error {
 	const info = "blockchainprovider.RegisterNode"
 	ipAddr := [4]uint8{}
 
@@ -55,8 +55,6 @@ func RegisterNode(address, password string, ip []string, port string) error {
 	if err != nil {
 		return fmt.Errorf("%s %w", info, err)
 	}
-
-	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
 	nodeAddr, err := shared.DecryptNodeAddr()
 	if err != nil {
@@ -93,7 +91,7 @@ func RegisterNode(address, password string, ip []string, port string) error {
 		return fmt.Errorf("%s %w", info, err)
 	}
 
-	opts, _, err := initTrxOpts(client, nodeAddr, password)
+	opts, _, err := initTrxOpts(ctx, client, nodeAddr, password)
 	if err != nil {
 		return fmt.Errorf("%s %w", info, err)
 	}
@@ -134,7 +132,7 @@ func GetNodeInfoByID() (nodeApi.SimpleMetaDataDeNetNode, error) {
 
 // ====================================================================================
 
-func UpdateNodeInfo(nodeAddr common.Address, password, newPort string, newIP []string) error {
+func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newPort string, newIP []string) error {
 	const info = "blockchainprovider.UpdateNodeInfo"
 	ipInfo := [4]uint8{}
 
@@ -164,7 +162,7 @@ func UpdateNodeInfo(nodeAddr common.Address, password, newPort string, newIP []s
 		return fmt.Errorf("%s %w", info, err)
 	}
 
-	opts, _, err := initTrxOpts(client, nodeAddr, password)
+	opts, _, err := initTrxOpts(ctx, client, nodeAddr, password)
 	if err != nil {
 		return fmt.Errorf("%s %w", info, err)
 	}
@@ -210,7 +208,6 @@ func StartMining(password string) {
 
 	for {
 		storageProviderAddresses := []string{}
-
 		err = filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
 				if err != nil {
@@ -233,16 +230,22 @@ func StartMining(password string) {
 			continue
 		}
 
-		ctx, _ := context.WithTimeout(context.Background(), time.Minute)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
 
 		blockNum, err := client.BlockNumber(ctx)
 		if err != nil {
 			shared.LogError(info + ":" + err.Error())
+			cancel()
+			time.Sleep(time.Second * 60)
+			continue
 		}
 
 		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum-1)))
 		if err != nil {
 			shared.LogError(info + ":" + err.Error())
+			cancel()
+			time.Sleep(time.Second * 60)
+			continue
 		}
 
 		nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
@@ -333,7 +336,7 @@ func StartMining(password string) {
 
 				if compareResultIsLessUserDifficulty && rewardisEnough {
 					fmt.Println("Sending Proof for reward", reward)
-					err := sendProof(client, password, storedFileBytes, nodeAddr, spAddress)
+					err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress)
 					if err != nil {
 						shared.LogError(info + ":" + err.Error())
 					}
@@ -341,6 +344,7 @@ func StartMining(password string) {
 			}
 		}
 
+		cancel()
 		fmt.Println("Sleeping...")
 		time.Sleep(time.Second * 60)
 	}
@@ -348,9 +352,8 @@ func StartMining(password string) {
 
 // ====================================================================================
 
-func initTrxOpts(client *ethclient.Client, nodeAddr common.Address, password string) (*bind.TransactOpts, uint64, error) {
+func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.Address, password string) (*bind.TransactOpts, uint64, error) {
 	const info = "blockchainprovider.initTrxOpts"
-	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
 	blockNum, err := client.BlockNumber(ctx)
 	if err != nil {
@@ -394,7 +397,7 @@ func initTrxOpts(client *ethclient.Client, nodeAddr common.Address, password str
 
 // ====================================================================================
 
-func sendProof(client *ethclient.Client, password string, fileBytes []byte, nodeAddr common.Address, spAddr string) error {
+func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte, nodeAddr common.Address, spAddr string) error {
 	const info = "blockchainprovider.sendProof"
 	pathToFsTree := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, spAddr, "tree.json")
 
@@ -455,7 +458,7 @@ func sendProof(client *ethclient.Client, password string, fileBytes []byte, node
 		return fmt.Errorf("%s %w", info, err)
 	}
 
-	opts, blockNum, err := initTrxOpts(client, nodeAddr, password)
+	opts, blockNum, err := initTrxOpts(ctx, client, nodeAddr, password)
 	if err != nil {
 		return fmt.Errorf("%s %w", info, err)
 	}

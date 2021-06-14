@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"dfile-secondary-node/account"
 	blockchainprovider "dfile-secondary-node/blockchain_provider"
 	"dfile-secondary-node/config"
@@ -11,6 +12,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -97,7 +99,10 @@ var configUpdateCmd = &cobra.Command{
 		}
 
 		if stateBefore.IpAddress != dFileConf.IpAddress || stateBefore.HTTPPort != dFileConf.HTTPPort {
-			err := blockchainprovider.UpdateNodeInfo(etherAccount.Address, password, dFileConf.HTTPPort, splitIPAddr)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel()
+
+			err := blockchainprovider.UpdateNodeInfo(ctx, etherAccount.Address, password, dFileConf.HTTPPort, splitIPAddr)
 			if err != nil {
 				shared.LogError(info + ":" + err.Error())
 				log.Fatal(confUpdateFatalMessage)

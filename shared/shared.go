@@ -289,8 +289,8 @@ func LogError(errMsg string) error {
 	defer logsFile.Close()
 
 	currentTime := time.Now().Local()
-
-	logMsg := currentTime.String() + ": " + errMsg + "\n"
+	addr, _ := DecryptNodeAddr()
+	logMsg := currentTime.String() + ": " + addr.String() + ": " + errMsg + "\n"
 
 	fmt.Println(logMsg) //TODO remove
 

@@ -1,8 +1,10 @@
 package config
 
 import (
+	"context"
 	blockchainprovider "dfile-secondary-node/blockchain_provider"
 	"log"
+	"time"
 
 	"dfile-secondary-node/shared"
 	"encoding/json"
@@ -74,10 +76,18 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		return dFileConf, fmt.Errorf("%s %w", info, err)
 	}
 
-	err = blockchainprovider.RegisterNode(address, password, splitIPAddr, dFileConf.HTTPPort)
-	if err != nil {
-		shared.LogError(info + ":" + err.Error())
-		log.Fatal("Couldn't register node in network")
+	for {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		err = blockchainprovider.RegisterNode(ctx, address, password, splitIPAddr, dFileConf.HTTPPort)
+		if err != nil {
+			shared.LogError(info + ":" + err.Error())
+			log.Println("Couldn't register node in network. Try again...")
+			cancel()
+			continue
+		}
+
+		cancel()
+		break
 	}
 
 	confFile, err := os.Create(filepath.Join(pathToConfig, "config.json"))
