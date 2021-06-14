@@ -21,7 +21,7 @@ var accountCreateCmd = &cobra.Command{
 	Short: "create a new blockchain account",
 	Long:  `create a new blockchain account`,
 	Run: func(cmd *cobra.Command, args []string) {
-
+		const info = "accountCreateCmd"
 		var password1, password2 string
 
 		fmt.Println("Password is required for account creation. It can't be restored, please save it in a safe place.")
@@ -30,7 +30,7 @@ var accountCreateCmd = &cobra.Command{
 		for {
 			bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
-				shared.LogError(err.Error())
+				shared.LogError(info + ":" + err.Error())
 				log.Fatal(accCreateFatalMessage)
 			}
 			password1 = string(bytePassword)
@@ -43,7 +43,7 @@ var accountCreateCmd = &cobra.Command{
 			fmt.Println("Enter password again: ")
 			bytePassword, err = term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
-				shared.LogError(err.Error())
+				shared.LogError(info + ":" + err.Error())
 				log.Fatal(accCreateFatalMessage)
 			}
 
@@ -57,12 +57,11 @@ var accountCreateCmd = &cobra.Command{
 		}
 		accountStr, nodeConfig, err := account.Create(password1)
 		if err != nil {
-			shared.LogError(err.Error())
+			shared.LogError(info + ":" + err.Error())
 			log.Fatal(accCreateFatalMessage)
 		}
 
 		server.Start(accountStr, nodeConfig.HTTPPort)
-
 	},
 }
 

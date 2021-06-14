@@ -38,10 +38,10 @@ func GetAvailableSpace(storagePath string) int {
 // ====================================================================================
 
 func InitPaths() error {
-
+	const info = "shared.InitPaths"
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return err
+		return fmt.Errorf("%s %w", info, err)
 	}
 
 	WorkDirPath = filepath.Join(homeDir, WorkDirName)
@@ -55,19 +55,18 @@ func InitPaths() error {
 // ====================================================================================
 
 func CreateIfNotExistAccDirs() error {
-
+	const info = "shared.CreateIfNotExistAccDirs"
 	_, err := os.Stat(WorkDirPath)
 	if err != nil {
 		errPart := strings.Split(err.Error(), ":")
 
 		if strings.Trim(errPart[1], " ") != "no such file or directory" {
-			return err
+			return fmt.Errorf("%s %w", info, err)
 		}
 
 		err = os.MkdirAll(WorkDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
-			return err
-
+			return fmt.Errorf("%s %w", info, err)
 		}
 	}
 
@@ -76,18 +75,17 @@ func CreateIfNotExistAccDirs() error {
 		errPart := strings.Split(err.Error(), ":")
 
 		if strings.Trim(errPart[1], " ") != "no such file or directory" {
-			return err
+			return fmt.Errorf("%s %w", info, err)
 		}
 
 		err = os.MkdirAll(AccsDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %w", info, err)
 
 		}
 	}
 
 	return nil
-
 }
 
 // ====================================================================================
@@ -104,36 +102,38 @@ func ContainsAccount(accounts []string, address string) bool {
 // ====================================================================================
 
 func ReadFromConsole() (string, error) {
+	const info = "shared.ReadFromConsole"
 	fmt.Print("Enter value here: ")
 	reader := bufio.NewReader(os.Stdin)
 	// ReadString will block until the delimiter is entered
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%s %w", info, err)
 	}
 
 	// remove the delimiter from the string
 	input = strings.TrimSuffix(input, "\n")
 	input = strings.TrimSuffix(input, "\r")
 
-	return input, err
+	return input, nil
 }
 
 // ====================================================================================
 
 func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
+	const info = "shared.CalcRootHash"
 	resByte := [][][]byte{}
 	base := [][]byte{}
 
 	emptyValue, err := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
 	if err != nil {
-		return "", resByte, err
+		return "", resByte, fmt.Errorf("%s %w", info, err)
 	}
 
 	for _, v := range hashArr {
 		decoded, err := hex.DecodeString(v)
 		if err != nil {
-			return "", resByte, err
+			return "", resByte, fmt.Errorf("%s %w", info, err)
 		}
 		base = append(base, decoded)
 	}
@@ -172,20 +172,21 @@ func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 // ====================================================================================
 
 func encryptAES(key, data []byte) ([]byte, error) {
+	const info = "shared.encryptAES"
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s %w", info, err)
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s %w", info, err)
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	_, err = io.ReadFull(rand.Reader, nonce)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s %w", info, err)
 	}
 
 	ciphertext := gcm.Seal(nonce, nonce, data, nil)
@@ -197,18 +198,19 @@ func encryptAES(key, data []byte) ([]byte, error) {
 // ====================================================================================
 
 func decryptAES(key, data []byte) ([]byte, error) {
+	const info = "shared.decryptAES"
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s %w", info, err)
 	}
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s %w", info, err)
 	}
 	nonce, encrData := data[:gcm.NonceSize()], data[gcm.NonceSize():]
 	decrData, err := gcm.Open(nil, nonce, encrData, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s %w", info, err)
 	}
 
 	return decrData, nil
@@ -217,10 +219,11 @@ func decryptAES(key, data []byte) ([]byte, error) {
 // ====================================================================================
 
 func GetDeviceMacAddr() (string, error) {
+	const info = "shared.GetDeviceMacAddr"
 	var addr string
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%s %w", info, err)
 	}
 
 	for _, i := range interfaces {
@@ -236,18 +239,19 @@ func GetDeviceMacAddr() (string, error) {
 // ====================================================================================
 
 func EncryptNodeAddr(addr common.Address) ([]byte, error) {
+	const info = "shared.EncryptNodeAddr"
 	var nodeAddr []byte
 
 	macAddr, err := GetDeviceMacAddr()
 	if err != nil {
-		return nodeAddr, err
+		return nodeAddr, fmt.Errorf("%s %w", info, err)
 	}
 
 	encrKey := sha256.Sum256([]byte(macAddr))
 
 	encryptedAddr, err := encryptAES(encrKey[:], addr.Bytes())
 	if err != nil {
-		return nodeAddr, err
+		return nodeAddr, fmt.Errorf("%s %w", info, err)
 	}
 
 	return encryptedAddr, nil
@@ -256,18 +260,19 @@ func EncryptNodeAddr(addr common.Address) ([]byte, error) {
 // ====================================================================================
 
 func DecryptNodeAddr() (common.Address, error) {
+	const info = "shared.DecryptNodeAddr"
 	var nodeAddr common.Address
 
 	macAddr, err := GetDeviceMacAddr()
 	if err != nil {
-		return nodeAddr, err
+		return nodeAddr, fmt.Errorf("%s %w", info, err)
 	}
 
 	encrKey := sha256.Sum256([]byte(macAddr))
 
 	accAddr, err := decryptAES(encrKey[:], NodeAddr)
 	if err != nil {
-		return nodeAddr, err
+		return nodeAddr, fmt.Errorf("%s %w", info, err)
 	}
 
 	return common.BytesToAddress(accAddr), nil

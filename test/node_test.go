@@ -81,7 +81,7 @@ func TestCreateAccount(t *testing.T) {
 }
 
 func TestLoginAccountWithCorrectAddressAndPassword(t *testing.T) {
-	account, err := account.Login(accountAddress, accountPassword)
+	account, err := account.Login(accountAddress, "1")
 	if err != nil {
 		t.Error(err)
 	}

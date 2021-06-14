@@ -26,10 +26,10 @@ var accountLoginCmd = &cobra.Command{
 	Short: "log in a blockchain accounts",
 	Long:  "log in a blockchain accounts",
 	Run: func(cmd *cobra.Command, args []string) {
-
+		const info = "accountLoginCmd"
 		etherAccount, password, err := account.ValidateUser()
 		if err != nil {
-			shared.LogError(err.Error())
+			shared.LogError(info + ":" + err.Error())
 			log.Fatal(accLoginFatalError)
 		}
 
@@ -40,12 +40,11 @@ var accountLoginCmd = &cobra.Command{
 		pathToConfigFile := filepath.Join(pathToConfigDir, "config.json")
 
 		stat, err := os.Stat(pathToConfigFile)
-
 		if err != nil {
 			errPart := strings.Split(err.Error(), ":")
 
 			if strings.Trim(errPart[1], " ") != "no such file or directory" {
-				shared.LogError(err.Error())
+				shared.LogError(info + ":" + err.Error())
 				log.Fatal(accLoginFatalError)
 			}
 		}
@@ -53,31 +52,31 @@ var accountLoginCmd = &cobra.Command{
 		if stat == nil {
 			dFileConf, err = config.Create(etherAccount.Address.String(), password)
 			if err != nil {
-				shared.LogError(err.Error())
+				shared.LogError(info + ":" + err.Error())
 				log.Fatal(accLoginFatalError)
 			}
 		} else {
 			confFile, err := os.Open(pathToConfigFile)
 			if err != nil {
-				shared.LogError(err.Error())
+				shared.LogError(info + ":" + err.Error())
 				log.Fatal(accLoginFatalError)
 			}
 			defer confFile.Close()
 
 			fileBytes, err := io.ReadAll(confFile)
 			if err != nil {
-				shared.LogError(err.Error())
+				shared.LogError(info + ":" + err.Error())
 				log.Fatal(accLoginFatalError)
 			}
 
 			err = json.Unmarshal(fileBytes, &dFileConf)
 			if err != nil {
-				shared.LogError(err.Error())
+				shared.LogError(info + ":" + err.Error())
 				log.Fatal(accLoginFatalError)
 			}
 
 			if dFileConf.StorageLimit <= 0 {
-				shared.LogError(err.Error())
+				shared.LogError(info + ":" + err.Error())
 				log.Fatal(accLoginFatalError)
 			}
 		}
@@ -87,7 +86,6 @@ var accountLoginCmd = &cobra.Command{
 		go bcProvider.StartMining(password)
 
 		server.Start(etherAccount.Address.String(), dFileConf.HTTPPort)
-
 	},
 }
 
