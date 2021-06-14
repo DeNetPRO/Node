@@ -24,6 +24,7 @@ import (
 func main() {
 	err := shared.InitPaths()
 	if err != nil {
+		shared.LogError(err.Error())
 		log.Fatal("Fatal Error: couldn't locate home directory")
 	}
 	cmd.Execute()

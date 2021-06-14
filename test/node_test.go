@@ -49,7 +49,7 @@ func TestEmptyAccountListBeforeCreating(t *testing.T) {
 }
 
 func TestCreateAccount(t *testing.T) {
-	address, err := account.Create(accountPassword)
+	address, _, err := account.Create(accountPassword)
 	if err != nil {
 		t.Error(err)
 	}

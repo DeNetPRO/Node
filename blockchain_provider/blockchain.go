@@ -230,7 +230,7 @@ func StartMining(password string) {
 
 		if len(storageProviderAddresses) == 0 {
 			fmt.Println("Sleeping...")
-			time.Sleep(time.Second * 15)
+			time.Sleep(time.Second * 60)
 			continue
 		}
 
@@ -251,7 +251,7 @@ func StartMining(password string) {
 		if nodeBalanceIsLow {
 			fmt.Println("Your account has insufficient funds for paying transaction fee. Balance:", nodeBalance, "wei")
 			fmt.Println("Please top up your balance")
-			time.Sleep(time.Second * 15)
+			time.Sleep(time.Second * 60)
 			continue
 		}
 
@@ -261,6 +261,9 @@ func StartMining(password string) {
 			if err != nil {
 				shared.LogError(err.Error())
 			}
+
+			fmt.Println("reward is", reward) //TODO remove
+			fmt.Println("Min reward value:", 3000000000000000000)
 
 			fileNames := []string{}
 
@@ -284,6 +287,7 @@ func StartMining(password string) {
 			}
 
 			for _, fileName := range fileNames {
+				time.Sleep(time.Second) // allowed rps is 1 TODO?
 				storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
 				if err != nil {
 					shared.LogError(err.Error())
@@ -341,7 +345,7 @@ func StartMining(password string) {
 		}
 
 		fmt.Println("Sleeping...")
-		time.Sleep(time.Second * 15)
+		time.Sleep(time.Second * 60)
 
 	}
 

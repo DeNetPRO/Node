@@ -10,7 +10,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -55,19 +54,20 @@ func InitPaths() error {
 
 // ====================================================================================
 
-func CreateIfNotExistAccDirs() {
+func CreateIfNotExistAccDirs() error {
 
 	_, err := os.Stat(WorkDirPath)
 	if err != nil {
 		errPart := strings.Split(err.Error(), ":")
 
 		if strings.Trim(errPart[1], " ") != "no such file or directory" {
-			log.Fatal("Fatal error")
+			return err
 		}
 
 		err = os.MkdirAll(WorkDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
-			log.Fatal("Fatal error")
+			return err
+
 		}
 	}
 
@@ -76,14 +76,17 @@ func CreateIfNotExistAccDirs() {
 		errPart := strings.Split(err.Error(), ":")
 
 		if strings.Trim(errPart[1], " ") != "no such file or directory" {
-			log.Fatal("Fatal error")
+			return err
 		}
 
 		err = os.MkdirAll(AccsDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
-			log.Fatal("Fatal error")
+			return err
+
 		}
 	}
+
+	return nil
 
 }
 
@@ -275,7 +278,6 @@ func DecryptNodeAddr() (common.Address, error) {
 func LogError(errMsg string) error {
 	logsFile, err := os.OpenFile("./errorLogs", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0700)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
@@ -283,9 +285,12 @@ func LogError(errMsg string) error {
 
 	currentTime := time.Now().Local()
 
-	_, err = logsFile.WriteString(currentTime.String() + ": " + errMsg + "\n")
+	logMsg := currentTime.String() + ": " + errMsg + "\n"
+
+	fmt.Println(logMsg) //TODO remove
+
+	_, err = logsFile.WriteString(logMsg)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 
