@@ -26,7 +26,7 @@ var (
 	WorkDirPath    string
 	AccsDirPath    string
 	NodeAddr       []byte
-	WorkDirName    = "dfile"
+	WorkDirName    = "dfile-node"
 	ConfDirName    = "config"
 	StorageDirName = "storage"
 )
@@ -59,11 +59,9 @@ func InitPaths() error {
 func CreateIfNotExistAccDirs() error {
 	const logInfo = "shared.CreateIfNotExistAccDirs->"
 	statWDP, err := os.Stat(WorkDirPath)
+	err = CheckStatErr(err)
 	if err != nil {
-		err = CheckStatErr(err)
-		if err != nil {
-			return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-		}
+		return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
 	}
 
 	if statWDP == nil {
@@ -74,11 +72,9 @@ func CreateIfNotExistAccDirs() error {
 	}
 
 	statADP, err := os.Stat(AccsDirPath)
+	err = CheckStatErr(err)
 	if err != nil {
-		err = CheckStatErr(err)
-		if err != nil {
-			return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-		}
+		return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
 	}
 
 	if statADP == nil {
@@ -94,6 +90,11 @@ func CreateIfNotExistAccDirs() error {
 // ====================================================================================
 
 func CheckStatErr(statErr error) error {
+
+	if statErr == nil {
+		return nil
+	}
+
 	errParts := strings.Split(statErr.Error(), ":")
 
 	if len(errParts) == 3 && strings.Trim(errParts[2], " ") == "The system cannot find the file specified." {

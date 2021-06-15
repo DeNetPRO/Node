@@ -231,13 +231,11 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	addressPath := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, storageProviderAddress[0])
 
 	stat, err := os.Stat(addressPath)
+	err = shared.CheckStatErr(err)
 	if err != nil {
-		err = shared.CheckStatErr(err)
-		if err != nil {
-			shared.LogError(logInfo, shared.GetDetailedError(err))
-			http.Error(w, "File saving problem", 500)
-			return
-		}
+		shared.LogError(logInfo, shared.GetDetailedError(err))
+		http.Error(w, "File saving problem", 500)
+		return
 	}
 
 	if stat == nil {

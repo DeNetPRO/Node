@@ -39,11 +39,9 @@ var accountLoginCmd = &cobra.Command{
 		pathToConfigFile := filepath.Join(pathToConfigDir, "config.json")
 
 		stat, err := os.Stat(pathToConfigFile)
+		err = shared.CheckStatErr(err)
 		if err != nil {
-			err = shared.CheckStatErr(err)
-			if err != nil {
-				log.Fatal(accLoginFatalError)
-			}
+			log.Fatal(accLoginFatalError)
 		}
 
 		if stat == nil {
