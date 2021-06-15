@@ -295,12 +295,15 @@ func LogError(logInfo string, errMsg error) error {
 	defer logsFile.Close()
 
 	currentTime := time.Now().Local()
+
+	addrString := "addr is not initialized"
+
 	addr, err := DecryptNodeAddr()
-	if err != nil {
-		return err
+	if err == nil {
+		addrString = addr.String()
 	}
 
-	logMsg := fmt.Sprintf("%s: %s: %v\n", currentTime.String(), addr.String(), errMsg)
+	logMsg := fmt.Sprintf("%s: %s: %v\n", currentTime.String(), addrString, errMsg)
 
 	fmt.Println(logMsg) //TODO remove
 
