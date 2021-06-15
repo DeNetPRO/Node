@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts"
@@ -176,12 +177,11 @@ func ValidateUser() (*accounts.Account, string, error) {
 	const logInfo = "account.ValidateUser->"
 	var accountAddress, password string
 	var etherAccount *accounts.Account
-	var err error
 
 	accounts := List()
 
 	if len(accounts) > 1 {
-		fmt.Println("Please choose an account")
+		fmt.Println("Please choose an account number")
 		for i, a := range accounts {
 			fmt.Println(i+1, a)
 		}
@@ -191,10 +191,25 @@ func ValidateUser() (*accounts.Account, string, error) {
 		if len(accounts) == 1 {
 			accountAddress = accounts[0]
 		} else {
-			accountAddress, err = shared.ReadFromConsole()
+			number, err := shared.ReadFromConsole()
 			if err != nil {
 				return nil, "", fmt.Errorf("%s %w", logInfo, err)
 			}
+
+			accountNumber, err := strconv.Atoi(number)
+			if err != nil {
+				return nil, "", fmt.Errorf("%s %w", logInfo, err)
+			}
+
+			if accountNumber < 1 || accountNumber > len(accounts) {
+				fmt.Println("There is no such number:")
+				for i, a := range accounts {
+					fmt.Println(i+1, a)
+				}
+				continue
+			}
+
+			accountAddress = accounts[accountNumber-1]
 		}
 
 		if !shared.ContainsAccount(accounts, accountAddress) {

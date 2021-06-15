@@ -41,6 +41,7 @@ var accountLoginCmd = &cobra.Command{
 		stat, err := os.Stat(pathToConfigFile)
 		err = shared.CheckStatErr(err)
 		if err != nil {
+			shared.LogError(logInfo, err)
 			log.Fatal(accLoginFatalError)
 		}
 
@@ -53,20 +54,20 @@ var accountLoginCmd = &cobra.Command{
 		} else {
 			confFile, err := os.Open(pathToConfigFile)
 			if err != nil {
-				shared.LogError(logInfo, err)
+				shared.LogError(logInfo, shared.GetDetailedError(err))
 				log.Fatal(accLoginFatalError)
 			}
 			defer confFile.Close()
 
 			fileBytes, err := io.ReadAll(confFile)
 			if err != nil {
-				shared.LogError(logInfo, err)
+				shared.LogError(logInfo, shared.GetDetailedError(err))
 				log.Fatal(accLoginFatalError)
 			}
 
 			err = json.Unmarshal(fileBytes, &dFileConf)
 			if err != nil {
-				shared.LogError(logInfo, err)
+				shared.LogError(logInfo, shared.GetDetailedError(err))
 				log.Fatal(accLoginFatalError)
 			}
 

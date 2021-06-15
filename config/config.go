@@ -3,9 +3,9 @@ package config
 import (
 	"context"
 	blockchainprovider "dfile-secondary-node/blockchain_provider"
+	"dfile-secondary-node/shared"
 	"time"
 
-	"dfile-secondary-node/shared"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -21,6 +21,7 @@ type SecondaryNodeConfig struct {
 	HTTPPort         string `json:"portHTTP"`
 	StorageLimit     int    `json:"storageLimit"`
 	UsedStorageSpace int64  `json:"usedStorageSpace"`
+	AgreeSendLogs    bool   `json:"agreeSendLogs"`
 }
 
 type configState struct {
@@ -47,7 +48,8 @@ var partiallyReservedIPs = map[string]int{
 func Create(address, password string) (SecondaryNodeConfig, error) {
 	const logInfo = "config.Create->"
 	dFileConf := SecondaryNodeConfig{
-		Address: address,
+		Address:       address,
+		AgreeSendLogs: true,
 	}
 
 	fmt.Println("Now, a config file creation is needed.")
@@ -70,10 +72,13 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
 	}
 
-	err = SetPort(&dFileConf, State.Create)
+	err = SetPort(&dFileConf)
 	if err != nil {
 		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
 	}
+
+	fmt.Println("Now, you are sending bug reports to developers")
+	fmt.Println("If you want to opt out of this, update the config")
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -146,7 +151,7 @@ func SetStorageLimit(pathToConfig, state string, dFileConf *SecondaryNodeConfig)
 }
 
 func SetIpAddr(dFileConf *SecondaryNodeConfig, state string) ([]string, error) {
-	const logInfo = "config.SetIpAddr"
+	const logInfo = "config.SetIpAddr->"
 	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
 
 	var splitIPAddr []string
@@ -198,8 +203,8 @@ func SetIpAddr(dFileConf *SecondaryNodeConfig, state string) ([]string, error) {
 	return splitIPAddr, nil
 }
 
-func SetPort(dFileConf *SecondaryNodeConfig, state string) error {
-	const logInfo = "config.SetPort"
+func SetPort(dFileConf *SecondaryNodeConfig) error {
+	const logInfo = "config.SetPort->"
 	regPort := regexp.MustCompile("[0-9]+|")
 
 	for {
@@ -234,6 +239,37 @@ func SetPort(dFileConf *SecondaryNodeConfig, state string) error {
 		}
 
 		dFileConf.HTTPPort = fmt.Sprint(intHttpPort)
+		break
+	}
+
+	return nil
+}
+
+func ChangeAgreeSendLogs(dFileConf *SecondaryNodeConfig, state string) error {
+	const logInfo = "config.ChangeAgreeSendLogs->"
+	regPort := regexp.MustCompile("^(?:y|n)$")
+
+	for {
+		agree, err := shared.ReadFromConsole()
+		if err != nil {
+			return fmt.Errorf("%s %w", logInfo, err)
+		}
+
+		if state == State.Update && agree == "" {
+			break
+		}
+
+		if !regPort.MatchString(agree) {
+			fmt.Println("Value is incorrect, please try again")
+			continue
+		}
+
+		if agree == "y" {
+			dFileConf.AgreeSendLogs = true
+		} else {
+			dFileConf.AgreeSendLogs = false
+		}
+
 		break
 	}
 
