@@ -8,6 +8,8 @@ import (
 )
 
 func TestMain(m *testing.M) {
+	shared.WorkDirName = "dfile-test"
+
 	err := shared.InitPaths()
 	if err != nil {
 		log.Fatal("Fatal Error: couldn't locate home directory")

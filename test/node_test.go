@@ -70,21 +70,22 @@ func TestCreateAccount(t *testing.T) {
 	configPath := filepath.Join(shared.AccsDirPath, accountAddress, shared.ConfDirName)
 
 	if _, err := os.Stat(storagePath); err != nil {
-		t.Error("storage directory is not exist")
+		t.Error(err)
 	}
 
 	if _, err := os.Stat(configPath); err != nil {
-		t.Error("config directory is not exist")
+		t.Error(err)
 	}
 
 	nodeAddress = shared.NodeAddr
 }
 
 func TestLoginAccountWithCorrectAddressAndPassword(t *testing.T) {
-	_, err := account.Login(accountAddress, accountPassword)
+	account, err := account.Login(accountAddress, "1")
 	if err != nil {
 		t.Error(err)
 	}
+	require.Equal(t, accountAddress, account.Address.String())
 }
 
 func TestLoginAccountWithInvalidPassword(t *testing.T) {
@@ -124,7 +125,7 @@ func TestCreateConfig(t *testing.T) {
 
 	configPath := filepath.Join(shared.AccsDirPath, accountAddress, shared.ConfDirName, configName)
 	if _, err := os.Stat(configPath); err != nil {
-		t.Error("config not found")
+		t.Error(err)
 	}
 
 	configAddress = config.Address

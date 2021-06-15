@@ -34,42 +34,43 @@ func List() []string {
 
 // CreateAccount creates account and keystore file with encryption with password
 func Create(password string) (string, config.SecondaryNodeConfig, error) {
+	const logInfo = "account.Create->"
 	var nodeConf config.SecondaryNodeConfig
 
 	err := shared.CreateIfNotExistAccDirs()
 	if err != nil {
-		return "", nodeConf, err
+		return "", nodeConf, fmt.Errorf("%s %w", logInfo, err)
 	}
 
 	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 
 	etherAccount, err := ks.NewAccount(password)
 	if err != nil {
-		return "", nodeConf, err
+		return "", nodeConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 
 	nodeConf, err = initAccount(&etherAccount)
 	if err != nil {
-		return "", nodeConf, err
+		return "", nodeConf, fmt.Errorf("%s %w", logInfo, err)
 	}
 
 	return etherAccount.Address.String(), nodeConf, nil
 }
 
 func Import() (string, config.SecondaryNodeConfig, error) {
-
+	const logInfo = "account.Import->"
 	var nodeConfig config.SecondaryNodeConfig
 
 	fmt.Println("Please enter private key of the account you want to import:")
 
 	privKey, err := shared.ReadFromConsole()
 	if err != nil {
-		return "", nodeConfig, err
+		return "", nodeConfig, fmt.Errorf("%s %w", logInfo, err)
 	}
 
 	ecdsaPrivKey, err := crypto.HexToECDSA(privKey)
 	if err != nil {
-		return "", nodeConfig, err
+		return "", nodeConfig, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 
 	fmt.Println("Please enter new password:")
@@ -79,7 +80,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 	for {
 		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
-			return "", nodeConfig, err
+			return "", nodeConfig, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 		}
 
 		password = string(bytePassword)
@@ -93,7 +94,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 
 	err = shared.CreateIfNotExistAccDirs()
 	if err != nil {
-		return "", nodeConfig, err
+		return "", nodeConfig, fmt.Errorf("%s %w", logInfo, err)
 	}
 
 	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
@@ -101,12 +102,12 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 	etherAccount, err := ks.ImportECDSA(ecdsaPrivKey, password)
 	if err != nil {
 		fmt.Println(err)
-		return "", nodeConfig, err
+		return "", nodeConfig, fmt.Errorf("%s %v", logInfo, shared.GetDetailedError(err))
 	}
 
 	nodeConfig, err = initAccount(&etherAccount)
 	if err != nil {
-		return "", nodeConfig, err
+		return "", nodeConfig, fmt.Errorf("%s %w", logInfo, err)
 	}
 
 	return etherAccount.Address.String(), nodeConfig, nil
@@ -114,7 +115,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 
 //LoadAccount load in memory keystore file and decrypt it for further use
 func Login(blockchainAccountString, password string) (*accounts.Account, error) {
-
+	const logInfo = "account.Login->"
 	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccounts := ks.Accounts()
 
@@ -128,23 +129,24 @@ func Login(blockchainAccountString, password string) (*accounts.Account, error) 
 	}
 
 	if etherAccount == nil {
-		return nil, errors.New("Account Not Found Error: cannot find account for " + blockchainAccountString)
+		err := errors.New("Account Not Found Error: cannot find account for " + blockchainAccountString)
+		return nil, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 
 	keyJson, err := ks.Export(*etherAccount, password, password)
 	if err != nil {
 		fmt.Println("Wrong password")
-		return nil, err
+		return nil, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 
 	key, err := keystore.DecryptKey(keyJson, password)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 
 	encryptedAddr, err := shared.EncryptNodeAddr(key.Address)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s %w", logInfo, err)
 	}
 
 	shared.NodeAddr = encryptedAddr
@@ -153,24 +155,25 @@ func Login(blockchainAccountString, password string) (*accounts.Account, error) 
 }
 
 func CheckPassword(password, address string) error {
-
+	const logInfo = "account.CheckPassword->"
 	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	acc, err := utils.MakeAddress(ks, address)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 	key, err := ks.Export(acc, password, password)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 	_, err = keystore.DecryptKey(key, password)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 	return nil
 }
 
 func ValidateUser() (*accounts.Account, string, error) {
+	const logInfo = "account.ValidateUser->"
 	var accountAddress, password string
 	var etherAccount *accounts.Account
 	var err error
@@ -185,19 +188,16 @@ func ValidateUser() (*accounts.Account, string, error) {
 	}
 
 	for {
-
 		if len(accounts) == 1 {
 			accountAddress = accounts[0]
 		} else {
 			accountAddress, err = shared.ReadFromConsole()
 			if err != nil {
-				return nil, "", err
+				return nil, "", fmt.Errorf("%s %w", logInfo, err)
 			}
 		}
 
-		addressMatches := shared.ContainsAccount(accounts, accountAddress)
-
-		if !addressMatches {
+		if !shared.ContainsAccount(accounts, accountAddress) {
 			fmt.Println("There is no such account address:")
 			for i, a := range accounts {
 				fmt.Println(i+1, a)
@@ -209,7 +209,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 
 		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
-			return nil, "", err
+			return nil, "", fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 		}
 		password = string(bytePassword)
 		if strings.Trim(password, " ") == "" {
@@ -219,7 +219,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 
 		etherAccount, err = Login(accountAddress, password)
 		if err != nil {
-			return nil, "", err
+			return nil, "", fmt.Errorf("%s %w", logInfo, err)
 		}
 
 		break
@@ -229,31 +229,31 @@ func ValidateUser() (*accounts.Account, string, error) {
 }
 
 func initAccount(account *accounts.Account) (config.SecondaryNodeConfig, error) {
-
+	const logInfo = "account.initAccount->"
 	var nodeConf config.SecondaryNodeConfig
 
 	addressString := account.Address.String()
 
 	err := os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.StorageDirName), 0700)
 	if err != nil {
-		return nodeConf, err
+		return nodeConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 
 	err = os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.ConfDirName), 0700)
 	if err != nil {
-		return nodeConf, err
+		return nodeConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 
 	encryptedAddr, err := shared.EncryptNodeAddr(account.Address)
 	if err != nil {
-		return nodeConf, err
+		return nodeConf, fmt.Errorf("%s %w", logInfo, err)
 	}
 
 	shared.NodeAddr = encryptedAddr
 
 	nodeConf, err = config.Create(addressString, config.State.Create)
 	if err != nil {
-		return nodeConf, err
+		return nodeConf, fmt.Errorf("%s %w", logInfo, err)
 	}
 
 	return nodeConf, nil

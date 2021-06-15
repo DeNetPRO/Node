@@ -1,8 +1,9 @@
 package config
 
 import (
+	"context"
 	blockchainprovider "dfile-secondary-node/blockchain_provider"
-	"log"
+	"time"
 
 	"dfile-secondary-node/shared"
 	"encoding/json"
@@ -44,7 +45,7 @@ var partiallyReservedIPs = map[string]int{
 }
 
 func Create(address, password string) (SecondaryNodeConfig, error) {
-
+	const logInfo = "config.Create->"
 	dFileConf := SecondaryNodeConfig{
 		Address: address,
 	}
@@ -57,7 +58,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	err := SetStorageLimit(pathToConfig, State.Create, &dFileConf)
 	if err != nil {
-		return dFileConf, err
+		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
 	}
 
 	fmt.Println("Please enter your public IP address. Remember if you don't have a static ip address it may change")
@@ -66,34 +67,36 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	splitIPAddr, err := SetIpAddr(&dFileConf, State.Create)
 	if err != nil {
-		return dFileConf, err
+		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
 	}
 
 	err = SetPort(&dFileConf, State.Create)
 	if err != nil {
-		return dFileConf, err
+		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
 	}
 
-	err = blockchainprovider.RegisterNode(address, password, splitIPAddr, dFileConf.HTTPPort)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	err = blockchainprovider.RegisterNode(ctx, address, password, splitIPAddr, dFileConf.HTTPPort)
 	if err != nil {
-		shared.LogError(err.Error())
-		log.Fatal("Couldn't register node in network")
+		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
 	}
 
 	confFile, err := os.Create(filepath.Join(pathToConfig, "config.json"))
 	if err != nil {
-		return dFileConf, err
+		return dFileConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 	defer confFile.Close()
 
 	confJSON, err := json.Marshal(dFileConf)
 	if err != nil {
-		return dFileConf, err
+		return dFileConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 
 	_, err = confFile.Write(confJSON)
 	if err != nil {
-		return dFileConf, err
+		return dFileConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 
 	confFile.Sync()
@@ -102,15 +105,15 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 }
 
 func SetStorageLimit(pathToConfig, state string, dFileConf *SecondaryNodeConfig) error {
+	const logInfo = "config.SetStorageLimit->"
 	regNum := regexp.MustCompile(("[0-9]+"))
 
 	for {
-
 		availableSpace := shared.GetAvailableSpace(pathToConfig)
 		fmt.Println("Available space:", availableSpace, "GB")
 		space, err := shared.ReadFromConsole()
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %w", logInfo, err)
 		}
 
 		if state == State.Update && space == "" {
@@ -143,6 +146,7 @@ func SetStorageLimit(pathToConfig, state string, dFileConf *SecondaryNodeConfig)
 }
 
 func SetIpAddr(dFileConf *SecondaryNodeConfig, state string) ([]string, error) {
+	const logInfo = "config.SetIpAddr"
 	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
 
 	var splitIPAddr []string
@@ -151,7 +155,7 @@ func SetIpAddr(dFileConf *SecondaryNodeConfig, state string) ([]string, error) {
 
 		ipAddr, err := shared.ReadFromConsole()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s %w", logInfo, err)
 		}
 
 		if state == State.Update && ipAddr == "" {
@@ -177,7 +181,7 @@ func SetIpAddr(dFileConf *SecondaryNodeConfig, state string) ([]string, error) {
 		if partiallyReserved {
 			secondAddrPart, err := strconv.Atoi(splitIPAddr[1])
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 			}
 
 			if secondAddrPart <= reservedSecAddrPart {
@@ -195,6 +199,7 @@ func SetIpAddr(dFileConf *SecondaryNodeConfig, state string) ([]string, error) {
 }
 
 func SetPort(dFileConf *SecondaryNodeConfig, state string) error {
+	const logInfo = "config.SetPort"
 	regPort := regexp.MustCompile("[0-9]+|")
 
 	for {
@@ -202,7 +207,7 @@ func SetPort(dFileConf *SecondaryNodeConfig, state string) error {
 
 		httpPort, err := shared.ReadFromConsole()
 		if err != nil {
-			return err
+			return fmt.Errorf("%s %w", logInfo, err)
 		}
 
 		if httpPort == "" {
