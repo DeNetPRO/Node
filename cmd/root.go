@@ -14,7 +14,6 @@ var rootCmd = &cobra.Command{
 	to connect to the DeNet decentralized network and mine DFile tokens by granting access to their avaliable space for other users.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		accs := account.List()
-
 		if len(accs) == 0 {
 			accountCreateCmd.Run(accountCreateCmd, []string{})
 		} else {
@@ -25,7 +24,4 @@ var rootCmd = &cobra.Command{
 
 func Execute() {
 	cobra.CheckErr(rootCmd.Execute())
-}
-
-func init() {
 }

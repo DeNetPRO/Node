@@ -18,12 +18,12 @@ var showKeyCmd = &cobra.Command{
 	Short: "reveals you the private key",
 	Long:  "reveals you the private key",
 	Run: func(cmd *cobra.Command, args []string) {
-		const info = "showKeyCmd"
+		const logInfo = "showKeyCmd->"
 		fmt.Println("Never disclose this key. Anyone with your private keys can steal any assets held in your account")
 
 		etherAccount, password, err := account.ValidateUser()
 		if err != nil {
-			shared.LogError(info + ":" + err.Error())
+			shared.LogError(logInfo, err)
 			log.Fatal(showKeyFatalMessage)
 		}
 
@@ -31,13 +31,13 @@ var showKeyCmd = &cobra.Command{
 
 		keyJson, err := ks.Export(*etherAccount, password, password)
 		if err != nil {
-			shared.LogError(info + ":" + err.Error())
+			shared.LogError(logInfo, err)
 			log.Fatal(showKeyFatalMessage)
 		}
 
 		key, err := keystore.DecryptKey(keyJson, password)
 		if err != nil {
-			shared.LogError(info + ":" + err.Error())
+			shared.LogError(logInfo, err)
 			log.Fatal(showKeyFatalMessage)
 		}
 
