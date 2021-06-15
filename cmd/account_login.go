@@ -13,7 +13,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -41,10 +40,8 @@ var accountLoginCmd = &cobra.Command{
 
 		stat, err := os.Stat(pathToConfigFile)
 		if err != nil {
-			errPart := strings.Split(err.Error(), ":")
-
-			if strings.Trim(errPart[1], " ") != "no such file or directory" {
-				shared.LogError(logInfo, err)
+			err = shared.CheckStatErr(err)
+			if err != nil {
 				log.Fatal(accLoginFatalError)
 			}
 		}

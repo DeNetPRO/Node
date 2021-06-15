@@ -16,7 +16,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
@@ -233,11 +232,8 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	stat, err := os.Stat(addressPath)
 	if err != nil {
-		shared.LogError(logInfo, err)
-		errPart := strings.Split(err.Error(), ":")
-
-		if strings.Trim(errPart[1], " ") != "no such file or directory" {
-			fmt.Println(err)
+		err = shared.CheckStatErr(err)
+		if err != nil {
 			shared.LogError(logInfo, shared.GetDetailedError(err))
 			http.Error(w, "File saving problem", 500)
 			return

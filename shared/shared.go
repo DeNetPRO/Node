@@ -58,36 +58,53 @@ func InitPaths() error {
 
 func CreateIfNotExistAccDirs() error {
 	const logInfo = "shared.CreateIfNotExistAccDirs->"
-	_, err := os.Stat(WorkDirPath)
+	statWDP, err := os.Stat(WorkDirPath)
 	if err != nil {
-		errPart := strings.Split(err.Error(), ":")
-
-		if strings.Trim(errPart[1], " ") != "no such file or directory" {
+		err = CheckStatErr(err)
+		if err != nil {
 			return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
 		}
+	}
 
+	if statWDP == nil {
 		err = os.MkdirAll(WorkDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
 			return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
 		}
 	}
 
-	_, err = os.Stat(AccsDirPath)
+	statADP, err := os.Stat(AccsDirPath)
 	if err != nil {
-		errPart := strings.Split(err.Error(), ":")
-
-		if strings.Trim(errPart[1], " ") != "no such file or directory" {
+		err = CheckStatErr(err)
+		if err != nil {
 			return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
 		}
+	}
 
+	if statADP == nil {
 		err = os.MkdirAll(AccsDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
 			return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-
 		}
 	}
 
 	return nil
+}
+
+// ====================================================================================
+
+func CheckStatErr(statErr error) error {
+	errParts := strings.Split(statErr.Error(), ":")
+
+	if len(errParts) == 3 && strings.Trim(errParts[2], " ") == "The system cannot find the file specified." {
+		return nil
+	}
+
+	if len(errParts) == 2 && strings.Trim(errParts[1], " ") == "no such file or directory" {
+		return nil
+	}
+
+	return statErr
 }
 
 // ====================================================================================
