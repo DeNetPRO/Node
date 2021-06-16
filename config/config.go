@@ -51,6 +51,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		Address:       address,
 		AgreeSendLogs: true,
 	}
+	shared.SendLogs = true
 
 	fmt.Println("Now, a config file creation is needed.")
 
@@ -79,7 +80,6 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	fmt.Println("Now, you are sending bug reports to developers")
 	fmt.Println("If you want to opt out of this, update the config")
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -260,14 +260,16 @@ func ChangeAgreeSendLogs(dFileConf *SecondaryNodeConfig, state string) error {
 		}
 
 		if !regPort.MatchString(agree) {
-			fmt.Println("Value is incorrect, please try again")
+			fmt.Println("Value is incorrect, please try again. [y/n]")
 			continue
 		}
 
 		if agree == "y" {
 			dFileConf.AgreeSendLogs = true
+			shared.SendLogs = true
 		} else {
 			dFileConf.AgreeSendLogs = false
+			shared.SendLogs = false
 		}
 
 		break
