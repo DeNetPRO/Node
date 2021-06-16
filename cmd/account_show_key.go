@@ -31,13 +31,13 @@ var showKeyCmd = &cobra.Command{
 
 		keyJson, err := ks.Export(*etherAccount, password, password)
 		if err != nil {
-			shared.LogError(logInfo, err)
+			shared.LogError(logInfo, shared.GetDetailedError(err))
 			log.Fatal(showKeyFatalMessage)
 		}
 
 		key, err := keystore.DecryptKey(keyJson, password)
 		if err != nil {
-			shared.LogError(logInfo, err)
+			shared.LogError(logInfo, shared.GetDetailedError(err))
 			log.Fatal(showKeyFatalMessage)
 		}
 

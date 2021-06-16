@@ -48,20 +48,20 @@ var configUpdateCmd = &cobra.Command{
 
 		confFile, err := os.OpenFile(pathToConfigFile, os.O_RDWR, 0700)
 		if err != nil {
-			shared.LogError(logInfo, err)
+			shared.LogError(logInfo, shared.GetDetailedError(err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 		defer confFile.Close()
 
 		fileBytes, err := io.ReadAll(confFile)
 		if err != nil {
-			shared.LogError(logInfo, err)
+			shared.LogError(logInfo, shared.GetDetailedError(err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
 		err = json.Unmarshal(fileBytes, &dFileConf)
 		if err != nil {
-			shared.LogError(logInfo, err)
+			shared.LogError(logInfo, shared.GetDetailedError(err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
@@ -85,7 +85,15 @@ var configUpdateCmd = &cobra.Command{
 
 		fmt.Println("Please enter new http port number, or just press enter button to skip")
 
-		err = config.SetPort(&dFileConf, config.State.Update)
+		err = config.SetPort(&dFileConf)
+		if err != nil {
+			shared.LogError(logInfo, err)
+			log.Fatal(confUpdateFatalMessage)
+		}
+
+		fmt.Println("Do you want to send bug reports to developers? y/n (or just press enter button to skip)")
+
+		err = config.ChangeAgreeSendLogs(&dFileConf, config.State.Update)
 		if err != nil {
 			shared.LogError(logInfo, err)
 			log.Fatal(confUpdateFatalMessage)
@@ -93,7 +101,8 @@ var configUpdateCmd = &cobra.Command{
 
 		if stateBefore.IpAddress == dFileConf.IpAddress &&
 			stateBefore.HTTPPort == dFileConf.HTTPPort &&
-			stateBefore.StorageLimit == dFileConf.StorageLimit {
+			stateBefore.StorageLimit == dFileConf.StorageLimit &&
+			stateBefore.AgreeSendLogs == dFileConf.AgreeSendLogs {
 			fmt.Println("Nothing was changed")
 			return
 		}
