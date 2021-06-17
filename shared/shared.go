@@ -31,7 +31,7 @@ var (
 	WorkDirName    = "dfile-node"
 	ConfDirName    = "config"
 	StorageDirName = "storage"
-	SendLogs       bool
+	SendLogs       = true
 )
 
 func GetAvailableSpace(storagePath string) int {
@@ -334,7 +334,6 @@ func LogError(logInfo string, errMsg error) {
 		fmt.Println(err)
 	}
 
-	fmt.Println(logMsg) //TODO remove
 }
 
 // ====================================================================================

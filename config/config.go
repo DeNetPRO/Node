@@ -51,7 +51,6 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		Address:       address,
 		AgreeSendLogs: true,
 	}
-	shared.SendLogs = true
 
 	fmt.Println("Now, a config file creation is needed.")
 
