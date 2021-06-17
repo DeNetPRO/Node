@@ -319,7 +319,7 @@ func LogError(logInfo string, errMsg error) error {
 	logMsg := fmt.Sprintf("%s: %s: %v\n", currentTime.String(), logInfo, errMsg)
 
 	//TODO set real address
-	url := "http://127.0.0.1:9091/logs/" + accountAddress.String()
+	url := "http://127.0.0.1:9091/logs/node/" + accountAddress.String()
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
 	if err != nil {
