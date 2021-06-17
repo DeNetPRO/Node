@@ -50,7 +50,7 @@ func Create(password string) (string, config.SecondaryNodeConfig, error) {
 		return "", nodeConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 
-	nodeConf, err = initAccount(&etherAccount)
+	nodeConf, err = initAccount(&etherAccount, password)
 	if err != nil {
 		return "", nodeConf, fmt.Errorf("%s %w", logInfo, err)
 	}
@@ -106,7 +106,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 		return "", nodeConfig, fmt.Errorf("%s %v", logInfo, shared.GetDetailedError(err))
 	}
 
-	nodeConfig, err = initAccount(&etherAccount)
+	nodeConfig, err = initAccount(&etherAccount, password)
 	if err != nil {
 		return "", nodeConfig, fmt.Errorf("%s %w", logInfo, err)
 	}
@@ -243,7 +243,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 	return etherAccount, password, nil
 }
 
-func initAccount(account *accounts.Account) (config.SecondaryNodeConfig, error) {
+func initAccount(account *accounts.Account, password string) (config.SecondaryNodeConfig, error) {
 	const logInfo = "account.initAccount->"
 	var nodeConf config.SecondaryNodeConfig
 
@@ -266,7 +266,7 @@ func initAccount(account *accounts.Account) (config.SecondaryNodeConfig, error) 
 
 	shared.NodeAddr = encryptedAddr
 
-	nodeConf, err = config.Create(addressString, config.State.Create)
+	nodeConf, err = config.Create(addressString, password)
 	if err != nil {
 		return nodeConf, fmt.Errorf("%s %w", logInfo, err)
 	}
