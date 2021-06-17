@@ -3,9 +3,8 @@ package cmd
 import (
 	"dfile-secondary-node/account"
 	bcProvider "dfile-secondary-node/blockchain_provider"
-	"dfile-secondary-node/server"
-
 	"dfile-secondary-node/config"
+	"dfile-secondary-node/server"
 	"dfile-secondary-node/shared"
 	"encoding/json"
 	"fmt"
@@ -28,7 +27,6 @@ var accountLoginCmd = &cobra.Command{
 		const logInfo = "accountLoginCmd->"
 		etherAccount, password, err := account.ValidateUser()
 		if err != nil {
-			shared.LogError(logInfo, err)
 			log.Fatal(accLoginFatalError)
 		}
 
@@ -41,7 +39,6 @@ var accountLoginCmd = &cobra.Command{
 		stat, err := os.Stat(pathToConfigFile)
 		err = shared.CheckStatErr(err)
 		if err != nil {
-			shared.LogError(logInfo, err)
 			log.Fatal(accLoginFatalError)
 		}
 
@@ -54,31 +51,28 @@ var accountLoginCmd = &cobra.Command{
 		} else {
 			confFile, err := os.Open(pathToConfigFile)
 			if err != nil {
-				shared.LogError(logInfo, shared.GetDetailedError(err))
 				log.Fatal(accLoginFatalError)
 			}
 			defer confFile.Close()
 
 			fileBytes, err := io.ReadAll(confFile)
 			if err != nil {
-				shared.LogError(logInfo, shared.GetDetailedError(err))
 				log.Fatal(accLoginFatalError)
 			}
 
 			err = json.Unmarshal(fileBytes, &dFileConf)
 			if err != nil {
-				shared.LogError(logInfo, shared.GetDetailedError(err))
 				log.Fatal(accLoginFatalError)
 			}
 
 			if dFileConf.StorageLimit <= 0 {
-				shared.LogError(logInfo, err)
 				log.Fatal(accLoginFatalError)
 			}
+
+			shared.SendLogs = dFileConf.AgreeSendLogs
 		}
 
 		fmt.Println("Logged in")
-
 		go bcProvider.StartMining(password)
 
 		server.Start(etherAccount.Address.String(), dFileConf.HTTPPort)

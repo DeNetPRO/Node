@@ -11,7 +11,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -29,6 +31,7 @@ var (
 	WorkDirName    = "dfile-node"
 	ConfDirName    = "config"
 	StorageDirName = "storage"
+	SendLogs       bool
 )
 
 func GetAvailableSpace(storagePath string) int {
@@ -51,7 +54,6 @@ func InitPaths() error {
 	AccsDirPath = filepath.Join(WorkDirPath, "accounts")
 
 	return nil
-
 }
 
 // ====================================================================================
@@ -90,7 +92,6 @@ func CreateIfNotExistAccDirs() error {
 // ====================================================================================
 
 func CheckStatErr(statErr error) error {
-
 	if statErr == nil {
 		return nil
 	}
@@ -305,31 +306,34 @@ func DecryptNodeAddr() (common.Address, error) {
 // ====================================================================================
 
 func LogError(logInfo string, errMsg error) error {
-	logsFile, err := os.OpenFile("./errorLogs", os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0700)
+	if !SendLogs {
+		return nil
+	}
+
+	accountAddress, err := DecryptNodeAddr()
 	if err != nil {
 		return err
 	}
-
-	defer logsFile.Close()
 
 	currentTime := time.Now().Local()
+	logMsg := fmt.Sprintf("%s: %s: %v\n", currentTime.String(), logInfo, errMsg)
 
-	addrString := "addr is not initialized"
+	//TODO set real address
+	url := "http://127.0.0.1:9091/logs/node/" + accountAddress.String()
 
-	addr, err := DecryptNodeAddr()
-	if err == nil {
-		addrString = addr.String()
+	req, err := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
+	if err != nil {
+		log.Println(err)
 	}
 
-	logMsg := fmt.Sprintf("%s: %s: %v\n", currentTime.String(), addrString, errMsg)
+	client := &http.Client{Timeout: time.Minute}
+
+	_, err = client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	fmt.Println(logMsg) //TODO remove
-
-	_, err = logsFile.WriteString(logMsg)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 

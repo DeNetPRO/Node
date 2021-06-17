@@ -91,7 +91,7 @@ var configUpdateCmd = &cobra.Command{
 			log.Fatal(confUpdateFatalMessage)
 		}
 
-		fmt.Println("Do you want to send bug reports to developers? y/n (or just press enter button to skip)")
+		fmt.Println("Do you want to send bug reports to developers? [y/n] (or just press enter button to skip)")
 
 		err = config.ChangeAgreeSendLogs(&dFileConf, config.State.Update)
 		if err != nil {
