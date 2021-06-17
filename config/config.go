@@ -82,6 +82,8 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
+	fmt.Println("Registering node...")
+
 	err = blockchainprovider.RegisterNode(ctx, address, password, splitIPAddr, dFileConf.HTTPPort)
 	if err != nil {
 		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
@@ -102,6 +104,8 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 	if err != nil {
 		return dFileConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
+
+	fmt.Println("Saving config...")
 
 	confFile.Sync()
 
