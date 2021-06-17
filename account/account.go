@@ -74,7 +74,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 		return "", nodeConfig, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 
-	fmt.Println("Please enter new password:")
+	fmt.Println("Please enter your password:")
 
 	var password string
 
