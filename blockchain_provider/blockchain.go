@@ -379,7 +379,10 @@ func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.
 			for _, ac := range acs {
 				if ac.Address == a {
 					ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
-					ks.TimedUnlock(ac, password, 1)
+					err := ks.TimedUnlock(ac, password, 1)
+					if err != nil {
+						return t, err
+					}
 					return ks.SignTx(ac, t, chnID)
 				}
 			}

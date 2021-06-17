@@ -202,7 +202,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 			}
 
 			if accountNumber < 1 || accountNumber > len(accounts) {
-				fmt.Println("Number is invalid. Please choose the correct number:")
+				fmt.Println("Number is incorrect")
 				for i, a := range accounts {
 					fmt.Println(i+1, a)
 				}

@@ -85,7 +85,7 @@ var configUpdateCmd = &cobra.Command{
 
 		fmt.Println("Please enter new http port number, or just press enter button to skip")
 
-		err = config.SetPort(&dFileConf)
+		err = config.SetPort(&dFileConf, config.State.Update)
 		if err != nil {
 			shared.LogError(logInfo, err)
 			log.Fatal(confUpdateFatalMessage)

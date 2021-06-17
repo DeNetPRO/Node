@@ -305,21 +305,23 @@ func DecryptNodeAddr() (common.Address, error) {
 
 // ====================================================================================
 
-func LogError(logInfo string, errMsg error) error {
+func LogError(logInfo string, errMsg error) {
 	if !SendLogs {
-		return nil
+		return
 	}
 
+	var stringAddr = "Unknown"
+
 	accountAddress, err := DecryptNodeAddr()
-	if err != nil {
-		return err
+	if err == nil {
+		stringAddr = accountAddress.String()
 	}
 
 	currentTime := time.Now().Local()
 	logMsg := fmt.Sprintf("%s: %s: %v\n", currentTime.String(), logInfo, errMsg)
 
 	//TODO set real address
-	url := "http://127.0.0.1:9091/logs/node/" + accountAddress.String()
+	url := "http://127.0.0.1:9091/logs/node/" + stringAddr
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
 	if err != nil {
@@ -334,7 +336,6 @@ func LogError(logInfo string, errMsg error) error {
 	}
 
 	fmt.Println(logMsg) //TODO remove
-	return nil
 }
 
 // ====================================================================================
