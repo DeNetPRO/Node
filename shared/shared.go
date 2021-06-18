@@ -333,7 +333,6 @@ func LogError(logInfo string, errMsg error) {
 	if err != nil {
 		fmt.Println(err)
 	}
-
 }
 
 // ====================================================================================
@@ -344,3 +343,8 @@ func GetDetailedError(errMsg error) error {
 }
 
 // ====================================================================================
+
+func GetHashPassword(password string) string {
+	pBytes := sha256.Sum256([]byte(password))
+	return hex.EncodeToString(pBytes[:])
+}

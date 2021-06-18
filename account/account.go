@@ -76,7 +76,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 
 	fmt.Println("Please enter your password:")
 
-	var password string
+	var originalPassword string
 
 	for {
 		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
@@ -84,14 +84,17 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 			return "", nodeConfig, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 		}
 
-		password = string(bytePassword)
-		if strings.Trim(password, " ") == "" {
+		originalPassword = string(bytePassword)
+		if strings.Trim(originalPassword, " ") == "" {
 			fmt.Println("Empty string can't be used as a password. Please try again")
 			continue
 		}
 
 		break
 	}
+
+	password := shared.GetHashPassword(originalPassword)
+	originalPassword = ""
 
 	err = shared.CreateIfNotExistAccDirs()
 	if err != nil {
@@ -226,11 +229,16 @@ func ValidateUser() (*accounts.Account, string, error) {
 		if err != nil {
 			return nil, "", fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 		}
-		password = string(bytePassword)
-		if strings.Trim(password, " ") == "" {
+
+		originalPassword := string(bytePassword)
+		if strings.Trim(originalPassword, " ") == "" {
 			fmt.Println("Empty string can't be used as a password. Please enter passwords again")
 			continue
 		}
+
+		password = shared.GetHashPassword(originalPassword)
+		originalPassword = ""
+		bytePassword = nil
 
 		etherAccount, err = Login(accountAddress, password)
 		if err != nil {

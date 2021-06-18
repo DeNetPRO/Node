@@ -4,7 +4,6 @@ import (
 	"dfile-secondary-node/account"
 	"dfile-secondary-node/server"
 	"dfile-secondary-node/shared"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -54,13 +53,16 @@ var accountCreateCmd = &cobra.Command{
 
 			fmt.Println("Passwords do not match. Please enter passwords again.")
 		}
-		accountStr, nodeConfig, err := account.Create(password1)
+
+		password := shared.GetHashPassword(password1)
+		password1 = ""
+
+		accountStr, nodeConfig, err := account.Create(password)
 		if err != nil {
 			shared.LogError(logInfo, err)
 			log.Fatal(accCreateFatalMessage)
 		}
 
-		shared.LogError(logInfo, errors.New("create"))
 		server.Start(accountStr, nodeConfig.HTTPPort)
 	},
 }
