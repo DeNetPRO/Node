@@ -435,36 +435,31 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	}
 
 	vars := mux.Vars(req)
-	storageProviderAddress := vars["address"]
+	addressFromReq := vars["address"]
 	fileName := vars["fileName"]
-
 	signatureFromReq := vars["signature"]
 
 	signature, err := hex.DecodeString(signatureFromReq)
 	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
 		http.Error(w, "File serving problem", 400)
 		return
 	}
 
-	hash := sha256.Sum256([]byte(fileName + storageProviderAddress))
+	hash := sha256.Sum256([]byte(fileName + addressFromReq))
 
 	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
 	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
 		http.Error(w, "File serving problem", 400)
 		return
 	}
 
 	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
-	if storageProviderAddress != signatureAddress.String() {
-		err := errors.New("wrong signature")
-		shared.LogError(logInfo, shared.GetDetailedError(err))
-		http.Error(w, err.Error(), http.StatusForbidden)
+	if addressFromReq != signatureAddress.String() {
+		http.Error(w, "Wrong signature", http.StatusForbidden)
 		return
 	}
 
-	pathToFile := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, storageProviderAddress, fileName)
+	pathToFile := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, addressFromReq, fileName)
 	http.ServeFile(w, req, pathToFile)
 }
