@@ -436,7 +436,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 
 	vars := mux.Vars(req)
 	addressFromReq := vars["address"]
-	fileName := vars["fileName"]
+	fileKey := vars["fileKey"]
 	signatureFromReq := vars["signature"]
 
 	signature, err := hex.DecodeString(signatureFromReq)
@@ -445,7 +445,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	hash := sha256.Sum256([]byte(fileName + addressFromReq))
+	hash := sha256.Sum256([]byte(fileKey + addressFromReq))
 
 	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
 	if err != nil {
@@ -460,6 +460,6 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pathToFile := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, addressFromReq, fileName)
+	pathToFile := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, addressFromReq, fileKey)
 	http.ServeFile(w, req, pathToFile)
 }
