@@ -30,7 +30,7 @@ func Start(address, port string) {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/upload", SaveFiles).Methods("POST")
-	r.HandleFunc("/download/{fileKey}", ServeFiles).Methods("GET")
+	r.HandleFunc("/download/{address}/{fileKey}/{signature}", ServeFiles).Methods("GET")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -443,7 +443,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	signature, err := hex.DecodeString(signatureFromReq)
 	if err != nil {
 		shared.LogError(logInfo, shared.GetDetailedError(err))
-		http.Error(w, "File saving problem", 400)
+		http.Error(w, "File serving problem", 400)
 		return
 	}
 
@@ -452,7 +452,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
 	if err != nil {
 		shared.LogError(logInfo, shared.GetDetailedError(err))
-		http.Error(w, "File saving problem", 400)
+		http.Error(w, "File serving problem", 400)
 		return
 	}
 
