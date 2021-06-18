@@ -333,7 +333,6 @@ func LogError(logInfo string, errMsg error) {
 	if err != nil {
 		fmt.Println(err)
 	}
-
 }
 
 // ====================================================================================

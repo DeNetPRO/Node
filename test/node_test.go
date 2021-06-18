@@ -14,6 +14,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,10 +24,8 @@ var (
 	accountAddress       string
 	nodeAddress          []byte
 	ErrorInvalidPassword = errors.New("could not decrypt key with given password")
-	configName           = "config.json"
 	configPort           = "55051"
-	configAddress        string
-	configStorageLimit   = 1
+	configStorageLimit   = "1"
 	ip                   = "185.140.19.95"
 )
 
@@ -49,7 +49,7 @@ func TestEmptyAccountListBeforeCreating(t *testing.T) {
 }
 
 func TestCreateAccount(t *testing.T) {
-	address, _, err := account.Create(accountPassword)
+	address, config, err := accountCreateTest(accountPassword, ip, configStorageLimit, configPort)
 	if err != nil {
 		t.Error(err)
 	}
@@ -77,11 +77,16 @@ func TestCreateAccount(t *testing.T) {
 		t.Error(err)
 	}
 
+	intConfigStorageLimit, _ := strconv.Atoi(configStorageLimit)
+	if config.Address != address || !config.AgreeSendLogs || config.HTTPPort != configPort || config.IpAddress != ip || config.StorageLimit != intConfigStorageLimit {
+		t.Error("config is invalid")
+	}
+
 	nodeAddress = shared.NodeAddr
 }
 
 func TestLoginAccountWithCorrectAddressAndPassword(t *testing.T) {
-	account, err := account.Login(accountAddress, "1")
+	account, err := testLogin(accountAddress, accountPassword)
 	if err != nil {
 		t.Error(err)
 	}
@@ -89,7 +94,7 @@ func TestLoginAccountWithCorrectAddressAndPassword(t *testing.T) {
 }
 
 func TestLoginAccountWithInvalidPassword(t *testing.T) {
-	_, err := account.Login(accountAddress, "invalid")
+	_, err := testLogin(accountAddress, "invalid")
 	want := ErrorInvalidPassword
 
 	require.EqualError(t, want, err.Error())
@@ -97,7 +102,7 @@ func TestLoginAccountWithInvalidPassword(t *testing.T) {
 
 func TestLoginAccountWithUnknownAddress(t *testing.T) {
 	unknownAddress := "accountAddress"
-	_, err := account.Login(unknownAddress, accountPassword)
+	_, err := testLogin(unknownAddress, accountPassword)
 	want := errors.New("Account Not Found Error: cannot find account for " + unknownAddress)
 
 	require.EqualError(t, want, err.Error())
@@ -110,33 +115,30 @@ func TestCheckRightPassword(t *testing.T) {
 	}
 }
 
-func TestCheckInvalidPassword(t *testing.T) {
-	err := account.CheckPassword("accountPassword", accountAddress)
-	want := ErrorInvalidPassword
-	require.EqualError(t, want, err.Error())
-}
-
-func TestCreateConfig(t *testing.T) {
-	storageLimit := "1"
-	config, err := createConfigForTests(accountAddress, accountPassword, ip, storageLimit, configPort)
+func accountCreateTest(password, ipAddress, storageLimit, port string) (string, *config.SecondaryNodeConfig, error) {
+	var nodeConf *config.SecondaryNodeConfig
+	err := shared.CreateIfNotExistAccDirs()
 	if err != nil {
-		t.Error(err)
+		return "", nil, err
 	}
 
-	configPath := filepath.Join(shared.AccsDirPath, accountAddress, shared.ConfDirName, configName)
-	if _, err := os.Stat(configPath); err != nil {
-		t.Error(err)
+	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+
+	etherAccount, err := ks.NewAccount(password)
+	if err != nil {
+		return "", nil, err
 	}
 
-	configAddress = config.Address
+	nodeConf, err = initTestAccount(&etherAccount, password, ipAddress, storageLimit, port)
+	if err != nil {
+		return "", nodeConf, err
+	}
 
-	require.Equal(t, configPort, config.HTTPPort)
-	require.Equal(t, configStorageLimit, config.StorageLimit)
-	require.Equal(t, int64(0), config.UsedStorageSpace)
+	return etherAccount.Address.String(), nodeConf, nil
 }
 
 func createConfigForTests(address, password, ipAddress, storageLimit, port string) (*config.SecondaryNodeConfig, error) {
-	dFileConf := &config.SecondaryNodeConfig{Address: address}
+	dFileConf := &config.SecondaryNodeConfig{Address: address, AgreeSendLogs: true}
 	pathToConfig := filepath.Join(shared.AccsDirPath, address, shared.ConfDirName)
 	regNum := regexp.MustCompile(("[0-9]+"))
 
@@ -189,6 +191,8 @@ func createConfigForTests(address, password, ipAddress, storageLimit, port strin
 		}
 	}
 
+	dFileConf.IpAddress = ipAddr
+
 	regPort := regexp.MustCompile("[0-9]+|")
 
 	httpPort := port
@@ -213,14 +217,6 @@ func createConfigForTests(address, password, ipAddress, storageLimit, port strin
 		dFileConf.HTTPPort = fmt.Sprint(intHttpPort)
 	}
 
-	//TODO add blockchain request
-	/*
-		err := blockchainprovider.RegisterNode(address, password, splittedAddr, dFileConf.HTTPPort)
-		if err != nil {
-			log.Fatal("Couldn't register node in network")
-		}
-	*/
-
 	confFile, err := os.Create(filepath.Join(pathToConfig, "config.json"))
 	if err != nil {
 		return dFileConf, err
@@ -240,4 +236,71 @@ func createConfigForTests(address, password, ipAddress, storageLimit, port strin
 	confFile.Sync()
 
 	return dFileConf, nil
+}
+
+func initTestAccount(account *accounts.Account, password, ipAddress, storageLimit, port string) (*config.SecondaryNodeConfig, error) {
+	nodeConf := &config.SecondaryNodeConfig{}
+	addressString := account.Address.String()
+
+	err := os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.StorageDirName), 0700)
+	if err != nil {
+		return nodeConf, err
+	}
+
+	err = os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.ConfDirName), 0700)
+	if err != nil {
+		return nodeConf, err
+	}
+
+	encryptedAddr, err := shared.EncryptNodeAddr(account.Address)
+	if err != nil {
+		return nodeConf, err
+	}
+
+	shared.NodeAddr = encryptedAddr
+
+	nodeConf, err = createConfigForTests(account.Address.String(), password, ipAddress, storageLimit, port)
+	if err != nil {
+		return nodeConf, err
+	}
+
+	return nodeConf, nil
+}
+
+func testLogin(blockchainAccountString, password string) (*accounts.Account, error) {
+	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+	etherAccounts := ks.Accounts()
+
+	var etherAccount *accounts.Account
+
+	for _, a := range etherAccounts {
+		if blockchainAccountString == a.Address.String() {
+			etherAccount = &a
+			break
+		}
+	}
+
+	if etherAccount == nil {
+		err := errors.New("Account Not Found Error: cannot find account for " + blockchainAccountString)
+		return nil, err
+	}
+
+	keyJson, err := ks.Export(*etherAccount, password, password)
+	if err != nil {
+		return nil, err
+	}
+
+	key, err := keystore.DecryptKey(keyJson, password)
+	if err != nil {
+		return nil, err
+	}
+
+	encryptedAddr, err := shared.EncryptNodeAddr(key.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	shared.NodeAddr = encryptedAddr
+
+	return etherAccount, nil
 }
