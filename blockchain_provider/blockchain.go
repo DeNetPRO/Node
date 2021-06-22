@@ -289,7 +289,7 @@ func StartMining(password string) {
 			}
 
 			for _, fileName := range fileNames {
-				time.Sleep(time.Second) // allowed rps is 1 TODO?
+				time.Sleep(10 * time.Second) // allowed rps is 1 TODO?
 				storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
 				if err != nil {
 					shared.LogError(logInfo, shared.GetDetailedError(err))

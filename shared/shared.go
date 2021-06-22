@@ -320,7 +320,7 @@ func LogError(logInfo string, errMsg error) {
 	currentTime := time.Now().Local()
 	logMsg := fmt.Sprintf("%s: %s: %v\n", currentTime.String(), logInfo, errMsg)
 
-	url := "http://68.183.215.241:9091/logs/node/" + stringAddr
+	url := "http://91.244.254.50:9091/logs/node/" + stringAddr
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
 	if err != nil {

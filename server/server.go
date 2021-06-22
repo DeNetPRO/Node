@@ -460,6 +460,8 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	fmt.Println("serving file:", fileKey)
+
 	pathToFile := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, addressFromReq, fileKey)
 	http.ServeFile(w, req, pathToFile)
 }
