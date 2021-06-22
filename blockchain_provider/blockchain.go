@@ -257,7 +257,12 @@ func StartMining(password string) {
 			continue
 		}
 
+		ctxIsOver := false
 		for _, spAddress := range storageProviderAddresses {
+			if ctxIsOver {
+				break
+			}
+
 			storageProviderAddr := common.HexToAddress(spAddress)
 			_, reward, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
 			if err != nil {
@@ -304,7 +309,9 @@ func StartMining(password string) {
 
 				blockNum, err := client.BlockNumber(ctx)
 				if err != nil {
+					ctxIsOver = true
 					shared.LogError(logInfo, shared.GetDetailedError(err))
+					break
 				}
 
 				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-1))
@@ -338,7 +345,9 @@ func StartMining(password string) {
 					fmt.Println("Sending Proof for reward", reward)
 					err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress)
 					if err != nil {
+						ctxIsOver = true
 						shared.LogError(logInfo, shared.GetDetailedError(err))
+						break
 					}
 				}
 			}
