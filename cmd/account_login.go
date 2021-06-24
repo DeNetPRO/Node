@@ -80,7 +80,9 @@ var accountLoginCmd = &cobra.Command{
 			log.Fatal(accCreateFatalMessage)
 		}
 
-		if err := shared.InternetDevice.Forward(uint16(intPort), "node"); err != nil {
+		err = shared.InternetDevice.Forward(uint16(intPort), "node")
+		if err != nil {
+			shared.LogError(logInfo, err)
 			log.Println(accCreateFatalMessage)
 		}
 

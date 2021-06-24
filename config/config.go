@@ -71,7 +71,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 	dFileConf.IpAddress = ip
 	splitIPAddr := strings.Split(ip, ".")
 
-	fmt.Println("Your IP address:", ip)
+	fmt.Println("Your public IP address:", ip)
 	fmt.Println("Remember if you don't have a static ip address it may change")
 	fmt.Println("After router reset ip address info update may be needed")
 

@@ -72,10 +72,10 @@ var accountCreateCmd = &cobra.Command{
 			log.Fatal(accCreateFatalMessage)
 		}
 
-		fmt.Println("forward port")
-		if err := shared.InternetDevice.Forward(uint16(intPort), "node"); err != nil {
+		err = shared.InternetDevice.Forward(uint16(intPort), "node")
+		if err != nil {
 			shared.LogError(logInfo, err)
-			log.Fatal(accCreateFatalMessage)
+			log.Println(accCreateFatalMessage)
 		}
 
 		defer shared.InternetDevice.Clear(uint16(intPort))
