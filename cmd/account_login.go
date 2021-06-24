@@ -73,6 +73,7 @@ var accountLoginCmd = &cobra.Command{
 		}
 
 		fmt.Println("Logged in")
+
 		go bcProvider.StartMining(password)
 
 		server.Start(etherAccount.Address.String(), dFileConf.HTTPPort)

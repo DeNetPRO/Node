@@ -30,6 +30,7 @@ var accountCreateCmd = &cobra.Command{
 		for {
 			bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
+				shared.LogError(logInfo, err)
 				log.Fatal(accCreateFatalMessage)
 			}
 			password1 = string(bytePassword)
@@ -42,7 +43,8 @@ var accountCreateCmd = &cobra.Command{
 			fmt.Println("Enter password again: ")
 			bytePassword, err = term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
-				log.Fatal(accCreateFatalMessage)
+				shared.LogError(logInfo, err)
+				log.Println(accCreateFatalMessage)
 			}
 
 			password2 = string(bytePassword)

@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -24,9 +25,10 @@ import (
 
 const gbBytes = int64(1024 * 1024 * 1024)
 const oneHunderdMBBytes = int64(1024 * 1024 * 100)
+const serverStartFatalMessage = "Couldn't start server"
 
 func Start(address, port string) {
-
+	const logInfo = "server.Start->"
 	r := mux.NewRouter()
 
 	r.HandleFunc("/upload", SaveFiles).Methods("POST")
@@ -51,11 +53,25 @@ func Start(address, port string) {
 		},
 	})
 
+	intPort, err := strconv.Atoi(port)
+	if err != nil {
+		shared.LogError(logInfo, shared.GetDetailedError(err))
+		log.Fatal(serverStartFatalMessage)
+	}
+
+	err = shared.InternetDevice.Forward(uint16(intPort), "node")
+	if err != nil {
+		shared.LogError(logInfo, shared.GetDetailedError(err))
+		log.Println(serverStartFatalMessage)
+	}
+
+	defer shared.InternetDevice.Clear(uint16(intPort))
+
 	fmt.Println("Dfile node is ready and started listening on port: " + port)
 
-	err := http.ListenAndServe(":"+port, corsOpts.Handler(checkSignature(r)))
+	err = http.ListenAndServe(":"+port, corsOpts.Handler(checkSignature(r)))
 	if err != nil {
-		panic(err)
+		log.Fatal(serverStartFatalMessage)
 	}
 }
 

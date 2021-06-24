@@ -63,14 +63,17 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
 	}
 
-	fmt.Println("Please enter your public IP address. Remember if you don't have a static ip address it may change")
-	fmt.Println("After router reset ip address info update may be needed")
-	fmt.Println("You can check your public ip address by using various online services")
-
-	splitIPAddr, err := SetIpAddr(&dFileConf, State.Create)
+	ip, err := shared.InternetDevice.ExternalIP()
 	if err != nil {
 		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
 	}
+
+	dFileConf.IpAddress = ip
+	splitIPAddr := strings.Split(ip, ".")
+
+	fmt.Println("Your public IP address:", ip)
+	fmt.Println("Remember if you don't have a static ip address it may change")
+	fmt.Println("After router reset ip address info update may be needed")
 
 	err = SetPort(&dFileConf, State.Create)
 	if err != nil {
