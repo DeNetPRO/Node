@@ -5,6 +5,7 @@ import (
 	"dfile-secondary-node/server"
 	"dfile-secondary-node/shared"
 	"log"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -21,6 +22,19 @@ var accountImportCmd = &cobra.Command{
 			shared.LogError(logInfo, err)
 			log.Fatal("Fatal error, couldn't import an account")
 		}
+
+		intPort, err := strconv.Atoi(nodeConfig.HTTPPort)
+		if err != nil {
+			log.Fatal(accCreateFatalMessage)
+		}
+
+		device, err := shared.ForwardPort(intPort)
+		if err != nil {
+			shared.LogError(logInfo, err)
+			log.Fatal(accCreateFatalMessage)
+		}
+
+		defer device.Clear(uint16(intPort))
 
 		server.Start(accountStr, nodeConfig.HTTPPort)
 	},

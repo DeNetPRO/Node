@@ -20,6 +20,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ricochet2200/go-disk-usage/du"
+	"gitlab.com/NebulousLabs/go-upnp"
 )
 
 var (
@@ -346,4 +347,22 @@ func GetDetailedError(errMsg error) error {
 func GetHashPassword(password string) string {
 	pBytes := sha256.Sum256([]byte(password))
 	return hex.EncodeToString(pBytes[:])
+}
+
+// ====================================================================================
+
+func ForwardPort(port int) (*upnp.IGD, error) {
+	const logInfo = "shared.ForwardPort"
+
+	device, err := upnp.Discover()
+	if err != nil {
+		return nil, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
+	}
+
+	err = device.Forward(uint16(port), "node")
+	if err != nil {
+		return nil, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
+	}
+
+	return device, nil
 }

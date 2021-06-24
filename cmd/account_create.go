@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -62,6 +63,19 @@ var accountCreateCmd = &cobra.Command{
 			shared.LogError(logInfo, err)
 			log.Fatal(accCreateFatalMessage)
 		}
+
+		intPort, err := strconv.Atoi(nodeConfig.HTTPPort)
+		if err != nil {
+			log.Fatal(accCreateFatalMessage)
+		}
+
+		device, err := shared.ForwardPort(intPort)
+		if err != nil {
+			shared.LogError(logInfo, err)
+			log.Fatal(accCreateFatalMessage)
+		}
+
+		defer device.Clear(uint16(intPort))
 
 		server.Start(accountStr, nodeConfig.HTTPPort)
 	},
