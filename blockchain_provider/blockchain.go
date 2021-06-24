@@ -230,12 +230,11 @@ func StartMining(password string) {
 			continue
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
+		ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
 
 		blockNum, err := client.BlockNumber(ctx)
 		if err != nil {
 			shared.LogError(logInfo, shared.GetDetailedError(err))
-			cancel()
 			time.Sleep(time.Second * 60)
 			continue
 		}
@@ -243,7 +242,6 @@ func StartMining(password string) {
 		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum-1)))
 		if err != nil {
 			shared.LogError(logInfo, shared.GetDetailedError(err))
-			cancel()
 			time.Sleep(time.Second * 60)
 			continue
 		}
@@ -257,11 +255,7 @@ func StartMining(password string) {
 			continue
 		}
 
-		ctxIsOver := false
 		for _, spAddress := range storageProviderAddresses {
-			if ctxIsOver {
-				break
-			}
 
 			storageProviderAddr := common.HexToAddress(spAddress)
 			_, reward, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
@@ -307,9 +301,10 @@ func StartMining(password string) {
 
 				storedFile.Close()
 
+				ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
+
 				blockNum, err := client.BlockNumber(ctx)
 				if err != nil {
-					ctxIsOver = true
 					shared.LogError(logInfo, shared.GetDetailedError(err))
 					break
 				}
@@ -345,7 +340,6 @@ func StartMining(password string) {
 					fmt.Println("Sending Proof for reward", reward)
 					err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress)
 					if err != nil {
-						ctxIsOver = true
 						shared.LogError(logInfo, shared.GetDetailedError(err))
 						break
 					}
@@ -353,7 +347,6 @@ func StartMining(password string) {
 			}
 		}
 
-		cancel()
 		fmt.Println("Sleeping...")
 		time.Sleep(time.Second * 60)
 	}

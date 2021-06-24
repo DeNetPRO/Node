@@ -11,9 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
-	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -306,33 +304,34 @@ func DecryptNodeAddr() (common.Address, error) {
 // ====================================================================================
 
 func LogError(logInfo string, errMsg error) {
-	if !SendLogs {
-		return
-	}
+	// if !SendLogs {
+	// 	return
+	// }
 
-	var stringAddr = "Unknown"
+	// var stringAddr = "Unknown"
 
-	accountAddress, err := DecryptNodeAddr()
-	if err == nil {
-		stringAddr = accountAddress.String()
-	}
+	// accountAddress, err := DecryptNodeAddr()
+	// if err == nil {
+	// 	stringAddr = accountAddress.String()
+	// }
 
 	currentTime := time.Now().Local()
 	logMsg := fmt.Sprintf("%s: %s: %v\n", currentTime.String(), logInfo, errMsg)
+	fmt.Println(logMsg)
 
-	url := "http://91.244.254.50:9091/logs/node/" + stringAddr
+	// url := "http://91.244.254.50:9091/logs/node/" + stringAddr
 
-	req, err := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
-	if err != nil {
-		log.Println(err)
-	}
+	// req, err := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
+	// if err != nil {
+	// 	log.Println(err)
+	// }
 
-	client := &http.Client{Timeout: time.Minute}
+	// client := &http.Client{Timeout: time.Minute}
 
-	_, err = client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-	}
+	// _, err = client.Do(req)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
 }
 
 // ====================================================================================
