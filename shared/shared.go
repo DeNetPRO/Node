@@ -3,6 +3,7 @@ package shared
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -11,7 +12,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -31,6 +34,7 @@ var (
 	ConfDirName    = "config"
 	StorageDirName = "storage"
 	SendLogs       = true
+	InternetDevice = &upnp.IGD{}
 )
 
 func GetAvailableSpace(storagePath string) int {
@@ -305,34 +309,33 @@ func DecryptNodeAddr() (common.Address, error) {
 // ====================================================================================
 
 func LogError(logInfo string, errMsg error) {
-	// if !SendLogs {
-	// 	return
-	// }
+	if !SendLogs {
+		return
+	}
 
-	// var stringAddr = "Unknown"
+	var stringAddr = "Unknown"
 
-	// accountAddress, err := DecryptNodeAddr()
-	// if err == nil {
-	// 	stringAddr = accountAddress.String()
-	// }
+	accountAddress, err := DecryptNodeAddr()
+	if err == nil {
+		stringAddr = accountAddress.String()
+	}
 
 	currentTime := time.Now().Local()
 	logMsg := fmt.Sprintf("%s: %s: %v\n", currentTime.String(), logInfo, errMsg)
-	fmt.Println(logMsg)
 
-	// url := "http://91.244.254.50:9091/logs/node/" + stringAddr
+	url := "http://91.244.254.50:9091/logs/node/" + stringAddr
 
-	// req, err := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
-	// if err != nil {
-	// 	log.Println(err)
-	// }
+	req, err := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
+	if err != nil {
+		log.Println(err)
+	}
 
-	// client := &http.Client{Timeout: time.Minute}
+	client := &http.Client{Timeout: time.Minute}
 
-	// _, err = client.Do(req)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
+	_, err = client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 // ====================================================================================
@@ -351,18 +354,14 @@ func GetHashPassword(password string) string {
 
 // ====================================================================================
 
-func ForwardPort(port int) (*upnp.IGD, error) {
-	const logInfo = "shared.ForwardPort"
-
-	device, err := upnp.Discover()
+func InitIGD() error {
+	const logInfo = "shared.InitIGD"
+	device, err := upnp.DiscoverCtx(context.Background())
 	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
+		return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
 	}
 
-	err = device.Forward(uint16(port), "node")
-	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-	}
+	InternetDevice = device
 
-	return device, nil
+	return nil
 }

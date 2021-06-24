@@ -4,6 +4,7 @@ import (
 	"dfile-secondary-node/account"
 	"dfile-secondary-node/server"
 	"dfile-secondary-node/shared"
+	"fmt"
 	"log"
 	"strconv"
 
@@ -25,16 +26,17 @@ var accountImportCmd = &cobra.Command{
 
 		intPort, err := strconv.Atoi(nodeConfig.HTTPPort)
 		if err != nil {
-			log.Fatal(accCreateFatalMessage)
-		}
-
-		device, err := shared.ForwardPort(intPort)
-		if err != nil {
 			shared.LogError(logInfo, err)
 			log.Fatal(accCreateFatalMessage)
 		}
 
-		defer device.Clear(uint16(intPort))
+		fmt.Println(intPort)
+		if err := shared.InternetDevice.Forward(uint16(intPort), "node"); err != nil {
+			shared.LogError(logInfo, err)
+			log.Println(accCreateFatalMessage)
+		}
+
+		defer shared.InternetDevice.Clear(uint16(intPort))
 
 		server.Start(accountStr, nodeConfig.HTTPPort)
 	},

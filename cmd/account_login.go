@@ -80,13 +80,11 @@ var accountLoginCmd = &cobra.Command{
 			log.Fatal(accCreateFatalMessage)
 		}
 
-		device, err := shared.ForwardPort(intPort)
-		if err != nil {
-			shared.LogError(logInfo, err)
-			log.Fatal(accCreateFatalMessage)
+		if err := shared.InternetDevice.Forward(uint16(intPort), "node"); err != nil {
+			log.Println(accCreateFatalMessage)
 		}
 
-		defer device.Clear(uint16(intPort))
+		defer shared.InternetDevice.Clear(uint16(intPort))
 
 		go bcProvider.StartMining(password)
 
