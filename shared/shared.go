@@ -334,7 +334,17 @@ func LogError(logInfo string, errMsg error) {
 
 	_, err = client.Do(req)
 	if err != nil {
-		fmt.Println(err)
+		url := "http://192.168.1.96:9091/logs/node/" + stringAddr
+
+		req, err = http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
+		if err != nil {
+			log.Println(err)
+		}
+
+		_, err = client.Do(req)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
 
@@ -355,7 +365,7 @@ func GetHashPassword(password string) string {
 // ====================================================================================
 
 func InitIGD() error {
-	const logInfo = "shared.InitIGD"
+	const logInfo = "shared.InitIGD->"
 	device, err := upnp.DiscoverCtx(context.Background())
 	if err != nil {
 		return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))

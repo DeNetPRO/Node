@@ -12,7 +12,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -74,19 +73,6 @@ var accountLoginCmd = &cobra.Command{
 		}
 
 		fmt.Println("Logged in")
-
-		intPort, err := strconv.Atoi(dFileConf.HTTPPort)
-		if err != nil {
-			log.Fatal(accCreateFatalMessage)
-		}
-
-		err = shared.InternetDevice.Forward(uint16(intPort), "node")
-		if err != nil {
-			shared.LogError(logInfo, err)
-			log.Println(accCreateFatalMessage)
-		}
-
-		defer shared.InternetDevice.Clear(uint16(intPort))
 
 		go bcProvider.StartMining(password)
 
