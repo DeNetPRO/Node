@@ -476,7 +476,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 
-	_, err = instance.SendProof(opts, common.HexToAddress("0x537F6af3A07e58986Bb5041c304e9Eb2283396CD"), uint32(blockNum-1), proof[len(proof)-1], uint64(intNonce), signedFSRootHash[:64], bytesToProve, proof)
+	_, err = instance.SendProof(opts, common.HexToAddress(spAddr), uint32(blockNum-1), proof[len(proof)-1], uint64(intNonce), signedFSRootHash[:64], bytesToProve, proof)
 	if err != nil {
 		return fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
