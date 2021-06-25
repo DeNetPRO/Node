@@ -71,17 +71,15 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 	dFileConf.IpAddress = ip
 	splitIPAddr := strings.Split(ip, ".")
 
-	fmt.Println("Your public IP address:", ip)
-	fmt.Println("Remember if you don't have a static ip address it may change")
-	fmt.Println("After router reset ip address info update may be needed")
+	fmt.Println("Your public IP address", ip, "is added to config")
 
 	err = SetPort(&dFileConf, State.Create)
 	if err != nil {
 		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
 	}
 
-	fmt.Println("Bug reports will be sent to developers")
-	fmt.Println("You can switch off reports by updating config")
+	fmt.Println("Due to testing stage bug reports from your device are going to be received by developers")
+	fmt.Println("You can stop sending reports by updating config")
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 

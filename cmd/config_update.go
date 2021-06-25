@@ -108,37 +108,36 @@ var configUpdateCmd = &cobra.Command{
 		}
 
 		if stateBefore.IpAddress != dFileConf.IpAddress || stateBefore.HTTPPort != dFileConf.HTTPPort {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-			defer cancel()
+			ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
 			err := blockchainprovider.UpdateNodeInfo(ctx, etherAccount.Address, password, dFileConf.HTTPPort, splitIPAddr)
 			if err != nil {
-				shared.LogError(logInfo, err)
+				shared.LogError(logInfo, shared.GetDetailedError(err))
 				log.Fatal(confUpdateFatalMessage)
 			}
 		}
 
 		confJSON, err := json.Marshal(dFileConf)
 		if err != nil {
-			shared.LogError(logInfo, err)
+			shared.LogError(logInfo, shared.GetDetailedError(err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
 		err = confFile.Truncate(0)
 		if err != nil {
-			shared.LogError(logInfo, err)
+			shared.LogError(logInfo, shared.GetDetailedError(err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
 		_, err = confFile.Seek(0, 0)
 		if err != nil {
-			shared.LogError(logInfo, err)
+			shared.LogError(logInfo, shared.GetDetailedError(err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
 		_, err = confFile.Write(confJSON)
 		if err != nil {
-			shared.LogError(logInfo, err)
+			shared.LogError(logInfo, shared.GetDetailedError(err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 

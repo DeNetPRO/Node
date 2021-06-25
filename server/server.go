@@ -256,7 +256,6 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	if stat == nil {
 		err = os.Mkdir(addressPath, 0700)
 		if err != nil {
-			fmt.Println(err)
 			shared.LogError(logInfo, shared.GetDetailedError(err))
 			http.Error(w, "File saving problem", 500)
 			return
@@ -265,7 +264,6 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	treeFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
 	if err != nil {
-		fmt.Println(err)
 		shared.LogError(logInfo, shared.GetDetailedError(err))
 		http.Error(w, "File saving problem", 500)
 		return

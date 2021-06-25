@@ -12,7 +12,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -325,10 +324,7 @@ func LogError(logInfo string, errMsg error) {
 
 	url := "http://91.244.254.50:9091/logs/node/" + stringAddr
 
-	req, err := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
-	if err != nil {
-		log.Println(err)
-	}
+	req, _ := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
 
 	client := &http.Client{Timeout: time.Minute}
 
@@ -336,15 +332,9 @@ func LogError(logInfo string, errMsg error) {
 	if err != nil {
 		url := "http://192.168.1.96:9091/logs/node/" + stringAddr
 
-		req, err = http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
-		if err != nil {
-			log.Println(err)
-		}
+		req, _ = http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
 
-		_, err = client.Do(req)
-		if err != nil {
-			fmt.Println(err)
-		}
+		client.Do(req)
 	}
 }
 

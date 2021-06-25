@@ -263,8 +263,14 @@ func StartMining(password string) {
 				shared.LogError(logInfo, shared.GetDetailedError(err))
 			}
 
-			fmt.Println("reward is", reward) //TODO remove
+			fmt.Println("reward for", spAddress, "files is", reward) //TODO remove
 			fmt.Println("Min reward value:", 3000000000000000000)
+
+			rewardisEnough := reward.Cmp(big.NewInt(3000000000000000000)) == 1
+
+			if !rewardisEnough {
+				continue
+			}
 
 			fileNames := []string{}
 
@@ -332,12 +338,9 @@ func StartMining(password string) {
 
 				compareResultIsLessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
 
-				fmt.Println("checked file:", fileName)
-
-				rewardisEnough := reward.Cmp(big.NewInt(3000000000000000000)) == 1
-
-				if compareResultIsLessUserDifficulty && rewardisEnough {
-					fmt.Println("Sending Proof for reward", reward)
+				if compareResultIsLessUserDifficulty {
+					fmt.Println("checking file:", fileName)
+					fmt.Println("Sending proof of", fileName, "for reward:", reward)
 					err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress)
 					if err != nil {
 						shared.LogError(logInfo, shared.GetDetailedError(err))
