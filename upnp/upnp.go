@@ -8,7 +8,7 @@ import (
 	"gitlab.com/NebulousLabs/go-upnp"
 )
 
-var InternetDevice = &upnp.IGD{}
+var InternetDevice *upnp.IGD
 
 func InitIGD() error {
 	const logInfo = "shared.InitIGD->"

@@ -66,18 +66,21 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	var splitIPAddr []string
 
-	ip, err := upnp.InternetDevice.ExternalIP()
-	if err != nil {
-		fmt.Println("Please enter your public ip address")
-		splitIPAddr, err = SetIpAddr(&dFileConf, State.Update)
+	if upnp.InternetDevice != nil {
+		ip, err := upnp.InternetDevice.ExternalIP()
 		if err != nil {
-			shared.LogError(logInfo, err)
+			return dFileConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 		}
-	} else {
+
 		dFileConf.IpAddress = ip
 		splitIPAddr = strings.Split(ip, ".")
 		fmt.Println("Your public IP address", ip, "is added to config")
-
+	} else {
+		fmt.Println("Please enter your public ip address")
+		splitIPAddr, err = SetIpAddr(&dFileConf, State.Update)
+		if err != nil {
+			return dFileConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
+		}
 	}
 
 	err = SetPort(&dFileConf, State.Create)

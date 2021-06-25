@@ -77,10 +77,13 @@ var accountLoginCmd = &cobra.Command{
 				log.Fatal(accLoginFatalError)
 			}
 
-			ip, err := upnp.InternetDevice.ExternalIP()
-			if err != nil {
-				shared.LogError(logInfo, shared.GetDetailedError(err))
-			} else {
+			if upnp.InternetDevice != nil {
+
+				ip, err := upnp.InternetDevice.ExternalIP()
+				if err != nil {
+					shared.LogError(logInfo, shared.GetDetailedError(err))
+				}
+
 				if dFileConf.IpAddress != ip {
 
 					fmt.Println("Updating public ip info...")
