@@ -29,9 +29,7 @@ func main() {
 		log.Fatal("Fatal Error: couldn't locate home directory")
 	}
 
-	if err := upnp.InitIGD(); err != nil {
-		shared.LogError("main->", err)
-	}
+	upnp.InitIGD()
 
 	cmd.Execute()
 }
