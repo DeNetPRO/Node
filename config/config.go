@@ -4,6 +4,7 @@ import (
 	"context"
 	blockchainprovider "dfile-secondary-node/blockchain_provider"
 	"dfile-secondary-node/shared"
+	"dfile-secondary-node/upnp"
 	"time"
 
 	"encoding/json"
@@ -63,7 +64,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
 	}
 
-	ip, err := shared.InternetDevice.ExternalIP()
+	ip, err := upnp.InternetDevice.ExternalIP()
 	if err != nil {
 		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
 	}

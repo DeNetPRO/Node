@@ -7,6 +7,7 @@ import (
 	"dfile-secondary-node/config"
 	"dfile-secondary-node/server"
 	"dfile-secondary-node/shared"
+	"dfile-secondary-node/upnp"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -72,7 +73,7 @@ var accountLoginCmd = &cobra.Command{
 				log.Fatal("couldn't read config file")
 			}
 
-			ip, err := shared.InternetDevice.ExternalIP()
+			ip, err := upnp.InternetDevice.ExternalIP()
 			if err != nil {
 				shared.LogError(logInfo, shared.GetDetailedError(err))
 				log.Fatal("couldn't check public ip")

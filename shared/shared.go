@@ -3,7 +3,6 @@ package shared
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -22,7 +21,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ricochet2200/go-disk-usage/du"
-	"gitlab.com/NebulousLabs/go-upnp"
 )
 
 var (
@@ -33,7 +31,6 @@ var (
 	ConfDirName    = "config"
 	StorageDirName = "storage"
 	SendLogs       = true
-	InternetDevice = &upnp.IGD{}
 )
 
 func GetAvailableSpace(storagePath string) int {
@@ -355,15 +352,3 @@ func GetHashPassword(password string) string {
 }
 
 // ====================================================================================
-
-func InitIGD() error {
-	const logInfo = "shared.InitIGD->"
-	device, err := upnp.DiscoverCtx(context.Background())
-	if err != nil {
-		return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-	}
-
-	InternetDevice = device
-
-	return nil
-}

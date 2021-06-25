@@ -6,6 +6,7 @@ import (
 	blockchainprovider "dfile-secondary-node/blockchain_provider"
 	"dfile-secondary-node/config"
 	"dfile-secondary-node/shared"
+	"dfile-secondary-node/upnp"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -60,13 +61,13 @@ func Start(address, port string) {
 		log.Fatal(serverStartFatalMessage)
 	}
 
-	err = shared.InternetDevice.Forward(uint16(intPort), "node")
+	err = upnp.InternetDevice.Forward(uint16(intPort), "node")
 	if err != nil {
 		shared.LogError(logInfo, shared.GetDetailedError(err))
 		log.Println(serverStartFatalMessage)
 	}
 
-	defer shared.InternetDevice.Clear(uint16(intPort))
+	defer upnp.InternetDevice.Clear(uint16(intPort))
 
 	fmt.Println("Dfile node is ready and started listening on port: " + port)
 

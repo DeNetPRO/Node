@@ -18,6 +18,7 @@ package main
 import (
 	"dfile-secondary-node/cmd"
 	"dfile-secondary-node/shared"
+	"dfile-secondary-node/upnp"
 	"log"
 )
 
@@ -28,7 +29,7 @@ func main() {
 		log.Fatal("Fatal Error: couldn't locate home directory")
 	}
 
-	if err := shared.InitIGD(); err != nil {
+	if err := upnp.InitIGD(); err != nil {
 		shared.LogError("main->", err)
 		log.Fatal("Fatal Error: couldn't locate home directory")
 	}
