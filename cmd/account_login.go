@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"dfile-secondary-node/account"
-	bcProvider "dfile-secondary-node/blockchain_provider"
 	blockchainprovider "dfile-secondary-node/blockchain_provider"
 	"dfile-secondary-node/config"
 	"dfile-secondary-node/server"
@@ -130,7 +129,7 @@ var accountLoginCmd = &cobra.Command{
 
 		fmt.Println("Logged in")
 
-		go bcProvider.StartMining(password)
+		go blockchainprovider.StartMining(password)
 
 		server.Start(etherAccount.Address.String(), dFileConf.HTTPPort)
 	},

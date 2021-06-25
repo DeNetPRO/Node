@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"sync"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
@@ -118,6 +119,11 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	}
 
 	pathToConfig := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.ConfDirName, "config.json")
+
+	var MU sync.Mutex
+
+	MU.Lock()
+	defer MU.Unlock() //TODO refactor
 
 	confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
 	if err != nil {
