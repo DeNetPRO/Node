@@ -64,10 +64,9 @@ func Start(address, port string) {
 	err = upnp.InternetDevice.Forward(uint16(intPort), "node")
 	if err != nil {
 		shared.LogError(logInfo, shared.GetDetailedError(err))
-		log.Println(serverStartFatalMessage)
+	} else {
+		defer upnp.InternetDevice.Clear(uint16(intPort))
 	}
-
-	defer upnp.InternetDevice.Clear(uint16(intPort))
 
 	fmt.Println("Dfile node is ready and started listening on port: " + port)
 

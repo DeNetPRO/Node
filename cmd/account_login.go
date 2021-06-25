@@ -73,56 +73,55 @@ var accountLoginCmd = &cobra.Command{
 				log.Fatal("couldn't read config file")
 			}
 
-			ip, err := upnp.InternetDevice.ExternalIP()
-			if err != nil {
-				shared.LogError(logInfo, shared.GetDetailedError(err))
-				log.Fatal("couldn't check public ip")
-			}
-
 			if dFileConf.StorageLimit <= 0 {
 				log.Fatal(accLoginFatalError)
 			}
 
-			if dFileConf.IpAddress != ip {
+			ip, err := upnp.InternetDevice.ExternalIP()
+			if err != nil {
+				shared.LogError(logInfo, shared.GetDetailedError(err))
+			} else {
+				if dFileConf.IpAddress != ip {
 
-				fmt.Println("Updating public ip info...")
+					fmt.Println("Updating public ip info...")
 
-				splitIPAddr := strings.Split(ip, ".")
+					splitIPAddr := strings.Split(ip, ".")
 
-				ctx, _ := context.WithTimeout(context.Background(), time.Minute)
+					ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
-				err = blockchainprovider.UpdateNodeInfo(ctx, etherAccount.Address, password, dFileConf.HTTPPort, splitIPAddr)
-				if err != nil {
-					shared.LogError(logInfo, shared.GetDetailedError(err))
-					log.Fatal(ipUpdateFatalError)
+					err = blockchainprovider.UpdateNodeInfo(ctx, etherAccount.Address, password, dFileConf.HTTPPort, splitIPAddr)
+					if err != nil {
+						shared.LogError(logInfo, shared.GetDetailedError(err))
+						log.Fatal(ipUpdateFatalError)
+					}
+
+					dFileConf.IpAddress = ip
+
+					confJSON, err := json.Marshal(dFileConf)
+					if err != nil {
+						shared.LogError(logInfo, shared.GetDetailedError(err))
+						log.Fatal(ipUpdateFatalError)
+					}
+
+					err = confFile.Truncate(0)
+					if err != nil {
+						shared.LogError(logInfo, shared.GetDetailedError(err))
+						log.Fatal(ipUpdateFatalError)
+					}
+
+					_, err = confFile.Seek(0, 0)
+					if err != nil {
+						shared.LogError(logInfo, shared.GetDetailedError(err))
+						log.Fatal(ipUpdateFatalError)
+					}
+
+					_, err = confFile.Write(confJSON)
+					if err != nil {
+						shared.LogError(logInfo, shared.GetDetailedError(err))
+						log.Fatal(ipUpdateFatalError)
+					}
+
 				}
-
-				dFileConf.IpAddress = ip
-
-				confJSON, err := json.Marshal(dFileConf)
-				if err != nil {
-					shared.LogError(logInfo, shared.GetDetailedError(err))
-					log.Fatal(ipUpdateFatalError)
-				}
-
-				err = confFile.Truncate(0)
-				if err != nil {
-					shared.LogError(logInfo, shared.GetDetailedError(err))
-					log.Fatal(ipUpdateFatalError)
-				}
-
-				_, err = confFile.Seek(0, 0)
-				if err != nil {
-					shared.LogError(logInfo, shared.GetDetailedError(err))
-					log.Fatal(ipUpdateFatalError)
-				}
-
-				_, err = confFile.Write(confJSON)
-				if err != nil {
-					shared.LogError(logInfo, shared.GetDetailedError(err))
-					log.Fatal(ipUpdateFatalError)
-				}
-
 			}
 
 			shared.SendLogs = dFileConf.AgreeSendLogs

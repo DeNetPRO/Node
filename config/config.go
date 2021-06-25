@@ -64,15 +64,21 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
 	}
 
+	var splitIPAddr []string
+
 	ip, err := upnp.InternetDevice.ExternalIP()
 	if err != nil {
-		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
+		fmt.Println("Please enter your public ip address")
+		splitIPAddr, err = SetIpAddr(&dFileConf, State.Update)
+		if err != nil {
+			shared.LogError(logInfo, err)
+		}
+	} else {
+		dFileConf.IpAddress = ip
+		splitIPAddr = strings.Split(ip, ".")
+		fmt.Println("Your public IP address", ip, "is added to config")
+
 	}
-
-	dFileConf.IpAddress = ip
-	splitIPAddr := strings.Split(ip, ".")
-
-	fmt.Println("Your public IP address", ip, "is added to config")
 
 	err = SetPort(&dFileConf, State.Create)
 	if err != nil {
