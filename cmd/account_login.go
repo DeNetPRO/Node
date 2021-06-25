@@ -14,6 +14,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -53,7 +54,7 @@ var accountLoginCmd = &cobra.Command{
 				log.Fatal("couldn't create config file")
 			}
 		} else {
-			confFile, err := os.Open(pathToConfigFile)
+			confFile, err := os.OpenFile(pathToConfigFile, os.O_RDWR, 0700)
 			if err != nil {
 				shared.LogError(logInfo, shared.GetDetailedError(err))
 				log.Fatal("couldn't open config file")
@@ -86,11 +87,7 @@ var accountLoginCmd = &cobra.Command{
 
 				fmt.Println("Updating public ip info...")
 
-				splitIPAddr, err := config.SetIpAddr(&dFileConf, config.State.Update)
-				if err != nil {
-					shared.LogError(logInfo, shared.GetDetailedError(err))
-					log.Fatal(ipUpdateFatalError)
-				}
+				splitIPAddr := strings.Split(ip, ".")
 
 				ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
@@ -99,6 +96,8 @@ var accountLoginCmd = &cobra.Command{
 					shared.LogError(logInfo, shared.GetDetailedError(err))
 					log.Fatal(ipUpdateFatalError)
 				}
+
+				dFileConf.IpAddress = ip
 
 				confJSON, err := json.Marshal(dFileConf)
 				if err != nil {
