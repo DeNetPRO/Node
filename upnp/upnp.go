@@ -2,7 +2,6 @@ package upnp
 
 import (
 	"context"
-	"dfile-secondary-node/shared"
 	"fmt"
 
 	"gitlab.com/NebulousLabs/go-upnp"
@@ -11,17 +10,14 @@ import (
 var InternetDevice *upnp.IGD
 
 func InitIGD() {
-	const logInfo = "shared.InitIGD->"
-
-	fmt.Println("Enabling UPnP...")
+	fmt.Println("Searching UPnP devices...")
 
 	device, err := upnp.DiscoverCtx(context.Background())
 	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		fmt.Println(err)
 	}
 
 	InternetDevice = device
-
 }
 
 // ====================================================================================

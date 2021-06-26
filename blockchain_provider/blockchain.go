@@ -264,9 +264,9 @@ func StartMining(password string) {
 			}
 
 			fmt.Println("reward for", spAddress, "files is", reward) //TODO remove
-			fmt.Println("Min reward value:", 600000000000000000)
+			fmt.Println("Min reward value:", 350000000000000000)
 
-			rewardisEnough := reward.Cmp(big.NewInt(600000000000000000)) == 1
+			rewardisEnough := reward.Cmp(big.NewInt(350000000000000000)) == 1
 
 			if !rewardisEnough {
 				continue
