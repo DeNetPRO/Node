@@ -100,25 +100,7 @@ var accountLoginCmd = &cobra.Command{
 
 					dFileConf.IpAddress = ip
 
-					confJSON, err := json.Marshal(dFileConf)
-					if err != nil {
-						shared.LogError(logInfo, shared.GetDetailedError(err))
-						log.Fatal(ipUpdateFatalError)
-					}
-
-					err = confFile.Truncate(0)
-					if err != nil {
-						shared.LogError(logInfo, shared.GetDetailedError(err))
-						log.Fatal(ipUpdateFatalError)
-					}
-
-					_, err = confFile.Seek(0, 0)
-					if err != nil {
-						shared.LogError(logInfo, shared.GetDetailedError(err))
-						log.Fatal(ipUpdateFatalError)
-					}
-
-					_, err = confFile.Write(confJSON)
+					err = config.SaveAndClose(confFile, dFileConf) // we dont't use mutex because race condition while login is impossible
 					if err != nil {
 						shared.LogError(logInfo, shared.GetDetailedError(err))
 						log.Fatal(ipUpdateFatalError)

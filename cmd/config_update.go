@@ -117,31 +117,11 @@ var configUpdateCmd = &cobra.Command{
 			}
 		}
 
-		confJSON, err := json.Marshal(dFileConf)
+		err = config.SaveAndClose(confFile, dFileConf) // we dont't use mutex because race condition while config update is impossible
 		if err != nil {
 			shared.LogError(logInfo, shared.GetDetailedError(err))
 			log.Fatal(confUpdateFatalMessage)
 		}
-
-		err = confFile.Truncate(0)
-		if err != nil {
-			shared.LogError(logInfo, shared.GetDetailedError(err))
-			log.Fatal(confUpdateFatalMessage)
-		}
-
-		_, err = confFile.Seek(0, 0)
-		if err != nil {
-			shared.LogError(logInfo, shared.GetDetailedError(err))
-			log.Fatal(confUpdateFatalMessage)
-		}
-
-		_, err = confFile.Write(confJSON)
-		if err != nil {
-			shared.LogError(logInfo, shared.GetDetailedError(err))
-			log.Fatal(confUpdateFatalMessage)
-		}
-
-		confFile.Sync()
 
 		fmt.Println("Config file is updated successfully")
 	},

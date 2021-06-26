@@ -123,6 +123,8 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 	return dFileConf, nil
 }
 
+// ====================================================================================
+
 func SetStorageLimit(pathToConfig, state string, dFileConf *SecondaryNodeConfig) error {
 	const logInfo = "config.SetStorageLimit->"
 	regNum := regexp.MustCompile(("[0-9]+"))
@@ -163,6 +165,8 @@ func SetStorageLimit(pathToConfig, state string, dFileConf *SecondaryNodeConfig)
 
 	return nil
 }
+
+// ====================================================================================
 
 func SetIpAddr(dFileConf *SecondaryNodeConfig, state string) ([]string, error) {
 	const logInfo = "config.SetIpAddr->"
@@ -217,6 +221,8 @@ func SetIpAddr(dFileConf *SecondaryNodeConfig, state string) ([]string, error) {
 	return splitIPAddr, nil
 }
 
+// ====================================================================================
+
 func SetPort(dFileConf *SecondaryNodeConfig, state string) error {
 	const logInfo = "config.SetPort->"
 	regPort := regexp.MustCompile("[0-9]+|")
@@ -263,6 +269,8 @@ func SetPort(dFileConf *SecondaryNodeConfig, state string) error {
 	return nil
 }
 
+// ====================================================================================
+
 func ChangeAgreeSendLogs(dFileConf *SecondaryNodeConfig, state string) error {
 	const logInfo = "config.ChangeAgreeSendLogs->"
 	regPort := regexp.MustCompile("^(?:y|n)$")
@@ -291,6 +299,42 @@ func ChangeAgreeSendLogs(dFileConf *SecondaryNodeConfig, state string) error {
 		}
 
 		break
+	}
+
+	return nil
+}
+
+// ====================================================================================
+
+func SaveAndClose(confFile *os.File, dFileConf SecondaryNodeConfig) error {
+	confJSON, err := json.Marshal(dFileConf)
+	if err != nil {
+		return err
+	}
+
+	err = confFile.Truncate(0)
+	if err != nil {
+		return err
+	}
+
+	_, err = confFile.Seek(0, 0)
+	if err != nil {
+		return err
+	}
+
+	_, err = confFile.Write(confJSON)
+	if err != nil {
+		return err
+	}
+
+	err = confFile.Sync()
+	if err != nil {
+		return err
+	}
+
+	err = confFile.Close()
+	if err != nil {
+		return err
 	}
 
 	return nil

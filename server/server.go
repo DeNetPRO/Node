@@ -124,10 +124,9 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	var MU sync.Mutex
 
 	MU.Lock()
-	defer MU.Unlock() //TODO refactor
-
 	confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
 	if err != nil {
+		MU.Unlock()
 		shared.LogError(logInfo, shared.GetDetailedError(err))
 		http.Error(w, "Account config problem", 500)
 		return
@@ -136,6 +135,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	fileBytes, err := io.ReadAll(confFile)
 	if err != nil {
+		MU.Unlock()
 		shared.LogError(logInfo, shared.GetDetailedError(err))
 		http.Error(w, "Account config problem", 500)
 		return
@@ -145,6 +145,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	err = json.Unmarshal(fileBytes, &dFileConf)
 	if err != nil {
+		MU.Unlock()
 		shared.LogError(logInfo, shared.GetDetailedError(err))
 		http.Error(w, "Account config problem", 500)
 		return
@@ -163,9 +164,9 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	dFileConf.UsedStorageSpace += filesTotalSize
 
 	if dFileConf.UsedStorageSpace > sharedSpaceInBytes {
+		MU.Unlock()
 		err := errors.New("insufficient memory avaliable")
 		shared.LogError(logInfo, shared.GetDetailedError(err))
-		fmt.Println(err)
 		http.Error(w, err.Error(), 400)
 		return
 	}
@@ -173,9 +174,18 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	avaliableSpaceLeft := sharedSpaceInBytes - dFileConf.UsedStorageSpace
 
 	if avaliableSpaceLeft < oneHunderdMBBytes {
-		fmt.Println("Shared storage memory is running low", avaliableSpaceLeft/(1024*1024), "MB of space is avaliable")
+		fmt.Println("Shared storage memory is running low,", avaliableSpaceLeft/(1024*1024), "MB of space is avaliable")
 		fmt.Println("You may need additional space for mining. Total shared space can be changed in account configuration")
 	}
+
+	err = config.SaveAndClose(confFile, dFileConf)
+	if err != nil {
+		MU.Unlock()
+		shared.LogError(logInfo, shared.GetDetailedError(err))
+		http.Error(w, "Couldn't update config file", 500)
+		return
+	}
+	MU.Unlock()
 
 	fs := req.MultipartForm.Value["fs"]
 
@@ -409,36 +419,6 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 		newFile.Sync()
 	}
-
-	configJson, err := json.Marshal(dFileConf)
-	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
-		http.Error(w, "Couldn't update config file", 500)
-		return
-	}
-
-	err = confFile.Truncate(0)
-	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
-		http.Error(w, "Couldn't update config file", 500)
-		return
-	}
-
-	_, err = confFile.Seek(0, 0)
-	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
-		http.Error(w, "Couldn't update config file", 500)
-		return
-	}
-
-	_, err = confFile.Write(configJson)
-	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
-		http.Error(w, "Couldn't update config file", 500)
-		return
-	}
-
-	confFile.Sync()
 
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "OK")
