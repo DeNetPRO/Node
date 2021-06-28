@@ -228,7 +228,7 @@ func StartMining(password string) {
 
 		ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
 
-		time.Sleep(time.Second) // allowed rps is 1 TODO?
+		time.Sleep(time.Second * 5) // allowed rps is 1 TODO?
 
 		blockNum, err := client.BlockNumber(ctx)
 		if err != nil {
