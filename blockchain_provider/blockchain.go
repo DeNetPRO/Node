@@ -201,11 +201,6 @@ func StartMining(password string) {
 		shared.LogError(logInfo, shared.GetDetailedError(err))
 	}
 
-	baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
-	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
-	}
-
 	for {
 		storageProviderAddresses := []string{}
 		err = filepath.WalkDir(pathToAccStorage,
@@ -220,6 +215,7 @@ func StartMining(password string) {
 
 				return nil
 			})
+
 		if err != nil {
 			shared.LogError(logInfo, shared.GetDetailedError(err))
 		}
@@ -231,6 +227,8 @@ func StartMining(password string) {
 		}
 
 		ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
+
+		time.Sleep(time.Second) // allowed rps is 1 TODO?
 
 		blockNum, err := client.BlockNumber(ctx)
 		if err != nil {
@@ -330,6 +328,11 @@ func StartMining(password string) {
 				stringFileAddrBlock = strings.TrimLeft(stringFileAddrBlock, "0")
 
 				decodedBigInt, err := hexutil.DecodeBig("0x" + stringFileAddrBlock)
+				if err != nil {
+					shared.LogError(logInfo, shared.GetDetailedError(err))
+				}
+
+				baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
 				if err != nil {
 					shared.LogError(logInfo, shared.GetDetailedError(err))
 				}
