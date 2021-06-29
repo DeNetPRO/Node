@@ -36,7 +36,10 @@ type StorageInfo struct {
 
 const eightKB = 8192
 const NFT = "0xBfAfdaE6B77a02A4684D39D1528c873961528342"
-const ethClientAddr = "https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2"
+
+//const ethClientAddr = "https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2"
+
+const ethClientAddr = "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f"
 
 func RegisterNode(ctx context.Context, address, password string, ip []string, port string) error {
 	const logInfo = "blockchainprovider.RegisterNode->"
@@ -178,6 +181,9 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 // ====================================================================================
 
 func StartMining(password string) {
+	fmt.Println("Sleeping...")
+	time.Sleep(time.Minute * 10)
+
 	const logInfo = "blockchainprovider.StartMining->"
 	nodeAddr, err := shared.DecryptNodeAddr()
 	if err != nil {
@@ -221,26 +227,20 @@ func StartMining(password string) {
 		}
 
 		if len(storageProviderAddresses) == 0 {
-			fmt.Println("Sleeping...")
-			time.Sleep(time.Second * 60)
 			continue
 		}
 
 		ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
 
-		time.Sleep(time.Second * 5) // allowed rps is 1 TODO?
-
 		blockNum, err := client.BlockNumber(ctx)
 		if err != nil {
 			shared.LogError(logInfo, shared.GetDetailedError(err))
-			time.Sleep(time.Second * 60)
 			continue
 		}
 
 		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum-1)))
 		if err != nil {
 			shared.LogError(logInfo, shared.GetDetailedError(err))
-			time.Sleep(time.Second * 60)
 			continue
 		}
 
@@ -249,7 +249,6 @@ func StartMining(password string) {
 		if nodeBalanceIsLow {
 			fmt.Println("Your account has insufficient funds for paying transaction fee. Balance:", nodeBalance, "wei")
 			fmt.Println("Please top up your balance")
-			time.Sleep(time.Second * 60)
 			continue
 		}
 
@@ -292,7 +291,7 @@ func StartMining(password string) {
 			}
 
 			for _, fileName := range fileNames {
-				time.Sleep(10 * time.Second) // allowed rps is 1 TODO?
+				time.Sleep(10 * time.Minute) // allowed rps is 1 TODO?
 				storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
 				if err != nil {
 					shared.LogError(logInfo, shared.GetDetailedError(err))
@@ -352,9 +351,6 @@ func StartMining(password string) {
 				}
 			}
 		}
-
-		fmt.Println("Sleeping...")
-		time.Sleep(time.Second * 60)
 	}
 }
 
