@@ -254,6 +254,8 @@ func StartMining(password string) {
 
 		for _, spAddress := range storageProviderAddresses {
 
+			time.Sleep(time.Minute * 1)
+
 			storageProviderAddr := common.HexToAddress(spAddress)
 			_, reward, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
 			if err != nil {
@@ -291,7 +293,6 @@ func StartMining(password string) {
 			}
 
 			for _, fileName := range fileNames {
-				time.Sleep(10 * time.Minute) // allowed rps is 1 TODO?
 				storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
 				if err != nil {
 					shared.LogError(logInfo, shared.GetDetailedError(err))
