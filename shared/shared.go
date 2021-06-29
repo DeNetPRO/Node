@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -31,6 +32,7 @@ var (
 	ConfDirName    = "config"
 	StorageDirName = "storage"
 	SendLogs       = true
+	MU             sync.Mutex
 )
 
 func GetAvailableSpace(storagePath string) int {

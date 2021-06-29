@@ -18,7 +18,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-	"sync"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
@@ -121,12 +120,10 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	pathToConfig := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.ConfDirName, "config.json")
 
-	var MU sync.Mutex
-
-	MU.Lock()
+	shared.MU.Lock()
 	confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
 	if err != nil {
-		MU.Unlock()
+		shared.MU.Unlock()
 		shared.LogError(logInfo, shared.GetDetailedError(err))
 		http.Error(w, "Account config problem", 500)
 		return
@@ -135,7 +132,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	fileBytes, err := io.ReadAll(confFile)
 	if err != nil {
-		MU.Unlock()
+		shared.MU.Unlock()
 		shared.LogError(logInfo, shared.GetDetailedError(err))
 		http.Error(w, "Account config problem", 500)
 		return
@@ -145,7 +142,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	err = json.Unmarshal(fileBytes, &dFileConf)
 	if err != nil {
-		MU.Unlock()
+		shared.MU.Unlock()
 		shared.LogError(logInfo, shared.GetDetailedError(err))
 		http.Error(w, "Account config problem", 500)
 		return
@@ -164,7 +161,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	dFileConf.UsedStorageSpace += filesTotalSize
 
 	if dFileConf.UsedStorageSpace > sharedSpaceInBytes {
-		MU.Unlock()
+		shared.MU.Unlock()
 		err := errors.New("insufficient memory avaliable")
 		shared.LogError(logInfo, shared.GetDetailedError(err))
 		http.Error(w, err.Error(), 400)
@@ -180,12 +177,12 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	err = config.SaveAndClose(confFile, dFileConf)
 	if err != nil {
-		MU.Unlock()
+		shared.MU.Unlock()
 		shared.LogError(logInfo, shared.GetDetailedError(err))
 		http.Error(w, "Couldn't update config file", 500)
 		return
 	}
-	MU.Unlock()
+	shared.MU.Unlock()
 
 	fs := req.MultipartForm.Value["fs"]
 

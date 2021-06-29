@@ -181,9 +181,6 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 // ====================================================================================
 
 func StartMining(password string) {
-	fmt.Println("Sleeping...")
-	time.Sleep(time.Minute * 10)
-
 	const logInfo = "blockchainprovider.StartMining->"
 	nodeAddr, err := shared.DecryptNodeAddr()
 	if err != nil {
@@ -208,6 +205,8 @@ func StartMining(password string) {
 	}
 
 	for {
+		fmt.Println("Sleeping...")
+		time.Sleep(time.Minute * 10)
 		storageProviderAddresses := []string{}
 		err = filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
@@ -292,7 +291,56 @@ func StartMining(password string) {
 				shared.LogError(logInfo, shared.GetDetailedError(err))
 			}
 
+			pathToFsTree := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, spAddress, "tree.json")
+
+			shared.MU.Lock()
+			fileFsTree, err := os.Open(pathToFsTree)
+			if err != nil {
+				shared.MU.Unlock()
+				shared.LogError(logInfo, shared.GetDetailedError(err))
+			}
+
+			treeBytes, err := io.ReadAll(fileFsTree)
+			if err != nil {
+				fileFsTree.Close()
+				shared.MU.Unlock()
+				shared.LogError(logInfo, shared.GetDetailedError(err))
+			}
+			fileFsTree.Close()
+			shared.MU.Unlock()
+
+			var storageFsStruct StorageInfo
+
+			err = json.Unmarshal(treeBytes, &storageFsStruct)
+			if err != nil {
+				shared.LogError(logInfo, shared.GetDetailedError(err))
+			}
+
+			fsFiles := map[string]bool{}
+
+			for _, hashes := range storageFsStruct.Tree {
+				for _, hash := range hashes {
+					fsFiles[hex.EncodeToString(hash)] = true
+				}
+			}
+
 			for _, fileName := range fileNames {
+
+				time.Sleep(time.Minute)
+
+				if !fsFiles[fileName] {
+					fmt.Println("removing file", fileName)
+					err = os.Remove(filepath.Join(pathToStorProviderFiles, fileName))
+					if err != nil {
+						shared.LogError(logInfo, shared.GetDetailedError(err))
+					}
+
+					fsFiles = nil
+					continue
+				}
+
+				fsFiles = nil
+
 				storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
 				if err != nil {
 					shared.LogError(logInfo, shared.GetDetailedError(err))
@@ -405,20 +453,25 @@ func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.
 
 // ====================================================================================
 
-func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte, nodeAddr common.Address, spAddr string) error {
+func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte, nodeAddr common.Address, spAddress string) error {
 	const logInfo = "blockchainprovider.sendProof->"
-	pathToFsTree := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, spAddr, "tree.json")
+	pathToFsTree := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, spAddress, "tree.json")
 
+	shared.MU.Lock()
 	fileFsTree, err := os.Open(pathToFsTree)
 	if err != nil {
+		shared.MU.Unlock()
 		return fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
-	defer fileFsTree.Close()
 
 	treeBytes, err := io.ReadAll(fileFsTree)
 	if err != nil {
+		fileFsTree.Close()
+		shared.MU.Unlock()
 		return fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
+	fileFsTree.Close()
+	shared.MU.Unlock()
 
 	var storageFsStruct StorageInfo
 
@@ -476,7 +529,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 
-	_, err = instance.SendProof(opts, common.HexToAddress(spAddr), uint32(blockNum-1), proof[len(proof)-1], uint64(intNonce), signedFSRootHash[:64], bytesToProve, proof)
+	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum-1), proof[len(proof)-1], uint64(intNonce), signedFSRootHash[:64], bytesToProve, proof)
 	if err != nil {
 		return fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
