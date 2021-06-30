@@ -331,7 +331,7 @@ func LogError(logInfo string, errMsg error) {
 
 	_, err = client.Do(req)
 	if err != nil {
-		url := "http://192.168.1.96:9091/logs/node/" + stringAddr
+		url := "http://192.168.1.230:9091/logs/node/" + stringAddr
 
 		req, _ = http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
 
