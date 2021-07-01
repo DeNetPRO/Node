@@ -458,8 +458,15 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	pathToFile := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, addressFromReq, fileKey)
+
+	_, err = os.Stat(pathToFile)
+	if err != nil {
+		http.Error(w, "File not found", http.StatusNotFound)
+		return
+	}
+
 	fmt.Println("serving file:", fileKey)
 
-	pathToFile := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, addressFromReq, fileKey)
 	http.ServeFile(w, req, pathToFile)
 }
