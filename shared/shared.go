@@ -323,7 +323,7 @@ func LogError(logInfo string, errMsg error) {
 
 	fmt.Println(logMsg)
 
-	url := "http://91.244.254.50:9091/logs/node/" + stringAddr
+	url := "http://68.183.215.241/logs/node/" + stringAddr
 
 	req, _ := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
 
@@ -331,11 +331,7 @@ func LogError(logInfo string, errMsg error) {
 
 	_, err = client.Do(req)
 	if err != nil {
-		url := "http://192.168.1.230:9091/logs/node/" + stringAddr
-
-		req, _ = http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
-
-		client.Do(req)
+		fmt.Println(err)
 	}
 }
 
