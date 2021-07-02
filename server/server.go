@@ -3,8 +3,8 @@ package server
 import (
 	"bytes"
 	"crypto/sha256"
-	blockchainprovider "dfile-secondary-node/blockchain_provider"
 	"dfile-secondary-node/config"
+	"dfile-secondary-node/paths"
 	"dfile-secondary-node/shared"
 	"dfile-secondary-node/upnp"
 	"encoding/hex"
@@ -118,7 +118,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pathToConfig := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.ConfDirName, "config.json")
+	pathToConfig := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.ConfDirName, "config.json")
 
 	shared.MU.Lock()
 	confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
@@ -257,7 +257,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	addressPath := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, storageProviderAddress[0])
+	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, storageProviderAddress[0])
 
 	stat, err := os.Stat(addressPath)
 	err = shared.CheckStatErr(err)
@@ -284,7 +284,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	}
 	defer treeFile.Close()
 
-	tree := blockchainprovider.StorageInfo{
+	tree := shared.StorageInfo{
 		Nonce:        nonce[0],
 		SignedFsRoot: signedFsRootHash[0],
 		Tree:         fsTree,
@@ -458,7 +458,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pathToFile := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, addressFromReq, fileKey)
+	pathToFile := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, addressFromReq, fileKey)
 
 	_, err = os.Stat(pathToFile)
 	if err != nil {

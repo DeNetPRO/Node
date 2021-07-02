@@ -3,6 +3,7 @@ package test
 import (
 	"dfile-secondary-node/account"
 	"dfile-secondary-node/config"
+	"dfile-secondary-node/paths"
 	"dfile-secondary-node/shared"
 	"encoding/json"
 	"errors"
@@ -66,8 +67,8 @@ func TestCreateAccount(t *testing.T) {
 
 	require.Equal(t, want, get)
 
-	storagePath := filepath.Join(shared.AccsDirPath, accountAddress, shared.StorageDirName)
-	configPath := filepath.Join(shared.AccsDirPath, accountAddress, shared.ConfDirName)
+	storagePath := filepath.Join(paths.AccsDirPath, accountAddress, paths.StorageDirName)
+	configPath := filepath.Join(paths.AccsDirPath, accountAddress, paths.ConfDirName)
 
 	if _, err := os.Stat(storagePath); err != nil {
 		t.Error(err)
@@ -122,7 +123,7 @@ func accountCreateTest(password, ipAddress, storageLimit, port string) (string, 
 		return "", nil, err
 	}
 
-	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 
 	etherAccount, err := ks.NewAccount(password)
 	if err != nil {
@@ -139,7 +140,7 @@ func accountCreateTest(password, ipAddress, storageLimit, port string) (string, 
 
 func createConfigForTests(address, password, ipAddress, storageLimit, port string) (*config.SecondaryNodeConfig, error) {
 	dFileConf := &config.SecondaryNodeConfig{Address: address, AgreeSendLogs: true}
-	pathToConfig := filepath.Join(shared.AccsDirPath, address, shared.ConfDirName)
+	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
 	regNum := regexp.MustCompile(("[0-9]+"))
 
 	availableSpace := shared.GetAvailableSpace(pathToConfig)
@@ -242,12 +243,12 @@ func initTestAccount(account *accounts.Account, password, ipAddress, storageLimi
 	nodeConf := &config.SecondaryNodeConfig{}
 	addressString := account.Address.String()
 
-	err := os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.StorageDirName), 0700)
+	err := os.MkdirAll(filepath.Join(paths.AccsDirPath, addressString, paths.StorageDirName), 0700)
 	if err != nil {
 		return nodeConf, err
 	}
 
-	err = os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.ConfDirName), 0700)
+	err = os.MkdirAll(filepath.Join(paths.AccsDirPath, addressString, paths.ConfDirName), 0700)
 	if err != nil {
 		return nodeConf, err
 	}
@@ -268,7 +269,7 @@ func initTestAccount(account *accounts.Account, password, ipAddress, storageLimi
 }
 
 func testLogin(blockchainAccountString, password string) (*accounts.Account, error) {
-	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccounts := ks.Accounts()
 
 	var etherAccount *accounts.Account

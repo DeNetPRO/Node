@@ -4,7 +4,9 @@ import (
 	"context"
 	"dfile-secondary-node/account"
 	blockchainprovider "dfile-secondary-node/blockchain_provider"
+	"dfile-secondary-node/cleaner"
 	"dfile-secondary-node/config"
+	"dfile-secondary-node/paths"
 	"dfile-secondary-node/server"
 	"dfile-secondary-node/shared"
 	"dfile-secondary-node/upnp"
@@ -35,7 +37,7 @@ var accountLoginCmd = &cobra.Command{
 			log.Fatal(accLoginFatalError)
 		}
 
-		pathToConfigDir := filepath.Join(shared.AccsDirPath, etherAccount.Address.String(), shared.ConfDirName)
+		pathToConfigDir := filepath.Join(paths.AccsDirPath, etherAccount.Address.String(), paths.ConfDirName)
 
 		var dFileConf config.SecondaryNodeConfig
 
@@ -115,6 +117,8 @@ var accountLoginCmd = &cobra.Command{
 		fmt.Println("Logged in")
 
 		go blockchainprovider.StartMining(password)
+
+		go cleaner.Start()
 
 		server.Start(etherAccount.Address.String(), dFileConf.HTTPPort)
 	},

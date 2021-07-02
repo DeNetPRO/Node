@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	abiPOS "dfile-secondary-node/POS_abi"
 	nodeApi "dfile-secondary-node/node_abi"
+	"dfile-secondary-node/paths"
 	"dfile-secondary-node/shared"
 	"encoding/hex"
 	"encoding/json"
@@ -27,12 +28,6 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
-
-type StorageInfo struct {
-	Nonce        string     `json:"nonce"`
-	SignedFsRoot string     `json:"signedFsRoot"`
-	Tree         [][][]byte `json:"tree"`
-}
 
 const eightKB = 8192
 const NFT = "0xBfAfdaE6B77a02A4684D39D1528c873961528342"
@@ -182,12 +177,13 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 
 func StartMining(password string) {
 	const logInfo = "blockchainprovider.StartMining->"
+
 	nodeAddr, err := shared.DecryptNodeAddr()
 	if err != nil {
 		shared.LogError(logInfo, shared.GetDetailedError(err))
 	}
 
-	pathToAccStorage := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName)
+	pathToAccStorage := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName)
 
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
@@ -223,6 +219,7 @@ func StartMining(password string) {
 
 		if err != nil {
 			shared.LogError(logInfo, shared.GetDetailedError(err))
+			continue
 		}
 
 		if len(storageProviderAddresses) == 0 {
@@ -289,9 +286,10 @@ func StartMining(password string) {
 				})
 			if err != nil {
 				shared.LogError(logInfo, shared.GetDetailedError(err))
+				continue
 			}
 
-			pathToFsTree := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, spAddress, "tree.json")
+			pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, "tree.json")
 
 			shared.MU.Lock()
 			fileFsTree, err := os.Open(pathToFsTree)
@@ -309,37 +307,16 @@ func StartMining(password string) {
 			fileFsTree.Close()
 			shared.MU.Unlock()
 
-			var storageFsStruct StorageInfo
+			var storageFsStruct shared.StorageInfo
 
 			err = json.Unmarshal(treeBytes, &storageFsStruct)
 			if err != nil {
 				shared.LogError(logInfo, shared.GetDetailedError(err))
 			}
 
-			fsFiles := map[string]bool{}
-
-			for _, hashes := range storageFsStruct.Tree {
-				for _, hash := range hashes {
-					fsFiles[hex.EncodeToString(hash)] = true
-				}
-			}
-
 			for _, fileName := range fileNames {
 
 				time.Sleep(time.Minute)
-
-				if !fsFiles[fileName] {
-					fmt.Println("removing file", fileName)
-					err = os.Remove(filepath.Join(pathToStorProviderFiles, fileName))
-					if err != nil {
-						shared.LogError(logInfo, shared.GetDetailedError(err))
-					}
-
-					fsFiles = nil
-					continue
-				}
-
-				fsFiles = nil
 
 				storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
 				if err != nil {
@@ -427,11 +404,11 @@ func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.
 		From:  nodeAddr,
 		Nonce: big.NewInt(int64(transactNonce)),
 		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
-			ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+			ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 			acs := ks.Accounts()
 			for _, ac := range acs {
 				if ac.Address == a {
-					ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+					ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 					err := ks.TimedUnlock(ac, password, 1)
 					if err != nil {
 						return t, err
@@ -455,7 +432,7 @@ func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.
 
 func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte, nodeAddr common.Address, spAddress string) error {
 	const logInfo = "blockchainprovider.sendProof->"
-	pathToFsTree := filepath.Join(shared.AccsDirPath, nodeAddr.String(), shared.StorageDirName, spAddress, "tree.json")
+	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, "tree.json")
 
 	shared.MU.Lock()
 	fileFsTree, err := os.Open(pathToFsTree)
@@ -473,7 +450,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 	fileFsTree.Close()
 	shared.MU.Unlock()
 
-	var storageFsStruct StorageInfo
+	var storageFsStruct shared.StorageInfo
 
 	err = json.Unmarshal(treeBytes, &storageFsStruct)
 	if err != nil {

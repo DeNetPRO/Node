@@ -5,6 +5,7 @@ import (
 	"dfile-secondary-node/account"
 	blockchainprovider "dfile-secondary-node/blockchain_provider"
 	"dfile-secondary-node/config"
+	"dfile-secondary-node/paths"
 	"dfile-secondary-node/shared"
 	"encoding/json"
 	"fmt"
@@ -41,7 +42,7 @@ var configUpdateCmd = &cobra.Command{
 			log.Fatal(confUpdateFatalMessage)
 		}
 
-		pathToConfigDir := filepath.Join(shared.AccsDirPath, etherAccount.Address.String(), shared.ConfDirName)
+		pathToConfigDir := filepath.Join(paths.AccsDirPath, etherAccount.Address.String(), paths.ConfDirName)
 		pathToConfigFile := filepath.Join(pathToConfigDir, "config.json")
 
 		var dFileConf config.SecondaryNodeConfig

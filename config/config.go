@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	blockchainprovider "dfile-secondary-node/blockchain_provider"
+	"dfile-secondary-node/paths"
 	"dfile-secondary-node/shared"
 	"dfile-secondary-node/upnp"
 	"time"
@@ -55,7 +56,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	fmt.Println("Now, a config file creation is needed.")
 
-	pathToConfig := filepath.Join(shared.AccsDirPath, address, shared.ConfDirName)
+	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
 
 	fmt.Println("Please enter disk space for usage in GB (should be positive number)")
 

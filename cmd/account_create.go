@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"dfile-secondary-node/account"
+	"dfile-secondary-node/cleaner"
 	"dfile-secondary-node/server"
 	"dfile-secondary-node/shared"
 	"fmt"
@@ -64,6 +65,8 @@ var accountCreateCmd = &cobra.Command{
 			shared.LogError(logInfo, err)
 			log.Fatal(accCreateFatalMessage)
 		}
+
+		go cleaner.Start()
 
 		server.Start(accountStr, nodeConfig.HTTPPort)
 	},

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"dfile-secondary-node/account"
+	"dfile-secondary-node/paths"
 	"dfile-secondary-node/shared"
 	"encoding/hex"
 	"fmt"
@@ -27,7 +28,7 @@ var showKeyCmd = &cobra.Command{
 			log.Fatal(showKeyFatalMessage)
 		}
 
-		ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+		ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 
 		keyJson, err := ks.Export(*etherAccount, password, password)
 		if err != nil {

@@ -1,6 +1,7 @@
 package test
 
 import (
+	"dfile-secondary-node/paths"
 	"dfile-secondary-node/shared"
 	"log"
 	"os"
@@ -8,7 +9,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	shared.WorkDirName = "dfile-test"
+	paths.WorkDirName = "dfile-test"
 
 	err := shared.InitPaths()
 	if err != nil {
@@ -16,7 +17,7 @@ func TestMain(m *testing.M) {
 	}
 	exitVal := m.Run()
 
-	err = os.RemoveAll(shared.WorkDirPath)
+	err = os.RemoveAll(paths.WorkDirPath)
 	if err != nil {
 		log.Fatal(err)
 	}

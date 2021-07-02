@@ -7,6 +7,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
+	"dfile-secondary-node/paths"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -24,15 +25,16 @@ import (
 	"github.com/ricochet2200/go-disk-usage/du"
 )
 
+type StorageInfo struct {
+	Nonce        string     `json:"nonce"`
+	SignedFsRoot string     `json:"signedFsRoot"`
+	Tree         [][][]byte `json:"tree"`
+}
+
 var (
-	WorkDirPath    string
-	AccsDirPath    string
-	NodeAddr       []byte
-	WorkDirName    = "dfile-node"
-	ConfDirName    = "config"
-	StorageDirName = "storage"
-	SendLogs       = true
-	MU             sync.Mutex
+	NodeAddr []byte
+	SendLogs = true
+	MU       sync.Mutex
 )
 
 func GetAvailableSpace(storagePath string) int {
@@ -50,9 +52,9 @@ func InitPaths() error {
 		return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
 	}
 
-	WorkDirPath = filepath.Join(homeDir, WorkDirName)
+	paths.WorkDirPath = filepath.Join(homeDir, paths.WorkDirName)
 
-	AccsDirPath = filepath.Join(WorkDirPath, "accounts")
+	paths.AccsDirPath = filepath.Join(paths.WorkDirPath, "accounts")
 
 	return nil
 }
@@ -61,27 +63,27 @@ func InitPaths() error {
 
 func CreateIfNotExistAccDirs() error {
 	const logInfo = "shared.CreateIfNotExistAccDirs->"
-	statWDP, err := os.Stat(WorkDirPath)
+	statWDP, err := os.Stat(paths.WorkDirPath)
 	err = CheckStatErr(err)
 	if err != nil {
 		return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
 	}
 
 	if statWDP == nil {
-		err = os.MkdirAll(WorkDirPath, os.ModePerm|os.ModeDir)
+		err = os.MkdirAll(paths.WorkDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
 			return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
 		}
 	}
 
-	statADP, err := os.Stat(AccsDirPath)
+	statADP, err := os.Stat(paths.AccsDirPath)
 	err = CheckStatErr(err)
 	if err != nil {
 		return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
 	}
 
 	if statADP == nil {
-		err = os.MkdirAll(AccsDirPath, os.ModePerm|os.ModeDir)
+		err = os.MkdirAll(paths.AccsDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
 			return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
 		}
@@ -323,7 +325,7 @@ func LogError(logInfo string, errMsg error) {
 
 	fmt.Println(logMsg)
 
-	url := "http://68.183.215.241/logs/node/" + stringAddr
+	url := "http://68.183.215.241:9091/logs/node/" + stringAddr
 
 	req, _ := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
 

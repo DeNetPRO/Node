@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"dfile-secondary-node/account"
+	"dfile-secondary-node/cleaner"
 	"dfile-secondary-node/server"
 	"dfile-secondary-node/shared"
 	"log"
@@ -21,6 +22,8 @@ var accountImportCmd = &cobra.Command{
 			shared.LogError(logInfo, err)
 			log.Fatal("Fatal error, couldn't import an account")
 		}
+
+		go cleaner.Start()
 
 		server.Start(accountStr, nodeConfig.HTTPPort)
 	},

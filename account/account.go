@@ -2,6 +2,7 @@ package account
 
 import (
 	"dfile-secondary-node/config"
+	"dfile-secondary-node/paths"
 	"dfile-secondary-node/shared"
 	"errors"
 	"fmt"
@@ -21,7 +22,7 @@ import (
 func List() []string {
 	var blockchainAccounts []string
 
-	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccounts := ks.Accounts()
 
 	blockchainAccounts = make([]string, 0, 1)
@@ -43,7 +44,7 @@ func Create(password string) (string, config.SecondaryNodeConfig, error) {
 		return "", nodeConf, fmt.Errorf("%s %w", logInfo, err)
 	}
 
-	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 
 	etherAccount, err := ks.NewAccount(password)
 	if err != nil {
@@ -101,7 +102,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 		return "", nodeConfig, fmt.Errorf("%s %w", logInfo, err)
 	}
 
-	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 
 	etherAccount, err := ks.ImportECDSA(ecdsaPrivKey, password)
 	if err != nil {
@@ -120,7 +121,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 //LoadAccount load in memory keystore file and decrypt it for further use
 func Login(blockchainAccountString, password string) (*accounts.Account, error) {
 	const logInfo = "account.Login->"
-	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccounts := ks.Accounts()
 
 	var etherAccount *accounts.Account
@@ -160,7 +161,7 @@ func Login(blockchainAccountString, password string) (*accounts.Account, error) 
 
 func CheckPassword(password, address string) error {
 	const logInfo = "account.CheckPassword->"
-	ks := keystore.NewKeyStore(shared.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	acc, err := utils.MakeAddress(ks, address)
 	if err != nil {
 		return fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
@@ -257,12 +258,12 @@ func initAccount(account *accounts.Account, password string) (config.SecondaryNo
 
 	addressString := account.Address.String()
 
-	err := os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.StorageDirName), 0700)
+	err := os.MkdirAll(filepath.Join(paths.AccsDirPath, addressString, paths.StorageDirName), 0700)
 	if err != nil {
 		return nodeConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
 
-	err = os.MkdirAll(filepath.Join(shared.AccsDirPath, addressString, shared.ConfDirName), 0700)
+	err = os.MkdirAll(filepath.Join(paths.AccsDirPath, addressString, paths.ConfDirName), 0700)
 	if err != nil {
 		return nodeConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
 	}
