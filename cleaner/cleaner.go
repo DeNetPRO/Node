@@ -123,7 +123,7 @@ func Start() {
 						shared.LogError(logInfo, shared.GetDetailedError(err))
 					}
 
-					shared.MU.Lock()
+					shared.MU.Unlock()
 
 					fsFiles = nil
 					continue

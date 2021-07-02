@@ -318,6 +318,8 @@ func StartMining(password string) {
 
 				time.Sleep(time.Minute)
 
+				shared.MU.Lock()
+
 				storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
 				if err != nil {
 					shared.LogError(logInfo, shared.GetDetailedError(err))
@@ -329,6 +331,7 @@ func StartMining(password string) {
 				}
 
 				storedFile.Close()
+				shared.MU.Unlock()
 
 				ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
 
