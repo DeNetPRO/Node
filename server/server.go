@@ -425,6 +425,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	const logInfo = "server.ServeFiles->"
+
 	nodeAddr, err := shared.DecryptNodeAddr()
 	if err != nil {
 		shared.LogError(logInfo, err)
@@ -469,4 +470,168 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	fmt.Println("serving file:", fileKey)
 
 	http.ServeFile(w, req, pathToFile)
+}
+
+// ====================================================================================
+
+func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
+	const logInfo = "server.ServeFiles->"
+
+	nodeAddr, err := shared.DecryptNodeAddr()
+	if err != nil {
+		shared.LogError(logInfo, err)
+		http.Error(w, "Couldn't parse address", 500)
+		return
+	}
+
+	vars := mux.Vars(req)
+	addressFromReq := vars["address"]
+	signedFsys := vars["signedFsys"]
+
+	fsysSignature, err := hex.DecodeString(signedFsys)
+	if err != nil {
+		http.Error(w, "File serving problem", 400)
+		return
+	}
+
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		shared.LogError(logInfo, shared.GetDetailedError(err))
+		http.Error(w, "Storage provider internal error", 500)
+		return
+	}
+	defer req.Body.Close()
+
+	var updatedFs []string
+
+	err = json.Unmarshal(body, &updatedFs)
+	if err != nil {
+		shared.LogError(logInfo, shared.GetDetailedError(err))
+		http.Error(w, "Storage provider internal error", 500)
+		return
+	}
+
+	sort.Strings(updatedFs)
+
+	concatStrings := ""
+
+	for _, hash := range updatedFs {
+		concatStrings += hash
+	}
+
+	fsysHash := sha256.Sum256([]byte(concatStrings + addressFromReq))
+
+	sigPublicKey, err := crypto.SigToPub(fsysHash[:], fsysSignature)
+	if err != nil {
+		http.Error(w, "File serving problem", 400)
+		return
+	}
+
+	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
+
+	if addressFromReq != signatureAddress.String() {
+		http.Error(w, "Wrong signature", http.StatusForbidden)
+		return
+	}
+
+	fsRootHash, fsTree, err := shared.CalcRootHash(updatedFs)
+	if err != nil {
+		shared.LogError(logInfo, err)
+		http.Error(w, "File saving problem", 400)
+		return
+	}
+
+	signedFsRootHash := vars["fsRootHash"]
+
+	rootSignature, err := hex.DecodeString(signedFsRootHash)
+	if err != nil {
+		shared.LogError(logInfo, err)
+		http.Error(w, "File saving problem", 400)
+		return
+	}
+
+	nonce := vars["nonce"]
+
+	nonceInt, err := strconv.Atoi(nonce)
+	if err != nil {
+		shared.LogError(logInfo, err)
+		http.Error(w, "File saving problem", 400)
+		return
+	}
+
+	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
+
+	nonceBytes, err := hex.DecodeString(nonceHex)
+	if err != nil {
+		shared.LogError(logInfo, err)
+		http.Error(w, "File saving problem", 400)
+		return
+	}
+
+	nonce32 := make([]byte, 32-len(nonceBytes))
+	nonce32 = append(nonce32, nonceBytes...)
+
+	fsRootBytes, err := hex.DecodeString(fsRootHash)
+	if err != nil {
+		shared.LogError(logInfo, err)
+		http.Error(w, "File saving problem", 400)
+		return
+	}
+
+	fsRootNonceBytes := append(fsRootBytes, nonce32...)
+
+	hash := sha256.Sum256(fsRootNonceBytes)
+
+	sigPublicKey, err = crypto.SigToPub(hash[:], rootSignature)
+	if err != nil {
+		shared.LogError(logInfo, err)
+		http.Error(w, "File saving problem", 400)
+		return
+	}
+
+	storageProviderAddress := req.MultipartForm.Value["address"]
+
+	signatureAddress = crypto.PubkeyToAddress(*sigPublicKey)
+
+	if addressFromReq != signatureAddress.String() {
+		http.Error(w, "Wrong signature", http.StatusForbidden)
+		return
+	}
+
+	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, storageProviderAddress[0])
+
+	shared.MU.Lock()
+
+	treeFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
+	if err != nil {
+		shared.LogError(logInfo, shared.GetDetailedError(err))
+		http.Error(w, "File saving problem", 500)
+		return
+	}
+	defer treeFile.Close()
+
+	tree := shared.StorageInfo{
+		Nonce:        nonce,
+		SignedFsRoot: signedFsRootHash,
+		Tree:         fsTree,
+	}
+
+	js, err := json.Marshal(tree)
+	if err != nil {
+		shared.LogError(logInfo, shared.GetDetailedError(err))
+		http.Error(w, "File saving problem", 500)
+		return
+	}
+
+	_, err = treeFile.Write(js)
+	if err != nil {
+		shared.LogError(logInfo, shared.GetDetailedError(err))
+		http.Error(w, "File saving problem", 500)
+		return
+	}
+
+	treeFile.Sync()
+
+	shared.MU.Unlock()
+
 }
