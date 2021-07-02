@@ -55,11 +55,9 @@ func Start() {
 			continue
 		}
 
-		fileNames := []string{}
-
 		for _, spAddress := range storageProviderAddresses {
 
-			pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, "tree.json")
+			fileNames := []string{}
 
 			pathToStorProviderFiles := filepath.Join(pathToAccStorage, spAddress)
 
@@ -79,6 +77,8 @@ func Start() {
 				shared.LogError(logInfo, shared.GetDetailedError(err))
 				continue
 			}
+
+			pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, "tree.json")
 
 			shared.MU.Lock()
 			fileFsTree, err := os.Open(pathToFsTree)
@@ -124,9 +124,6 @@ func Start() {
 					}
 
 					shared.MU.Unlock()
-
-					fsFiles = nil
-					continue
 				}
 			}
 
