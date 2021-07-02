@@ -27,7 +27,7 @@ func Start() {
 	}
 
 	for {
-		time.Sleep(5 * time.Second)
+		time.Sleep(time.Minute) // add period
 
 		pathToAccStorage := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName)
 
@@ -112,8 +112,6 @@ func Start() {
 			}
 
 			for _, fileName := range fileNames {
-
-				fmt.Println(fileName, fsFiles[fileName])
 
 				if !fsFiles[fileName] {
 					shared.MU.Lock()
