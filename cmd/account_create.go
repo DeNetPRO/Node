@@ -3,6 +3,7 @@ package cmd
 import (
 	"dfile-secondary-node/account"
 	"dfile-secondary-node/cleaner"
+	"dfile-secondary-node/logger"
 	"dfile-secondary-node/server"
 	"dfile-secondary-node/shared"
 	"fmt"
@@ -31,7 +32,7 @@ var accountCreateCmd = &cobra.Command{
 		for {
 			bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
-				shared.LogError(logInfo, err)
+				logger.LogError(logInfo, err)
 				log.Fatal(accCreateFatalMessage)
 			}
 			password1 = string(bytePassword)
@@ -44,7 +45,7 @@ var accountCreateCmd = &cobra.Command{
 			fmt.Println("Enter password again: ")
 			bytePassword, err = term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
-				shared.LogError(logInfo, err)
+				logger.LogError(logInfo, err)
 				log.Println(accCreateFatalMessage)
 			}
 
@@ -62,7 +63,7 @@ var accountCreateCmd = &cobra.Command{
 
 		accountStr, nodeConfig, err := account.Create(password)
 		if err != nil {
-			shared.LogError(logInfo, err)
+			logger.LogError(logInfo, err)
 			log.Fatal(accCreateFatalMessage)
 		}
 

@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	blockchainprovider "dfile-secondary-node/blockchain_provider"
+	"dfile-secondary-node/logger"
 	"dfile-secondary-node/paths"
 	"dfile-secondary-node/shared"
 	"dfile-secondary-node/upnp"
@@ -70,7 +71,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 	if upnp.InternetDevice != nil {
 		ip, err := upnp.InternetDevice.ExternalIP()
 		if err != nil {
-			return dFileConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
+			return dFileConf, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
 		}
 
 		dFileConf.IpAddress = ip
@@ -80,7 +81,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		fmt.Println("Please enter your public ip address")
 		splitIPAddr, err = SetIpAddr(&dFileConf, State.Update)
 		if err != nil {
-			return dFileConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
+			return dFileConf, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
 		}
 	}
 
@@ -103,18 +104,18 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	confFile, err := os.Create(filepath.Join(pathToConfig, "config.json"))
 	if err != nil {
-		return dFileConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
+		return dFileConf, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
 	}
 	defer confFile.Close()
 
 	confJSON, err := json.Marshal(dFileConf)
 	if err != nil {
-		return dFileConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
+		return dFileConf, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
 	}
 
 	_, err = confFile.Write(confJSON)
 	if err != nil {
-		return dFileConf, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
+		return dFileConf, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
 	}
 
 	fmt.Println("Saving config...")
@@ -205,7 +206,7 @@ func SetIpAddr(dFileConf *SecondaryNodeConfig, state string) ([]string, error) {
 		if partiallyReserved {
 			secondAddrPart, err := strconv.Atoi(splitIPAddr[1])
 			if err != nil {
-				return nil, fmt.Errorf("%s %w", logInfo, shared.GetDetailedError(err))
+				return nil, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
 			}
 
 			if secondAddrPart <= reservedSecAddrPart {
@@ -293,10 +294,10 @@ func ChangeAgreeSendLogs(dFileConf *SecondaryNodeConfig, state string) error {
 
 		if agree == "y" {
 			dFileConf.AgreeSendLogs = true
-			shared.SendLogs = true
+			logger.SendLogs = true
 		} else {
 			dFileConf.AgreeSendLogs = false
-			shared.SendLogs = false
+			logger.SendLogs = false
 		}
 
 		break

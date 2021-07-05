@@ -3,8 +3,8 @@ package cmd
 import (
 	"dfile-secondary-node/account"
 	"dfile-secondary-node/cleaner"
+	"dfile-secondary-node/logger"
 	"dfile-secondary-node/server"
-	"dfile-secondary-node/shared"
 	"log"
 
 	"github.com/spf13/cobra"
@@ -19,7 +19,7 @@ var accountImportCmd = &cobra.Command{
 		const logInfo = "accountImportCmd->"
 		accountStr, nodeConfig, err := account.Import()
 		if err != nil {
-			shared.LogError(logInfo, err)
+			logger.LogError(logInfo, err)
 			log.Fatal("Fatal error, couldn't import an account")
 		}
 

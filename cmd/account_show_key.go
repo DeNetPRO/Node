@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"dfile-secondary-node/account"
+	"dfile-secondary-node/logger"
 	"dfile-secondary-node/paths"
-	"dfile-secondary-node/shared"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -24,7 +24,7 @@ var showKeyCmd = &cobra.Command{
 
 		etherAccount, password, err := account.ValidateUser()
 		if err != nil {
-			shared.LogError(logInfo, err)
+			logger.LogError(logInfo, err)
 			log.Fatal(showKeyFatalMessage)
 		}
 
@@ -32,13 +32,13 @@ var showKeyCmd = &cobra.Command{
 
 		keyJson, err := ks.Export(*etherAccount, password, password)
 		if err != nil {
-			shared.LogError(logInfo, shared.GetDetailedError(err))
+			logger.LogError(logInfo, logger.GetDetailedError(err))
 			log.Fatal(showKeyFatalMessage)
 		}
 
 		key, err := keystore.DecryptKey(keyJson, password)
 		if err != nil {
-			shared.LogError(logInfo, shared.GetDetailedError(err))
+			logger.LogError(logInfo, logger.GetDetailedError(err))
 			log.Fatal(showKeyFatalMessage)
 		}
 

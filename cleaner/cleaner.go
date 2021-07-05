@@ -1,6 +1,8 @@
 package cleaner
 
 import (
+	"dfile-secondary-node/encryption"
+	"dfile-secondary-node/logger"
 	"dfile-secondary-node/paths"
 	"dfile-secondary-node/shared"
 	"encoding/hex"
@@ -21,9 +23,9 @@ func Start() {
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
 
-	nodeAddr, err := shared.DecryptNodeAddr()
+	nodeAddr, err := encryption.DecryptNodeAddr()
 	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 	}
 
 	for {
@@ -36,7 +38,7 @@ func Start() {
 		err = filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
 				if err != nil {
-					shared.LogError(logInfo, shared.GetDetailedError(err))
+					logger.LogError(logInfo, logger.GetDetailedError(err))
 				}
 
 				if regAddr.MatchString(info.Name()) {
@@ -47,7 +49,7 @@ func Start() {
 			})
 
 		if err != nil {
-			shared.LogError(logInfo, shared.GetDetailedError(err))
+			logger.LogError(logInfo, logger.GetDetailedError(err))
 			continue
 		}
 
@@ -64,7 +66,7 @@ func Start() {
 			err = filepath.WalkDir(pathToStorProviderFiles,
 				func(path string, info fs.DirEntry, err error) error {
 					if err != nil {
-						shared.LogError(logInfo, shared.GetDetailedError(err))
+						logger.LogError(logInfo, logger.GetDetailedError(err))
 					}
 
 					if regFileName.MatchString(info.Name()) && len(info.Name()) == 64 {
@@ -74,7 +76,7 @@ func Start() {
 					return nil
 				})
 			if err != nil {
-				shared.LogError(logInfo, shared.GetDetailedError(err))
+				logger.LogError(logInfo, logger.GetDetailedError(err))
 				continue
 			}
 
@@ -84,14 +86,14 @@ func Start() {
 			fileFsTree, err := os.Open(pathToFsTree)
 			if err != nil {
 				shared.MU.Unlock()
-				shared.LogError(logInfo, shared.GetDetailedError(err))
+				logger.LogError(logInfo, logger.GetDetailedError(err))
 			}
 
 			treeBytes, err := io.ReadAll(fileFsTree)
 			if err != nil {
 				fileFsTree.Close()
 				shared.MU.Unlock()
-				shared.LogError(logInfo, shared.GetDetailedError(err))
+				logger.LogError(logInfo, logger.GetDetailedError(err))
 			}
 			fileFsTree.Close()
 			shared.MU.Unlock()
@@ -100,7 +102,7 @@ func Start() {
 
 			err = json.Unmarshal(treeBytes, &storageFsStruct)
 			if err != nil {
-				shared.LogError(logInfo, shared.GetDetailedError(err))
+				logger.LogError(logInfo, logger.GetDetailedError(err))
 			}
 
 			fsFiles := map[string]bool{}
@@ -118,7 +120,7 @@ func Start() {
 					fmt.Println("removing file", fileName)
 					err = os.Remove(filepath.Join(pathToStorProviderFiles, fileName))
 					if err != nil {
-						shared.LogError(logInfo, shared.GetDetailedError(err))
+						logger.LogError(logInfo, logger.GetDetailedError(err))
 					}
 
 					shared.MU.Unlock()

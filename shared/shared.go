@@ -2,26 +2,16 @@ package shared
 
 import (
 	"bufio"
-	"bytes"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/rand"
 	"crypto/sha256"
+	"dfile-secondary-node/logger"
 	"dfile-secondary-node/paths"
 	"encoding/hex"
-	"errors"
 	"fmt"
-	"io"
-	"net"
-	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"sync"
-	"time"
 
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ricochet2200/go-disk-usage/du"
 )
 
@@ -32,9 +22,7 @@ type StorageInfo struct {
 }
 
 var (
-	NodeAddr []byte
-	SendLogs = true
-	MU       sync.Mutex
+	MU sync.Mutex
 )
 
 func GetAvailableSpace(storagePath string) int {
@@ -49,7 +37,7 @@ func InitPaths() error {
 	const logInfo = "shared.InitPaths->"
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
+		return fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
 	}
 
 	paths.WorkDirPath = filepath.Join(homeDir, paths.WorkDirName)
@@ -66,26 +54,26 @@ func CreateIfNotExistAccDirs() error {
 	statWDP, err := os.Stat(paths.WorkDirPath)
 	err = CheckStatErr(err)
 	if err != nil {
-		return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
+		return fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
 	}
 
 	if statWDP == nil {
 		err = os.MkdirAll(paths.WorkDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
-			return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
+			return fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
 		}
 	}
 
 	statADP, err := os.Stat(paths.AccsDirPath)
 	err = CheckStatErr(err)
 	if err != nil {
-		return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
+		return fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
 	}
 
 	if statADP == nil {
 		err = os.MkdirAll(paths.AccsDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
-			return fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
+			return fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
 		}
 	}
 
@@ -132,7 +120,7 @@ func ReadFromConsole() (string, error) {
 	// ReadString will block until the delimiter is entered
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		return "", fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
+		return "", fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
 	}
 
 	// remove the delimiter from the string
@@ -151,13 +139,13 @@ func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 
 	emptyValue, err := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
 	if err != nil {
-		return "", resByte, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
+		return "", resByte, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
 	}
 
 	for _, v := range hashArr {
 		decoded, err := hex.DecodeString(v)
 		if err != nil {
-			return "", resByte, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
+			return "", resByte, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
 		}
 		base = append(base, decoded)
 	}
@@ -192,159 +180,6 @@ func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 
 	return hex.EncodeToString(resByte[len(resByte)-1][0]), resByte, nil
 }
-
-// ====================================================================================
-
-func encryptAES(key, data []byte) ([]byte, error) {
-	const logInfo = "shared.encryptAES->"
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-	}
-
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-	}
-
-	nonce := make([]byte, gcm.NonceSize())
-	_, err = io.ReadFull(rand.Reader, nonce)
-	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-	}
-
-	ciphertext := gcm.Seal(nonce, nonce, data, nil)
-
-	return ciphertext, nil
-
-}
-
-// ====================================================================================
-
-func decryptAES(key, data []byte) ([]byte, error) {
-	const logInfo = "shared.decryptAES->"
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-	}
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-	}
-	nonce, encrData := data[:gcm.NonceSize()], data[gcm.NonceSize():]
-	decrData, err := gcm.Open(nil, nonce, encrData, nil)
-	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-	}
-
-	return decrData, nil
-}
-
-// ====================================================================================
-
-func GetDeviceMacAddr() (string, error) {
-	const logInfo = "shared.GetDeviceMacAddr->"
-	var addr string
-	interfaces, err := net.Interfaces()
-	if err != nil {
-		return "", fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-	}
-
-	for _, i := range interfaces {
-		if !bytes.Equal(i.HardwareAddr, nil) {
-			addr = i.HardwareAddr.String()
-			break
-		}
-	}
-
-	return addr, nil
-}
-
-// ====================================================================================
-
-func EncryptNodeAddr(addr common.Address) ([]byte, error) {
-	const logInfo = "shared.EncryptNodeAddr->"
-	var nodeAddr []byte
-
-	macAddr, err := GetDeviceMacAddr()
-	if err != nil {
-		return nodeAddr, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-	}
-
-	encrKey := sha256.Sum256([]byte(macAddr))
-
-	encryptedAddr, err := encryptAES(encrKey[:], addr.Bytes())
-	if err != nil {
-		return nodeAddr, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-	}
-
-	return encryptedAddr, nil
-}
-
-// ====================================================================================
-
-func DecryptNodeAddr() (common.Address, error) {
-	const logInfo = "shared.DecryptNodeAddr->"
-	var nodeAddr common.Address
-
-	if len(NodeAddr) == 0 {
-		return nodeAddr, errors.New("empty address")
-	}
-
-	macAddr, err := GetDeviceMacAddr()
-	if err != nil {
-		return nodeAddr, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-	}
-
-	encrKey := sha256.Sum256([]byte(macAddr))
-
-	accAddr, err := decryptAES(encrKey[:], NodeAddr)
-	if err != nil {
-		return nodeAddr, fmt.Errorf("%s %w", logInfo, GetDetailedError(err))
-	}
-
-	return common.BytesToAddress(accAddr), nil
-}
-
-// ====================================================================================
-
-func LogError(logInfo string, errMsg error) {
-	if !SendLogs {
-		return
-	}
-
-	var stringAddr = "Unknown"
-
-	accountAddress, err := DecryptNodeAddr()
-	if err == nil {
-		stringAddr = accountAddress.String()
-	}
-
-	currentTime := time.Now().Local()
-	logMsg := fmt.Sprintf("%s: %s: %v\n", currentTime.String(), logInfo, errMsg)
-
-	fmt.Println(logMsg)
-
-	url := "http://68.183.215.241:9091/logs/node/" + stringAddr
-
-	req, _ := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
-
-	client := &http.Client{Timeout: time.Minute}
-
-	_, err = client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-// ====================================================================================
-
-func GetDetailedError(errMsg error) error {
-	_, _, line, _ := runtime.Caller(1)
-	return fmt.Errorf("%w. line: %d", errMsg, line)
-}
-
-// ====================================================================================
 
 func GetHashPassword(password string) string {
 	pBytes := sha256.Sum256([]byte(password))

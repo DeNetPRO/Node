@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"dfile-secondary-node/config"
+	"dfile-secondary-node/encryption"
+	"dfile-secondary-node/logger"
 	"dfile-secondary-node/paths"
 	"dfile-secondary-node/shared"
 	"dfile-secondary-node/upnp"
@@ -56,14 +58,14 @@ func Start(address, port string) {
 
 	intPort, err := strconv.Atoi(port)
 	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		log.Fatal(serverStartFatalMessage)
 	}
 
 	if upnp.InternetDevice != nil {
 		err = upnp.InternetDevice.Forward(uint16(intPort), "node")
 		if err != nil {
-			shared.LogError(logInfo, shared.GetDetailedError(err))
+			logger.LogError(logInfo, logger.GetDetailedError(err))
 		}
 		defer upnp.InternetDevice.Clear(uint16(intPort))
 	}
@@ -106,14 +108,14 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	const logInfo = "server.SaveFiles->"
 	err := req.ParseMultipartForm(1 << 20) // maxMemory 32MB
 	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "Parse multiform problem", 400)
 		return
 	}
 
-	nodeAddr, err := shared.DecryptNodeAddr()
+	nodeAddr, err := encryption.DecryptNodeAddr()
 	if err != nil {
-		shared.LogError(logInfo, err)
+		logger.LogError(logInfo, err)
 		http.Error(w, "Couldn't parse address", 500)
 		return
 	}
@@ -124,7 +126,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
 	if err != nil {
 		shared.MU.Unlock()
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "Account config problem", 500)
 		return
 	}
@@ -133,7 +135,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	fileBytes, err := io.ReadAll(confFile)
 	if err != nil {
 		shared.MU.Unlock()
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "Account config problem", 500)
 		return
 	}
@@ -143,7 +145,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	err = json.Unmarshal(fileBytes, &dFileConf)
 	if err != nil {
 		shared.MU.Unlock()
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "Account config problem", 500)
 		return
 	}
@@ -163,7 +165,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	if dFileConf.UsedStorageSpace > sharedSpaceInBytes {
 		shared.MU.Unlock()
 		err := errors.New("insufficient memory avaliable")
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, err.Error(), 400)
 		return
 	}
@@ -178,7 +180,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	err = config.SaveAndClose(confFile, dFileConf)
 	if err != nil {
 		shared.MU.Unlock()
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "Couldn't update config file", 500)
 		return
 	}
@@ -193,7 +195,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	fsRootHash, fsTree, err := shared.CalcRootHash(fsHashes)
 	if err != nil {
-		shared.LogError(logInfo, err)
+		logger.LogError(logInfo, err)
 		http.Error(w, "File saving problem", 400)
 		return
 	}
@@ -202,7 +204,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	signature, err := hex.DecodeString(signedFsRootHash[0])
 	if err != nil {
-		shared.LogError(logInfo, err)
+		logger.LogError(logInfo, err)
 		http.Error(w, "File saving problem", 400)
 		return
 	}
@@ -211,7 +213,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	nonceInt, err := strconv.Atoi(nonce[0])
 	if err != nil {
-		shared.LogError(logInfo, err)
+		logger.LogError(logInfo, err)
 		http.Error(w, "File saving problem", 400)
 		return
 	}
@@ -220,7 +222,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	nonceBytes, err := hex.DecodeString(nonceHex)
 	if err != nil {
-		shared.LogError(logInfo, err)
+		logger.LogError(logInfo, err)
 		http.Error(w, "File saving problem", 400)
 		return
 	}
@@ -230,7 +232,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	fsRootBytes, err := hex.DecodeString(fsRootHash)
 	if err != nil {
-		shared.LogError(logInfo, err)
+		logger.LogError(logInfo, err)
 		http.Error(w, "File saving problem", 400)
 		return
 	}
@@ -241,7 +243,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
 	if err != nil {
-		shared.LogError(logInfo, err)
+		logger.LogError(logInfo, err)
 		http.Error(w, "File saving problem", 400)
 		return
 	}
@@ -252,7 +254,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	if storageProviderAddress[0] != fmt.Sprint(senderAddress) {
 		err := errors.New("wrong signature")
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
@@ -262,7 +264,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	stat, err := os.Stat(addressPath)
 	err = shared.CheckStatErr(err)
 	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "File saving problem", 500)
 		return
 	}
@@ -270,7 +272,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	if stat == nil {
 		err = os.Mkdir(addressPath, 0700)
 		if err != nil {
-			shared.LogError(logInfo, shared.GetDetailedError(err))
+			logger.LogError(logInfo, logger.GetDetailedError(err))
 			http.Error(w, "File saving problem", 500)
 			return
 		}
@@ -278,7 +280,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	treeFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
 	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "File saving problem", 500)
 		return
 	}
@@ -292,14 +294,14 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	js, err := json.Marshal(tree)
 	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "File saving problem", 500)
 		return
 	}
 
 	_, err = treeFile.Write(js)
 	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "File saving problem", 500)
 		return
 	}
@@ -317,14 +319,14 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 		rqFile, err := reqFile.Open()
 		if err != nil {
-			shared.LogError(logInfo, shared.GetDetailedError(err))
+			logger.LogError(logInfo, logger.GetDetailedError(err))
 			http.Error(w, "File check problem", 500)
 			return
 		}
 
 		_, err = io.Copy(&buf, rqFile)
 		if err != nil {
-			shared.LogError(logInfo, shared.GetDetailedError(err))
+			logger.LogError(logInfo, logger.GetDetailedError(err))
 			rqFile.Close()
 			http.Error(w, "File check problem", 500)
 			return
@@ -341,14 +343,14 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 		oneMBHash, _, err := shared.CalcRootHash(eightKBHashes)
 		if err != nil {
-			shared.LogError(logInfo, shared.GetDetailedError(err))
+			logger.LogError(logInfo, logger.GetDetailedError(err))
 			http.Error(w, "Wrong file", 400)
 			return
 		}
 
 		if reqFile.Filename != oneMBHash {
 			err := errors.New("wrong file")
-			shared.LogError(logInfo, shared.GetDetailedError(err))
+			logger.LogError(logInfo, logger.GetDetailedError(err))
 			http.Error(w, err.Error(), 400)
 			return
 		}
@@ -367,7 +369,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		sort.Strings(oneMBHashes)
 		fileRootHash, _, err = shared.CalcRootHash(oneMBHashes)
 		if err != nil {
-			shared.LogError(logInfo, err)
+			logger.LogError(logInfo, err)
 			http.Error(w, "Wrong file", 400)
 			return
 		}
@@ -381,7 +383,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	if !fsContainsFile {
 		err := errors.New("wrong file")
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, err.Error(), 400)
 		return
 	}
@@ -389,7 +391,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	for _, reqFile := range reqFiles {
 		rqFile, err := reqFile.Open()
 		if err != nil {
-			shared.LogError(logInfo, shared.GetDetailedError(err))
+			logger.LogError(logInfo, logger.GetDetailedError(err))
 			http.Error(w, "File saving problem", 500)
 			return
 		}
@@ -399,7 +401,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 		newFile, err := os.Create(pathToFile)
 		if err != nil {
-			shared.LogError(logInfo, shared.GetDetailedError(err))
+			logger.LogError(logInfo, logger.GetDetailedError(err))
 			http.Error(w, "File saving problem", 500)
 			return
 		}
@@ -407,7 +409,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 		_, err = io.Copy(newFile, rqFile)
 		if err != nil {
-			shared.LogError(logInfo, shared.GetDetailedError(err))
+			logger.LogError(logInfo, logger.GetDetailedError(err))
 			http.Error(w, "File saving problem", 500)
 			return
 		}
@@ -426,9 +428,9 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	const logInfo = "server.ServeFiles->"
 
-	nodeAddr, err := shared.DecryptNodeAddr()
+	nodeAddr, err := encryption.DecryptNodeAddr()
 	if err != nil {
-		shared.LogError(logInfo, err)
+		logger.LogError(logInfo, err)
 		http.Error(w, "Couldn't parse address", 500)
 		return
 	}
@@ -475,11 +477,11 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 // ====================================================================================
 
 func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
-	const logInfo = "server.ServeFiles->"
+	const logInfo = "server.UpdateFsInfo->"
 
-	nodeAddr, err := shared.DecryptNodeAddr()
+	nodeAddr, err := encryption.DecryptNodeAddr()
 	if err != nil {
-		shared.LogError(logInfo, err)
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "Couldn't parse address", 500)
 		return
 	}
@@ -496,8 +498,8 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
-		http.Error(w, "Storage provider internal error", 500)
+		logger.LogError(logInfo, logger.GetDetailedError(err))
+		http.Error(w, "Internal error", 500)
 		return
 	}
 	defer req.Body.Close()
@@ -506,8 +508,8 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	err = json.Unmarshal(body, &updatedFs)
 	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
-		http.Error(w, "Storage provider internal error", 500)
+		logger.LogError(logInfo, logger.GetDetailedError(err))
+		http.Error(w, "Internal error", 500)
 		return
 	}
 
@@ -536,7 +538,7 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	fsRootHash, fsTree, err := shared.CalcRootHash(updatedFs)
 	if err != nil {
-		shared.LogError(logInfo, err)
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "File saving problem", 400)
 		return
 	}
@@ -545,7 +547,7 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	rootSignature, err := hex.DecodeString(signedFsRootHash)
 	if err != nil {
-		shared.LogError(logInfo, err)
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "File saving problem", 400)
 		return
 	}
@@ -554,7 +556,7 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	nonceInt, err := strconv.Atoi(nonce)
 	if err != nil {
-		shared.LogError(logInfo, err)
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "File saving problem", 400)
 		return
 	}
@@ -563,7 +565,7 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	nonceBytes, err := hex.DecodeString(nonceHex)
 	if err != nil {
-		shared.LogError(logInfo, err)
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "File saving problem", 400)
 		return
 	}
@@ -573,7 +575,7 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	fsRootBytes, err := hex.DecodeString(fsRootHash)
 	if err != nil {
-		shared.LogError(logInfo, err)
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "File saving problem", 400)
 		return
 	}
@@ -584,7 +586,7 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	sigPublicKey, err = crypto.SigToPub(hash[:], rootSignature)
 	if err != nil {
-		shared.LogError(logInfo, err)
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "File saving problem", 400)
 		return
 	}
@@ -604,7 +606,7 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	treeFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
 	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "File saving problem", 500)
 		return
 	}
@@ -618,14 +620,14 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	js, err := json.Marshal(tree)
 	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "File saving problem", 500)
 		return
 	}
 
 	_, err = treeFile.Write(js)
 	if err != nil {
-		shared.LogError(logInfo, shared.GetDetailedError(err))
+		logger.LogError(logInfo, logger.GetDetailedError(err))
 		http.Error(w, "File saving problem", 500)
 		return
 	}
