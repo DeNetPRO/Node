@@ -26,6 +26,12 @@ import (
 	"github.com/rs/cors"
 )
 
+type updatedFsInfo struct {
+	NewFs            []string
+	Nonce            string
+	SignedFsRootHash string
+}
+
 const gbBytes = int64(1024 * 1024 * 1024)
 const oneHunderdMBBytes = int64(1024 * 1024 * 100)
 const serverStartFatalMessage = "Couldn't start server"
@@ -36,6 +42,7 @@ func Start(address, port string) {
 
 	r.HandleFunc("/upload", SaveFiles).Methods("POST")
 	r.HandleFunc("/download/{address}/{fileKey}/{signature}", ServeFiles).Methods("GET")
+	r.HandleFunc("/update_fs/{address}/{signedFsys}", updateFsInfo).Methods("POST")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -476,13 +483,12 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 
 // ====================================================================================
 
-func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
+func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	const logInfo = "server.UpdateFsInfo->"
 
 	nodeAddr, err := encryption.DecryptNodeAddr()
 	if err != nil {
-		logger.LogError(logInfo, logger.GetDetailedError(err))
-		http.Error(w, "Couldn't parse address", 500)
+		http.Error(w, "Internal node error", 500)
 		return
 	}
 
@@ -492,7 +498,7 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	fsysSignature, err := hex.DecodeString(signedFsys)
 	if err != nil {
-		http.Error(w, "File serving problem", 400)
+		http.Error(w, "Wrong signature", 400)
 		return
 	}
 
@@ -504,7 +510,7 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 	}
 	defer req.Body.Close()
 
-	var updatedFs []string
+	var updatedFs updatedFsInfo
 
 	err = json.Unmarshal(body, &updatedFs)
 	if err != nil {
@@ -513,51 +519,10 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	sort.Strings(updatedFs)
-
-	concatStrings := ""
-
-	for _, hash := range updatedFs {
-		concatStrings += hash
-	}
-
-	fsysHash := sha256.Sum256([]byte(concatStrings + addressFromReq))
-
-	sigPublicKey, err := crypto.SigToPub(fsysHash[:], fsysSignature)
-	if err != nil {
-		http.Error(w, "File serving problem", 400)
-		return
-	}
-
-	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
-
-	if addressFromReq != signatureAddress.String() {
-		http.Error(w, "Wrong signature", http.StatusForbidden)
-		return
-	}
-
-	fsRootHash, fsTree, err := shared.CalcRootHash(updatedFs)
+	nonceInt, err := strconv.Atoi(updatedFs.Nonce)
 	if err != nil {
 		logger.LogError(logInfo, logger.GetDetailedError(err))
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	signedFsRootHash := vars["fsRootHash"]
-
-	rootSignature, err := hex.DecodeString(signedFsRootHash)
-	if err != nil {
-		logger.LogError(logInfo, logger.GetDetailedError(err))
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonce := vars["nonce"]
-
-	nonceInt, err := strconv.Atoi(nonce)
-	if err != nil {
-		logger.LogError(logInfo, logger.GetDetailedError(err))
-		http.Error(w, "File saving problem", 400)
+		http.Error(w, "Fs info update problem", 400)
 		return
 	}
 
@@ -566,17 +531,58 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 	nonceBytes, err := hex.DecodeString(nonceHex)
 	if err != nil {
 		logger.LogError(logInfo, logger.GetDetailedError(err))
-		http.Error(w, "File saving problem", 400)
+		http.Error(w, "Fs info update problem", 400)
 		return
 	}
 
 	nonce32 := make([]byte, 32-len(nonceBytes))
 	nonce32 = append(nonce32, nonceBytes...)
 
+	sort.Strings(updatedFs.NewFs)
+
+	concatFsHashes := ""
+
+	for _, hash := range updatedFs.NewFs {
+		concatFsHashes += hash
+	}
+
+	fsTreeNonceBytes := append([]byte(concatFsHashes), nonce32...)
+
+	fsTreeNonceSha := sha256.Sum256(fsTreeNonceBytes)
+
+	sigPublicKey, err := crypto.SigToPub(fsTreeNonceSha[:], fsysSignature)
+	if err != nil {
+		logger.LogError(logInfo, logger.GetDetailedError(err))
+		http.Error(w, "Wrong signature", 400)
+		return
+	}
+
+	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
+
+	if addressFromReq != signatureAddress.String() {
+		logger.LogError(logInfo, logger.GetDetailedError(errors.New("Wrong signature")))
+		http.Error(w, "Wrong signature", http.StatusForbidden)
+		return
+	}
+
+	fsRootHash, fsTree, err := shared.CalcRootHash(updatedFs.NewFs)
+	if err != nil {
+		logger.LogError(logInfo, logger.GetDetailedError(err))
+		http.Error(w, "Fs info update problem", 400)
+		return
+	}
+
+	rootSignature, err := hex.DecodeString(updatedFs.SignedFsRootHash)
+	if err != nil {
+		logger.LogError(logInfo, logger.GetDetailedError(err))
+		http.Error(w, "Fs info update problem", 400)
+		return
+	}
+
 	fsRootBytes, err := hex.DecodeString(fsRootHash)
 	if err != nil {
 		logger.LogError(logInfo, logger.GetDetailedError(err))
-		http.Error(w, "File saving problem", 400)
+		http.Error(w, "Fs info update problem", 400)
 		return
 	}
 
@@ -587,52 +593,53 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 	sigPublicKey, err = crypto.SigToPub(hash[:], rootSignature)
 	if err != nil {
 		logger.LogError(logInfo, logger.GetDetailedError(err))
-		http.Error(w, "File saving problem", 400)
+		http.Error(w, "Fs info update problem", 400)
 		return
 	}
-
-	storageProviderAddress := req.MultipartForm.Value["address"]
 
 	signatureAddress = crypto.PubkeyToAddress(*sigPublicKey)
 
 	if addressFromReq != signatureAddress.String() {
+		logger.LogError(logInfo, logger.GetDetailedError(errors.New("Wrong signature")))
 		http.Error(w, "Wrong signature", http.StatusForbidden)
 		return
 	}
 
-	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, storageProviderAddress[0])
+	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, addressFromReq)
 
 	shared.MU.Lock()
 
 	treeFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
 	if err != nil {
 		logger.LogError(logInfo, logger.GetDetailedError(err))
-		http.Error(w, "File saving problem", 500)
+		http.Error(w, "Fs info update problem", 500)
 		return
 	}
 	defer treeFile.Close()
 
 	tree := shared.StorageInfo{
-		Nonce:        nonce,
-		SignedFsRoot: signedFsRootHash,
+		Nonce:        updatedFs.Nonce,
+		SignedFsRoot: updatedFs.SignedFsRootHash,
 		Tree:         fsTree,
 	}
 
 	js, err := json.Marshal(tree)
 	if err != nil {
 		logger.LogError(logInfo, logger.GetDetailedError(err))
-		http.Error(w, "File saving problem", 500)
+		http.Error(w, "Fs info update problem", 500)
 		return
 	}
 
 	_, err = treeFile.Write(js)
 	if err != nil {
 		logger.LogError(logInfo, logger.GetDetailedError(err))
-		http.Error(w, "File saving problem", 500)
+		http.Error(w, "Fs info update problem", 500)
 		return
 	}
 
 	treeFile.Sync()
+
+	fmt.Println("Updated fs info") //TODO remove
 
 	shared.MU.Unlock()
 

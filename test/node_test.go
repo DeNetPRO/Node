@@ -3,6 +3,7 @@ package test
 import (
 	"dfile-secondary-node/account"
 	"dfile-secondary-node/config"
+	"dfile-secondary-node/encryption"
 	"dfile-secondary-node/paths"
 	"dfile-secondary-node/shared"
 	"encoding/json"
@@ -83,7 +84,7 @@ func TestCreateAccount(t *testing.T) {
 		t.Error("config is invalid")
 	}
 
-	nodeAddress = shared.NodeAddr
+	nodeAddress = encryption.NodeAddr
 }
 
 func TestLoginAccountWithCorrectAddressAndPassword(t *testing.T) {
@@ -253,12 +254,12 @@ func initTestAccount(account *accounts.Account, password, ipAddress, storageLimi
 		return nodeConf, err
 	}
 
-	encryptedAddr, err := shared.EncryptNodeAddr(account.Address)
+	encryptedAddr, err := encryption.EncryptNodeAddr(account.Address)
 	if err != nil {
 		return nodeConf, err
 	}
 
-	shared.NodeAddr = encryptedAddr
+	encryption.NodeAddr = encryptedAddr
 
 	nodeConf, err = createConfigForTests(account.Address.String(), password, ipAddress, storageLimit, port)
 	if err != nil {
@@ -296,12 +297,12 @@ func testLogin(blockchainAccountString, password string) (*accounts.Account, err
 		return nil, err
 	}
 
-	encryptedAddr, err := shared.EncryptNodeAddr(key.Address)
+	encryptedAddr, err := encryption.EncryptNodeAddr(key.Address)
 	if err != nil {
 		return nil, err
 	}
 
-	shared.NodeAddr = encryptedAddr
+	encryption.NodeAddr = encryptedAddr
 
 	return etherAccount, nil
 }
