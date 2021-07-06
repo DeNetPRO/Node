@@ -7,7 +7,6 @@ import (
 	"dfile-secondary-node/shared"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -117,7 +116,7 @@ func Start() {
 
 				if !fsFiles[fileName] {
 					shared.MU.Lock()
-					fmt.Println("removing file", fileName)
+					logger.Log("removing file: " + fileName)
 					err = os.Remove(filepath.Join(pathToStorProviderFiles, fileName))
 					if err != nil {
 						logger.Log(logger.CreateDetails(logInfo, err))

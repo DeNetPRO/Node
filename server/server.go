@@ -639,7 +639,7 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	treeFile.Sync()
 
-	fmt.Println("Updated fs info") //TODO remove
+	logger.Log("Updated fs info")
 
 	shared.MU.Unlock()
 
