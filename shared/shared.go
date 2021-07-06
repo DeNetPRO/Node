@@ -37,7 +37,7 @@ func InitPaths() error {
 	const logInfo = "shared.InitPaths->"
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return logger.CreateDetails(logInfo, err)
 	}
 
 	paths.WorkDirPath = filepath.Join(homeDir, paths.WorkDirName)
@@ -54,26 +54,26 @@ func CreateIfNotExistAccDirs() error {
 	statWDP, err := os.Stat(paths.WorkDirPath)
 	err = CheckStatErr(err)
 	if err != nil {
-		return fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return logger.CreateDetails(logInfo, err)
 	}
 
 	if statWDP == nil {
 		err = os.MkdirAll(paths.WorkDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
-			return fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+			return logger.CreateDetails(logInfo, err)
 		}
 	}
 
 	statADP, err := os.Stat(paths.AccsDirPath)
 	err = CheckStatErr(err)
 	if err != nil {
-		return fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return logger.CreateDetails(logInfo, err)
 	}
 
 	if statADP == nil {
 		err = os.MkdirAll(paths.AccsDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
-			return fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+			return logger.CreateDetails(logInfo, err)
 		}
 	}
 
@@ -120,7 +120,7 @@ func ReadFromConsole() (string, error) {
 	// ReadString will block until the delimiter is entered
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		return "", fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return "", logger.CreateDetails(logInfo, err)
 	}
 
 	// remove the delimiter from the string
@@ -139,13 +139,13 @@ func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 
 	emptyValue, err := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
 	if err != nil {
-		return "", resByte, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return "", resByte, logger.CreateDetails(logInfo, err)
 	}
 
 	for _, v := range hashArr {
 		decoded, err := hex.DecodeString(v)
 		if err != nil {
-			return "", resByte, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+			return "", resByte, logger.CreateDetails(logInfo, err)
 		}
 		base = append(base, decoded)
 	}

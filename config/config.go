@@ -71,7 +71,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 	if upnp.InternetDevice != nil {
 		ip, err := upnp.InternetDevice.ExternalIP()
 		if err != nil {
-			return dFileConf, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+			return dFileConf, logger.CreateDetails(logInfo, err)
 		}
 
 		dFileConf.IpAddress = ip
@@ -81,7 +81,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		fmt.Println("Please enter your public ip address")
 		splitIPAddr, err = SetIpAddr(&dFileConf, State.Update)
 		if err != nil {
-			return dFileConf, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+			return dFileConf, logger.CreateDetails(logInfo, err)
 		}
 	}
 
@@ -104,18 +104,18 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	confFile, err := os.Create(filepath.Join(pathToConfig, "config.json"))
 	if err != nil {
-		return dFileConf, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return dFileConf, logger.CreateDetails(logInfo, err)
 	}
 	defer confFile.Close()
 
 	confJSON, err := json.Marshal(dFileConf)
 	if err != nil {
-		return dFileConf, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return dFileConf, logger.CreateDetails(logInfo, err)
 	}
 
 	_, err = confFile.Write(confJSON)
 	if err != nil {
-		return dFileConf, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return dFileConf, logger.CreateDetails(logInfo, err)
 	}
 
 	fmt.Println("Saving config...")
@@ -206,7 +206,7 @@ func SetIpAddr(dFileConf *SecondaryNodeConfig, state string) ([]string, error) {
 		if partiallyReserved {
 			secondAddrPart, err := strconv.Atoi(splitIPAddr[1])
 			if err != nil {
-				return nil, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+				return nil, logger.CreateDetails(logInfo, err)
 			}
 
 			if secondAddrPart <= reservedSecAddrPart {

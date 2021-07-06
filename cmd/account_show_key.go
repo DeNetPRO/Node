@@ -24,7 +24,7 @@ var showKeyCmd = &cobra.Command{
 
 		etherAccount, password, err := account.ValidateUser()
 		if err != nil {
-			logger.Log(logInfo, err)
+			logger.Log(logger.CreateDetails(logInfo, err))
 			log.Fatal(showKeyFatalMessage)
 		}
 
@@ -32,13 +32,13 @@ var showKeyCmd = &cobra.Command{
 
 		keyJson, err := ks.Export(*etherAccount, password, password)
 		if err != nil {
-			logger.Log(logInfo, logger.GetDetailedError(err))
+			logger.Log(logger.CreateDetails(logInfo, err))
 			log.Fatal(showKeyFatalMessage)
 		}
 
 		key, err := keystore.DecryptKey(keyJson, password)
 		if err != nil {
-			logger.Log(logInfo, logger.GetDetailedError(err))
+			logger.Log(logger.CreateDetails(logInfo, err))
 			log.Fatal(showKeyFatalMessage)
 		}
 

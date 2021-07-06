@@ -8,7 +8,6 @@ import (
 	"crypto/sha256"
 	"dfile-secondary-node/logger"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 
@@ -25,18 +24,18 @@ func encryptAES(key, data []byte) ([]byte, error) {
 	const logInfo = "shared.encryptAES->"
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return nil, logger.CreateDetails(logInfo, err)
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return nil, logger.CreateDetails(logInfo, err)
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	_, err = io.ReadFull(rand.Reader, nonce)
 	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return nil, logger.CreateDetails(logInfo, err)
 	}
 
 	ciphertext := gcm.Seal(nonce, nonce, data, nil)
@@ -51,16 +50,16 @@ func decryptAES(key, data []byte) ([]byte, error) {
 	const logInfo = "shared.decryptAES->"
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return nil, logger.CreateDetails(logInfo, err)
 	}
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return nil, logger.CreateDetails(logInfo, err)
 	}
 	nonce, encrData := data[:gcm.NonceSize()], data[gcm.NonceSize():]
 	decrData, err := gcm.Open(nil, nonce, encrData, nil)
 	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return nil, logger.CreateDetails(logInfo, err)
 	}
 
 	return decrData, nil
@@ -73,7 +72,7 @@ func GetDeviceMacAddr() (string, error) {
 	var addr string
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		return "", fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return "", logger.CreateDetails(logInfo, err)
 	}
 
 	for _, i := range interfaces {
@@ -94,14 +93,14 @@ func EncryptNodeAddr(addr common.Address) ([]byte, error) {
 
 	macAddr, err := GetDeviceMacAddr()
 	if err != nil {
-		return nodeAddr, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return nodeAddr, logger.CreateDetails(logInfo, err)
 	}
 
 	encrKey := sha256.Sum256([]byte(macAddr))
 
 	encryptedAddr, err := encryptAES(encrKey[:], addr.Bytes())
 	if err != nil {
-		return nodeAddr, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return nodeAddr, logger.CreateDetails(logInfo, err)
 	}
 
 	return encryptedAddr, nil
@@ -119,14 +118,14 @@ func DecryptNodeAddr() (common.Address, error) {
 
 	macAddr, err := GetDeviceMacAddr()
 	if err != nil {
-		return nodeAddr, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return nodeAddr, logger.CreateDetails(logInfo, err)
 	}
 
 	encrKey := sha256.Sum256([]byte(macAddr))
 
 	accAddr, err := decryptAES(encrKey[:], NodeAddr)
 	if err != nil {
-		return nodeAddr, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return nodeAddr, logger.CreateDetails(logInfo, err)
 	}
 
 	return common.BytesToAddress(accAddr), nil

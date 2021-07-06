@@ -43,19 +43,19 @@ func Create(password string) (string, config.SecondaryNodeConfig, error) {
 
 	err := shared.CreateIfNotExistAccDirs()
 	if err != nil {
-		return "", nodeConf, fmt.Errorf("%s %w", logInfo, err)
+		return "", nodeConf, logger.CreateDetails(logInfo, err)
 	}
 
 	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 
 	etherAccount, err := ks.NewAccount(password)
 	if err != nil {
-		return "", nodeConf, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return "", nodeConf, logger.CreateDetails(logInfo, err)
 	}
 
 	nodeConf, err = initAccount(&etherAccount, password)
 	if err != nil {
-		return "", nodeConf, fmt.Errorf("%s %w", logInfo, err)
+		return "", nodeConf, logger.CreateDetails(logInfo, err)
 	}
 
 	return etherAccount.Address.String(), nodeConf, nil
@@ -69,12 +69,12 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 
 	privKey, err := shared.ReadFromConsole()
 	if err != nil {
-		return "", nodeConfig, fmt.Errorf("%s %w", logInfo, err)
+		return "", nodeConfig, logger.CreateDetails(logInfo, err)
 	}
 
 	ecdsaPrivKey, err := crypto.HexToECDSA(privKey)
 	if err != nil {
-		return "", nodeConfig, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return "", nodeConfig, logger.CreateDetails(logInfo, err)
 	}
 
 	fmt.Println("Please enter your password:")
@@ -84,7 +84,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 	for {
 		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
-			return "", nodeConfig, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+			return "", nodeConfig, logger.CreateDetails(logInfo, err)
 		}
 
 		originalPassword = string(bytePassword)
@@ -101,7 +101,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 
 	err = shared.CreateIfNotExistAccDirs()
 	if err != nil {
-		return "", nodeConfig, fmt.Errorf("%s %w", logInfo, err)
+		return "", nodeConfig, logger.CreateDetails(logInfo, err)
 	}
 
 	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
@@ -109,12 +109,12 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 	etherAccount, err := ks.ImportECDSA(ecdsaPrivKey, password)
 	if err != nil {
 		fmt.Println(err)
-		return "", nodeConfig, fmt.Errorf("%s %v", logInfo, logger.GetDetailedError(err))
+		return "", nodeConfig, logger.CreateDetails(logInfo, err)
 	}
 
 	nodeConfig, err = initAccount(&etherAccount, password)
 	if err != nil {
-		return "", nodeConfig, fmt.Errorf("%s %w", logInfo, err)
+		return "", nodeConfig, logger.CreateDetails(logInfo, err)
 	}
 
 	return etherAccount.Address.String(), nodeConfig, nil
@@ -137,23 +137,23 @@ func Login(blockchainAccountString, password string) (*accounts.Account, error) 
 
 	if etherAccount == nil {
 		err := errors.New("Account Not Found Error: cannot find account for " + blockchainAccountString)
-		return nil, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return nil, logger.CreateDetails(logInfo, err)
 	}
 
 	keyJson, err := ks.Export(*etherAccount, password, password)
 	if err != nil {
 		fmt.Println("Wrong password")
-		return nil, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return nil, logger.CreateDetails(logInfo, err)
 	}
 
 	key, err := keystore.DecryptKey(keyJson, password)
 	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return nil, logger.CreateDetails(logInfo, err)
 	}
 
 	encryptedAddr, err := encryption.EncryptNodeAddr(key.Address)
 	if err != nil {
-		return nil, fmt.Errorf("%s %w", logInfo, err)
+		return nil, logger.CreateDetails(logInfo, err)
 	}
 
 	encryption.NodeAddr = encryptedAddr
@@ -166,15 +166,15 @@ func CheckPassword(password, address string) error {
 	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	acc, err := utils.MakeAddress(ks, address)
 	if err != nil {
-		return fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return logger.CreateDetails(logInfo, err)
 	}
 	key, err := ks.Export(acc, password, password)
 	if err != nil {
-		return fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return logger.CreateDetails(logInfo, err)
 	}
 	_, err = keystore.DecryptKey(key, password)
 	if err != nil {
-		return fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return logger.CreateDetails(logInfo, err)
 	}
 	return nil
 }
@@ -199,12 +199,12 @@ func ValidateUser() (*accounts.Account, string, error) {
 		} else {
 			number, err := shared.ReadFromConsole()
 			if err != nil {
-				return nil, "", fmt.Errorf("%s %w", logInfo, err)
+				return nil, "", logger.CreateDetails(logInfo, err)
 			}
 
 			accountNumber, err := strconv.Atoi(number)
 			if err != nil {
-				return nil, "", fmt.Errorf("%s %w", logInfo, err)
+				return nil, "", logger.CreateDetails(logInfo, err)
 			}
 
 			if accountNumber < 1 || accountNumber > len(accounts) {
@@ -230,7 +230,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 
 		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
-			return nil, "", fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+			return nil, "", logger.CreateDetails(logInfo, err)
 		}
 
 		originalPassword := string(bytePassword)
@@ -245,7 +245,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 
 		etherAccount, err = Login(accountAddress, password)
 		if err != nil {
-			return nil, "", fmt.Errorf("%s %w", logInfo, err)
+			return nil, "", logger.CreateDetails(logInfo, err)
 		}
 
 		break
@@ -262,24 +262,24 @@ func initAccount(account *accounts.Account, password string) (config.SecondaryNo
 
 	err := os.MkdirAll(filepath.Join(paths.AccsDirPath, addressString, paths.StorageDirName), 0700)
 	if err != nil {
-		return nodeConf, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return nodeConf, logger.CreateDetails(logInfo, err)
 	}
 
 	err = os.MkdirAll(filepath.Join(paths.AccsDirPath, addressString, paths.ConfDirName), 0700)
 	if err != nil {
-		return nodeConf, fmt.Errorf("%s %w", logInfo, logger.GetDetailedError(err))
+		return nodeConf, logger.CreateDetails(logInfo, err)
 	}
 
 	encryptedAddr, err := encryption.EncryptNodeAddr(account.Address)
 	if err != nil {
-		return nodeConf, fmt.Errorf("%s %w", logInfo, err)
+		return nodeConf, logger.CreateDetails(logInfo, err)
 	}
 
 	encryption.NodeAddr = encryptedAddr
 
 	nodeConf, err = config.Create(addressString, password)
 	if err != nil {
-		return nodeConf, fmt.Errorf("%s %w", logInfo, err)
+		return nodeConf, logger.CreateDetails(logInfo, err)
 	}
 
 	return nodeConf, nil

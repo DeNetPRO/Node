@@ -14,13 +14,13 @@ var (
 
 // ====================================================================================
 
-func Log(logInfo string, errMsg error) {
+func Log(msg error) {
 	if !SendLogs {
 		return
 	}
 
 	currentTime := time.Now().Local()
-	logMsg := fmt.Sprintf("%s: %s: %v\n", currentTime.String(), logInfo, errMsg)
+	logMsg := fmt.Sprintf("%s: %v\n", currentTime.String(), msg)
 
 	fmt.Println(logMsg)
 
@@ -38,7 +38,7 @@ func Log(logInfo string, errMsg error) {
 
 // ====================================================================================
 
-func GetDetailedError(errMsg error) error {
+func CreateDetails(logInfo string, errMsg error) error {
 	_, _, line, _ := runtime.Caller(1)
-	return fmt.Errorf("%w. line: %d", errMsg, line)
+	return fmt.Errorf("%s %w. line: %d", logInfo, errMsg, line)
 }

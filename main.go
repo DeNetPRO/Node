@@ -26,7 +26,7 @@ import (
 func main() {
 	err := shared.InitPaths()
 	if err != nil {
-		logger.Log("main->", err)
+		logger.Log(logger.CreateDetails("main->", err))
 		log.Fatal("Fatal Error: couldn't locate home directory")
 	}
 

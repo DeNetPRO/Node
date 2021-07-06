@@ -25,7 +25,7 @@ func Start() {
 
 	nodeAddr, err := encryption.DecryptNodeAddr()
 	if err != nil {
-		logger.Log(logInfo, logger.GetDetailedError(err))
+		logger.Log(logger.CreateDetails(logInfo, err))
 	}
 
 	for {
@@ -38,7 +38,7 @@ func Start() {
 		err = filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
 				if err != nil {
-					logger.Log(logInfo, logger.GetDetailedError(err))
+					logger.Log(logger.CreateDetails(logInfo, err))
 				}
 
 				if regAddr.MatchString(info.Name()) {
@@ -49,7 +49,7 @@ func Start() {
 			})
 
 		if err != nil {
-			logger.Log(logInfo, logger.GetDetailedError(err))
+			logger.Log(logger.CreateDetails(logInfo, err))
 			continue
 		}
 
@@ -66,7 +66,7 @@ func Start() {
 			err = filepath.WalkDir(pathToStorProviderFiles,
 				func(path string, info fs.DirEntry, err error) error {
 					if err != nil {
-						logger.Log(logInfo, logger.GetDetailedError(err))
+						logger.Log(logger.CreateDetails(logInfo, err))
 					}
 
 					if regFileName.MatchString(info.Name()) && len(info.Name()) == 64 {
@@ -76,7 +76,7 @@ func Start() {
 					return nil
 				})
 			if err != nil {
-				logger.Log(logInfo, logger.GetDetailedError(err))
+				logger.Log(logger.CreateDetails(logInfo, err))
 				continue
 			}
 
@@ -86,14 +86,14 @@ func Start() {
 			fileFsTree, err := os.Open(pathToFsTree)
 			if err != nil {
 				shared.MU.Unlock()
-				logger.Log(logInfo, logger.GetDetailedError(err))
+				logger.Log(logger.CreateDetails(logInfo, err))
 			}
 
 			treeBytes, err := io.ReadAll(fileFsTree)
 			if err != nil {
 				fileFsTree.Close()
 				shared.MU.Unlock()
-				logger.Log(logInfo, logger.GetDetailedError(err))
+				logger.Log(logger.CreateDetails(logInfo, err))
 			}
 			fileFsTree.Close()
 			shared.MU.Unlock()
@@ -102,7 +102,7 @@ func Start() {
 
 			err = json.Unmarshal(treeBytes, &storageFsStruct)
 			if err != nil {
-				logger.Log(logInfo, logger.GetDetailedError(err))
+				logger.Log(logger.CreateDetails(logInfo, err))
 			}
 
 			fsFiles := map[string]bool{}
@@ -120,7 +120,7 @@ func Start() {
 					fmt.Println("removing file", fileName)
 					err = os.Remove(filepath.Join(pathToStorProviderFiles, fileName))
 					if err != nil {
-						logger.Log(logInfo, logger.GetDetailedError(err))
+						logger.Log(logger.CreateDetails(logInfo, err))
 					}
 
 					shared.MU.Unlock()
