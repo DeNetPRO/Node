@@ -421,7 +421,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		fmt.Println("Saved file:", reqFile.Filename) //TODO remove
+		logger.Log("Saved file:" + reqFile.Filename) //TODO remove
 
 		newFile.Sync()
 	}
