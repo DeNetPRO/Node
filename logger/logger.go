@@ -14,12 +14,13 @@ var (
 
 // ====================================================================================
 
-func Log(msg error) {
+func Log(msg interface{}) {
 	if !SendLogs {
 		return
 	}
 
 	currentTime := time.Now().Local()
+
 	logMsg := fmt.Sprintf("%s: %v\n", currentTime.String(), msg)
 
 	fmt.Println(logMsg)
@@ -30,10 +31,7 @@ func Log(msg error) {
 
 	client := &http.Client{Timeout: time.Minute}
 
-	_, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-	}
+	client.Do(req)
 }
 
 // ====================================================================================
