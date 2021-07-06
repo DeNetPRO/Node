@@ -19,7 +19,7 @@ var accountImportCmd = &cobra.Command{
 		const logInfo = "accountImportCmd->"
 		accountStr, nodeConfig, err := account.Import()
 		if err != nil {
-			logger.LogError(logInfo, err)
+			logger.Log(logInfo, err)
 			log.Fatal("Fatal error, couldn't import an account")
 		}
 

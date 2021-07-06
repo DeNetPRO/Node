@@ -32,7 +32,7 @@ var accountCreateCmd = &cobra.Command{
 		for {
 			bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
-				logger.LogError(logInfo, err)
+				logger.Log(logInfo, err)
 				log.Fatal(accCreateFatalMessage)
 			}
 			password1 = string(bytePassword)
@@ -45,7 +45,7 @@ var accountCreateCmd = &cobra.Command{
 			fmt.Println("Enter password again: ")
 			bytePassword, err = term.ReadPassword(int(os.Stdin.Fd()))
 			if err != nil {
-				logger.LogError(logInfo, err)
+				logger.Log(logInfo, err)
 				log.Println(accCreateFatalMessage)
 			}
 
@@ -63,7 +63,7 @@ var accountCreateCmd = &cobra.Command{
 
 		accountStr, nodeConfig, err := account.Create(password)
 		if err != nil {
-			logger.LogError(logInfo, err)
+			logger.Log(logInfo, err)
 			log.Fatal(accCreateFatalMessage)
 		}
 

@@ -182,7 +182,7 @@ func StartMining(password string) {
 
 	nodeAddr, err := encryption.DecryptNodeAddr()
 	if err != nil {
-		logger.LogError(logInfo, logger.GetDetailedError(err))
+		logger.Log(logInfo, logger.GetDetailedError(err))
 	}
 
 	pathToAccStorage := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName)
@@ -192,14 +192,14 @@ func StartMining(password string) {
 
 	client, err := ethclient.Dial(ethClientAddr)
 	if err != nil {
-		logger.LogError(logInfo, logger.GetDetailedError(err))
+		logger.Log(logInfo, logger.GetDetailedError(err))
 	}
 	defer client.Close()
 
 	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
 	instance, err := abiPOS.NewStore(tokenAddress, client)
 	if err != nil {
-		logger.LogError(logInfo, logger.GetDetailedError(err))
+		logger.Log(logInfo, logger.GetDetailedError(err))
 	}
 
 	for {
@@ -209,7 +209,7 @@ func StartMining(password string) {
 		err = filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
 				if err != nil {
-					logger.LogError(logInfo, logger.GetDetailedError(err))
+					logger.Log(logInfo, logger.GetDetailedError(err))
 				}
 
 				if regAddr.MatchString(info.Name()) {
@@ -220,7 +220,7 @@ func StartMining(password string) {
 			})
 
 		if err != nil {
-			logger.LogError(logInfo, logger.GetDetailedError(err))
+			logger.Log(logInfo, logger.GetDetailedError(err))
 			continue
 		}
 
@@ -232,13 +232,13 @@ func StartMining(password string) {
 
 		blockNum, err := client.BlockNumber(ctx)
 		if err != nil {
-			logger.LogError(logInfo, logger.GetDetailedError(err))
+			logger.Log(logInfo, logger.GetDetailedError(err))
 			continue
 		}
 
 		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum-1)))
 		if err != nil {
-			logger.LogError(logInfo, logger.GetDetailedError(err))
+			logger.Log(logInfo, logger.GetDetailedError(err))
 			continue
 		}
 
@@ -257,7 +257,7 @@ func StartMining(password string) {
 			storageProviderAddr := common.HexToAddress(spAddress)
 			_, reward, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
 			if err != nil {
-				logger.LogError(logInfo, logger.GetDetailedError(err))
+				logger.Log(logInfo, logger.GetDetailedError(err))
 			}
 
 			fmt.Println("reward for", spAddress, "files is", reward) //TODO remove
@@ -276,7 +276,7 @@ func StartMining(password string) {
 			err = filepath.WalkDir(pathToStorProviderFiles,
 				func(path string, info fs.DirEntry, err error) error {
 					if err != nil {
-						logger.LogError(logInfo, logger.GetDetailedError(err))
+						logger.Log(logInfo, logger.GetDetailedError(err))
 					}
 
 					if regFileName.MatchString(info.Name()) && len(info.Name()) == 64 {
@@ -287,7 +287,7 @@ func StartMining(password string) {
 					return nil
 				})
 			if err != nil {
-				logger.LogError(logInfo, logger.GetDetailedError(err))
+				logger.Log(logInfo, logger.GetDetailedError(err))
 				continue
 			}
 
@@ -297,14 +297,14 @@ func StartMining(password string) {
 			fileFsTree, err := os.Open(pathToFsTree)
 			if err != nil {
 				shared.MU.Unlock()
-				logger.LogError(logInfo, logger.GetDetailedError(err))
+				logger.Log(logInfo, logger.GetDetailedError(err))
 			}
 
 			treeBytes, err := io.ReadAll(fileFsTree)
 			if err != nil {
 				fileFsTree.Close()
 				shared.MU.Unlock()
-				logger.LogError(logInfo, logger.GetDetailedError(err))
+				logger.Log(logInfo, logger.GetDetailedError(err))
 			}
 			fileFsTree.Close()
 			shared.MU.Unlock()
@@ -313,7 +313,7 @@ func StartMining(password string) {
 
 			err = json.Unmarshal(treeBytes, &storageFsStruct)
 			if err != nil {
-				logger.LogError(logInfo, logger.GetDetailedError(err))
+				logger.Log(logInfo, logger.GetDetailedError(err))
 			}
 
 			for _, fileName := range fileNames {
@@ -324,12 +324,12 @@ func StartMining(password string) {
 
 				storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
 				if err != nil {
-					logger.LogError(logInfo, logger.GetDetailedError(err))
+					logger.Log(logInfo, logger.GetDetailedError(err))
 				}
 
 				storedFileBytes, err := io.ReadAll(storedFile)
 				if err != nil {
-					logger.LogError(logInfo, logger.GetDetailedError(err))
+					logger.Log(logInfo, logger.GetDetailedError(err))
 				}
 
 				storedFile.Close()
@@ -339,13 +339,13 @@ func StartMining(password string) {
 
 				blockNum, err := client.BlockNumber(ctx)
 				if err != nil {
-					logger.LogError(logInfo, logger.GetDetailedError(err))
+					logger.Log(logInfo, logger.GetDetailedError(err))
 					break
 				}
 
 				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-1))
 				if err != nil {
-					logger.LogError(logInfo, logger.GetDetailedError(err))
+					logger.Log(logInfo, logger.GetDetailedError(err))
 				}
 
 				fileBytesAddrBlockHash := append(storedFileBytes, nodeAddr.Bytes()...)
@@ -359,12 +359,12 @@ func StartMining(password string) {
 
 				decodedBigInt, err := hexutil.DecodeBig("0x" + stringFileAddrBlock)
 				if err != nil {
-					logger.LogError(logInfo, logger.GetDetailedError(err))
+					logger.Log(logInfo, logger.GetDetailedError(err))
 				}
 
 				baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
 				if err != nil {
-					logger.LogError(logInfo, logger.GetDetailedError(err))
+					logger.Log(logInfo, logger.GetDetailedError(err))
 				}
 
 				remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
@@ -376,7 +376,7 @@ func StartMining(password string) {
 					fmt.Println("Sending proof of", fileName, "for reward:", reward)
 					err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress)
 					if err != nil {
-						logger.LogError(logInfo, logger.GetDetailedError(err))
+						logger.Log(logInfo, logger.GetDetailedError(err))
 						break
 					}
 				}
@@ -392,7 +392,7 @@ func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.
 
 	blockNum, err := client.BlockNumber(ctx)
 	if err != nil {
-		logger.LogError(logInfo, logger.GetDetailedError(err))
+		logger.Log(logInfo, logger.GetDetailedError(err))
 	}
 
 	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum-1)))

@@ -14,7 +14,7 @@ var (
 
 // ====================================================================================
 
-func LogError(logInfo string, errMsg error) {
+func Log(logInfo string, errMsg error) {
 	if !SendLogs {
 		return
 	}

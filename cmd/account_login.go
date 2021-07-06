@@ -53,26 +53,26 @@ var accountLoginCmd = &cobra.Command{
 		if stat == nil {
 			dFileConf, err = config.Create(etherAccount.Address.String(), password)
 			if err != nil {
-				logger.LogError(logInfo, logger.GetDetailedError(err))
+				logger.Log(logInfo, logger.GetDetailedError(err))
 				log.Fatal("couldn't create config file")
 			}
 		} else {
 			confFile, err := os.OpenFile(pathToConfigFile, os.O_RDWR, 0700)
 			if err != nil {
-				logger.LogError(logInfo, logger.GetDetailedError(err))
+				logger.Log(logInfo, logger.GetDetailedError(err))
 				log.Fatal("couldn't open config file")
 			}
 			defer confFile.Close()
 
 			fileBytes, err := io.ReadAll(confFile)
 			if err != nil {
-				logger.LogError(logInfo, logger.GetDetailedError(err))
+				logger.Log(logInfo, logger.GetDetailedError(err))
 				log.Fatal("couldn't read config file")
 			}
 
 			err = json.Unmarshal(fileBytes, &dFileConf)
 			if err != nil {
-				logger.LogError(logInfo, logger.GetDetailedError(err))
+				logger.Log(logInfo, logger.GetDetailedError(err))
 				log.Fatal("couldn't read config file")
 			}
 
@@ -84,7 +84,7 @@ var accountLoginCmd = &cobra.Command{
 
 				ip, err := upnp.InternetDevice.ExternalIP()
 				if err != nil {
-					logger.LogError(logInfo, logger.GetDetailedError(err))
+					logger.Log(logInfo, logger.GetDetailedError(err))
 				}
 
 				if dFileConf.IpAddress != ip {
@@ -97,7 +97,7 @@ var accountLoginCmd = &cobra.Command{
 
 					err = blockchainprovider.UpdateNodeInfo(ctx, etherAccount.Address, password, dFileConf.HTTPPort, splitIPAddr)
 					if err != nil {
-						logger.LogError(logInfo, logger.GetDetailedError(err))
+						logger.Log(logInfo, logger.GetDetailedError(err))
 						log.Fatal(ipUpdateFatalError)
 					}
 
@@ -105,7 +105,7 @@ var accountLoginCmd = &cobra.Command{
 
 					err = config.SaveAndClose(confFile, dFileConf) // we dont't use mutex because race condition while login is impossible
 					if err != nil {
-						logger.LogError(logInfo, logger.GetDetailedError(err))
+						logger.Log(logInfo, logger.GetDetailedError(err))
 						log.Fatal(ipUpdateFatalError)
 					}
 
