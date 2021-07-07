@@ -136,13 +136,11 @@ func ReadFromConsole() (string, error) {
 func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 	const logInfo = "shared.CalcRootHash->"
 
-	arrLen := len(hashArr)
-
-	if arrLen == 0 {
+	if len(hashArr) == 0 {
 		return "", nil, logger.CreateDetails(logInfo, errors.New("hash array is empty"))
 	}
 
-	base := make([][]byte, arrLen+1)
+	base := [][]byte{}
 
 	emptyValue, err := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
 	if err != nil {
