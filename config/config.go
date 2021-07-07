@@ -63,7 +63,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	err := SetStorageLimit(pathToConfig, State.Create, &dFileConf)
 	if err != nil {
-		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
+		return dFileConf, logger.CreateDetails(logInfo, err)
 	}
 
 	var splitIPAddr []string
@@ -87,7 +87,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	err = SetPort(&dFileConf, State.Create)
 	if err != nil {
-		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
+		return dFileConf, logger.CreateDetails(logInfo, err)
 	}
 
 	fmt.Println("Due to testing stage bug reports from your device are going to be received by developers")
@@ -99,7 +99,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	err = blockchainprovider.RegisterNode(ctx, address, password, splitIPAddr, dFileConf.HTTPPort)
 	if err != nil {
-		return dFileConf, fmt.Errorf("%s %w", logInfo, err)
+		return dFileConf, logger.CreateDetails(logInfo, err)
 	}
 
 	confFile, err := os.Create(filepath.Join(pathToConfig, "config.json"))
@@ -136,7 +136,7 @@ func SetStorageLimit(pathToConfig, state string, dFileConf *SecondaryNodeConfig)
 		fmt.Println("Available space:", availableSpace, "GB")
 		space, err := shared.ReadFromConsole()
 		if err != nil {
-			return fmt.Errorf("%s %w", logInfo, err)
+			return logger.CreateDetails(logInfo, err)
 		}
 
 		if state == State.Update && space == "" {
@@ -180,7 +180,7 @@ func SetIpAddr(dFileConf *SecondaryNodeConfig, state string) ([]string, error) {
 
 		ipAddr, err := shared.ReadFromConsole()
 		if err != nil {
-			return nil, fmt.Errorf("%s %w", logInfo, err)
+			return nil, logger.CreateDetails(logInfo, err)
 		}
 
 		if state == State.Update && ipAddr == "" {
@@ -234,7 +234,7 @@ func SetPort(dFileConf *SecondaryNodeConfig, state string) error {
 
 		httpPort, err := shared.ReadFromConsole()
 		if err != nil {
-			return fmt.Errorf("%s %w", logInfo, err)
+			return logger.CreateDetails(logInfo, err)
 		}
 
 		if state == State.Create && httpPort == "" {
@@ -280,7 +280,7 @@ func ChangeAgreeSendLogs(dFileConf *SecondaryNodeConfig, state string) error {
 	for {
 		agree, err := shared.ReadFromConsole()
 		if err != nil {
-			return fmt.Errorf("%s %w", logInfo, err)
+			return logger.CreateDetails(logInfo, err)
 		}
 
 		if state == State.Update && agree == "" {

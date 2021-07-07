@@ -40,5 +40,5 @@ func Log(msg interface{}) {
 
 func CreateDetails(logInfo string, errMsg error) error {
 	_, _, line, _ := runtime.Caller(1)
-	return fmt.Errorf("%s %w. line: %d", logInfo, errMsg, line)
+	return fmt.Errorf("%s line %d -> %w", logInfo, line, errMsg)
 }
