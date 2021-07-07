@@ -6,6 +6,7 @@ import (
 	"dfile-secondary-node/logger"
 	"dfile-secondary-node/paths"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -134,18 +135,24 @@ func ReadFromConsole() (string, error) {
 
 func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 	const logInfo = "shared.CalcRootHash->"
-	resByte := [][][]byte{}
-	base := [][]byte{}
+
+	arrLen := len(hashArr)
+
+	if arrLen == 0 {
+		return "", nil, logger.CreateDetails(logInfo, errors.New("hash array is empty"))
+	}
+
+	base := make([][]byte, arrLen+1)
 
 	emptyValue, err := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
 	if err != nil {
-		return "", resByte, logger.CreateDetails(logInfo, err)
+		return "", nil, logger.CreateDetails(logInfo, err)
 	}
 
 	for _, v := range hashArr {
 		decoded, err := hex.DecodeString(v)
 		if err != nil {
-			return "", resByte, logger.CreateDetails(logInfo, err)
+			return "", nil, logger.CreateDetails(logInfo, err)
 		}
 		base = append(base, decoded)
 	}
@@ -153,6 +160,8 @@ func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 	if len(base)%2 != 0 {
 		base = append(base, emptyValue)
 	}
+
+	resByte := make([][][]byte, len(base)*2-1)
 
 	resByte = append(resByte, base)
 
