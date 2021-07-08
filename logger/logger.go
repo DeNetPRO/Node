@@ -25,18 +25,20 @@ func Log(msg interface{}) {
 
 	fmt.Println(logMsg)
 
-	url := "http://68.183.215.241:9091/logs/node/"
+	if fmt.Sprintf("%T", msg) == "*errors.errorString" {
+		url := "http://68.183.215.241:9091/logs/node/"
 
-	req, _ := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
+		req, _ := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
 
-	client := &http.Client{Timeout: time.Minute}
+		client := &http.Client{Timeout: time.Minute}
 
-	client.Do(req)
+		client.Do(req)
+	}
 }
 
 // ====================================================================================
 
 func CreateDetails(logInfo string, errMsg error) error {
 	_, _, line, _ := runtime.Caller(1)
-	return fmt.Errorf("%s %w. line: %d", logInfo, errMsg, line)
+	return fmt.Errorf("%s line %d -> %w", logInfo, line, errMsg)
 }
