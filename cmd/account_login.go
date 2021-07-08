@@ -103,7 +103,7 @@ var accountLoginCmd = &cobra.Command{
 
 					dFileConf.IpAddress = ip
 
-					err = config.SaveAndClose(confFile, dFileConf) // we dont't use mutex because race condition while login is impossible
+					err = config.Save(confFile, dFileConf) // we dont't use mutex because race condition while login is impossible
 					if err != nil {
 						logger.Log(logger.CreateDetails(logInfo, err))
 						log.Fatal(ipUpdateFatalError)

@@ -308,7 +308,7 @@ func ChangeAgreeSendLogs(dFileConf *SecondaryNodeConfig, state string) error {
 
 // ====================================================================================
 
-func SaveAndClose(confFile *os.File, dFileConf SecondaryNodeConfig) error {
+func Save(confFile *os.File, dFileConf SecondaryNodeConfig) error {
 	confJSON, err := json.Marshal(dFileConf)
 	if err != nil {
 		return err
@@ -330,11 +330,6 @@ func SaveAndClose(confFile *os.File, dFileConf SecondaryNodeConfig) error {
 	}
 
 	err = confFile.Sync()
-	if err != nil {
-		return err
-	}
-
-	err = confFile.Close()
 	if err != nil {
 		return err
 	}

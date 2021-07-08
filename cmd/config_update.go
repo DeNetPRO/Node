@@ -118,7 +118,7 @@ var configUpdateCmd = &cobra.Command{
 			}
 		}
 
-		err = config.SaveAndClose(confFile, dFileConf) // we dont't use mutex because race condition while config update is impossible
+		err = config.Save(confFile, dFileConf) // we dont't use mutex because race condition while config update is impossible
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			log.Fatal(confUpdateFatalMessage)
