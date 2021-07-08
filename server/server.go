@@ -341,10 +341,10 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	const eightKB = 8192
 
-	oneMBHashes := []string{}
+	oneMBHashes := make([]string, 0, len(reqFiles))
 
 	for _, reqFile := range reqFiles {
-		eightKBHashes := []string{}
+		eightKBHashes := make([]string, 0, 128)
 
 		var buf bytes.Buffer
 
