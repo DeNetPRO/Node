@@ -116,7 +116,7 @@ func Start() {
 
 				if !fsFiles[fileName] {
 					shared.MU.Lock()
-					logger.Log("removing file: " + fileName)
+					logger.Log("removing file: " + fileName + " of " + spAddress)
 					err = os.Remove(filepath.Join(pathToStorProviderFiles, fileName))
 					if err != nil {
 						logger.Log(logger.CreateDetails(logInfo, err))
