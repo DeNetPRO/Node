@@ -454,9 +454,11 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		logger.Log("Saved file:" + reqFile.Filename) //TODO remove
+		logger.Log("Saved file " + reqFile.Filename + "from " + storageProviderAddress[0]) //TODO remove
 
 		newFile.Sync()
+		rqFile.Close()
+		newFile.Close()
 	}
 
 	w.WriteHeader(http.StatusOK)
