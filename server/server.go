@@ -121,8 +121,6 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pathToConfig := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.ConfDirName, "config.json")
-
 	vars := mux.Vars(req)
 	fileSize := vars["size"]
 
@@ -138,6 +136,8 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "file size is 0", 400)
 		return
 	}
+
+	pathToConfig := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.ConfDirName, "config.json")
 
 	shared.MU.Lock()
 	confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)

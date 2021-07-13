@@ -1,6 +1,7 @@
 package cleaner
 
 import (
+	"dfile-secondary-node/config"
 	"dfile-secondary-node/encryption"
 	"dfile-secondary-node/logger"
 	"dfile-secondary-node/paths"
@@ -14,6 +15,8 @@ import (
 	"regexp"
 	"time"
 )
+
+const oneMB = 1048576
 
 func Start() {
 
@@ -55,6 +58,8 @@ func Start() {
 		if len(storageProviderAddresses) == 0 {
 			continue
 		}
+
+		removedTotal := 0
 
 		for _, spAddress := range storageProviderAddresses {
 
@@ -122,10 +127,48 @@ func Start() {
 						logger.Log(logger.CreateDetails(logInfo, err))
 					}
 
+					removedTotal++
+
 					shared.MU.Unlock()
 				}
 			}
 
+		}
+
+		if removedTotal > 0 {
+			pathToConfig := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.ConfDirName, "config.json")
+
+			shared.MU.Lock()
+			confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
+			if err != nil {
+				shared.MU.Unlock()
+				logger.Log(logger.CreateDetails(logInfo, err))
+			}
+			defer confFile.Close()
+
+			fileBytes, err := io.ReadAll(confFile)
+			if err != nil {
+				shared.MU.Unlock()
+				logger.Log(logger.CreateDetails(logInfo, err))
+			}
+
+			var dFileConf config.SecondaryNodeConfig
+
+			err = json.Unmarshal(fileBytes, &dFileConf)
+			if err != nil {
+				shared.MU.Unlock()
+				logger.Log(logger.CreateDetails(logInfo, err))
+			}
+
+			dFileConf.UsedStorageSpace -= int64(removedTotal * oneMB)
+
+			err = config.Save(confFile, dFileConf)
+			if err != nil {
+				shared.MU.Unlock()
+				logger.Log(logger.CreateDetails(logInfo, err))
+			}
+			confFile.Close()
+			shared.MU.Unlock()
 		}
 
 	}
