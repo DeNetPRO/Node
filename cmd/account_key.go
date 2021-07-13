@@ -16,8 +16,8 @@ const showKeyFatalMessage = "Fatal error while extracting private key"
 
 var showKeyCmd = &cobra.Command{
 	Use:   "key",
-	Short: "reveals you the private key",
-	Long:  "reveals you the private key",
+	Short: "discloses your private key",
+	Long:  "discloses your private key",
 	Run: func(cmd *cobra.Command, args []string) {
 		const logInfo = "showKeyCmd->"
 		fmt.Println("Never disclose this key. Anyone with your private keys can steal any assets held in your account")

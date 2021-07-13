@@ -23,7 +23,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const accLoginFatalError = "Fatal error while account log in"
+const accLoginFatalError = "Error while account log in"
 const ipUpdateFatalError = "Couldn't update public ip info"
 
 // accountListCmd represents the list command
@@ -35,6 +35,7 @@ var accountLoginCmd = &cobra.Command{
 		const logInfo = "accountLoginCmd->"
 		etherAccount, password, err := account.ValidateUser()
 		if err != nil {
+			logger.Log(logger.CreateDetails(logInfo, err))
 			log.Fatal(accLoginFatalError)
 		}
 

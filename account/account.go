@@ -193,7 +193,9 @@ func ValidateUser() (*accounts.Account, string, error) {
 		}
 	}
 
-	for {
+	loggedIn := false
+
+	for i := 0; i < 3; i++ {
 		if len(accounts) == 1 {
 			accountAddress = accounts[0]
 		} else {
@@ -245,10 +247,16 @@ func ValidateUser() (*accounts.Account, string, error) {
 
 		etherAccount, err = Login(accountAddress, password)
 		if err != nil {
-			return nil, "", logger.CreateDetails(logInfo, err)
+			logger.CreateDetails(logInfo, err)
+			continue
 		}
 
+		loggedIn = true
 		break
+	}
+
+	if !loggedIn {
+		return nil, "", logger.CreateDetails(logInfo, errors.New("couldn't log in in 3 attempts"))
 	}
 
 	return etherAccount, password, nil
