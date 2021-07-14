@@ -182,31 +182,32 @@ func SetStorageLimit(pathToConfig, state string, dFileConf *SecondaryNodeConfig)
 func SetIpAddr(dFileConf *SecondaryNodeConfig, state string) ([]string, error) {
 	const logInfo = "config.SetIpAddr->"
 
+	var splitIPAddr []string
+
+	if shared.TestMode {
+		ipAddr := shared.TestAddress
+		splitIPAddr := strings.Split(ipAddr, ".")
+		dFileConf.IpAddress = ipAddr
+		return splitIPAddr, nil
+	}
+
 	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
 
-	var splitIPAddr []string
-	var ipAddr string
-	var err error
-
 	for {
-		if shared.TestMode {
-			ipAddr = shared.TestAddress
-		} else {
-			ipAddr, err = shared.ReadFromConsole()
-			if err != nil {
-				return nil, logger.CreateDetails(logInfo, err)
-			}
+		ipAddr, err := shared.ReadFromConsole()
+		if err != nil {
+			return nil, logger.CreateDetails(logInfo, err)
+		}
 
-			if state == State.Update && ipAddr == "" {
-				break
-			}
+		if state == State.Update && ipAddr == "" {
+			break
+		}
 
-			match := regIp.MatchString(ipAddr)
+		match := regIp.MatchString(ipAddr)
 
-			if !match {
-				fmt.Println("Value is incorrect, please try again")
-				continue
-			}
+		if !match {
+			fmt.Println("Value is incorrect, please try again")
+			continue
 		}
 
 		splitIPAddr = strings.Split(ipAddr, ".")
