@@ -339,19 +339,21 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	treeFile.Sync()
 	treeFile.Close()
+	shared.MU.Unlock()
 
-	reqFiles := req.MultipartForm.File["files"]
+	reqFileParts := req.MultipartForm.File["files"]
 
 	const eightKB = 8192
 
-	oneMBHashes := make([]string, 0, len(reqFiles))
+	oneMBHashes := make([]string, 0, len(reqFileParts))
 
-	for _, reqFile := range reqFiles {
+	for _, reqFilePart := range reqFileParts {
+
 		eightKBHashes := make([]string, 0, 128)
 
 		var buf bytes.Buffer
 
-		rqFile, err := reqFile.Open()
+		rqFile, err := reqFilePart.Open()
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			restoreMemoryInfo(pathToConfig, intFileSize)
@@ -385,7 +387,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		if reqFile.Filename != oneMBHash {
+		if reqFilePart.Filename != oneMBHash {
 			err := errors.New("wrong file")
 			logger.Log(logger.CreateDetails(logInfo, err))
 			restoreMemoryInfo(pathToConfig, intFileSize)
@@ -431,8 +433,8 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	count := 1
 	total := len(oneMBHashes)
 
-	for _, reqFile := range reqFiles {
-		rqFile, err := reqFile.Open()
+	for _, reqFilePart := range reqFileParts {
+		rqFile, err := reqFilePart.Open()
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			deleteFileParts(addressPath, oneMBHashes)
@@ -442,7 +444,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		}
 		defer rqFile.Close()
 
-		pathToFile := filepath.Join(addressPath, reqFile.Filename)
+		pathToFile := filepath.Join(addressPath, reqFilePart.Filename)
 
 		newFile, err := os.Create(pathToFile)
 		if err != nil {
@@ -463,7 +465,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		logger.Log("Saved file " + reqFile.Filename + " (" + fmt.Sprint(count) + "/" + fmt.Sprint(total) + ")" + " from " + storageProviderAddress[0]) //TODO remove
+		logger.Log("Saved file " + reqFilePart.Filename + " (" + fmt.Sprint(count) + "/" + fmt.Sprint(total) + ")" + " from " + storageProviderAddress[0]) //TODO remove
 
 		newFile.Sync()
 		rqFile.Close()
@@ -535,7 +537,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fmt.Println("serving file:", fileKey)
+	logger.Log("serving file: " + fileKey)
 
 	http.ServeFile(w, req, pathToFile)
 }
