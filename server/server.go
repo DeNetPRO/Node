@@ -3,12 +3,7 @@ package server
 import (
 	"bytes"
 	"crypto/sha256"
-	"dfile-secondary-node/config"
-	"dfile-secondary-node/encryption"
-	"dfile-secondary-node/logger"
-	"dfile-secondary-node/paths"
-	"dfile-secondary-node/shared"
-	"dfile-secondary-node/upnp"
+
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -21,6 +16,12 @@ import (
 	"sort"
 	"strconv"
 
+	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"

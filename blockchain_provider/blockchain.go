@@ -4,12 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
-	abiPOS "dfile-secondary-node/POS_abi"
-	"dfile-secondary-node/encryption"
-	"dfile-secondary-node/logger"
-	nodeApi "dfile-secondary-node/node_abi"
-	"dfile-secondary-node/paths"
-	"dfile-secondary-node/shared"
+
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -23,6 +18,13 @@ import (
 	"strings"
 	"time"
 
+	nodeAbi "git.denetwork.xyz/dfile/dfile-secondary-node/node_abi"
+
+	abiPOS "git.denetwork.xyz/dfile/dfile-secondary-node/POS_abi"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
@@ -86,7 +88,7 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 		os.Exit(0)
 	}
 
-	node, err := nodeApi.NewNodeNft(common.HexToAddress(NFT), client)
+	node, err := nodeAbi.NewNodeNft(common.HexToAddress(NFT), client)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
@@ -106,9 +108,9 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 
 // ====================================================================================
 
-func GetNodeInfoByID() (nodeApi.SimpleMetaDataDeNetNode, error) {
+func GetNodeInfoByID() (nodeAbi.SimpleMetaDataDeNetNode, error) {
 	const logInfo = "blockchainprovider.GetNodeInfoByID->"
-	var nodeInfo nodeApi.SimpleMetaDataDeNetNode
+	var nodeInfo nodeAbi.SimpleMetaDataDeNetNode
 
 	client, err := ethclient.Dial(ethClientAddr)
 	if err != nil {
@@ -117,7 +119,7 @@ func GetNodeInfoByID() (nodeApi.SimpleMetaDataDeNetNode, error) {
 
 	defer client.Close()
 
-	node, err := nodeApi.NewNodeNft(common.HexToAddress(NFT), client)
+	node, err := nodeAbi.NewNodeNft(common.HexToAddress(NFT), client)
 	if err != nil {
 		return nodeInfo, logger.CreateDetails(logInfo, err)
 	}
@@ -157,7 +159,7 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 
 	defer client.Close()
 
-	node, err := nodeApi.NewNodeNft(common.HexToAddress(NFT), client)
+	node, err := nodeAbi.NewNodeNft(common.HexToAddress(NFT), client)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}

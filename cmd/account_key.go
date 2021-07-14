@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"dfile-secondary-node/account"
-	"dfile-secondary-node/logger"
-	"dfile-secondary-node/paths"
 	"encoding/hex"
 	"fmt"
 	"log"
 
+	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/spf13/cobra"
 )

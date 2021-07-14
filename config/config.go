@@ -2,11 +2,7 @@ package config
 
 import (
 	"context"
-	blockchainprovider "dfile-secondary-node/blockchain_provider"
-	"dfile-secondary-node/logger"
-	"dfile-secondary-node/paths"
-	"dfile-secondary-node/shared"
-	"dfile-secondary-node/upnp"
+
 	"time"
 
 	"encoding/json"
@@ -16,6 +12,12 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 )
 
 type SecondaryNodeConfig struct {

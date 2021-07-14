@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"dfile-secondary-node/account"
-	"dfile-secondary-node/cleaner"
-	"dfile-secondary-node/logger"
-	"dfile-secondary-node/server"
 	"log"
 
+	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/cleaner"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/server"
 	"github.com/spf13/cobra"
 )
 

@@ -1,11 +1,12 @@
 package test
 
 import (
-	"dfile-secondary-node/paths"
-	"dfile-secondary-node/shared"
 	"log"
 	"os"
 	"testing"
+
+	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 )
 
 func TestMain(m *testing.M) {

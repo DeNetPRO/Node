@@ -2,11 +2,7 @@ package cmd
 
 import (
 	"context"
-	"dfile-secondary-node/account"
-	blockchainprovider "dfile-secondary-node/blockchain_provider"
-	"dfile-secondary-node/config"
-	"dfile-secondary-node/logger"
-	"dfile-secondary-node/paths"
+
 	"encoding/json"
 	"fmt"
 	"io"
@@ -15,6 +11,11 @@ import (
 	"path/filepath"
 	"time"
 
+	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
+	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"github.com/spf13/cobra"
 )
 

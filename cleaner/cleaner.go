@@ -1,11 +1,6 @@
 package cleaner
 
 import (
-	"dfile-secondary-node/config"
-	"dfile-secondary-node/encryption"
-	"dfile-secondary-node/logger"
-	"dfile-secondary-node/paths"
-	"dfile-secondary-node/shared"
 	"encoding/hex"
 	"encoding/json"
 	"io"
@@ -14,6 +9,12 @@ import (
 	"path/filepath"
 	"regexp"
 	"time"
+
+	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 )
 
 const oneMB = 1048576

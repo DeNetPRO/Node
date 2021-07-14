@@ -1,16 +1,16 @@
 package cmd
 
 import (
-	"dfile-secondary-node/account"
-	"dfile-secondary-node/cleaner"
-	"dfile-secondary-node/logger"
-	"dfile-secondary-node/server"
-	"dfile-secondary-node/shared"
 	"fmt"
 	"log"
 	"os"
 	"strings"
 
+	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/cleaner"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/server"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )

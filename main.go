@@ -16,11 +16,12 @@ limitations under the License.
 package main
 
 import (
-	"dfile-secondary-node/cmd"
-	"dfile-secondary-node/logger"
-	"dfile-secondary-node/shared"
-	"dfile-secondary-node/upnp"
 	"log"
+
+	"git.denetwork.xyz/dfile/dfile-secondary-node/cmd"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 )
 
 func main() {
