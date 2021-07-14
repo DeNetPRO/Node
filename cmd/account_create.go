@@ -29,33 +29,37 @@ var accountCreateCmd = &cobra.Command{
 		fmt.Println("Password is required for account creation. It can't be restored, please save it in a safe place.")
 		fmt.Println("Please enter your new password: ")
 
-		for {
-			bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
-			if err != nil {
-				logger.Log(logger.CreateDetails(logInfo, err))
-				log.Fatal(accCreateFatalMessage)
+		if !shared.TestMode {
+			for {
+				bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
+				if err != nil {
+					logger.Log(logger.CreateDetails(logInfo, err))
+					log.Fatal(accCreateFatalMessage)
+				}
+				password1 = string(bytePassword)
+
+				if strings.Trim(password1, " ") == "" {
+					fmt.Println("Empty string can't be used as a password. Please enter passwords again.")
+					continue
+				}
+
+				fmt.Println("Enter password again: ")
+				bytePassword, err = term.ReadPassword(int(os.Stdin.Fd()))
+				if err != nil {
+					logger.Log(logger.CreateDetails(logInfo, err))
+					log.Println(accCreateFatalMessage)
+				}
+
+				password2 = string(bytePassword)
+
+				if password1 == password2 {
+					break
+				}
+
+				fmt.Println("Passwords do not match. Please enter passwords again.")
 			}
-			password1 = string(bytePassword)
-
-			if strings.Trim(password1, " ") == "" {
-				fmt.Println("Empty string can't be used as a password. Please enter passwords again.")
-				continue
-			}
-
-			fmt.Println("Enter password again: ")
-			bytePassword, err = term.ReadPassword(int(os.Stdin.Fd()))
-			if err != nil {
-				logger.Log(logger.CreateDetails(logInfo, err))
-				log.Println(accCreateFatalMessage)
-			}
-
-			password2 = string(bytePassword)
-
-			if password1 == password2 {
-				break
-			}
-
-			fmt.Println("Passwords do not match. Please enter passwords again.")
+		} else {
+			password1 = shared.TestPassword
 		}
 
 		password := shared.GetHashPassword(password1)

@@ -24,7 +24,12 @@ type StorageInfo struct {
 }
 
 var (
-	MU sync.Mutex
+	MU           sync.Mutex
+	TestMode     = false
+	TestPassword = "test"
+	TestLimit    = 1
+	TestAddress  = "127.0.0.1"
+	TestPort     = "55050"
 )
 
 func GetAvailableSpace(storagePath string) int {
