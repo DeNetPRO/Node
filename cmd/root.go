@@ -1,8 +1,7 @@
 package cmd
 
 import (
-	"dfile-secondary-node/account"
-
+	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
 	"github.com/spf13/cobra"
 )
 

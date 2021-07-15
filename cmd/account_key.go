@@ -1,13 +1,13 @@
 package cmd
 
 import (
-	"dfile-secondary-node/account"
-	"dfile-secondary-node/logger"
-	"dfile-secondary-node/paths"
 	"encoding/hex"
 	"fmt"
 	"log"
 
+	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/spf13/cobra"
 )
@@ -16,8 +16,8 @@ const showKeyFatalMessage = "Fatal error while extracting private key"
 
 var showKeyCmd = &cobra.Command{
 	Use:   "key",
-	Short: "reveals you the private key",
-	Long:  "reveals you the private key",
+	Short: "discloses your private key",
+	Long:  "discloses your private key",
 	Run: func(cmd *cobra.Command, args []string) {
 		const logInfo = "showKeyCmd->"
 		fmt.Println("Never disclose this key. Anyone with your private keys can steal any assets held in your account")

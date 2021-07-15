@@ -16,14 +16,23 @@ limitations under the License.
 package main
 
 import (
-	"dfile-secondary-node/cmd"
-	"dfile-secondary-node/logger"
-	"dfile-secondary-node/shared"
-	"dfile-secondary-node/upnp"
 	"log"
+	"os"
+
+	"git.denetwork.xyz/dfile/dfile-secondary-node/cmd"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 )
 
+var testMode = "test"
+
 func main() {
+	mode := os.Getenv("MODE")
+	if mode == testMode {
+		shared.TestMode = true
+	}
+
 	err := shared.InitPaths()
 	if err != nil {
 		logger.Log(logger.CreateDetails("main->", err))

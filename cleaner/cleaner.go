@@ -1,10 +1,6 @@
 package cleaner
 
 import (
-	"dfile-secondary-node/encryption"
-	"dfile-secondary-node/logger"
-	"dfile-secondary-node/paths"
-	"dfile-secondary-node/shared"
 	"encoding/hex"
 	"encoding/json"
 	"io"
@@ -13,7 +9,15 @@ import (
 	"path/filepath"
 	"regexp"
 	"time"
+
+	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 )
+
+const oneMB = 1048576
 
 func Start() {
 
@@ -55,6 +59,8 @@ func Start() {
 		if len(storageProviderAddresses) == 0 {
 			continue
 		}
+
+		removedTotal := 0
 
 		for _, spAddress := range storageProviderAddresses {
 
@@ -116,16 +122,54 @@ func Start() {
 
 				if !fsFiles[fileName] {
 					shared.MU.Lock()
-					logger.Log("removing file: " + fileName)
+					logger.Log("removing file: " + fileName + " of " + spAddress)
 					err = os.Remove(filepath.Join(pathToStorProviderFiles, fileName))
 					if err != nil {
 						logger.Log(logger.CreateDetails(logInfo, err))
 					}
 
+					removedTotal++
+
 					shared.MU.Unlock()
 				}
 			}
 
+		}
+
+		if removedTotal > 0 {
+			pathToConfig := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.ConfDirName, "config.json")
+
+			shared.MU.Lock()
+			confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
+			if err != nil {
+				shared.MU.Unlock()
+				logger.Log(logger.CreateDetails(logInfo, err))
+			}
+			defer confFile.Close()
+
+			fileBytes, err := io.ReadAll(confFile)
+			if err != nil {
+				shared.MU.Unlock()
+				logger.Log(logger.CreateDetails(logInfo, err))
+			}
+
+			var dFileConf config.SecondaryNodeConfig
+
+			err = json.Unmarshal(fileBytes, &dFileConf)
+			if err != nil {
+				shared.MU.Unlock()
+				logger.Log(logger.CreateDetails(logInfo, err))
+			}
+
+			dFileConf.UsedStorageSpace -= int64(removedTotal * oneMB)
+
+			err = config.Save(confFile, dFileConf)
+			if err != nil {
+				shared.MU.Unlock()
+				logger.Log(logger.CreateDetails(logInfo, err))
+			}
+			confFile.Close()
+			shared.MU.Unlock()
 		}
 
 	}

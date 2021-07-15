@@ -3,8 +3,7 @@ package shared
 import (
 	"bufio"
 	"crypto/sha256"
-	"dfile-secondary-node/logger"
-	"dfile-secondary-node/paths"
+
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"sync"
 
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"github.com/ricochet2200/go-disk-usage/du"
 )
 
@@ -23,7 +24,12 @@ type StorageInfo struct {
 }
 
 var (
-	MU sync.Mutex
+	MU           sync.Mutex
+	TestMode     = false
+	TestPassword = "test"
+	TestLimit    = 1
+	TestAddress  = "127.0.0.1"
+	TestPort     = "8081"
 )
 
 func GetAvailableSpace(storagePath string) int {

@@ -1,11 +1,6 @@
 package account
 
 import (
-	"dfile-secondary-node/config"
-	"dfile-secondary-node/encryption"
-	"dfile-secondary-node/logger"
-	"dfile-secondary-node/paths"
-	"dfile-secondary-node/shared"
 	"errors"
 	"fmt"
 	"os"
@@ -13,6 +8,11 @@ import (
 	"strconv"
 	"strings"
 
+	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/cmd/utils"
@@ -193,7 +193,9 @@ func ValidateUser() (*accounts.Account, string, error) {
 		}
 	}
 
-	for {
+	loggedIn := false
+
+	for i := 0; i < 3; i++ {
 		if len(accounts) == 1 {
 			accountAddress = accounts[0]
 		} else {
@@ -245,10 +247,16 @@ func ValidateUser() (*accounts.Account, string, error) {
 
 		etherAccount, err = Login(accountAddress, password)
 		if err != nil {
-			return nil, "", logger.CreateDetails(logInfo, err)
+			logger.CreateDetails(logInfo, err)
+			continue
 		}
 
+		loggedIn = true
 		break
+	}
+
+	if !loggedIn {
+		return nil, "", logger.CreateDetails(logInfo, errors.New("couldn't log in in 3 attempts"))
 	}
 
 	return etherAccount, password, nil

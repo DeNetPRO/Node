@@ -6,11 +6,11 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
-	"dfile-secondary-node/logger"
 	"errors"
 	"io"
 	"net"
 
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"github.com/ethereum/go-ethereum/common"
 )
 

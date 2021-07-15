@@ -15,7 +15,9 @@ var accountCmd = &cobra.Command{
 		fmt.Println(`account:
 		account list: lists all accounts that were created
 		account create: creates a new account
-		account login: asks for account address you want to log in and logs you in`)
+		account import: imports your account by private key
+		account login: asks for account address you want to log in and logs you in
+		account key: discloses your private key`)
 	},
 }
 

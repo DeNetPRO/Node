@@ -2,11 +2,7 @@ package config
 
 import (
 	"context"
-	blockchainprovider "dfile-secondary-node/blockchain_provider"
-	"dfile-secondary-node/logger"
-	"dfile-secondary-node/paths"
-	"dfile-secondary-node/shared"
-	"dfile-secondary-node/upnp"
+
 	"time"
 
 	"encoding/json"
@@ -16,6 +12,12 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 )
 
 type SecondaryNodeConfig struct {
@@ -90,16 +92,18 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		return dFileConf, logger.CreateDetails(logInfo, err)
 	}
 
-	fmt.Println("Due to testing stage bug reports from your device are going to be received by developers")
-	fmt.Println("You can stop sending reports by updating config")
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
+	if !shared.TestMode {
+		fmt.Println("Due to testing stage bug reports from your device are going to be received by developers")
+		fmt.Println("You can stop sending reports by updating config")
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
 
-	fmt.Println("Registering node...")
+		fmt.Println("Registering node...")
 
-	err = blockchainprovider.RegisterNode(ctx, address, password, splitIPAddr, dFileConf.HTTPPort)
-	if err != nil {
-		return dFileConf, logger.CreateDetails(logInfo, err)
+		err = blockchainprovider.RegisterNode(ctx, address, password, splitIPAddr, dFileConf.HTTPPort)
+		if err != nil {
+			return dFileConf, logger.CreateDetails(logInfo, err)
+		}
 	}
 
 	confFile, err := os.Create(filepath.Join(pathToConfig, "config.json"))
@@ -130,6 +134,11 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 func SetStorageLimit(pathToConfig, state string, dFileConf *SecondaryNodeConfig) error {
 	const logInfo = "config.SetStorageLimit->"
 	regNum := regexp.MustCompile(("[0-9]+"))
+
+	if shared.TestMode {
+		dFileConf.StorageLimit = shared.TestLimit
+		return nil
+	}
 
 	for {
 		availableSpace := shared.GetAvailableSpace(pathToConfig)
@@ -172,12 +181,19 @@ func SetStorageLimit(pathToConfig, state string, dFileConf *SecondaryNodeConfig)
 
 func SetIpAddr(dFileConf *SecondaryNodeConfig, state string) ([]string, error) {
 	const logInfo = "config.SetIpAddr->"
-	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
 
 	var splitIPAddr []string
 
-	for {
+	if shared.TestMode {
+		ipAddr := shared.TestAddress
+		splitIPAddr := strings.Split(ipAddr, ".")
+		dFileConf.IpAddress = ipAddr
+		return splitIPAddr, nil
+	}
 
+	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
+
+	for {
 		ipAddr, err := shared.ReadFromConsole()
 		if err != nil {
 			return nil, logger.CreateDetails(logInfo, err)
@@ -216,7 +232,6 @@ func SetIpAddr(dFileConf *SecondaryNodeConfig, state string) ([]string, error) {
 		}
 
 		dFileConf.IpAddress = ipAddr
-
 		break
 	}
 
@@ -227,6 +242,12 @@ func SetIpAddr(dFileConf *SecondaryNodeConfig, state string) ([]string, error) {
 
 func SetPort(dFileConf *SecondaryNodeConfig, state string) error {
 	const logInfo = "config.SetPort->"
+
+	if shared.TestMode {
+		dFileConf.HTTPPort = shared.TestPort
+		return nil
+	}
+
 	regPort := regexp.MustCompile("[0-9]+|")
 
 	for {

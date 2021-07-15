@@ -3,12 +3,7 @@ package server
 import (
 	"bytes"
 	"crypto/sha256"
-	"dfile-secondary-node/config"
-	"dfile-secondary-node/encryption"
-	"dfile-secondary-node/logger"
-	"dfile-secondary-node/paths"
-	"dfile-secondary-node/shared"
-	"dfile-secondary-node/upnp"
+
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -21,6 +16,12 @@ import (
 	"sort"
 	"strconv"
 
+	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -114,6 +115,13 @@ func checkSignature(h http.Handler) http.Handler {
 func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	const logInfo = "server.SaveFiles->"
 
+	nodeAddr, err := encryption.DecryptNodeAddr()
+	if err != nil {
+		logger.Log(logger.CreateDetails(logInfo, err))
+		http.Error(w, "Couldn't parse address", 500)
+		return
+	}
+
 	vars := mux.Vars(req)
 	fileSize := vars["size"]
 
@@ -127,13 +135,6 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	if intFileSize == 0 {
 		logger.Log(logger.CreateDetails(logInfo, errors.New("file size is 0")))
 		http.Error(w, "file size is 0", 400)
-		return
-	}
-
-	nodeAddr, err := encryption.DecryptNodeAddr()
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Couldn't parse address", 500)
 		return
 	}
 
@@ -204,15 +205,11 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	reqFiles := req.MultipartForm.File["files"]
 	fs := req.MultipartForm.Value["fs"]
 
-	fsHashes := make([]string, len(fs))
-	copy(fsHashes, fs)
+	sort.Strings(fs)
 
-	sort.Strings(fsHashes)
-
-	fsRootHash, fsTree, err := shared.CalcRootHash(fsHashes)
+	fsRootHash, fsTree, err := shared.CalcRootHash(fs)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
@@ -306,8 +303,10 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
+	shared.MU.Lock()
 	treeFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
 	if err != nil {
+		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
@@ -323,6 +322,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	js, err := json.Marshal(tree)
 	if err != nil {
+		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
@@ -331,6 +331,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	_, err = treeFile.Write(js)
 	if err != nil {
+		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
@@ -338,17 +339,22 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	}
 
 	treeFile.Sync()
+	treeFile.Close()
+	shared.MU.Unlock()
+
+	reqFileParts := req.MultipartForm.File["files"]
 
 	const eightKB = 8192
 
-	oneMBHashes := make([]string, 0, len(reqFiles))
+	oneMBHashes := make([]string, 0, len(reqFileParts))
 
-	for _, reqFile := range reqFiles {
+	for _, reqFilePart := range reqFileParts {
+
 		eightKBHashes := make([]string, 0, 128)
 
 		var buf bytes.Buffer
 
-		rqFile, err := reqFile.Open()
+		rqFile, err := reqFilePart.Open()
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			restoreMemoryInfo(pathToConfig, intFileSize)
@@ -382,7 +388,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		if reqFile.Filename != oneMBHash {
+		if reqFilePart.Filename != oneMBHash {
 			err := errors.New("wrong file")
 			logger.Log(logger.CreateDetails(logInfo, err))
 			restoreMemoryInfo(pathToConfig, intFileSize)
@@ -396,13 +402,13 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	fsContainsFile := false
 
-	var fileRootHash string
+	var wholeFileHash string
 
 	if len(oneMBHashes) == 1 {
-		fileRootHash = oneMBHashes[0]
+		wholeFileHash = oneMBHashes[0]
 	} else {
 		sort.Strings(oneMBHashes)
-		fileRootHash, _, err = shared.CalcRootHash(oneMBHashes)
+		wholeFileHash, _, err = shared.CalcRootHash(oneMBHashes)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			restoreMemoryInfo(pathToConfig, intFileSize)
@@ -411,8 +417,8 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	for _, k := range fs {
-		if k == fileRootHash {
+	for _, fileHash := range fs {
+		if fileHash == wholeFileHash {
 			fsContainsFile = true
 		}
 	}
@@ -425,21 +431,26 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	for _, reqFile := range reqFiles {
-		rqFile, err := reqFile.Open()
+	count := 1
+	total := len(oneMBHashes)
+
+	for _, reqFilePart := range reqFileParts {
+		rqFile, err := reqFilePart.Open()
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
+			deleteFileParts(addressPath, oneMBHashes)
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			http.Error(w, "File saving problem", 500)
 			return
 		}
 		defer rqFile.Close()
 
-		pathToFile := filepath.Join(addressPath, reqFile.Filename)
+		pathToFile := filepath.Join(addressPath, reqFilePart.Filename)
 
 		newFile, err := os.Create(pathToFile)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
+			deleteFileParts(addressPath, oneMBHashes)
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			http.Error(w, "File saving problem", 500)
 			return
@@ -449,20 +460,36 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		_, err = io.Copy(newFile, rqFile)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
+			deleteFileParts(addressPath, oneMBHashes)
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			http.Error(w, "File saving problem", 500)
 			return
 		}
 
-		logger.Log("Saved file " + reqFile.Filename + "from " + storageProviderAddress[0]) //TODO remove
+		logger.Log("Saved file " + reqFilePart.Filename + " (" + fmt.Sprint(count) + "/" + fmt.Sprint(total) + ")" + " from " + storageProviderAddress[0]) //TODO remove
 
 		newFile.Sync()
 		rqFile.Close()
 		newFile.Close()
+
+		count++
 	}
 
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "OK")
+}
+
+// ====================================================================================
+
+func deleteFileParts(addressPath string, fileHashes []string) {
+
+	logger.Log("deleting file parts after error...")
+
+	for _, hash := range fileHashes {
+		pathToFile := filepath.Join(addressPath, hash)
+
+		os.Remove(pathToFile)
+	}
 }
 
 // ====================================================================================
@@ -511,7 +538,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fmt.Println("serving file:", fileKey)
+	logger.Log("serving file: " + fileKey)
 
 	http.ServeFile(w, req, pathToFile)
 }
