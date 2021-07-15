@@ -21,6 +21,7 @@ import (
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/update"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
@@ -475,6 +476,8 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		count++
 	}
 
+	go update.FsInfo(nodeAddr.String(), storageProviderAddress[0], fsRootHash, nonce[0], fs, nonce32, fsRootNonceBytes)
+
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "OK")
 }
@@ -557,6 +560,14 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	addressFromReq := vars["address"]
 	signedFsys := vars["signedFsys"]
+
+	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, addressFromReq)
+
+	_, err = os.Stat(addressPath)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logInfo, errors.New("account not found")))
+		return
+	}
 
 	fsysSignature, err := hex.DecodeString(signedFsys)
 	if err != nil {
@@ -666,8 +677,6 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Wrong signature", http.StatusForbidden)
 		return
 	}
-
-	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, addressFromReq)
 
 	shared.MU.Lock()
 

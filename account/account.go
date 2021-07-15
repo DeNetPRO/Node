@@ -1,6 +1,7 @@
 package account
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"os"
@@ -53,7 +54,7 @@ func Create(password string) (string, config.SecondaryNodeConfig, error) {
 		return "", nodeConf, logger.CreateDetails(logInfo, err)
 	}
 
-	nodeConf, err = initAccount(&etherAccount, password)
+	nodeConf, err = initAccount(ks, &etherAccount, password)
 	if err != nil {
 		return "", nodeConf, logger.CreateDetails(logInfo, err)
 	}
@@ -112,7 +113,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 		return "", nodeConfig, logger.CreateDetails(logInfo, err)
 	}
 
-	nodeConfig, err = initAccount(&etherAccount, password)
+	nodeConfig, err = initAccount(ks, &etherAccount, password)
 	if err != nil {
 		return "", nodeConfig, logger.CreateDetails(logInfo, err)
 	}
@@ -120,27 +121,26 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 	return etherAccount.Address.String(), nodeConfig, nil
 }
 
-//LoadAccount load in memory keystore file and decrypt it for further use
 func Login(blockchainAccountString, password string) (*accounts.Account, error) {
 	const logInfo = "account.Login->"
 	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccounts := ks.Accounts()
 
-	var etherAccount *accounts.Account
+	var account *accounts.Account
 
 	for _, a := range etherAccounts {
 		if blockchainAccountString == a.Address.String() {
-			etherAccount = &a
+			account = &a
 			break
 		}
 	}
 
-	if etherAccount == nil {
+	if account == nil {
 		err := errors.New("Account Not Found Error: cannot find account for " + blockchainAccountString)
 		return nil, logger.CreateDetails(logInfo, err)
 	}
 
-	keyJson, err := ks.Export(*etherAccount, password, password)
+	keyJson, err := ks.Export(*account, password, password)
 	if err != nil {
 		fmt.Println("Wrong password")
 		return nil, logger.CreateDetails(logInfo, err)
@@ -151,14 +151,22 @@ func Login(blockchainAccountString, password string) (*accounts.Account, error) 
 		return nil, logger.CreateDetails(logInfo, err)
 	}
 
-	encryptedAddr, err := encryption.EncryptNodeAddr(key.Address)
+	encryptedAddr, err := encryption.EncryptNodeAddr(account.Address)
 	if err != nil {
 		return nil, logger.CreateDetails(logInfo, err)
 	}
 
 	encryption.NodeAddr = encryptedAddr
 
-	return etherAccount, nil
+	encrForKey := sha256.Sum256([]byte(account.Address.String()))
+	encryptedKey, err := encryption.EncryptAES(encrForKey[:], key.PrivateKey.D.Bytes())
+	if err != nil {
+		return nil, logger.CreateDetails(logInfo, err)
+	}
+
+	encryption.PrivateKey = encryptedKey
+
+	return account, nil
 }
 
 func CheckPassword(password, address string) error {
@@ -262,7 +270,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 	return etherAccount, password, nil
 }
 
-func initAccount(account *accounts.Account, password string) (config.SecondaryNodeConfig, error) {
+func initAccount(ks *keystore.KeyStore, account *accounts.Account, password string) (config.SecondaryNodeConfig, error) {
 	const logInfo = "account.initAccount->"
 	var nodeConf config.SecondaryNodeConfig
 
@@ -278,12 +286,31 @@ func initAccount(account *accounts.Account, password string) (config.SecondaryNo
 		return nodeConf, logger.CreateDetails(logInfo, err)
 	}
 
+	keyJson, err := ks.Export(*account, password, password)
+	if err != nil {
+		fmt.Println("Wrong password")
+		return nodeConf, logger.CreateDetails(logInfo, err)
+	}
+
+	key, err := keystore.DecryptKey(keyJson, password)
+	if err != nil {
+		return nodeConf, logger.CreateDetails(logInfo, err)
+	}
+
 	encryptedAddr, err := encryption.EncryptNodeAddr(account.Address)
 	if err != nil {
 		return nodeConf, logger.CreateDetails(logInfo, err)
 	}
 
 	encryption.NodeAddr = encryptedAddr
+
+	encrForKey := sha256.Sum256([]byte(account.Address.String()))
+	encryptedKey, err := encryption.EncryptAES(encrForKey[:], key.PrivateKey.D.Bytes())
+	if err != nil {
+		return nodeConf, logger.CreateDetails(logInfo, err)
+	}
+
+	encryption.PrivateKey = encryptedKey
 
 	nodeConf, err = config.Create(addressString, password)
 	if err != nil {

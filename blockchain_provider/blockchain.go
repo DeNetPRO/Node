@@ -18,11 +18,10 @@ import (
 	"strings"
 	"time"
 
-	nodeAbi "git.denetwork.xyz/dfile/dfile-secondary-node/node_abi"
-
 	abiPOS "git.denetwork.xyz/dfile/dfile-secondary-node/POS_abi"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	nodeAbi "git.denetwork.xyz/dfile/dfile-secondary-node/node_abi"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -130,6 +129,30 @@ func GetNodeInfoByID() (nodeAbi.SimpleMetaDataDeNetNode, error) {
 	}
 
 	return nodeInfo, nil
+}
+
+// ====================================================================================
+
+func GetNodeNFT() (*nodeAbi.NodeNft, error) {
+	const logInfo = "blockchainprovider.getNodeNFT->"
+
+	nftAddr := common.HexToAddress("0xBfAfdaE6B77a02A4684D39D1528c873961528342")
+
+	// https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2
+
+	client, err := ethclient.Dial("https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f")
+	if err != nil {
+		return nil, logger.CreateDetails(logInfo, err)
+	}
+
+	defer client.Close()
+
+	node, err := nodeAbi.NewNodeNft(nftAddr, client)
+	if err != nil {
+		return nil, logger.CreateDetails(logInfo, err)
+	}
+
+	return node, err
 }
 
 // ====================================================================================
@@ -329,11 +352,13 @@ func StartMining(password string) {
 				storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
+					continue
 				}
 
 				storedFileBytes, err := io.ReadAll(storedFile)
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
+					continue
 				}
 
 				storedFile.Close()
@@ -344,6 +369,7 @@ func StartMining(password string) {
 				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum))
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
+					continue
 				}
 
 				fileBytesAddrBlockHash := append(storedFileBytes, nodeAddr.Bytes()...)
@@ -358,11 +384,13 @@ func StartMining(password string) {
 				decodedBigInt, err := hexutil.DecodeBig("0x" + stringFileAddrBlock)
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
+					continue
 				}
 
 				baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
+					continue
 				}
 
 				remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
@@ -375,7 +403,7 @@ func StartMining(password string) {
 
 				if remainderIsLessUserDifficulty {
 					fmt.Println("checking file:", fileName)
-					fmt.Println("Sending proof of", fileName, "for reward:", reward)
+					fmt.Println("Trying proof", fileName, "for reward:", reward)
 					err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress, blockNum)
 					if err != nil {
 						logger.Log(logger.CreateDetails(logInfo, err))
@@ -517,8 +545,6 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
-
-	fmt.Println("Got some cash 0_o")
 
 	return nil
 }

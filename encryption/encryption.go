@@ -15,12 +15,13 @@ import (
 )
 
 var (
-	NodeAddr []byte
+	NodeAddr   []byte
+	PrivateKey []byte
 )
 
 // ====================================================================================
 
-func encryptAES(key, data []byte) ([]byte, error) {
+func EncryptAES(key, data []byte) ([]byte, error) {
 	const logInfo = "shared.encryptAES->"
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -46,7 +47,7 @@ func encryptAES(key, data []byte) ([]byte, error) {
 
 // ====================================================================================
 
-func decryptAES(key, data []byte) ([]byte, error) {
+func DecryptAES(key, data []byte) ([]byte, error) {
 	const logInfo = "shared.decryptAES->"
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -98,7 +99,7 @@ func EncryptNodeAddr(addr common.Address) ([]byte, error) {
 
 	encrKey := sha256.Sum256([]byte(macAddr))
 
-	encryptedAddr, err := encryptAES(encrKey[:], addr.Bytes())
+	encryptedAddr, err := EncryptAES(encrKey[:], addr.Bytes())
 	if err != nil {
 		return nodeAddr, logger.CreateDetails(logInfo, err)
 	}
@@ -109,7 +110,9 @@ func EncryptNodeAddr(addr common.Address) ([]byte, error) {
 // ====================================================================================
 
 func DecryptNodeAddr() (common.Address, error) {
+
 	const logInfo = "shared.DecryptNodeAddr->"
+
 	var nodeAddr common.Address
 
 	if len(NodeAddr) == 0 {
@@ -123,7 +126,7 @@ func DecryptNodeAddr() (common.Address, error) {
 
 	encrKey := sha256.Sum256([]byte(macAddr))
 
-	accAddr, err := decryptAES(encrKey[:], NodeAddr)
+	accAddr, err := DecryptAES(encrKey[:], NodeAddr)
 	if err != nil {
 		return nodeAddr, logger.CreateDetails(logInfo, err)
 	}
