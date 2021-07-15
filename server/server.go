@@ -43,7 +43,7 @@ func Start(address, port string) {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/upload/{size}", SaveFiles).Methods("POST")
-	r.HandleFunc("/download/{address}/{fileKey}/{signature}", ServeFiles).Methods("GET")
+	r.HandleFunc("/download/{spAddress}/{senderAddress}/{fileKey}/{signature}", ServeFiles).Methods("GET")
 	r.HandleFunc("/update_fs/{address}/{signedFsys}", updateFsInfo).Methods("POST")
 
 	corsOpts := cors.New(cors.Options{
@@ -559,10 +559,11 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	}
 
 	vars := mux.Vars(req)
-	addressFromReq := vars["address"]
+	spAddress := vars["spAddress"]
+	senderAddress := vars["senderAddress"]
 	signedFsys := vars["signedFsys"]
 
-	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, addressFromReq)
+	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress)
 
 	_, err = os.Stat(addressPath)
 	if err != nil {
@@ -633,7 +634,7 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
-	if addressFromReq != signatureAddress.String() {
+	if spAddress != signatureAddress.String() {
 		logger.Log(logger.CreateDetails(logInfo, errors.New("wrong signature")))
 		http.Error(w, "Wrong signature", http.StatusForbidden)
 		return
@@ -673,7 +674,7 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	signatureAddress = crypto.PubkeyToAddress(*sigPublicKey)
 
-	if addressFromReq != signatureAddress.String() {
+	if senderAddress != signatureAddress.String() {
 		logger.Log(logger.CreateDetails(logInfo, errors.New("wrong signature")))
 		http.Error(w, "Wrong signature", http.StatusForbidden)
 		return

@@ -94,7 +94,7 @@ func FsInfo(senderNodeAddr, storageAddr, fsRootHash, nonce string, fsHashes []st
 
 		stringIP := getNodeIP(node)
 
-		url := "http://" + stringIP + fmt.Sprint("/update_fs/", storageAddr, "/", hex.EncodeToString(signedFSTree))
+		url := "http://" + stringIP + fmt.Sprint("/update_fs/", storageAddr, "/", senderNodeAddr, "/", hex.EncodeToString(signedFSTree))
 
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(updatedFsJson))
 		if err != nil {
