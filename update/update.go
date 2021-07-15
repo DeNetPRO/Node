@@ -108,11 +108,15 @@ func FsInfo(senderNodeAddr, storageAddr, fsRootHash, nonce string, fsHashes []st
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 		}
-		defer resp.Body.Close()
 
-		if resp.Status != "200 OK" {
-			logger.Log(logger.CreateDetails(logInfo, errors.New("fs wasn't updated")))
+		if resp != nil {
+			defer resp.Body.Close()
+
+			if resp.Status != "200 OK" {
+				logger.Log(logger.CreateDetails(logInfo, errors.New("fs wasn't updated")))
+			}
 		}
+
 	}
 
 }
