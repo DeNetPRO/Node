@@ -380,7 +380,7 @@ func StartMining(password string) {
 
 				if remainderIsLessUserDifficulty {
 					fmt.Println("checking file:", fileName)
-					fmt.Println("Sending proof of", fileName, "for reward:", reward)
+					fmt.Println("Trying proof", fileName, "for reward:", reward)
 					err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress, blockNum)
 					if err != nil {
 						logger.Log(logger.CreateDetails(logInfo, err))
@@ -522,8 +522,6 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
-
-	fmt.Println("Got some cash 0_o")
 
 	return nil
 }
