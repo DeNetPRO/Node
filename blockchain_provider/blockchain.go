@@ -404,7 +404,7 @@ func StartMining(password string) {
 				if remainderIsLessUserDifficulty {
 					fmt.Println("checking file:", fileName)
 					fmt.Println("Trying proof", fileName, "for reward:", reward)
-					err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress, blockNum)
+					err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress)
 					if err != nil {
 						logger.Log(logger.CreateDetails(logInfo, err))
 						break
@@ -465,7 +465,7 @@ func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.
 
 // ====================================================================================
 
-func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte, nodeAddr common.Address, spAddress string, blockNum uint64) error {
+func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte, nodeAddr common.Address, spAddress string) error {
 	const logInfo = "blockchainprovider.sendProof->"
 	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, "tree.json")
 
@@ -531,7 +531,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	opts, _, err := initTrxOpts(ctx, client, nodeAddr, password)
+	opts, blockNum, err := initTrxOpts(ctx, client, nodeAddr, password)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
@@ -541,7 +541,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), proof[len(proof)-1], uint64(intNonce), signedFSRootHash[:64], bytesToProve, proof)
+	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum-1), proof[len(proof)-1], uint64(intNonce), signedFSRootHash[:64], bytesToProve, proof)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
