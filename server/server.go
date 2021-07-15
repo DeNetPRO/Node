@@ -558,6 +558,14 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	addressFromReq := vars["address"]
 	signedFsys := vars["signedFsys"]
 
+	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, addressFromReq)
+
+	_, err = os.Stat(addressPath)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logInfo, errors.New("account not found")))
+		return
+	}
+
 	fsysSignature, err := hex.DecodeString(signedFsys)
 	if err != nil {
 		http.Error(w, "Wrong signature", 400)
@@ -666,8 +674,6 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Wrong signature", http.StatusForbidden)
 		return
 	}
-
-	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, addressFromReq)
 
 	shared.MU.Lock()
 
