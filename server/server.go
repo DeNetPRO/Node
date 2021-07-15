@@ -21,6 +21,7 @@ import (
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/update"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
@@ -474,6 +475,8 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 		count++
 	}
+
+	go update.FsInfo(nodeAddr.String(), storageProviderAddress[0], fsRootHash, nonce[0], fs, nonce32, fsRootNonceBytes)
 
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "OK")

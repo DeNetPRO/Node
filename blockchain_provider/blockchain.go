@@ -18,11 +18,10 @@ import (
 	"strings"
 	"time"
 
-	nodeAbi "git.denetwork.xyz/dfile/dfile-secondary-node/node_abi"
-
 	abiPOS "git.denetwork.xyz/dfile/dfile-secondary-node/POS_abi"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	nodeAbi "git.denetwork.xyz/dfile/dfile-secondary-node/node_abi"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -130,6 +129,30 @@ func GetNodeInfoByID() (nodeAbi.SimpleMetaDataDeNetNode, error) {
 	}
 
 	return nodeInfo, nil
+}
+
+// ====================================================================================
+
+func GetNodeNFT() (*nodeAbi.NodeNft, error) {
+	const logInfo = "blockchainprovider.getNodeNFT->"
+
+	nftAddr := common.HexToAddress("0xBfAfdaE6B77a02A4684D39D1528c873961528342")
+
+	// https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2
+
+	client, err := ethclient.Dial("https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f")
+	if err != nil {
+		return nil, logger.CreateDetails(logInfo, err)
+	}
+
+	defer client.Close()
+
+	node, err := nodeAbi.NewNodeNft(nftAddr, client)
+	if err != nil {
+		return nil, logger.CreateDetails(logInfo, err)
+	}
+
+	return node, err
 }
 
 // ====================================================================================
