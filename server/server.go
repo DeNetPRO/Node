@@ -476,6 +476,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		count++
 	}
 
+	fs = req.MultipartForm.Value["fs"] // unsorted fs
 	go update.FsInfo(nodeAddr.String(), storageProviderAddress[0], fsRootHash, nonce[0], fs, nonce32, fsRootNonceBytes)
 
 	w.WriteHeader(http.StatusOK)
