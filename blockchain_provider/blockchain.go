@@ -261,9 +261,7 @@ func StartMining(password string) {
 			continue
 		}
 
-		blockNum = blockNum - uint64(1)
-
-		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
+		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum-1)))
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			continue
@@ -366,7 +364,7 @@ func StartMining(password string) {
 
 				ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
 
-				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum))
+				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-1))
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
 					continue
