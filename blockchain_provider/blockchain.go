@@ -329,11 +329,13 @@ func StartMining(password string) {
 				storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
+					continue
 				}
 
 				storedFileBytes, err := io.ReadAll(storedFile)
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
+					continue
 				}
 
 				storedFile.Close()
@@ -344,6 +346,7 @@ func StartMining(password string) {
 				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum))
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
+					continue
 				}
 
 				fileBytesAddrBlockHash := append(storedFileBytes, nodeAddr.Bytes()...)
@@ -358,11 +361,13 @@ func StartMining(password string) {
 				decodedBigInt, err := hexutil.DecodeBig("0x" + stringFileAddrBlock)
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
+					continue
 				}
 
 				baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
+					continue
 				}
 
 				remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
