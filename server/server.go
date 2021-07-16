@@ -636,6 +636,7 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	if newNonceInt < currentNonceInt {
 		logger.Log(spAddress + " fs info is up to date")
+		http.Error(w, httpErrorMsg, 400)
 		return
 	}
 

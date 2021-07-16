@@ -104,10 +104,7 @@ func FsInfo(senderNodeAddr, storageAddr, signedFsRootHash, nonce string, fsHashe
 		client := &http.Client{}
 
 		go func(req *http.Request, stringIP string) {
-			resp, err := client.Do(req)
-			if err != nil {
-				logger.Log(logger.CreateDetails(logInfo, err))
-			}
+			resp, _ := client.Do(req)
 
 			if resp != nil {
 				defer resp.Body.Close()
