@@ -18,7 +18,7 @@ import (
 )
 
 type StorageProviderFs struct {
-	Nonce        int        `json:"nonce"`
+	Nonce        string     `json:"nonce"`
 	SignedFsRoot string     `json:"signedFsRoot"`
 	Tree         [][][]byte `json:"tree"`
 }

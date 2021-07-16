@@ -229,7 +229,7 @@ func StartMining(password string) {
 
 	for {
 		fmt.Println("Sleeping...")
-		time.Sleep(time.Minute * 10)
+		time.Sleep(time.Minute * 2)
 		storageProviderAddresses := []string{}
 		err = filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
@@ -343,7 +343,7 @@ func StartMining(password string) {
 
 			for _, fileName := range fileNames {
 
-				time.Sleep(time.Minute)
+				time.Sleep(time.Second * 5)
 
 				shared.MU.Lock()
 
@@ -534,7 +534,12 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum-1), proof[len(proof)-1], uint64(spFs.Nonce), signedFSRootHash[:64], bytesToProve, proof)
+	nonceInt, err := strconv.Atoi(spFs.Nonce)
+	if err != nil {
+		return logger.CreateDetails(logInfo, err)
+	}
+
+	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum-1), proof[len(proof)-1], uint64(nonceInt), signedFSRootHash[:64], bytesToProve, proof)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}

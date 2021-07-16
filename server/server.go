@@ -316,7 +316,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	defer treeFile.Close()
 
 	tree := shared.StorageProviderFs{
-		Nonce:        nonceInt,
+		Nonce:        nonce[0],
 		SignedFsRoot: signedFsRootHash[0],
 		Tree:         fsTree,
 	}
@@ -476,8 +476,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		count++
 	}
 
-	fs = req.MultipartForm.Value["fs"] // unsorted fs
-	go update.FsInfo(nodeAddr.String(), storageProviderAddress[0], fsRootHash, nonce[0], fs, nonce32, fsRootNonceBytes)
+	go update.FsInfo(nodeAddr.String(), storageProviderAddress[0], signedFsRootHash[0], nonce[0], fs, nonce32, fsRootNonceBytes)
 
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "OK")
@@ -628,7 +627,14 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if newNonceInt < spFs.Nonce {
+	currentNonceInt, err := strconv.Atoi(spFs.Nonce)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logInfo, err))
+		http.Error(w, httpErrorMsg, 400)
+		return
+	}
+
+	if newNonceInt < currentNonceInt {
 		logger.Log(spAddress + " fs info is up to date")
 		return
 	}
@@ -672,7 +678,7 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
-	if spAddress != signatureAddress.String() {
+	if senderAddress != signatureAddress.String() {
 		logger.Log(logger.CreateDetails(logInfo, errors.New("wrong signature")))
 		http.Error(w, "Wrong signature", http.StatusForbidden)
 		return
@@ -712,7 +718,11 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	signatureAddress = crypto.PubkeyToAddress(*sigPublicKey)
 
-	if senderAddress != signatureAddress.String() {
+	fmt.Println(spAddress)
+	fmt.Println(senderAddress)
+	fmt.Println(signatureAddress.String())
+
+	if spAddress != signatureAddress.String() {
 		logger.Log(logger.CreateDetails(logInfo, errors.New("wrong signature")))
 		http.Error(w, "Wrong signature", http.StatusForbidden)
 		return
@@ -730,7 +740,7 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	defer spFsFile.Close()
 
 	spFs = shared.StorageProviderFs{
-		Nonce:        newNonceInt,
+		Nonce:        updatedFs.Nonce,
 		SignedFsRoot: updatedFs.SignedFsRootHash,
 		Tree:         fsTree,
 	}
