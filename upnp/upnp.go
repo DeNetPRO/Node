@@ -30,7 +30,6 @@ func Init() {
 
 	device, err := initDevice()
 	if err != nil {
-		fmt.Println(err)
 		fmt.Println("Warn: manual port forwarding may be needed")
 	}
 
