@@ -27,7 +27,7 @@ type UpdatedFsInfo struct {
 	SignedFsRootHash string
 }
 
-func FsInfo(senderNodeAddr, storageAddr, signedFsRootHash, nonce string, fsHashes []string, nonce32, fsRootNonceBytes []byte) {
+func FsInfo(senderNodeAddr, storageAddr, signedFsRootHash, nonce string, fsHashes []string, nonce32 []byte) {
 
 	const logInfo = "update.FsInfo->"
 

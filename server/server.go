@@ -305,7 +305,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	}
 
 	shared.MU.Lock()
-	treeFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
+	spFsFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -313,15 +313,15 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "File saving problem", 500)
 		return
 	}
-	defer treeFile.Close()
+	defer spFsFile.Close()
 
-	tree := shared.StorageProviderFs{
+	spFs := shared.StorageProviderFs{
 		Nonce:        nonce[0],
 		SignedFsRoot: signedFsRootHash[0],
 		Tree:         fsTree,
 	}
 
-	js, err := json.Marshal(tree)
+	js, err := json.Marshal(spFs)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -330,7 +330,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	_, err = treeFile.Write(js)
+	_, err = spFsFile.Write(js)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -339,8 +339,8 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	treeFile.Sync()
-	treeFile.Close()
+	spFsFile.Sync()
+	spFsFile.Close()
 	shared.MU.Unlock()
 
 	reqFileParts := req.MultipartForm.File["files"]
@@ -476,7 +476,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		count++
 	}
 
-	go update.FsInfo(nodeAddr.String(), storageProviderAddress[0], signedFsRootHash[0], nonce[0], fs, nonce32, fsRootNonceBytes)
+	go update.FsInfo(nodeAddr.String(), storageProviderAddress[0], signedFsRootHash[0], nonce[0], fs, nonce32)
 
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "OK")

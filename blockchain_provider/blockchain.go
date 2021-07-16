@@ -92,7 +92,7 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	opts, _, err := initTrxOpts(ctx, client, nodeAddr, password)
+	opts, err := initTrxOpts(ctx, client, nodeAddr, password, blockNum)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
@@ -187,7 +187,12 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	opts, _, err := initTrxOpts(ctx, client, nodeAddr, password)
+	blockNum, err := client.BlockNumber(ctx)
+	if err != nil {
+		return logger.CreateDetails(logInfo, err)
+	}
+
+	opts, err := initTrxOpts(ctx, client, nodeAddr, password, blockNum)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
@@ -229,7 +234,7 @@ func StartMining(password string) {
 
 	for {
 		fmt.Println("Sleeping...")
-		time.Sleep(time.Minute * 2)
+		time.Sleep(time.Minute * 10)
 		storageProviderAddresses := []string{}
 		err = filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
@@ -364,6 +369,12 @@ func StartMining(password string) {
 
 				ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
 
+				blockNum, err := client.BlockNumber(ctx)
+				if err != nil {
+					logger.Log(logger.CreateDetails(logInfo, err))
+					continue
+				}
+
 				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-1))
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
@@ -402,7 +413,7 @@ func StartMining(password string) {
 				if remainderIsLessUserDifficulty {
 					fmt.Println("checking file:", fileName)
 					fmt.Println("Trying proof", fileName, "for reward:", reward)
-					err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress)
+					err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress, blockNum)
 					if err != nil {
 						logger.Log(logger.CreateDetails(logInfo, err))
 						break
@@ -415,55 +426,8 @@ func StartMining(password string) {
 
 // ====================================================================================
 
-func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.Address, password string) (*bind.TransactOpts, uint64, error) {
-	const logInfo = "blockchainprovider.initTrxOpts->"
-
-	blockNum, err := client.BlockNumber(ctx)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-	}
-
-	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum-1)))
-	if err != nil {
-		return nil, 0, logger.CreateDetails(logInfo, err)
-	}
-
-	chnID, err := client.ChainID(ctx)
-	if err != nil {
-		return nil, 0, logger.CreateDetails(logInfo, err)
-	}
-
-	opts := &bind.TransactOpts{
-		From:  nodeAddr,
-		Nonce: big.NewInt(int64(transactNonce)),
-		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
-			ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
-			acs := ks.Accounts()
-			for _, ac := range acs {
-				if ac.Address == a {
-					ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
-					err := ks.TimedUnlock(ac, password, 1)
-					if err != nil {
-						return t, err
-					}
-					return ks.SignTx(ac, t, chnID)
-				}
-			}
-			return t, nil
-		},
-		Value:    big.NewInt(0),
-		GasPrice: big.NewInt(1000000000),
-		GasLimit: 1000000,
-		Context:  ctx,
-		NoSend:   false,
-	}
-
-	return opts, blockNum, nil
-}
-
-// ====================================================================================
-
-func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte, nodeAddr common.Address, spAddress string) error {
+func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte,
+	nodeAddr common.Address, spAddress string, blockNum uint64) error {
 	const logInfo = "blockchainprovider.sendProof->"
 	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, "tree.json")
 
@@ -529,7 +493,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	opts, blockNum, err := initTrxOpts(ctx, client, nodeAddr, password)
+	opts, err := initTrxOpts(ctx, client, nodeAddr, password, blockNum)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
@@ -539,12 +503,55 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum-1), proof[len(proof)-1], uint64(nonceInt), signedFSRootHash[:64], bytesToProve, proof)
+	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), proof[len(proof)-1], uint64(nonceInt), signedFSRootHash[:64], bytesToProve, proof)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
 
 	return nil
+}
+
+// ====================================================================================
+
+func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.Address, password string, blockNum uint64) (*bind.TransactOpts, error) {
+	const logInfo = "blockchainprovider.initTrxOpts->"
+
+	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
+	if err != nil {
+		return nil, logger.CreateDetails(logInfo, err)
+	}
+
+	chnID, err := client.ChainID(ctx)
+	if err != nil {
+		return nil, logger.CreateDetails(logInfo, err)
+	}
+
+	opts := &bind.TransactOpts{
+		From:  nodeAddr,
+		Nonce: big.NewInt(int64(transactNonce)),
+		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
+			ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+			acs := ks.Accounts()
+			for _, ac := range acs {
+				if ac.Address == a {
+					ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+					err := ks.TimedUnlock(ac, password, 1)
+					if err != nil {
+						return t, err
+					}
+					return ks.SignTx(ac, t, chnID)
+				}
+			}
+			return t, nil
+		},
+		Value:    big.NewInt(0),
+		GasPrice: big.NewInt(1000000000),
+		GasLimit: 1000000,
+		Context:  ctx,
+		NoSend:   false,
+	}
+
+	return opts, nil
 }
 
 // ====================================================================================
