@@ -103,7 +103,7 @@ func FsInfo(senderNodeAddr, storageAddr, signedFsRootHash, nonce string, fsHashe
 
 		client := &http.Client{}
 
-		go func(req *http.Request) {
+		go func(req *http.Request, stringIP string) {
 			resp, err := client.Do(req)
 			if err != nil {
 				logger.Log(logger.CreateDetails(logInfo, err))
@@ -113,10 +113,10 @@ func FsInfo(senderNodeAddr, storageAddr, signedFsRootHash, nonce string, fsHashe
 				defer resp.Body.Close()
 
 				if resp.Status != "200 OK" {
-					logger.Log(logger.CreateDetails(logInfo, errors.New("fs wasn't updated")))
+					logger.Log(logger.CreateDetails(logInfo, errors.New(stringIP+" fs wasn't updated")))
 				}
 			}
-		}(req)
+		}(req, stringIP)
 
 	}
 
