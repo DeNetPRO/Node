@@ -95,7 +95,10 @@ func FsInfo(senderNodeAddr, storageAddr, fsRootHash, nonce string, fsHashes []st
 
 		stringIP := getNodeIP(node)
 
+		fmt.Println(account.NodeIpAddr, "--->", stringIP)
+
 		if stringIP == account.NodeIpAddr {
+			fmt.Println("skipping", stringIP)
 			continue
 		}
 
@@ -109,18 +112,21 @@ func FsInfo(senderNodeAddr, storageAddr, fsRootHash, nonce string, fsHashes []st
 		req.Header.Set("Content-Type", "application/json")
 
 		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-		}
 
-		if resp != nil {
-			defer resp.Body.Close()
-
-			if resp.Status != "200 OK" {
-				logger.Log(logger.CreateDetails(logInfo, errors.New("fs wasn't updated")))
+		go func(req *http.Request) {
+			resp, err := client.Do(req)
+			if err != nil {
+				logger.Log(logger.CreateDetails(logInfo, err))
 			}
-		}
+
+			if resp != nil {
+				defer resp.Body.Close()
+
+				if resp.Status != "200 OK" {
+					logger.Log(logger.CreateDetails(logInfo, errors.New("fs wasn't updated")))
+				}
+			}
+		}(req)
 
 	}
 
