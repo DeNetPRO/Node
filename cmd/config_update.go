@@ -46,7 +46,7 @@ var configUpdateCmd = &cobra.Command{
 		pathToConfigDir := filepath.Join(paths.AccsDirPath, etherAccount.Address.String(), paths.ConfDirName)
 		pathToConfigFile := filepath.Join(pathToConfigDir, "config.json")
 
-		var dFileConf config.SecondaryNodeConfig
+		var nodeConfig config.SecondaryNodeConfig
 
 		confFile, err := os.OpenFile(pathToConfigFile, os.O_RDWR, 0700)
 		if err != nil {
@@ -61,17 +61,17 @@ var configUpdateCmd = &cobra.Command{
 			log.Fatal(confUpdateFatalMessage)
 		}
 
-		err = json.Unmarshal(fileBytes, &dFileConf)
+		err = json.Unmarshal(fileBytes, &nodeConfig)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
-		stateBefore := dFileConf
+		stateBefore := nodeConfig
 
 		fmt.Println("Please enter disk space for usage in GB (should be positive number), or just press enter button to skip")
 
-		err = config.SetStorageLimit(pathToConfigDir, config.State.Update, &dFileConf)
+		err = config.SetStorageLimit(pathToConfigDir, config.State.Update, &nodeConfig)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			log.Fatal(confUpdateFatalMessage)
@@ -79,7 +79,7 @@ var configUpdateCmd = &cobra.Command{
 
 		fmt.Println("Please enter new ip address, or just press enter button to skip")
 
-		splitIPAddr, err := config.SetIpAddr(&dFileConf, config.State.Update)
+		splitIPAddr, err := config.SetIpAddr(&nodeConfig, config.State.Update)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			log.Fatal(confUpdateFatalMessage)
@@ -87,7 +87,7 @@ var configUpdateCmd = &cobra.Command{
 
 		fmt.Println("Please enter new http port number, or just press enter button to skip")
 
-		err = config.SetPort(&dFileConf, config.State.Update)
+		err = config.SetPort(&nodeConfig, config.State.Update)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			log.Fatal(confUpdateFatalMessage)
@@ -95,31 +95,31 @@ var configUpdateCmd = &cobra.Command{
 
 		fmt.Println("Do you want to send bug reports to developers? [y/n] (or just press enter button to skip)")
 
-		err = config.ChangeAgreeSendLogs(&dFileConf, config.State.Update)
+		err = config.ChangeAgreeSendLogs(&nodeConfig, config.State.Update)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
-		if stateBefore.IpAddress == dFileConf.IpAddress &&
-			stateBefore.HTTPPort == dFileConf.HTTPPort &&
-			stateBefore.StorageLimit == dFileConf.StorageLimit &&
-			stateBefore.AgreeSendLogs == dFileConf.AgreeSendLogs {
+		if stateBefore.IpAddress == nodeConfig.IpAddress &&
+			stateBefore.HTTPPort == nodeConfig.HTTPPort &&
+			stateBefore.StorageLimit == nodeConfig.StorageLimit &&
+			stateBefore.AgreeSendLogs == nodeConfig.AgreeSendLogs {
 			fmt.Println("Nothing was changed")
 			return
 		}
 
-		if stateBefore.IpAddress != dFileConf.IpAddress || stateBefore.HTTPPort != dFileConf.HTTPPort {
+		if stateBefore.IpAddress != nodeConfig.IpAddress || stateBefore.HTTPPort != nodeConfig.HTTPPort {
 			ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
-			err := blockchainprovider.UpdateNodeInfo(ctx, etherAccount.Address, password, dFileConf.HTTPPort, splitIPAddr)
+			err := blockchainprovider.UpdateNodeInfo(ctx, etherAccount.Address, password, nodeConfig.HTTPPort, splitIPAddr)
 			if err != nil {
 				logger.Log(logger.CreateDetails(logInfo, err))
 				log.Fatal(confUpdateFatalMessage)
 			}
 		}
 
-		err = config.Save(confFile, dFileConf) // we dont't use mutex because race condition while config update is impossible
+		err = config.Save(confFile, nodeConfig) // we dont't use mutex because race condition while config update is impossible
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			log.Fatal(confUpdateFatalMessage)

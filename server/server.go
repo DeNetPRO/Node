@@ -38,7 +38,7 @@ const gbBytes = int64(1024 * 1024 * 1024)
 const oneHunderdMBBytes = int64(1024 * 1024 * 100)
 const serverStartFatalMessage = "Couldn't start server"
 
-func Start(address, port string) {
+func Start(port string) {
 	const logInfo = "server.Start->"
 	r := mux.NewRouter()
 
@@ -159,9 +159,9 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var dFileConf config.SecondaryNodeConfig
+	var nodeConfig config.SecondaryNodeConfig
 
-	err = json.Unmarshal(fileBytes, &dFileConf)
+	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -169,11 +169,11 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	sharedSpaceInBytes := int64(dFileConf.StorageLimit) * gbBytes
+	sharedSpaceInBytes := int64(nodeConfig.StorageLimit) * gbBytes
 
-	dFileConf.UsedStorageSpace += int64(intFileSize)
+	nodeConfig.UsedStorageSpace += int64(intFileSize)
 
-	if dFileConf.UsedStorageSpace > sharedSpaceInBytes {
+	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
 		shared.MU.Unlock()
 		err := errors.New("insufficient memory avaliable")
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -181,14 +181,14 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	avaliableSpaceLeft := sharedSpaceInBytes - dFileConf.UsedStorageSpace
+	avaliableSpaceLeft := sharedSpaceInBytes - nodeConfig.UsedStorageSpace
 
 	if avaliableSpaceLeft < oneHunderdMBBytes {
 		fmt.Println("Shared storage memory is running low,", avaliableSpaceLeft/(1024*1024), "MB of space is avaliable")
 		fmt.Println("You may need additional space for mining. Total shared space can be changed in account configuration")
 	}
 
-	err = config.Save(confFile, dFileConf)
+	err = config.Save(confFile, nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -780,18 +780,18 @@ func restoreMemoryInfo(pathToConfig string, intFileSize int) {
 		return
 	}
 
-	var dFileConf config.SecondaryNodeConfig
+	var nodeConfig config.SecondaryNodeConfig
 
-	err = json.Unmarshal(fileBytes, &dFileConf)
+	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
 		return
 	}
 
-	dFileConf.UsedStorageSpace -= int64(intFileSize)
+	nodeConfig.UsedStorageSpace -= int64(intFileSize)
 
-	err = config.Save(confFile, dFileConf)
+	err = config.Save(confFile, nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))

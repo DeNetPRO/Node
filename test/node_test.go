@@ -140,7 +140,7 @@ func accountCreateTest(password, ipAddress, storageLimit, port string) (string, 
 }
 
 func createConfigForTests(address, password, ipAddress, storageLimit, port string) (*config.SecondaryNodeConfig, error) {
-	dFileConf := &config.SecondaryNodeConfig{Address: address, AgreeSendLogs: true}
+	nodeConfig := &config.SecondaryNodeConfig{Address: address, AgreeSendLogs: true}
 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
 	regNum := regexp.MustCompile(("[0-9]+"))
 
@@ -162,7 +162,7 @@ func createConfigForTests(address, password, ipAddress, storageLimit, port strin
 		return nil, fmt.Errorf("storage limit is incorrect")
 	}
 
-	dFileConf.StorageLimit = intSpace
+	nodeConfig.StorageLimit = intSpace
 
 	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
 
@@ -185,7 +185,7 @@ func createConfigForTests(address, password, ipAddress, storageLimit, port strin
 	if isReserved {
 		secondAddrPart, err := strconv.Atoi(splitIPAddr[1])
 		if err != nil {
-			return dFileConf, fmt.Errorf("ip  part is incorrect, please try again")
+			return nodeConfig, fmt.Errorf("ip  part is incorrect, please try again")
 		}
 
 		if secondAddrPart <= reservedSecAddrPart {
@@ -193,14 +193,14 @@ func createConfigForTests(address, password, ipAddress, storageLimit, port strin
 		}
 	}
 
-	dFileConf.IpAddress = ipAddr
+	nodeConfig.IpAddress = ipAddr
 
 	regPort := regexp.MustCompile("[0-9]+|")
 
 	httpPort := port
 
 	if httpPort == "" {
-		dFileConf.HTTPPort = fmt.Sprint(55050)
+		nodeConfig.HTTPPort = fmt.Sprint(55050)
 	} else {
 		match = regPort.MatchString(httpPort)
 		if !match {
@@ -216,28 +216,28 @@ func createConfigForTests(address, password, ipAddress, storageLimit, port strin
 			return nil, fmt.Errorf("port is incorrect, please try again")
 		}
 
-		dFileConf.HTTPPort = fmt.Sprint(intHttpPort)
+		nodeConfig.HTTPPort = fmt.Sprint(intHttpPort)
 	}
 
 	confFile, err := os.Create(filepath.Join(pathToConfig, "config.json"))
 	if err != nil {
-		return dFileConf, err
+		return nodeConfig, err
 	}
 	defer confFile.Close()
 
-	confJSON, err := json.Marshal(dFileConf)
+	confJSON, err := json.Marshal(nodeConfig)
 	if err != nil {
-		return dFileConf, err
+		return nodeConfig, err
 	}
 
 	_, err = confFile.Write(confJSON)
 	if err != nil {
-		return dFileConf, err
+		return nodeConfig, err
 	}
 
 	confFile.Sync()
 
-	return dFileConf, nil
+	return nodeConfig, nil
 }
 
 func initTestAccount(account *accounts.Account, password, ipAddress, storageLimit, port string) (*config.SecondaryNodeConfig, error) {

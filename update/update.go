@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
 	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
@@ -93,6 +94,10 @@ func FsInfo(senderNodeAddr, storageAddr, fsRootHash, nonce string, fsHashes []st
 		}
 
 		stringIP := getNodeIP(node)
+
+		if stringIP == account.NodeIpAddr {
+			continue
+		}
 
 		url := "http://" + stringIP + fmt.Sprint("/update_fs/", storageAddr, "/", senderNodeAddr, "/", hex.EncodeToString(signedFSTree))
 

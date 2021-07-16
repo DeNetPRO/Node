@@ -42,7 +42,7 @@ var accountLoginCmd = &cobra.Command{
 
 		pathToConfigDir := filepath.Join(paths.AccsDirPath, etherAccount.Address.String(), paths.ConfDirName)
 
-		var dFileConf config.SecondaryNodeConfig
+		var nodeConfig config.SecondaryNodeConfig
 
 		pathToConfigFile := filepath.Join(pathToConfigDir, "config.json")
 
@@ -53,7 +53,7 @@ var accountLoginCmd = &cobra.Command{
 		}
 
 		if stat == nil {
-			dFileConf, err = config.Create(etherAccount.Address.String(), password)
+			nodeConfig, err = config.Create(etherAccount.Address.String(), password)
 			if err != nil {
 				logger.Log(logger.CreateDetails(logInfo, err))
 				log.Fatal("couldn't create config file")
@@ -72,13 +72,13 @@ var accountLoginCmd = &cobra.Command{
 				log.Fatal("couldn't read config file")
 			}
 
-			err = json.Unmarshal(fileBytes, &dFileConf)
+			err = json.Unmarshal(fileBytes, &nodeConfig)
 			if err != nil {
 				logger.Log(logger.CreateDetails(logInfo, err))
 				log.Fatal("couldn't read config file")
 			}
 
-			if dFileConf.StorageLimit <= 0 {
+			if nodeConfig.StorageLimit <= 0 {
 				log.Fatal(accLoginFatalError)
 			}
 
@@ -89,7 +89,7 @@ var accountLoginCmd = &cobra.Command{
 					logger.Log(logger.CreateDetails(logInfo, err))
 				}
 
-				if dFileConf.IpAddress != ip {
+				if nodeConfig.IpAddress != ip {
 
 					fmt.Println("Updating public ip info...")
 
@@ -97,15 +97,15 @@ var accountLoginCmd = &cobra.Command{
 
 					ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
-					err = blockchainprovider.UpdateNodeInfo(ctx, etherAccount.Address, password, dFileConf.HTTPPort, splitIPAddr)
+					err = blockchainprovider.UpdateNodeInfo(ctx, etherAccount.Address, password, nodeConfig.HTTPPort, splitIPAddr)
 					if err != nil {
 						logger.Log(logger.CreateDetails(logInfo, err))
 						log.Fatal(ipUpdateFatalError)
 					}
 
-					dFileConf.IpAddress = ip
+					nodeConfig.IpAddress = ip
 
-					err = config.Save(confFile, dFileConf) // we dont't use mutex because race condition while login is impossible
+					err = config.Save(confFile, nodeConfig) // we dont't use mutex because race condition while login is impossible
 					if err != nil {
 						logger.Log(logger.CreateDetails(logInfo, err))
 						log.Fatal(ipUpdateFatalError)
@@ -114,8 +114,10 @@ var accountLoginCmd = &cobra.Command{
 				}
 			}
 
-			logger.SendLogs = dFileConf.AgreeSendLogs
+			logger.SendLogs = nodeConfig.AgreeSendLogs
 		}
+
+		account.NodeIpAddr = fmt.Sprint(nodeConfig.IpAddress, ":", nodeConfig.HTTPPort)
 
 		fmt.Println("Logged in")
 
@@ -123,7 +125,7 @@ var accountLoginCmd = &cobra.Command{
 
 		go cleaner.Start()
 
-		server.Start(etherAccount.Address.String(), dFileConf.HTTPPort)
+		server.Start(nodeConfig.HTTPPort)
 	},
 }
 

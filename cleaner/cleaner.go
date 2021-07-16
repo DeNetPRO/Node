@@ -153,18 +153,18 @@ func Start() {
 				logger.Log(logger.CreateDetails(logInfo, err))
 			}
 
-			var dFileConf config.SecondaryNodeConfig
+			var nodeConfig config.SecondaryNodeConfig
 
-			err = json.Unmarshal(fileBytes, &dFileConf)
+			err = json.Unmarshal(fileBytes, &nodeConfig)
 			if err != nil {
 				shared.MU.Unlock()
 				confFile.Close()
 				logger.Log(logger.CreateDetails(logInfo, err))
 			}
 
-			dFileConf.UsedStorageSpace -= int64(removedTotal * oneMB)
+			nodeConfig.UsedStorageSpace -= int64(removedTotal * oneMB)
 
-			err = config.Save(confFile, dFileConf)
+			err = config.Save(confFile, nodeConfig)
 			if err != nil {
 				shared.MU.Unlock()
 				confFile.Close()
