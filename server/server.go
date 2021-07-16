@@ -72,11 +72,11 @@ func Start(address, port string) {
 	}
 
 	if upnp.InternetDevice != nil {
-		err = upnp.InternetDevice.Forward(uint16(intPort), "node")
+		err = upnp.InternetDevice.Forward(intPort)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 		}
-		defer upnp.InternetDevice.Clear(uint16(intPort))
+		defer upnp.InternetDevice.Close()
 	}
 
 	fmt.Println("Dfile node is ready and started listening on port: " + port)

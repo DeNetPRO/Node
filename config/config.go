@@ -71,7 +71,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 	var splitIPAddr []string
 
 	if upnp.InternetDevice != nil {
-		ip, err := upnp.InternetDevice.ExternalIP()
+		ip, err := upnp.InternetDevice.PublicIP()
 		if err != nil {
 			return dFileConf, logger.CreateDetails(logInfo, err)
 		}

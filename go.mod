@@ -9,6 +9,6 @@ require (
 	github.com/rs/cors v1.8.0
 	github.com/spf13/cobra v1.2.1
 	github.com/stretchr/testify v1.7.0
-	gitlab.com/NebulousLabs/go-upnp v0.0.0-20210414172302-67b91c9a5c03
+	golang.org/x/net v0.0.0-20210410081132-afb366fc7cd1
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b
 )
