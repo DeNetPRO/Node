@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
@@ -17,15 +18,17 @@ var accountImportCmd = &cobra.Command{
 	Long:  "imports your account by private key",
 	Run: func(cmd *cobra.Command, args []string) {
 		const logInfo = "accountImportCmd->"
-		accountStr, nodeConfig, err := account.Import()
+		_, nodeConfig, err := account.Import()
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			log.Fatal("Fatal error, couldn't import an account")
 		}
 
+		account.NodeIpAddr = fmt.Sprint(nodeConfig.IpAddress, ":", nodeConfig.HTTPPort)
+
 		go cleaner.Start()
 
-		server.Start(accountStr, nodeConfig.HTTPPort)
+		server.Start(nodeConfig.HTTPPort)
 	},
 }
 

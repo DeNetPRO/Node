@@ -65,15 +65,17 @@ var accountCreateCmd = &cobra.Command{
 		password := shared.GetHashPassword(password1)
 		password1 = ""
 
-		accountStr, nodeConfig, err := account.Create(password)
+		_, nodeConfig, err := account.Create(password)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			log.Fatal(accCreateFatalMessage)
 		}
 
+		account.NodeIpAddr = fmt.Sprint(nodeConfig.IpAddress, ":", nodeConfig.HTTPPort)
+
 		go cleaner.Start()
 
-		server.Start(accountStr, nodeConfig.HTTPPort)
+		server.Start(nodeConfig.HTTPPort)
 	},
 }
 

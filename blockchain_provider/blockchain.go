@@ -92,7 +92,7 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	opts, _, err := initTrxOpts(ctx, client, nodeAddr, password)
+	opts, err := initTrxOpts(ctx, client, nodeAddr, password, blockNum)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
@@ -187,7 +187,12 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	opts, _, err := initTrxOpts(ctx, client, nodeAddr, password)
+	blockNum, err := client.BlockNumber(ctx)
+	if err != nil {
+		return logger.CreateDetails(logInfo, err)
+	}
+
+	opts, err := initTrxOpts(ctx, client, nodeAddr, password, blockNum)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
@@ -261,9 +266,7 @@ func StartMining(password string) {
 			continue
 		}
 
-		blockNum = blockNum - uint64(1)
-
-		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
+		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum-1)))
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			continue
@@ -279,7 +282,7 @@ func StartMining(password string) {
 
 		for _, spAddress := range storageProviderAddresses {
 
-			time.Sleep(time.Second * 2)
+			time.Sleep(time.Minute * 1)
 
 			storageProviderAddr := common.HexToAddress(spAddress)
 			_, reward, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
@@ -336,7 +339,7 @@ func StartMining(password string) {
 			fileFsTree.Close()
 			shared.MU.Unlock()
 
-			var storageFsStruct shared.StorageInfo
+			var storageFsStruct shared.StorageProviderFs
 
 			err = json.Unmarshal(treeBytes, &storageFsStruct)
 			if err != nil {
@@ -345,7 +348,7 @@ func StartMining(password string) {
 
 			for _, fileName := range fileNames {
 
-				time.Sleep(time.Minute)
+				time.Sleep(time.Minute * 1)
 
 				shared.MU.Lock()
 
@@ -366,7 +369,13 @@ func StartMining(password string) {
 
 				ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
 
-				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum))
+				blockNum, err := client.BlockNumber(ctx)
+				if err != nil {
+					logger.Log(logger.CreateDetails(logInfo, err))
+					continue
+				}
+
+				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-1))
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
 					continue
@@ -417,22 +426,104 @@ func StartMining(password string) {
 
 // ====================================================================================
 
-func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.Address, password string) (*bind.TransactOpts, uint64, error) {
-	const logInfo = "blockchainprovider.initTrxOpts->"
+func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte,
+	nodeAddr common.Address, spAddress string, blockNum uint64) error {
+	const logInfo = "blockchainprovider.sendProof->"
+	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, "tree.json")
 
-	blockNum, err := client.BlockNumber(ctx)
+	shared.MU.Lock()
+	fileFsTree, err := os.Open(pathToFsTree)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
+		shared.MU.Unlock()
+		return logger.CreateDetails(logInfo, err)
 	}
 
-	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum-1)))
+	treeBytes, err := io.ReadAll(fileFsTree)
 	if err != nil {
-		return nil, 0, logger.CreateDetails(logInfo, err)
+		fileFsTree.Close()
+		shared.MU.Unlock()
+		return logger.CreateDetails(logInfo, err)
+	}
+	fileFsTree.Close()
+	shared.MU.Unlock()
+
+	var spFs shared.StorageProviderFs
+
+	err = json.Unmarshal(treeBytes, &spFs)
+	if err != nil {
+		return logger.CreateDetails(logInfo, err)
+	}
+
+	eightKBHashes := []string{}
+
+	bytesToProve := fileBytes[:eightKB]
+
+	for i := 0; i < len(fileBytes); i += eightKB {
+		hSum := sha256.Sum256(fileBytes[i : i+eightKB])
+		eightKBHashes = append(eightKBHashes, hex.EncodeToString(hSum[:]))
+	}
+
+	_, fileTree, err := shared.CalcRootHash(eightKBHashes)
+	if err != nil {
+		return logger.CreateDetails(logInfo, err)
+	}
+
+	hashFileRoot := fileTree[len(fileTree)-1][0]
+
+	treeToFsRoot := [][][]byte{}
+
+	for _, baseHash := range spFs.Tree[0] {
+		diff := bytes.Compare(hashFileRoot, baseHash)
+		if diff == 0 {
+			treeToFsRoot = append(treeToFsRoot, fileTree[:len(fileTree)-1]...)
+			treeToFsRoot = append(treeToFsRoot, spFs.Tree...)
+		}
+	}
+
+	proof := makeProof(fileTree[0][0], treeToFsRoot)
+
+	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
+	instance, err := abiPOS.NewStore(tokenAddress, client)
+	if err != nil {
+		return logger.CreateDetails(logInfo, err)
+	}
+
+	signedFSRootHash, err := hex.DecodeString(spFs.SignedFsRoot)
+	if err != nil {
+		return logger.CreateDetails(logInfo, err)
+	}
+
+	opts, err := initTrxOpts(ctx, client, nodeAddr, password, blockNum)
+	if err != nil {
+		return logger.CreateDetails(logInfo, err)
+	}
+
+	nonceInt, err := strconv.Atoi(spFs.Nonce)
+	if err != nil {
+		return logger.CreateDetails(logInfo, err)
+	}
+
+	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), proof[len(proof)-1], uint64(nonceInt), signedFSRootHash[:64], bytesToProve, proof)
+	if err != nil {
+		return logger.CreateDetails(logInfo, err)
+	}
+
+	return nil
+}
+
+// ====================================================================================
+
+func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.Address, password string, blockNum uint64) (*bind.TransactOpts, error) {
+	const logInfo = "blockchainprovider.initTrxOpts->"
+
+	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
+	if err != nil {
+		return nil, logger.CreateDetails(logInfo, err)
 	}
 
 	chnID, err := client.ChainID(ctx)
 	if err != nil {
-		return nil, 0, logger.CreateDetails(logInfo, err)
+		return nil, logger.CreateDetails(logInfo, err)
 	}
 
 	opts := &bind.TransactOpts{
@@ -460,93 +551,7 @@ func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.
 		NoSend:   false,
 	}
 
-	return opts, blockNum, nil
-}
-
-// ====================================================================================
-
-func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte, nodeAddr common.Address, spAddress string, blockNum uint64) error {
-	const logInfo = "blockchainprovider.sendProof->"
-	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, "tree.json")
-
-	shared.MU.Lock()
-	fileFsTree, err := os.Open(pathToFsTree)
-	if err != nil {
-		shared.MU.Unlock()
-		return logger.CreateDetails(logInfo, err)
-	}
-
-	treeBytes, err := io.ReadAll(fileFsTree)
-	if err != nil {
-		fileFsTree.Close()
-		shared.MU.Unlock()
-		return logger.CreateDetails(logInfo, err)
-	}
-	fileFsTree.Close()
-	shared.MU.Unlock()
-
-	var storageFsStruct shared.StorageInfo
-
-	err = json.Unmarshal(treeBytes, &storageFsStruct)
-	if err != nil {
-		return logger.CreateDetails(logInfo, err)
-	}
-
-	eightKBHashes := []string{}
-
-	bytesToProve := fileBytes[:eightKB]
-
-	for i := 0; i < len(fileBytes); i += eightKB {
-		hSum := sha256.Sum256(fileBytes[i : i+eightKB])
-		eightKBHashes = append(eightKBHashes, hex.EncodeToString(hSum[:]))
-	}
-
-	_, fileTree, err := shared.CalcRootHash(eightKBHashes)
-	if err != nil {
-		return logger.CreateDetails(logInfo, err)
-	}
-
-	hashFileRoot := fileTree[len(fileTree)-1][0]
-
-	treeToFsRoot := [][][]byte{}
-
-	for _, baseHash := range storageFsStruct.Tree[0] {
-		diff := bytes.Compare(hashFileRoot, baseHash)
-		if diff == 0 {
-			treeToFsRoot = append(treeToFsRoot, fileTree[:len(fileTree)-1]...)
-			treeToFsRoot = append(treeToFsRoot, storageFsStruct.Tree...)
-		}
-	}
-
-	proof := makeProof(fileTree[0][0], treeToFsRoot)
-
-	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
-	instance, err := abiPOS.NewStore(tokenAddress, client)
-	if err != nil {
-		return logger.CreateDetails(logInfo, err)
-	}
-
-	signedFSRootHash, err := hex.DecodeString(storageFsStruct.SignedFsRoot)
-	if err != nil {
-		return logger.CreateDetails(logInfo, err)
-	}
-
-	opts, _, err := initTrxOpts(ctx, client, nodeAddr, password)
-	if err != nil {
-		return logger.CreateDetails(logInfo, err)
-	}
-
-	intNonce, err := strconv.Atoi(storageFsStruct.Nonce)
-	if err != nil {
-		return logger.CreateDetails(logInfo, err)
-	}
-
-	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), proof[len(proof)-1], uint64(intNonce), signedFSRootHash[:64], bytesToProve, proof)
-	if err != nil {
-		return logger.CreateDetails(logInfo, err)
-	}
-
-	return nil
+	return opts, nil
 }
 
 // ====================================================================================
