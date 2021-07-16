@@ -113,8 +113,6 @@ func FsInfo(senderNodeAddr, storageAddr, signedFsRootHash, nonce string, fsHashe
 				defer resp.Body.Close()
 
 				if resp.Status != "200 OK" {
-					fmt.Println(resp)
-
 					logger.Log(logger.CreateDetails(logInfo, errors.New("fs wasn't updated")))
 				}
 			}

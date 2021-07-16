@@ -718,10 +718,6 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	signatureAddress = crypto.PubkeyToAddress(*sigPublicKey)
 
-	fmt.Println(spAddress)
-	fmt.Println(senderAddress)
-	fmt.Println(signatureAddress.String())
-
 	if spAddress != signatureAddress.String() {
 		logger.Log(logger.CreateDetails(logInfo, errors.New("wrong signature")))
 		http.Error(w, "Wrong signature", http.StatusForbidden)
