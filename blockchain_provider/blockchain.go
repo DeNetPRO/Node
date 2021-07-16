@@ -277,7 +277,7 @@ func StartMining(password string) {
 
 		for _, spAddress := range storageProviderAddresses {
 
-			time.Sleep(time.Second * 2)
+			time.Sleep(time.Minute * 1)
 
 			storageProviderAddr := common.HexToAddress(spAddress)
 			_, reward, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
@@ -343,7 +343,7 @@ func StartMining(password string) {
 
 			for _, fileName := range fileNames {
 
-				time.Sleep(time.Second * 5)
+				time.Sleep(time.Minute * 1)
 
 				shared.MU.Lock()
 
