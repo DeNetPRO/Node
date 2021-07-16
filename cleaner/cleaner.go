@@ -103,16 +103,16 @@ func Start() {
 			fileFsTree.Close()
 			shared.MU.Unlock()
 
-			var storageFsStruct shared.StorageInfo
+			var spFs shared.StorageProviderFs
 
-			err = json.Unmarshal(treeBytes, &storageFsStruct)
+			err = json.Unmarshal(treeBytes, &spFs)
 			if err != nil {
 				logger.Log(logger.CreateDetails(logInfo, err))
 			}
 
 			fsFiles := map[string]bool{}
 
-			for _, hashes := range storageFsStruct.Tree {
+			for _, hashes := range spFs.Tree {
 				for _, hash := range hashes {
 					fsFiles[hex.EncodeToString(hash)] = true
 				}
@@ -145,11 +145,11 @@ func Start() {
 				shared.MU.Unlock()
 				logger.Log(logger.CreateDetails(logInfo, err))
 			}
-			defer confFile.Close()
 
 			fileBytes, err := io.ReadAll(confFile)
 			if err != nil {
 				shared.MU.Unlock()
+				confFile.Close()
 				logger.Log(logger.CreateDetails(logInfo, err))
 			}
 
@@ -158,6 +158,7 @@ func Start() {
 			err = json.Unmarshal(fileBytes, &dFileConf)
 			if err != nil {
 				shared.MU.Unlock()
+				confFile.Close()
 				logger.Log(logger.CreateDetails(logInfo, err))
 			}
 
@@ -166,6 +167,7 @@ func Start() {
 			err = config.Save(confFile, dFileConf)
 			if err != nil {
 				shared.MU.Unlock()
+				confFile.Close()
 				logger.Log(logger.CreateDetails(logInfo, err))
 			}
 			confFile.Close()

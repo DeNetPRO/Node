@@ -43,8 +43,8 @@ func Start(address, port string) {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/upload/{size}", SaveFiles).Methods("POST")
-	r.HandleFunc("/download/{spAddress}/{senderAddress}/{fileKey}/{signature}", ServeFiles).Methods("GET")
-	r.HandleFunc("/update_fs/{address}/{signedFsys}", updateFsInfo).Methods("POST")
+	r.HandleFunc("/download/{address}/{fileName}/{signature}", ServeFiles).Methods("GET")
+	r.HandleFunc("/update_fs/{spAddress}/{senderAddress}/{signedFsys}", updateFsInfo).Methods("POST")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -315,8 +315,8 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	}
 	defer treeFile.Close()
 
-	tree := shared.StorageInfo{
-		Nonce:        nonce[0],
+	tree := shared.StorageProviderFs{
+		Nonce:        nonceInt,
 		SignedFsRoot: signedFsRootHash[0],
 		Tree:         fsTree,
 	}
@@ -552,6 +552,8 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	const logInfo = "server.UpdateFsInfo->"
 
+	const httpErrorMsg = "Fs info update problem"
+
 	nodeAddr, err := encryption.DecryptNodeAddr()
 	if err != nil {
 		http.Error(w, "Internal node error", 500)
@@ -567,20 +569,45 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	_, err = os.Stat(addressPath)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, errors.New("account not found")))
+		logger.Log(logger.CreateDetails(logInfo, err))
 		return
 	}
 
-	fsysSignature, err := hex.DecodeString(signedFsys)
+	shared.MU.Lock()
+	spFsFile, err := os.Open(filepath.Join(addressPath, "tree.json"))
 	if err != nil {
-		http.Error(w, "Wrong signature", 400)
+		shared.MU.Unlock()
+		logger.Log(logger.CreateDetails(logInfo, err))
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
+	defer spFsFile.Close()
+
+	var spFs shared.StorageProviderFs
+
+	fileBytes, err := io.ReadAll(spFsFile)
+	if err != nil {
+		shared.MU.Unlock()
+		logger.Log(logger.CreateDetails(logInfo, err))
+		http.Error(w, httpErrorMsg, 500)
+		return
+	}
+
+	err = json.Unmarshal(fileBytes, &spFs)
+	if err != nil {
+		shared.MU.Unlock()
+		logger.Log(logger.CreateDetails(logInfo, err))
+		http.Error(w, httpErrorMsg, 500)
+		return
+	}
+
+	spFsFile.Close()
+	shared.MU.Unlock()
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Internal error", 500)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 	defer req.Body.Close()
@@ -590,23 +617,28 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	err = json.Unmarshal(body, &updatedFs)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Internal error", 500)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 
-	nonceInt, err := strconv.Atoi(updatedFs.Nonce)
+	newNonceInt, err := strconv.Atoi(updatedFs.Nonce)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 400)
+		http.Error(w, httpErrorMsg, 400)
 		return
 	}
 
-	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
+	if newNonceInt < spFs.Nonce {
+		logger.Log(spAddress + " fs info is up to date")
+		return
+	}
+
+	nonceHex := strconv.FormatInt(int64(newNonceInt), 16)
 
 	nonceBytes, err := hex.DecodeString(nonceHex)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 400)
+		http.Error(w, httpErrorMsg, 400)
 		return
 	}
 
@@ -624,6 +656,12 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	fsTreeNonceBytes := append([]byte(concatFsHashes), nonce32...)
 
 	fsTreeNonceSha := sha256.Sum256(fsTreeNonceBytes)
+
+	fsysSignature, err := hex.DecodeString(signedFsys)
+	if err != nil {
+		http.Error(w, httpErrorMsg, 500)
+		return
+	}
 
 	sigPublicKey, err := crypto.SigToPub(fsTreeNonceSha[:], fsysSignature)
 	if err != nil {
@@ -643,21 +681,21 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	fsRootHash, fsTree, err := shared.CalcRootHash(updatedFs.NewFs)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 400)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 
 	rootSignature, err := hex.DecodeString(updatedFs.SignedFsRootHash)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 400)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 
 	fsRootBytes, err := hex.DecodeString(fsRootHash)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 400)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 
@@ -668,7 +706,7 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	sigPublicKey, err = crypto.SigToPub(hash[:], rootSignature)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 400)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 
@@ -682,35 +720,38 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	shared.MU.Lock()
 
-	treeFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
+	spFsFile, err = os.Create(filepath.Join(addressPath, "tree.json"))
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, errors.New("wrong signature")))
-		http.Error(w, "Fs info update problem", 500)
+		shared.MU.Unlock()
+		logger.Log(logger.CreateDetails(logInfo, err))
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
-	defer treeFile.Close()
+	defer spFsFile.Close()
 
-	tree := shared.StorageInfo{
-		Nonce:        updatedFs.Nonce,
+	spFs = shared.StorageProviderFs{
+		Nonce:        newNonceInt,
 		SignedFsRoot: updatedFs.SignedFsRootHash,
 		Tree:         fsTree,
 	}
 
-	js, err := json.Marshal(tree)
+	js, err := json.Marshal(spFs)
 	if err != nil {
+		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 500)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 
-	_, err = treeFile.Write(js)
+	_, err = spFsFile.Write(js)
 	if err != nil {
+		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 500)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 
-	treeFile.Sync()
+	spFsFile.Sync()
 
 	logger.Log("Updated fs info")
 

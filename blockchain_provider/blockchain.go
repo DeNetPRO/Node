@@ -334,7 +334,7 @@ func StartMining(password string) {
 			fileFsTree.Close()
 			shared.MU.Unlock()
 
-			var storageFsStruct shared.StorageInfo
+			var storageFsStruct shared.StorageProviderFs
 
 			err = json.Unmarshal(treeBytes, &storageFsStruct)
 			if err != nil {
@@ -483,9 +483,9 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 	fileFsTree.Close()
 	shared.MU.Unlock()
 
-	var storageFsStruct shared.StorageInfo
+	var spFs shared.StorageProviderFs
 
-	err = json.Unmarshal(treeBytes, &storageFsStruct)
+	err = json.Unmarshal(treeBytes, &spFs)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
@@ -508,11 +508,11 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 
 	treeToFsRoot := [][][]byte{}
 
-	for _, baseHash := range storageFsStruct.Tree[0] {
+	for _, baseHash := range spFs.Tree[0] {
 		diff := bytes.Compare(hashFileRoot, baseHash)
 		if diff == 0 {
 			treeToFsRoot = append(treeToFsRoot, fileTree[:len(fileTree)-1]...)
-			treeToFsRoot = append(treeToFsRoot, storageFsStruct.Tree...)
+			treeToFsRoot = append(treeToFsRoot, spFs.Tree...)
 		}
 	}
 
@@ -524,7 +524,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	signedFSRootHash, err := hex.DecodeString(storageFsStruct.SignedFsRoot)
+	signedFSRootHash, err := hex.DecodeString(spFs.SignedFsRoot)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
@@ -534,12 +534,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	intNonce, err := strconv.Atoi(storageFsStruct.Nonce)
-	if err != nil {
-		return logger.CreateDetails(logInfo, err)
-	}
-
-	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum-1), proof[len(proof)-1], uint64(intNonce), signedFSRootHash[:64], bytesToProve, proof)
+	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum-1), proof[len(proof)-1], uint64(spFs.Nonce), signedFSRootHash[:64], bytesToProve, proof)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}

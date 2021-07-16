@@ -17,8 +17,8 @@ import (
 	"github.com/ricochet2200/go-disk-usage/du"
 )
 
-type StorageInfo struct {
-	Nonce        string     `json:"nonce"`
+type StorageProviderFs struct {
+	Nonce        int        `json:"nonce"`
 	SignedFsRoot string     `json:"signedFsRoot"`
 	Tree         [][][]byte `json:"tree"`
 }
