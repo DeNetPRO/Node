@@ -21,6 +21,8 @@ import (
 	"golang.org/x/term"
 )
 
+var NodeIpAddr string
+
 //GetAllAccounts go to the folder ~/dfile/accounts and return all accounts addresses in string format
 func List() []string {
 	var blockchainAccounts []string

@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
 	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
@@ -26,7 +27,7 @@ type UpdatedFsInfo struct {
 	SignedFsRootHash string
 }
 
-func FsInfo(senderNodeAddr, storageAddr, fsRootHash, nonce string, fsHashes []string, nonce32, fsRootNonceBytes []byte) {
+func FsInfo(senderNodeAddr, storageAddr, signedFsRootHash, nonce string, fsHashes []string, nonce32 []byte) {
 
 	const logInfo = "update.FsInfo->"
 
@@ -36,9 +37,9 @@ func FsInfo(senderNodeAddr, storageAddr, fsRootHash, nonce string, fsHashes []st
 		concatFsHashes += hash
 	}
 
-	fsTreeNonceBytes := append([]byte(concatFsHashes), nonce32...)
+	hashesNonceBytes := append([]byte(concatFsHashes), nonce32...)
 
-	fsTreeNonceSha := sha256.Sum256(fsTreeNonceBytes)
+	hashesNonceSha := sha256.Sum256(hashesNonceBytes)
 
 	encrKey := sha256.Sum256([]byte(senderNodeAddr))
 
@@ -52,14 +53,7 @@ func FsInfo(senderNodeAddr, storageAddr, fsRootHash, nonce string, fsHashes []st
 		logger.Log(logger.CreateDetails(logInfo, err))
 	}
 
-	fsRootNonceSha := sha256.Sum256(fsRootNonceBytes)
-
-	signedFSRootHash, err := crypto.Sign(fsRootNonceSha[:], accPrivKey)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-	}
-
-	signedFSTree, err := crypto.Sign(fsTreeNonceSha[:], accPrivKey)
+	signedFSTree, err := crypto.Sign(hashesNonceSha[:], accPrivKey)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
 	}
@@ -67,7 +61,7 @@ func FsInfo(senderNodeAddr, storageAddr, fsRootHash, nonce string, fsHashes []st
 	updatedFs := UpdatedFsInfo{
 		NewFs:            fsHashes,
 		Nonce:            nonce,
-		SignedFsRootHash: hex.EncodeToString(signedFSRootHash),
+		SignedFsRootHash: signedFsRootHash,
 	}
 
 	updatedFsJson, err := json.Marshal(updatedFs)
@@ -94,7 +88,11 @@ func FsInfo(senderNodeAddr, storageAddr, fsRootHash, nonce string, fsHashes []st
 
 		stringIP := getNodeIP(node)
 
-		url := "http://" + stringIP + fmt.Sprint("/update_fs/", storageAddr, "/", hex.EncodeToString(signedFSTree))
+		if stringIP == account.NodeIpAddr {
+			continue
+		}
+
+		url := "http://" + stringIP + fmt.Sprint("/update_fs/", storageAddr, "/", senderNodeAddr, "/", hex.EncodeToString(signedFSTree))
 
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(updatedFsJson))
 		if err != nil {
@@ -104,15 +102,19 @@ func FsInfo(senderNodeAddr, storageAddr, fsRootHash, nonce string, fsHashes []st
 		req.Header.Set("Content-Type", "application/json")
 
 		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-		}
-		defer resp.Body.Close()
 
-		if resp.Status != "200 OK" {
-			logger.Log(logger.CreateDetails(logInfo, errors.New("fs wasn't updated")))
-		}
+		go func(req *http.Request, stringIP string) {
+			resp, _ := client.Do(req)
+
+			if resp != nil {
+				defer resp.Body.Close()
+
+				if resp.Status != "200 OK" {
+					logger.Log(logger.CreateDetails(logInfo, errors.New(stringIP+" fs wasn't updated")))
+				}
+			}
+		}(req, stringIP)
+
 	}
 
 }

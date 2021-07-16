@@ -38,13 +38,13 @@ const gbBytes = int64(1024 * 1024 * 1024)
 const oneHunderdMBBytes = int64(1024 * 1024 * 100)
 const serverStartFatalMessage = "Couldn't start server"
 
-func Start(address, port string) {
+func Start(port string) {
 	const logInfo = "server.Start->"
 	r := mux.NewRouter()
 
 	r.HandleFunc("/upload/{size}", SaveFiles).Methods("POST")
-	r.HandleFunc("/download/{address}/{fileKey}/{signature}", ServeFiles).Methods("GET")
-	r.HandleFunc("/update_fs/{address}/{signedFsys}", updateFsInfo).Methods("POST")
+	r.HandleFunc("/download/{address}/{fileName}/{signature}", ServeFiles).Methods("GET")
+	r.HandleFunc("/update_fs/{spAddress}/{senderAddress}/{signedFsys}", updateFsInfo).Methods("POST")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -159,9 +159,9 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var dFileConf config.SecondaryNodeConfig
+	var nodeConfig config.SecondaryNodeConfig
 
-	err = json.Unmarshal(fileBytes, &dFileConf)
+	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -169,11 +169,11 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	sharedSpaceInBytes := int64(dFileConf.StorageLimit) * gbBytes
+	sharedSpaceInBytes := int64(nodeConfig.StorageLimit) * gbBytes
 
-	dFileConf.UsedStorageSpace += int64(intFileSize)
+	nodeConfig.UsedStorageSpace += int64(intFileSize)
 
-	if dFileConf.UsedStorageSpace > sharedSpaceInBytes {
+	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
 		shared.MU.Unlock()
 		err := errors.New("insufficient memory avaliable")
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -181,14 +181,14 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	avaliableSpaceLeft := sharedSpaceInBytes - dFileConf.UsedStorageSpace
+	avaliableSpaceLeft := sharedSpaceInBytes - nodeConfig.UsedStorageSpace
 
 	if avaliableSpaceLeft < oneHunderdMBBytes {
 		fmt.Println("Shared storage memory is running low,", avaliableSpaceLeft/(1024*1024), "MB of space is avaliable")
 		fmt.Println("You may need additional space for mining. Total shared space can be changed in account configuration")
 	}
 
-	err = config.Save(confFile, dFileConf)
+	err = config.Save(confFile, nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -305,7 +305,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	}
 
 	shared.MU.Lock()
-	treeFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
+	spFsFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -313,15 +313,15 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "File saving problem", 500)
 		return
 	}
-	defer treeFile.Close()
+	defer spFsFile.Close()
 
-	tree := shared.StorageInfo{
+	spFs := shared.StorageProviderFs{
 		Nonce:        nonce[0],
 		SignedFsRoot: signedFsRootHash[0],
 		Tree:         fsTree,
 	}
 
-	js, err := json.Marshal(tree)
+	js, err := json.Marshal(spFs)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -330,7 +330,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	_, err = treeFile.Write(js)
+	_, err = spFsFile.Write(js)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -339,8 +339,8 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	treeFile.Sync()
-	treeFile.Close()
+	spFsFile.Sync()
+	spFsFile.Close()
 	shared.MU.Unlock()
 
 	reqFileParts := req.MultipartForm.File["files"]
@@ -476,7 +476,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		count++
 	}
 
-	go update.FsInfo(nodeAddr.String(), storageProviderAddress[0], fsRootHash, nonce[0], fs, nonce32, fsRootNonceBytes)
+	go update.FsInfo(nodeAddr.String(), storageProviderAddress[0], signedFsRootHash[0], nonce[0], fs, nonce32)
 
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "OK")
@@ -551,6 +551,8 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	const logInfo = "server.UpdateFsInfo->"
 
+	const httpErrorMsg = "Fs info update problem"
+
 	nodeAddr, err := encryption.DecryptNodeAddr()
 	if err != nil {
 		http.Error(w, "Internal node error", 500)
@@ -558,27 +560,53 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	}
 
 	vars := mux.Vars(req)
-	addressFromReq := vars["address"]
+	spAddress := vars["spAddress"]
+	senderAddress := vars["senderAddress"]
 	signedFsys := vars["signedFsys"]
 
-	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, addressFromReq)
+	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress)
 
 	_, err = os.Stat(addressPath)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, errors.New("account not found")))
+		logger.Log(logger.CreateDetails(logInfo, err))
 		return
 	}
 
-	fsysSignature, err := hex.DecodeString(signedFsys)
+	shared.MU.Lock()
+	spFsFile, err := os.Open(filepath.Join(addressPath, "tree.json"))
 	if err != nil {
-		http.Error(w, "Wrong signature", 400)
+		shared.MU.Unlock()
+		logger.Log(logger.CreateDetails(logInfo, err))
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
+	defer spFsFile.Close()
+
+	var spFs shared.StorageProviderFs
+
+	fileBytes, err := io.ReadAll(spFsFile)
+	if err != nil {
+		shared.MU.Unlock()
+		logger.Log(logger.CreateDetails(logInfo, err))
+		http.Error(w, httpErrorMsg, 500)
+		return
+	}
+
+	err = json.Unmarshal(fileBytes, &spFs)
+	if err != nil {
+		shared.MU.Unlock()
+		logger.Log(logger.CreateDetails(logInfo, err))
+		http.Error(w, httpErrorMsg, 500)
+		return
+	}
+
+	spFsFile.Close()
+	shared.MU.Unlock()
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Internal error", 500)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 	defer req.Body.Close()
@@ -588,23 +616,36 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	err = json.Unmarshal(body, &updatedFs)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Internal error", 500)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 
-	nonceInt, err := strconv.Atoi(updatedFs.Nonce)
+	newNonceInt, err := strconv.Atoi(updatedFs.Nonce)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 400)
+		http.Error(w, httpErrorMsg, 400)
 		return
 	}
 
-	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
+	currentNonceInt, err := strconv.Atoi(spFs.Nonce)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logInfo, err))
+		http.Error(w, httpErrorMsg, 400)
+		return
+	}
+
+	if newNonceInt < currentNonceInt {
+		logger.Log(spAddress + " fs info is up to date")
+		http.Error(w, httpErrorMsg, 400)
+		return
+	}
+
+	nonceHex := strconv.FormatInt(int64(newNonceInt), 16)
 
 	nonceBytes, err := hex.DecodeString(nonceHex)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 400)
+		http.Error(w, httpErrorMsg, 400)
 		return
 	}
 
@@ -623,6 +664,12 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	fsTreeNonceSha := sha256.Sum256(fsTreeNonceBytes)
 
+	fsysSignature, err := hex.DecodeString(signedFsys)
+	if err != nil {
+		http.Error(w, httpErrorMsg, 500)
+		return
+	}
+
 	sigPublicKey, err := crypto.SigToPub(fsTreeNonceSha[:], fsysSignature)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -632,7 +679,7 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
-	if addressFromReq != signatureAddress.String() {
+	if senderAddress != signatureAddress.String() {
 		logger.Log(logger.CreateDetails(logInfo, errors.New("wrong signature")))
 		http.Error(w, "Wrong signature", http.StatusForbidden)
 		return
@@ -641,21 +688,21 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	fsRootHash, fsTree, err := shared.CalcRootHash(updatedFs.NewFs)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 400)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 
 	rootSignature, err := hex.DecodeString(updatedFs.SignedFsRootHash)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 400)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 
 	fsRootBytes, err := hex.DecodeString(fsRootHash)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 400)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 
@@ -666,13 +713,13 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	sigPublicKey, err = crypto.SigToPub(hash[:], rootSignature)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 400)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 
 	signatureAddress = crypto.PubkeyToAddress(*sigPublicKey)
 
-	if addressFromReq != signatureAddress.String() {
+	if spAddress != signatureAddress.String() {
 		logger.Log(logger.CreateDetails(logInfo, errors.New("wrong signature")))
 		http.Error(w, "Wrong signature", http.StatusForbidden)
 		return
@@ -680,35 +727,38 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	shared.MU.Lock()
 
-	treeFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
+	spFsFile, err = os.Create(filepath.Join(addressPath, "tree.json"))
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, errors.New("wrong signature")))
-		http.Error(w, "Fs info update problem", 500)
+		shared.MU.Unlock()
+		logger.Log(logger.CreateDetails(logInfo, err))
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
-	defer treeFile.Close()
+	defer spFsFile.Close()
 
-	tree := shared.StorageInfo{
+	spFs = shared.StorageProviderFs{
 		Nonce:        updatedFs.Nonce,
 		SignedFsRoot: updatedFs.SignedFsRootHash,
 		Tree:         fsTree,
 	}
 
-	js, err := json.Marshal(tree)
+	js, err := json.Marshal(spFs)
 	if err != nil {
+		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 500)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 
-	_, err = treeFile.Write(js)
+	_, err = spFsFile.Write(js)
 	if err != nil {
+		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Fs info update problem", 500)
+		http.Error(w, httpErrorMsg, 500)
 		return
 	}
 
-	treeFile.Sync()
+	spFsFile.Sync()
 
 	logger.Log("Updated fs info")
 
@@ -737,18 +787,18 @@ func restoreMemoryInfo(pathToConfig string, intFileSize int) {
 		return
 	}
 
-	var dFileConf config.SecondaryNodeConfig
+	var nodeConfig config.SecondaryNodeConfig
 
-	err = json.Unmarshal(fileBytes, &dFileConf)
+	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
 		return
 	}
 
-	dFileConf.UsedStorageSpace -= int64(intFileSize)
+	nodeConfig.UsedStorageSpace -= int64(intFileSize)
 
-	err = config.Save(confFile, dFileConf)
+	err = config.Save(confFile, nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
