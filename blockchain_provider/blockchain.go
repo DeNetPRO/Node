@@ -511,7 +511,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	nonce32 := make([]byte, 0, 32-len(nonceBytes))
+	nonce32 := make([]byte, 32-len(nonceBytes))
 	nonce32 = append(nonce32, nonceBytes...)
 
 	fsRootNonceBytes := append(fsRootHashBytes[:], nonce32...)
