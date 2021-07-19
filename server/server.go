@@ -564,7 +564,7 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	_, err = os.Stat(addressPath)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logInfo, errors.New("no files of "+spAddress)))
 		return
 	}
 
