@@ -42,7 +42,7 @@ func Start(port string) {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/upload/{size}", SaveFiles).Methods("POST")
-	r.HandleFunc("/download/{address}/{fileName}/{signature}", ServeFiles).Methods("GET")
+	r.HandleFunc("/download/{spAddress}/{fileName}/{signature}", ServeFiles).Methods("GET")
 	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}", updateFsInfo).Methods("POST")
 
 	corsOpts := cors.New(cors.Options{
@@ -505,7 +505,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	}
 
 	vars := mux.Vars(req)
-	addressFromReq := vars["address"]
+	spAddress := vars["spAddress"]
 	fileKey := vars["fileKey"]
 	signatureFromReq := vars["signature"]
 
@@ -515,7 +515,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	hash := sha256.Sum256([]byte(fileKey + addressFromReq))
+	hash := sha256.Sum256([]byte(fileKey + spAddress))
 
 	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
 	if err != nil {
@@ -525,12 +525,12 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 
 	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
-	if addressFromReq != signatureAddress.String() {
+	if spAddress != signatureAddress.String() {
 		http.Error(w, "Wrong signature", http.StatusForbidden)
 		return
 	}
 
-	pathToFile := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, addressFromReq, fileKey)
+	pathToFile := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, fileKey)
 
 	_, err = os.Stat(pathToFile)
 	if err != nil {
