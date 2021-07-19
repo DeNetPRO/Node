@@ -42,7 +42,7 @@ func Start(port string) {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/upload/{size}", SaveFiles).Methods("POST")
-	r.HandleFunc("/download/{spAddress}/{fileName}/{signature}", ServeFiles).Methods("GET")
+	r.HandleFunc("/download/{spAddress}/{fileKey}/{signature}", ServeFiles).Methods("GET")
 	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}", updateFsInfo).Methods("POST")
 
 	corsOpts := cors.New(cors.Options{
