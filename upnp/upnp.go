@@ -94,7 +94,7 @@ func (d *Device) PublicIP() (string, error) {
 
 func (d *Device) Forward(port int) error {
 	d.port = port
-	return internet.AddPortMapping("", getInternalIP(), "TCP", "Test port mapping", uint16(port), uint16(port), true, 0, d.clientUrl)
+	return internet.AddPortMapping("", getInternalIP(), "TCP", "node", uint16(port), uint16(port), true, 0, d.clientUrl)
 }
 
 func (d *Device) Close() error {
