@@ -71,17 +71,14 @@ func Start(port string) {
 	}
 
 	if upnp.InternetDevice != nil {
-		err = upnp.InternetDevice.Forward(intPort)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-		}
-		defer upnp.InternetDevice.Close()
+		upnp.InternetDevice.Forward(intPort)
 	}
 
 	fmt.Println("Dfile node is ready and started listening on port: " + port)
 
 	err = http.ListenAndServe(":"+port, corsOpts.Handler(checkSignature(r)))
 	if err != nil {
+		upnp.InternetDevice.Close()
 		log.Fatal(serverStartFatalMessage)
 	}
 }
