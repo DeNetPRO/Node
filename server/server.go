@@ -21,7 +21,6 @@ import (
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/update"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
@@ -44,7 +43,7 @@ func Start(port string) {
 
 	r.HandleFunc("/upload/{size}", SaveFiles).Methods("POST")
 	r.HandleFunc("/download/{address}/{fileName}/{signature}", ServeFiles).Methods("GET")
-	r.HandleFunc("/update_fs/{spAddress}/{senderAddress}/{signedFsys}", updateFsInfo).Methods("POST")
+	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}", updateFsInfo).Methods("POST")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -476,8 +475,6 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		count++
 	}
 
-	go update.FsInfo(nodeAddr.String(), storageProviderAddress[0], signedFsRootHash[0], nonce[0], fs, nonce32)
-
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "OK")
 }
@@ -561,7 +558,6 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	vars := mux.Vars(req)
 	spAddress := vars["spAddress"]
-	senderAddress := vars["senderAddress"]
 	signedFsys := vars["signedFsys"]
 
 	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress)
@@ -679,7 +675,7 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
-	if senderAddress != signatureAddress.String() {
+	if spAddress != signatureAddress.String() {
 		logger.Log(logger.CreateDetails(logInfo, errors.New("wrong signature")))
 		http.Error(w, "Wrong signature", http.StatusForbidden)
 		return

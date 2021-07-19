@@ -413,7 +413,8 @@ func StartMining(password string) {
 				if remainderIsLessUserDifficulty {
 					fmt.Println("checking file:", fileName)
 					fmt.Println("Trying proof", fileName, "for reward:", reward)
-					err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress, blockNum)
+
+					err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress, blockNum, instance)
 					if err != nil {
 						logger.Log(logger.CreateDetails(logInfo, err))
 						break
@@ -427,29 +428,29 @@ func StartMining(password string) {
 // ====================================================================================
 
 func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte,
-	nodeAddr common.Address, spAddress string, blockNum uint64) error {
+	nodeAddr common.Address, spAddress string, blockNum uint64, instance *abiPOS.Store) error {
 	const logInfo = "blockchainprovider.sendProof->"
 	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, "tree.json")
 
 	shared.MU.Lock()
-	fileFsTree, err := os.Open(pathToFsTree)
+	spFsFile, err := os.Open(pathToFsTree)
 	if err != nil {
 		shared.MU.Unlock()
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	treeBytes, err := io.ReadAll(fileFsTree)
+	spFsBytes, err := io.ReadAll(spFsFile)
 	if err != nil {
-		fileFsTree.Close()
+		spFsFile.Close()
 		shared.MU.Unlock()
 		return logger.CreateDetails(logInfo, err)
 	}
-	fileFsTree.Close()
+	spFsFile.Close()
 	shared.MU.Unlock()
 
 	var spFs shared.StorageProviderFs
 
-	err = json.Unmarshal(treeBytes, &spFs)
+	err = json.Unmarshal(spFsBytes, &spFs)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
@@ -468,6 +469,8 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return logger.CreateDetails(logInfo, err)
 	}
 
+	eightKBHashes = nil
+
 	hashFileRoot := fileTree[len(fileTree)-1][0]
 
 	treeToFsRoot := [][][]byte{}
@@ -482,11 +485,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 
 	proof := makeProof(fileTree[0][0], treeToFsRoot)
 
-	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
-	instance, err := abiPOS.NewStore(tokenAddress, client)
-	if err != nil {
-		return logger.CreateDetails(logInfo, err)
-	}
+	treeToFsRoot = nil
 
 	signedFSRootHash, err := hex.DecodeString(spFs.SignedFsRoot)
 	if err != nil {
@@ -507,6 +506,8 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
+
+	proof = nil
 
 	return nil
 }
