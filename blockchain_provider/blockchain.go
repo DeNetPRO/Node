@@ -485,6 +485,8 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 
 	proof := makeProof(fileTree[0][0], treeToFsRoot)
 
+	fsRootHashBytes := proof[len(proof)-1]
+
 	treeToFsRoot = nil
 
 	signedFSRootHash, err := hex.DecodeString(spFs.SignedFsRoot)
@@ -502,9 +504,30 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), proof[len(proof)-1], uint64(nonceInt), signedFSRootHash[:64], bytesToProve, proof)
+	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
+
+	nonceBytes, err := hex.DecodeString(nonceHex)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
+	}
+
+	nonce32 := make([]byte, 32-len(nonceBytes))
+	nonce32 = append(nonce32, nonceBytes...)
+
+	fsRootNonceBytes := append(fsRootHashBytes[:], nonce32...)
+
+	signatureIsValid, err := instance.IsValidSign(&bind.CallOpts{}, common.HexToAddress(spAddress), fsRootNonceBytes, signedFSRootHash[:64])
+	if err != nil {
+		return logger.CreateDetails(logInfo, err)
+	}
+
+	fmt.Println("signature Is Valid:", signatureIsValid)
+
+	if signatureIsValid {
+		_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash[:64], bytesToProve, proof)
+		if err != nil {
+			return logger.CreateDetails(logInfo, err)
+		}
 	}
 
 	proof = nil
