@@ -2,7 +2,9 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
+	"os/signal"
 
 	"encoding/hex"
 	"encoding/json"
@@ -72,14 +74,31 @@ func Start(port string) {
 
 	if upnp.InternetDevice != nil {
 		upnp.InternetDevice.Forward(intPort)
+		defer upnp.InternetDevice.Close()
 	}
 
 	fmt.Println("Dfile node is ready and started listening on port: " + port)
 
-	err = http.ListenAndServe(":"+port, corsOpts.Handler(checkSignature(r)))
+	server := http.Server{
+		Addr:    ":" + port,
+		Handler: corsOpts.Handler(checkSignature(r)),
+	}
+
+	go func() {
+		err = server.ListenAndServe()
+		if err != nil {
+			log.Fatal(serverStartFatalMessage)
+		}
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+
+	<-stop
+
+	err = server.Shutdown(context.Background())
 	if err != nil {
-		upnp.InternetDevice.Close()
-		log.Fatal(serverStartFatalMessage)
+		log.Fatal(err)
 	}
 }
 
