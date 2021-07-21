@@ -1,3 +1,18 @@
-# This file is a template, and might need editing before it works on your project.
-include:
-  template: Jobs/Code-Quality.gitlab-ci.yml
+image: golang:1.16
+
+variables:
+  REPO_NAME: dfile-secondary-node
+
+
+before_script:
+  - export GO111MODULE="on" 
+  - go mod tidy
+
+stages:
+  - test
+  - build
+
+testing:
+  stage: test
+  script:
+    - go test ./...
