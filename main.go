@@ -39,7 +39,7 @@ func main() {
 		log.Fatal("Fatal Error: couldn't locate home directory")
 	}
 
-	upnp.InitIGD()
+	upnp.Init()
 
 	cmd.Execute()
 }

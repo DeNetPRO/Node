@@ -1,24 +1,20 @@
 package upnp
 
 import (
-	"context"
 	"fmt"
 
-	"gitlab.com/NebulousLabs/go-upnp"
+	"github.com/alex-gubin/fastupnp"
 )
 
-var InternetDevice *upnp.IGD
+var InternetDevice *fastupnp.Device
 
-func InitIGD() {
+func Init() {
 	fmt.Println("Checking UPnP devices...")
 
-	device, err := upnp.DiscoverCtx(context.Background())
+	device, err := fastupnp.InitDevice()
 	if err != nil {
-		fmt.Println(err)
 		fmt.Println("Warn: manual port forwarding may be needed")
 	}
 
 	InternetDevice = device
 }
-
-// ====================================================================================

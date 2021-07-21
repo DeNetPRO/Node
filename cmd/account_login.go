@@ -83,8 +83,7 @@ var accountLoginCmd = &cobra.Command{
 			}
 
 			if upnp.InternetDevice != nil {
-
-				ip, err := upnp.InternetDevice.ExternalIP()
+				ip, err := upnp.InternetDevice.PublicIP()
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
 				}
@@ -110,7 +109,6 @@ var accountLoginCmd = &cobra.Command{
 						logger.Log(logger.CreateDetails(logInfo, err))
 						log.Fatal(ipUpdateFatalError)
 					}
-
 				}
 			}
 
