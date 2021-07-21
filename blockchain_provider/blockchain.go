@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"errors"
 
 	"encoding/hex"
 	"encoding/json"
@@ -11,6 +12,7 @@ import (
 	"io"
 	"io/fs"
 	"math/big"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -282,21 +284,12 @@ func StartMining(password string) {
 
 		for _, spAddress := range storageProviderAddresses {
 
-			time.Sleep(time.Minute * 1)
+			time.Sleep(time.Second * 5)
 
 			storageProviderAddr := common.HexToAddress(spAddress)
 			_, reward, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
 			if err != nil {
 				logger.Log(logger.CreateDetails(logInfo, err))
-			}
-
-			fmt.Println("reward for", spAddress, "files is", reward) //TODO remove
-			fmt.Println("Min reward value:", 350000000000000000)
-
-			rewardisEnough := reward.Cmp(big.NewInt(350000000000000000)) == 1
-
-			if !rewardisEnough {
-				continue
 			}
 
 			fileNames := []string{}
@@ -311,7 +304,6 @@ func StartMining(password string) {
 
 					if regFileName.MatchString(info.Name()) && len(info.Name()) == 64 {
 						fileNames = append(fileNames, info.Name())
-
 					}
 
 					return nil
@@ -321,106 +313,95 @@ func StartMining(password string) {
 				continue
 			}
 
-			pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, "tree.json")
+			if len(fileNames) == 0 {
+				err = os.RemoveAll(pathToStorProviderFiles)
+				if err != nil {
+					logger.Log(logger.CreateDetails(logInfo, err))
+				}
+				continue
+			}
+
+			fmt.Println("reward for", spAddress, "files is", reward) //TODO remove
+			fmt.Println("Min reward value:", 350000000000000000)
+
+			rewardisEnough := reward.Cmp(big.NewInt(350000000000000000)) == 1
+
+			if !rewardisEnough {
+				continue
+			}
+
+			rand.Seed(time.Now().UnixNano())
+			randomFilePos := rand.Intn(len(fileNames))
+
+			fileName := fileNames[randomFilePos]
 
 			shared.MU.Lock()
-			fileFsTree, err := os.Open(pathToFsTree)
+
+			storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
 			if err != nil {
-				shared.MU.Unlock()
 				logger.Log(logger.CreateDetails(logInfo, err))
+				continue
 			}
 
-			treeBytes, err := io.ReadAll(fileFsTree)
+			storedFileBytes, err := io.ReadAll(storedFile)
 			if err != nil {
-				fileFsTree.Close()
-				shared.MU.Unlock()
 				logger.Log(logger.CreateDetails(logInfo, err))
+				continue
 			}
-			fileFsTree.Close()
+
+			storedFile.Close()
 			shared.MU.Unlock()
 
-			var storageFsStruct shared.StorageProviderFs
+			ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
 
-			err = json.Unmarshal(treeBytes, &storageFsStruct)
+			blockNum, err := client.BlockNumber(ctx)
 			if err != nil {
 				logger.Log(logger.CreateDetails(logInfo, err))
+				continue
 			}
 
-			for _, fileName := range fileNames {
+			blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-1))
+			if err != nil {
+				logger.Log(logger.CreateDetails(logInfo, err))
+				continue
+			}
 
-				time.Sleep(time.Minute * 1)
+			fileBytesAddrBlockHash := append(storedFileBytes, nodeAddr.Bytes()...)
+			fileBytesAddrBlockHash = append(fileBytesAddrBlockHash, blockHash[:]...)
 
-				shared.MU.Lock()
+			hashedFileAddrBlock := sha256.Sum256(fileBytesAddrBlockHash)
 
-				storedFile, err := os.Open(filepath.Join(pathToStorProviderFiles, fileName))
+			stringFileAddrBlock := hex.EncodeToString(hashedFileAddrBlock[:])
+
+			stringFileAddrBlock = strings.TrimLeft(stringFileAddrBlock, "0")
+
+			decodedBigInt, err := hexutil.DecodeBig("0x" + stringFileAddrBlock)
+			if err != nil {
+				logger.Log(logger.CreateDetails(logInfo, err))
+				continue
+			}
+
+			baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
+			if err != nil {
+				logger.Log(logger.CreateDetails(logInfo, err))
+				continue
+			}
+
+			remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
+
+			remainderIsLessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
+
+			if remainderIsLessUserDifficulty {
+				fmt.Println("checking file:", fileName)
+				fmt.Println("Trying proof", fileName, "for reward:", reward)
+
+				err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress, blockNum, instance)
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
 					continue
-				}
-
-				storedFileBytes, err := io.ReadAll(storedFile)
-				if err != nil {
-					logger.Log(logger.CreateDetails(logInfo, err))
-					continue
-				}
-
-				storedFile.Close()
-				shared.MU.Unlock()
-
-				ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
-
-				blockNum, err := client.BlockNumber(ctx)
-				if err != nil {
-					logger.Log(logger.CreateDetails(logInfo, err))
-					continue
-				}
-
-				blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-1))
-				if err != nil {
-					logger.Log(logger.CreateDetails(logInfo, err))
-					continue
-				}
-
-				fileBytesAddrBlockHash := append(storedFileBytes, nodeAddr.Bytes()...)
-				fileBytesAddrBlockHash = append(fileBytesAddrBlockHash, blockHash[:]...)
-
-				hashedFileAddrBlock := sha256.Sum256(fileBytesAddrBlockHash)
-
-				stringFileAddrBlock := hex.EncodeToString(hashedFileAddrBlock[:])
-
-				stringFileAddrBlock = strings.TrimLeft(stringFileAddrBlock, "0")
-
-				decodedBigInt, err := hexutil.DecodeBig("0x" + stringFileAddrBlock)
-				if err != nil {
-					logger.Log(logger.CreateDetails(logInfo, err))
-					continue
-				}
-
-				baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
-				if err != nil {
-					logger.Log(logger.CreateDetails(logInfo, err))
-					continue
-				}
-
-				remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
-
-				remainderIsLessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
-
-				fmt.Println("remainder", remainder)
-				fmt.Println("userDifficulty", userDifficulty)
-				fmt.Println("remainderIsLessUserDifficulty", remainderIsLessUserDifficulty)
-
-				if remainderIsLessUserDifficulty {
-					fmt.Println("checking file:", fileName)
-					fmt.Println("Trying proof", fileName, "for reward:", reward)
-
-					err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress, blockNum, instance)
-					if err != nil {
-						logger.Log(logger.CreateDetails(logInfo, err))
-						break
-					}
 				}
 			}
+
 		}
 	}
 }
@@ -521,13 +502,13 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	fmt.Println("signature Is Valid:", signatureIsValid)
+	if !signatureIsValid {
+		return logger.CreateDetails(logInfo, errors.New("signature is not valid"))
+	}
 
-	if signatureIsValid {
-		_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash[:64], bytesToProve, proof)
-		if err != nil {
-			return logger.CreateDetails(logInfo, err)
-		}
+	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash[:64], bytesToProve, proof)
+	if err != nil {
+		return logger.CreateDetails(logInfo, err)
 	}
 
 	proof = nil

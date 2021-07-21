@@ -1,0 +1,18 @@
+image: golang:1.16
+
+variables:
+  REPO_NAME: dfile-secondary-node
+
+
+before_script:
+  - export GO111MODULE="on" 
+  - go mod tidy
+
+stages:
+  - test
+  - build
+
+testing:
+  stage: test
+  script:
+    - go test ./...
