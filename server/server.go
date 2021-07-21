@@ -73,8 +73,8 @@ func Start(port string) {
 	}
 
 	if upnp.InternetDevice != nil {
-		upnp.InternetDevice.Forward(intPort)
-		defer upnp.InternetDevice.Close()
+		upnp.InternetDevice.Forward(intPort, "node")
+		defer upnp.InternetDevice.Close(intPort)
 	}
 
 	fmt.Println("Dfile node is ready and started listening on port: " + port)
