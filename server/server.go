@@ -87,6 +87,7 @@ func Start(port string) {
 	go func() {
 		err = server.ListenAndServe()
 		if err != nil {
+			logger.Log(logger.CreateDetails(logInfo, err))
 			log.Fatal(serverStartFatalMessage)
 		}
 	}()
@@ -98,6 +99,7 @@ func Start(port string) {
 
 	err = server.Shutdown(context.Background())
 	if err != nil {
+		logger.Log(logger.CreateDetails(logInfo, err))
 		log.Fatal(err)
 	}
 }

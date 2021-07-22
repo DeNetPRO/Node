@@ -25,7 +25,9 @@ func Log(msg interface{}) {
 
 	fmt.Println(logMsg)
 
-	if fmt.Sprintf("%T", msg) == "*errors.errorString" {
+	errType := fmt.Sprintf("%T", msg)
+
+	if errType == "*errors.errorString" || errType == "*fmt.wrapError" {
 		url := "http://68.183.215.241:9091/logs"
 
 		req, _ := http.NewRequest("POST", url, bytes.NewReader([]byte(logMsg)))
