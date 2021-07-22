@@ -492,7 +492,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 	}
 
 	if !signatureIsValid {
-		return logger.CreateDetails(logInfo, errors.New("signature is not valid"))
+		return logger.CreateDetails(logInfo, errors.New(spAddress+" signature is not valid"))
 	}
 
 	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash[:64], bytesToProve, proof)
