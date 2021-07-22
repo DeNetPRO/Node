@@ -115,7 +115,7 @@ var accountLoginCmd = &cobra.Command{
 			logger.SendLogs = nodeConfig.AgreeSendLogs
 		}
 
-		account.NodeIpAddr = fmt.Sprint(nodeConfig.IpAddress, ":", nodeConfig.HTTPPort)
+		account.IpAddr = fmt.Sprint(nodeConfig.IpAddress, ":", nodeConfig.HTTPPort)
 
 		fmt.Println("Logged in")
 

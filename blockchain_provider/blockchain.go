@@ -21,7 +21,6 @@ import (
 	"time"
 
 	abiPOS "git.denetwork.xyz/dfile/dfile-secondary-node/POS_abi"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	nodeAbi "git.denetwork.xyz/dfile/dfile-secondary-node/node_abi"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
@@ -59,11 +58,6 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	nodeAddr, err := encryption.DecryptNodeAddr()
-	if err != nil {
-		return logger.CreateDetails(logInfo, err)
-	}
-
 	client, err := ethclient.Dial(ethClientAddr)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
@@ -94,7 +88,7 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 		return logger.CreateDetails(logInfo, err)
 	}
 
-	opts, err := initTrxOpts(ctx, client, nodeAddr, password, blockNum)
+	opts, err := initTrxOpts(ctx, client, shared.NodeAddr, password, blockNum)
 	if err != nil {
 		return logger.CreateDetails(logInfo, err)
 	}
@@ -212,12 +206,7 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 func StartMining(password string) {
 	const logInfo = "blockchainprovider.StartMining->"
 
-	nodeAddr, err := encryption.DecryptNodeAddr()
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-	}
-
-	pathToAccStorage := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName)
+	pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName)
 
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
@@ -268,7 +257,7 @@ func StartMining(password string) {
 			continue
 		}
 
-		nodeBalance, err := client.BalanceAt(ctx, nodeAddr, big.NewInt(int64(blockNum-1)))
+		nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-1)))
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
 			continue
@@ -366,7 +355,7 @@ func StartMining(password string) {
 				continue
 			}
 
-			fileBytesAddrBlockHash := append(storedFileBytes, nodeAddr.Bytes()...)
+			fileBytesAddrBlockHash := append(storedFileBytes, shared.NodeAddr.Bytes()...)
 			fileBytesAddrBlockHash = append(fileBytesAddrBlockHash, blockHash[:]...)
 
 			hashedFileAddrBlock := sha256.Sum256(fileBytesAddrBlockHash)
@@ -395,7 +384,7 @@ func StartMining(password string) {
 				fmt.Println("checking file:", fileName)
 				fmt.Println("Trying proof", fileName, "for reward:", reward)
 
-				err := sendProof(ctx, client, password, storedFileBytes, nodeAddr, spAddress, blockNum, instance)
+				err := sendProof(ctx, client, password, storedFileBytes, shared.NodeAddr, spAddress, blockNum, instance)
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
 					continue

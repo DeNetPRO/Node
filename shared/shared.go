@@ -14,6 +14,7 @@ import (
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ricochet2200/go-disk-usage/du"
 )
 
@@ -24,6 +25,7 @@ type StorageProviderFs struct {
 }
 
 var (
+	NodeAddr     common.Address
 	MU           sync.Mutex
 	TestMode     = false
 	TestPassword = "test"
