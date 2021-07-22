@@ -157,7 +157,12 @@ func Login(blockchainAccountString, password string) (*accounts.Account, error) 
 
 	shared.NodeAddr = account.Address
 
-	encrForKey := sha256.Sum256([]byte(account.Address.String()))
+	macAddr, err := encryption.GetDeviceMacAddr()
+	if err != nil {
+		return nil, logger.CreateDetails(logInfo, err)
+	}
+
+	encrForKey := sha256.Sum256([]byte(macAddr))
 	encryptedKey, err := encryption.EncryptAES(encrForKey[:], key.PrivateKey.D.Bytes())
 	if err != nil {
 		return nil, logger.CreateDetails(logInfo, err)
@@ -298,7 +303,12 @@ func initAccount(ks *keystore.KeyStore, account *accounts.Account, password stri
 
 	shared.NodeAddr = account.Address
 
-	encrForKey := sha256.Sum256([]byte(account.Address.String()))
+	macAddr, err := encryption.GetDeviceMacAddr()
+	if err != nil {
+		return nodeConf, logger.CreateDetails(logInfo, err)
+	}
+
+	encrForKey := sha256.Sum256([]byte(macAddr))
 	encryptedKey, err := encryption.EncryptAES(encrForKey[:], key.PrivateKey.D.Bytes())
 	if err != nil {
 		return nodeConf, logger.CreateDetails(logInfo, err)
