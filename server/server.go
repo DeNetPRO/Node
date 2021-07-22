@@ -300,7 +300,9 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, storageProviderAddress[0])
+	hashProviderAddress := sha256.Sum256([]byte(storageProviderAddress[0]))
+
+	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, hex.EncodeToString(hashProviderAddress[:]))
 
 	stat, err := os.Stat(addressPath)
 	err = shared.CheckStatErr(err)
@@ -548,7 +550,9 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pathToFile := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, fileKey)
+	hashStorageProvider := sha256.Sum256([]byte(spAddress))
+
+	pathToFile := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, hex.EncodeToString(hashStorageProvider[:]), fileKey)
 
 	_, err = os.Stat(pathToFile)
 	if err != nil {

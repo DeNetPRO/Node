@@ -110,7 +110,6 @@ func EncryptNodeAddr(addr common.Address) ([]byte, error) {
 // ====================================================================================
 
 func DecryptNodeAddr() (common.Address, error) {
-
 	const logInfo = "shared.DecryptNodeAddr->"
 
 	var nodeAddr common.Address
