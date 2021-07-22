@@ -19,7 +19,6 @@ import (
 	"strconv"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
@@ -133,13 +132,6 @@ func checkSignature(h http.Handler) http.Handler {
 func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	const logInfo = "server.SaveFiles->"
 
-	nodeAddr, err := encryption.DecryptNodeAddr()
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Couldn't parse address", 500)
-		return
-	}
-
 	vars := mux.Vars(req)
 	fileSize := vars["size"]
 
@@ -156,7 +148,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pathToConfig := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.ConfDirName, "config.json")
+	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, "config.json")
 
 	shared.MU.Lock()
 	confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
@@ -300,7 +292,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, storageProviderAddress[0])
+	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, storageProviderAddress[0])
 
 	stat, err := os.Stat(addressPath)
 	err = shared.CheckStatErr(err)
@@ -515,13 +507,6 @@ func deleteFileParts(addressPath string, fileHashes []string) {
 func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	const logInfo = "server.ServeFiles->"
 
-	nodeAddr, err := encryption.DecryptNodeAddr()
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Couldn't parse address", 500)
-		return
-	}
-
 	vars := mux.Vars(req)
 	spAddress := vars["spAddress"]
 	fileKey := vars["fileKey"]
@@ -548,7 +533,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pathToFile := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, fileKey)
+	pathToFile := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress, fileKey)
 
 	_, err = os.Stat(pathToFile)
 	if err != nil {
@@ -568,19 +553,13 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	const httpErrorMsg = "Fs info update problem"
 
-	nodeAddr, err := encryption.DecryptNodeAddr()
-	if err != nil {
-		http.Error(w, "Internal node error", 500)
-		return
-	}
-
 	vars := mux.Vars(req)
 	spAddress := vars["spAddress"]
 	signedFsys := vars["signedFsys"]
 
-	addressPath := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress)
+	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress)
 
-	_, err = os.Stat(addressPath)
+	_, err := os.Stat(addressPath)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, errors.New("no files of "+spAddress)))
 		return

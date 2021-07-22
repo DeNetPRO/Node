@@ -13,7 +13,6 @@ import (
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"github.com/ethereum/go-ethereum/accounts"
@@ -84,7 +83,7 @@ func TestCreateAccount(t *testing.T) {
 		t.Error("config is invalid")
 	}
 
-	nodeAddress = encryption.NodeAddr
+	nodeAddress = shared.NodeAddr.Bytes()
 }
 
 func TestLoginAccountWithCorrectAddressAndPassword(t *testing.T) {
@@ -254,12 +253,7 @@ func initTestAccount(account *accounts.Account, password, ipAddress, storageLimi
 		return nodeConf, err
 	}
 
-	encryptedAddr, err := encryption.EncryptNodeAddr(account.Address)
-	if err != nil {
-		return nodeConf, err
-	}
-
-	encryption.NodeAddr = encryptedAddr
+	shared.NodeAddr = account.Address
 
 	nodeConf, err = createConfigForTests(account.Address.String(), password, ipAddress, storageLimit, port)
 	if err != nil {
@@ -273,36 +267,31 @@ func testLogin(blockchainAccountString, password string) (*accounts.Account, err
 	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccounts := ks.Accounts()
 
-	var etherAccount *accounts.Account
+	var account *accounts.Account
 
 	for _, a := range etherAccounts {
 		if blockchainAccountString == a.Address.String() {
-			etherAccount = &a
+			account = &a
 			break
 		}
 	}
 
-	if etherAccount == nil {
+	if account == nil {
 		err := errors.New("Account Not Found Error: cannot find account for " + blockchainAccountString)
 		return nil, err
 	}
 
-	keyJson, err := ks.Export(*etherAccount, password, password)
+	keyJson, err := ks.Export(*account, password, password)
 	if err != nil {
 		return nil, err
 	}
 
-	key, err := keystore.DecryptKey(keyJson, password)
+	_, err = keystore.DecryptKey(keyJson, password)
 	if err != nil {
 		return nil, err
 	}
 
-	encryptedAddr, err := encryption.EncryptNodeAddr(key.Address)
-	if err != nil {
-		return nil, err
-	}
+	shared.NodeAddr = account.Address
 
-	encryption.NodeAddr = encryptedAddr
-
-	return etherAccount, nil
+	return account, nil
 }

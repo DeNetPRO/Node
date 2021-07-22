@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
@@ -26,19 +25,14 @@ func Start() {
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
 
-	nodeAddr, err := encryption.DecryptNodeAddr()
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-	}
-
 	for {
 		time.Sleep(time.Minute) // add period
 
-		pathToAccStorage := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName)
+		pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName)
 
 		storageProviderAddresses := []string{}
 
-		err = filepath.WalkDir(pathToAccStorage,
+		err := filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
 				if err != nil {
 					logger.Log(logger.CreateDetails(logInfo, err))
@@ -85,7 +79,7 @@ func Start() {
 				continue
 			}
 
-			pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, "tree.json")
+			pathToFsTree := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress, "tree.json")
 
 			shared.MU.Lock()
 			fileFsTree, err := os.Open(pathToFsTree)
@@ -137,7 +131,7 @@ func Start() {
 		}
 
 		if removedTotal > 0 {
-			pathToConfig := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.ConfDirName, "config.json")
+			pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, "config.json")
 
 			shared.MU.Lock()
 			confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)

@@ -24,7 +24,7 @@ var accountImportCmd = &cobra.Command{
 			log.Fatal("Fatal error, couldn't import an account")
 		}
 
-		account.NodeIpAddr = fmt.Sprint(nodeConfig.IpAddress, ":", nodeConfig.HTTPPort)
+		account.IpAddr = fmt.Sprint(nodeConfig.IpAddress, ":", nodeConfig.HTTPPort)
 
 		go cleaner.Start()
 

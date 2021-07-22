@@ -21,7 +21,9 @@ import (
 	"golang.org/x/term"
 )
 
-var NodeIpAddr string
+var (
+	IpAddr string
+)
 
 //GetAllAccounts go to the folder ~/dfile/accounts and return all accounts addresses in string format
 func List() []string {
@@ -153,12 +155,7 @@ func Login(blockchainAccountString, password string) (*accounts.Account, error) 
 		return nil, logger.CreateDetails(logInfo, err)
 	}
 
-	encryptedAddr, err := encryption.EncryptNodeAddr(account.Address)
-	if err != nil {
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	encryption.NodeAddr = encryptedAddr
+	shared.NodeAddr = account.Address
 
 	encrForKey := sha256.Sum256([]byte(account.Address.String()))
 	encryptedKey, err := encryption.EncryptAES(encrForKey[:], key.PrivateKey.D.Bytes())
@@ -299,12 +296,7 @@ func initAccount(ks *keystore.KeyStore, account *accounts.Account, password stri
 		return nodeConf, logger.CreateDetails(logInfo, err)
 	}
 
-	encryptedAddr, err := encryption.EncryptNodeAddr(account.Address)
-	if err != nil {
-		return nodeConf, logger.CreateDetails(logInfo, err)
-	}
-
-	encryption.NodeAddr = encryptedAddr
+	shared.NodeAddr = account.Address
 
 	encrForKey := sha256.Sum256([]byte(account.Address.String()))
 	encryptedKey, err := encryption.EncryptAES(encrForKey[:], key.PrivateKey.D.Bytes())
