@@ -71,7 +71,7 @@ var accountCreateCmd = &cobra.Command{
 			log.Fatal(accCreateFatalMessage)
 		}
 
-		account.NodeIpAddr = fmt.Sprint(nodeConfig.IpAddress, ":", nodeConfig.HTTPPort)
+		account.IpAddr = fmt.Sprint(nodeConfig.IpAddress, ":", nodeConfig.HTTPPort)
 
 		go cleaner.Start()
 

@@ -5,17 +5,13 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
-	"crypto/sha256"
-	"errors"
 	"io"
 	"net"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 var (
-	NodeAddr   []byte
 	PrivateKey []byte
 )
 
@@ -84,53 +80,6 @@ func GetDeviceMacAddr() (string, error) {
 	}
 
 	return addr, nil
-}
-
-// ====================================================================================
-
-func EncryptNodeAddr(addr common.Address) ([]byte, error) {
-	const logInfo = "shared.EncryptNodeAddr->"
-	var nodeAddr []byte
-
-	macAddr, err := GetDeviceMacAddr()
-	if err != nil {
-		return nodeAddr, logger.CreateDetails(logInfo, err)
-	}
-
-	encrKey := sha256.Sum256([]byte(macAddr))
-
-	encryptedAddr, err := EncryptAES(encrKey[:], addr.Bytes())
-	if err != nil {
-		return nodeAddr, logger.CreateDetails(logInfo, err)
-	}
-
-	return encryptedAddr, nil
-}
-
-// ====================================================================================
-
-func DecryptNodeAddr() (common.Address, error) {
-	const logInfo = "shared.DecryptNodeAddr->"
-
-	var nodeAddr common.Address
-
-	if len(NodeAddr) == 0 {
-		return nodeAddr, errors.New("empty address")
-	}
-
-	macAddr, err := GetDeviceMacAddr()
-	if err != nil {
-		return nodeAddr, logger.CreateDetails(logInfo, err)
-	}
-
-	encrKey := sha256.Sum256([]byte(macAddr))
-
-	accAddr, err := DecryptAES(encrKey[:], NodeAddr)
-	if err != nil {
-		return nodeAddr, logger.CreateDetails(logInfo, err)
-	}
-
-	return common.BytesToAddress(accAddr), nil
 }
 
 // ====================================================================================
