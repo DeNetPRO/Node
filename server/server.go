@@ -194,7 +194,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	if avaliableSpaceLeft < oneHunderdMBBytes {
 		fmt.Println("Shared storage memory is running low,", avaliableSpaceLeft/(1024*1024), "MB of space is avaliable")
-		fmt.Println("You may need additional space for mining. Total shared space can be changed in account configuration")
+		fmt.Println("You may need additional space for storing data. Total shared space can be changed in account configuration")
 	}
 
 	err = config.Save(confFile, nodeConfig)
@@ -752,9 +752,6 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	}
 
 	spFsFile.Sync()
-
-	logger.Log("Updated fs info")
-
 	shared.MU.Unlock()
 
 }
