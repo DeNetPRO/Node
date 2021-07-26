@@ -33,12 +33,18 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	"github.com/valyala/fasthttp"
 )
 
 type updatedFsInfo struct {
 	NewFs            []string
 	Nonce            string
 	SignedFsRootHash string
+}
+
+type AddressNodeResponse struct {
+	IP   string `json:"ip"`
+	Port string `json:"port"`
 }
 
 const gbBytes = int64(1024 * 1024 * 1024)
@@ -789,6 +795,7 @@ func getNodeIP(nodeInfo nodeAbi.SimpleMetaDataDeNetNode) string {
 
 func CopyFile(w http.ResponseWriter, r *http.Request) {
 	logInfo := "server.CopyFile->"
+	fmt.Println("Copy file")
 
 	vars := mux.Vars(r)
 	fileSize := vars["size"]
@@ -859,26 +866,31 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 
 		intTotal := total.Int64()
 
-		// fastReq := fasthttp.AcquireRequest()
-		// fastResp := fasthttp.AcquireResponse()
-		// defer fasthttp.ReleaseRequest(fastReq)
-		// defer fasthttp.ReleaseResponse(fastResp)
+		fastReq := fasthttp.AcquireRequest()
+		fastResp := fasthttp.AcquireResponse()
+		defer fasthttp.ReleaseRequest(fastReq)
+		defer fasthttp.ReleaseResponse(fastResp)
 
 		client := &http.Client{Timeout: time.Minute}
-		pr, pw := io.Pipe()
-		writer := multipart.NewWriter(pw)
 
 		send := false
 		for i := int64(0); i < intTotal; i++ {
 			node, err := nftNode.GetNodeById(&bind.CallOpts{}, big.NewInt(i))
 			if err != nil {
-				logger.Log(logger.CreateDetails(logInfo, err))
-				http.Error(w, err.Error(), 400)
-				return
+				fmt.Println(err)
+				continue
 			}
+
+			pr, pw := io.Pipe()
+			writer := multipart.NewWriter(pw)
 
 			nodeIP := getNodeIP(node)
 
+			if nodeIP == nodeConfig.IpAddress+":"+nodeConfig.HTTPPort {
+				continue
+			}
+
+			fmt.Println("Try copy to:", nodeIP)
 			go func() {
 				defer pw.Close()
 				bytes, err := io.ReadAll(r.Body)
@@ -888,24 +900,33 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 				pw.Write(bytes)
 			}()
 
+			url := "http://" + nodeIP
+			fastReq.Reset()
+			fastResp.Reset()
+
+			fastReq.Header.SetRequestURI(url)
+			fastReq.Header.SetMethod("GET")
+			fastReq.Header.Set("Connection", "close")
+
+			err = fasthttp.Do(fastReq, fastResp)
+			if err != nil {
+				continue
+			}
+
 			req, err := http.NewRequest("POST", "http://"+nodeIP+"/copy/"+fileSize, pr)
 			if err != nil {
-				return
+				continue
 			}
 
 			req.Header.Set("Content-Type", writer.FormDataContentType())
 
 			resp, err := client.Do(req)
 			if err != nil {
-				return
+				continue
 			}
 
 			if resp != nil {
 				defer resp.Body.Close()
-			}
-
-			if resp.StatusCode != 200 {
-				continue
 			}
 
 			reqBody, err := io.ReadAll(resp.Body)
@@ -913,8 +934,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			w.WriteHeader(http.StatusOK)
-			io.WriteString(w, string(reqBody))
+			w.Write(reqBody)
 			return
 		}
 
@@ -1087,7 +1107,6 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 	shared.MU.Unlock()
 
 	hashes := r.MultipartForm.File["hashes"]
-	fmt.Println(len(hashes))
 	hashesFile, err := hashes[0].Open()
 	if err != nil {
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -1152,8 +1171,19 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 		newFile.Close()
 	}
 
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, nodeConfig.IpAddress)
+	resp := AddressNodeResponse{
+		IP:   nodeConfig.IpAddress,
+		Port: nodeConfig.HTTPPort,
+	}
+
+	js, err = json.Marshal(resp)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logInfo, err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }
 
 // ====================================================================================

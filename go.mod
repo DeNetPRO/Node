@@ -10,6 +10,6 @@ require (
 	github.com/rs/cors v1.8.0
 	github.com/spf13/cobra v1.2.1
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a // indirect
+	github.com/valyala/fasthttp v1.28.0
 	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b
 )
