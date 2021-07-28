@@ -369,9 +369,19 @@ func StartMining(password string) {
 				continue
 			}
 
+			diffIsMuch, err := instance.IsMatchDifficulty(&bind.CallOpts{}, decodedBigInt, baseDfficulty)
+			if err != nil {
+				logger.Log(logger.CreateDetails(actLoc, err))
+				continue
+			}
+
+			fmt.Println("diffIsMuch", diffIsMuch)
+
 			remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
 
 			remainderIsLessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
+
+			fmt.Println("remainderIsLessUserDifficulty", remainderIsLessUserDifficulty)
 
 			if remainderIsLessUserDifficulty {
 				fmt.Println("checking file:", fileName)
