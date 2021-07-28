@@ -17,10 +17,10 @@ var accountImportCmd = &cobra.Command{
 	Short: "imports your account by private key",
 	Long:  "imports your account by private key",
 	Run: func(cmd *cobra.Command, args []string) {
-		const logInfo = "accountImportCmd->"
+		const actLoc = "accountImportCmd->"
 		_, nodeConfig, err := account.Import()
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(actLoc, err))
 			log.Fatal("Fatal error, couldn't import an account")
 		}
 
