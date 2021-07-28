@@ -5,9 +5,7 @@ import (
 
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -16,6 +14,7 @@ import (
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +26,7 @@ var configUpdateCmd = &cobra.Command{
 	Short: "updates your account configuration",
 	Long:  "updates your account configuration",
 	Run: func(cmd *cobra.Command, args []string) {
-		const logInfo = "configUpdateCmd->"
+		const actLoc = "configUpdateCmd->"
 		accounts := account.List()
 
 		if len(accounts) > 1 {
@@ -39,7 +38,7 @@ var configUpdateCmd = &cobra.Command{
 
 		etherAccount, password, err := account.ValidateUser()
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(actLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
@@ -48,22 +47,16 @@ var configUpdateCmd = &cobra.Command{
 
 		var nodeConfig config.SecondaryNodeConfig
 
-		confFile, err := os.OpenFile(pathToConfigFile, os.O_RDWR, 0700)
+		confFile, fileBytes, err := shared.ReadFile(pathToConfigFile)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(actLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 		defer confFile.Close()
 
-		fileBytes, err := io.ReadAll(confFile)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-			log.Fatal(confUpdateFatalMessage)
-		}
-
 		err = json.Unmarshal(fileBytes, &nodeConfig)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(actLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
@@ -73,7 +66,7 @@ var configUpdateCmd = &cobra.Command{
 
 		err = config.SetStorageLimit(pathToConfigDir, config.State.Update, &nodeConfig)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(actLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
@@ -81,7 +74,7 @@ var configUpdateCmd = &cobra.Command{
 
 		splitIPAddr, err := config.SetIpAddr(&nodeConfig, config.State.Update)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(actLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
@@ -89,7 +82,7 @@ var configUpdateCmd = &cobra.Command{
 
 		err = config.SetPort(&nodeConfig, config.State.Update)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(actLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
@@ -97,7 +90,7 @@ var configUpdateCmd = &cobra.Command{
 
 		err = config.ChangeAgreeSendLogs(&nodeConfig, config.State.Update)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(actLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
@@ -114,14 +107,14 @@ var configUpdateCmd = &cobra.Command{
 
 			err := blockchainprovider.UpdateNodeInfo(ctx, etherAccount.Address, password, nodeConfig.HTTPPort, splitIPAddr)
 			if err != nil {
-				logger.Log(logger.CreateDetails(logInfo, err))
+				logger.Log(logger.CreateDetails(actLoc, err))
 				log.Fatal(confUpdateFatalMessage)
 			}
 		}
 
 		err = config.Save(confFile, nodeConfig) // we dont't use mutex because race condition while config update is impossible
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(actLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 

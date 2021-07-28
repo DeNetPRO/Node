@@ -51,7 +51,7 @@ var partiallyReservedIPs = map[string]int{
 }
 
 func Create(address, password string) (SecondaryNodeConfig, error) {
-	const logInfo = "config.Create->"
+	const actLoc = "config.Create->"
 	nodeConfig := SecondaryNodeConfig{
 		Address:       address,
 		AgreeSendLogs: true,
@@ -65,7 +65,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	err := SetStorageLimit(pathToConfig, State.Create, &nodeConfig)
 	if err != nil {
-		return nodeConfig, logger.CreateDetails(logInfo, err)
+		return nodeConfig, logger.CreateDetails(actLoc, err)
 	}
 
 	var splitIPAddr []string
@@ -73,7 +73,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 	if upnp.InternetDevice != nil {
 		ip, err := upnp.InternetDevice.PublicIP()
 		if err != nil {
-			return nodeConfig, logger.CreateDetails(logInfo, err)
+			return nodeConfig, logger.CreateDetails(actLoc, err)
 		}
 
 		nodeConfig.IpAddress = ip
@@ -83,13 +83,13 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		fmt.Println("Please enter your public ip address")
 		splitIPAddr, err = SetIpAddr(&nodeConfig, State.Update)
 		if err != nil {
-			return nodeConfig, logger.CreateDetails(logInfo, err)
+			return nodeConfig, logger.CreateDetails(actLoc, err)
 		}
 	}
 
 	err = SetPort(&nodeConfig, State.Create)
 	if err != nil {
-		return nodeConfig, logger.CreateDetails(logInfo, err)
+		return nodeConfig, logger.CreateDetails(actLoc, err)
 	}
 
 	if !shared.TestMode {
@@ -102,24 +102,24 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 		err = blockchainprovider.RegisterNode(ctx, address, password, splitIPAddr, nodeConfig.HTTPPort)
 		if err != nil {
-			return nodeConfig, logger.CreateDetails(logInfo, err)
+			return nodeConfig, logger.CreateDetails(actLoc, err)
 		}
 	}
 
 	confFile, err := os.Create(filepath.Join(pathToConfig, "config.json"))
 	if err != nil {
-		return nodeConfig, logger.CreateDetails(logInfo, err)
+		return nodeConfig, logger.CreateDetails(actLoc, err)
 	}
 	defer confFile.Close()
 
 	confJSON, err := json.Marshal(nodeConfig)
 	if err != nil {
-		return nodeConfig, logger.CreateDetails(logInfo, err)
+		return nodeConfig, logger.CreateDetails(actLoc, err)
 	}
 
 	_, err = confFile.Write(confJSON)
 	if err != nil {
-		return nodeConfig, logger.CreateDetails(logInfo, err)
+		return nodeConfig, logger.CreateDetails(actLoc, err)
 	}
 
 	fmt.Println("Saving config...")
@@ -132,7 +132,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 // ====================================================================================
 
 func SetStorageLimit(pathToConfig, state string, nodeConfig *SecondaryNodeConfig) error {
-	const logInfo = "config.SetStorageLimit->"
+	const actLoc = "config.SetStorageLimit->"
 	regNum := regexp.MustCompile(("[0-9]+"))
 
 	if shared.TestMode {
@@ -145,7 +145,7 @@ func SetStorageLimit(pathToConfig, state string, nodeConfig *SecondaryNodeConfig
 		fmt.Println("Available space:", availableSpace, "GB")
 		space, err := shared.ReadFromConsole()
 		if err != nil {
-			return logger.CreateDetails(logInfo, err)
+			return logger.CreateDetails(actLoc, err)
 		}
 
 		if state == State.Update && space == "" {
@@ -180,7 +180,7 @@ func SetStorageLimit(pathToConfig, state string, nodeConfig *SecondaryNodeConfig
 // ====================================================================================
 
 func SetIpAddr(nodeConfig *SecondaryNodeConfig, state string) ([]string, error) {
-	const logInfo = "config.SetIpAddr->"
+	const actLoc = "config.SetIpAddr->"
 
 	var splitIPAddr []string
 
@@ -196,7 +196,7 @@ func SetIpAddr(nodeConfig *SecondaryNodeConfig, state string) ([]string, error) 
 	for {
 		ipAddr, err := shared.ReadFromConsole()
 		if err != nil {
-			return nil, logger.CreateDetails(logInfo, err)
+			return nil, logger.CreateDetails(actLoc, err)
 		}
 
 		if state == State.Update && ipAddr == "" {
@@ -222,7 +222,7 @@ func SetIpAddr(nodeConfig *SecondaryNodeConfig, state string) ([]string, error) 
 		if partiallyReserved {
 			secondAddrPart, err := strconv.Atoi(splitIPAddr[1])
 			if err != nil {
-				return nil, logger.CreateDetails(logInfo, err)
+				return nil, logger.CreateDetails(actLoc, err)
 			}
 
 			if secondAddrPart <= reservedSecAddrPart {
@@ -241,7 +241,7 @@ func SetIpAddr(nodeConfig *SecondaryNodeConfig, state string) ([]string, error) 
 // ====================================================================================
 
 func SetPort(nodeConfig *SecondaryNodeConfig, state string) error {
-	const logInfo = "config.SetPort->"
+	const actLoc = "config.SetPort->"
 
 	if shared.TestMode {
 		nodeConfig.HTTPPort = shared.TestPort
@@ -255,7 +255,7 @@ func SetPort(nodeConfig *SecondaryNodeConfig, state string) error {
 
 		httpPort, err := shared.ReadFromConsole()
 		if err != nil {
-			return logger.CreateDetails(logInfo, err)
+			return logger.CreateDetails(actLoc, err)
 		}
 
 		if state == State.Create && httpPort == "" {
@@ -295,13 +295,13 @@ func SetPort(nodeConfig *SecondaryNodeConfig, state string) error {
 // ====================================================================================
 
 func ChangeAgreeSendLogs(nodeConfig *SecondaryNodeConfig, state string) error {
-	const logInfo = "config.ChangeAgreeSendLogs->"
+	const actLoc = "config.ChangeAgreeSendLogs->"
 	regPort := regexp.MustCompile("^(?:y|n)$")
 
 	for {
 		agree, err := shared.ReadFromConsole()
 		if err != nil {
-			return logger.CreateDetails(logInfo, err)
+			return logger.CreateDetails(actLoc, err)
 		}
 
 		if state == State.Update && agree == "" {

@@ -3,6 +3,7 @@ package shared
 import (
 	"bufio"
 	"crypto/sha256"
+	"io"
 
 	"encoding/hex"
 	"errors"
@@ -43,10 +44,10 @@ func GetAvailableSpace(storagePath string) int {
 // ====================================================================================
 
 func InitPaths() error {
-	const logInfo = "shared.InitPaths->"
+	const actLoc = "shared.InitPaths->"
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return logger.CreateDetails(logInfo, err)
+		return logger.CreateDetails(actLoc, err)
 	}
 
 	paths.WorkDirPath = filepath.Join(homeDir, paths.WorkDirName)
@@ -59,30 +60,30 @@ func InitPaths() error {
 // ====================================================================================
 
 func CreateIfNotExistAccDirs() error {
-	const logInfo = "shared.CreateIfNotExistAccDirs->"
+	const actLoc = "shared.CreateIfNotExistAccDirs->"
 	statWDP, err := os.Stat(paths.WorkDirPath)
 	err = CheckStatErr(err)
 	if err != nil {
-		return logger.CreateDetails(logInfo, err)
+		return logger.CreateDetails(actLoc, err)
 	}
 
 	if statWDP == nil {
 		err = os.MkdirAll(paths.WorkDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
-			return logger.CreateDetails(logInfo, err)
+			return logger.CreateDetails(actLoc, err)
 		}
 	}
 
 	statADP, err := os.Stat(paths.AccsDirPath)
 	err = CheckStatErr(err)
 	if err != nil {
-		return logger.CreateDetails(logInfo, err)
+		return logger.CreateDetails(actLoc, err)
 	}
 
 	if statADP == nil {
 		err = os.MkdirAll(paths.AccsDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
-			return logger.CreateDetails(logInfo, err)
+			return logger.CreateDetails(actLoc, err)
 		}
 	}
 
@@ -120,16 +121,32 @@ func ContainsAccount(accounts []string, address string) bool {
 	return false
 }
 
+func ReadFile(path string) (*os.File, []byte, error) {
+	const actLoc = "shared.ReadFile->"
+	file, err := os.OpenFile(path, os.O_RDWR, 0700)
+	if err != nil {
+		return nil, nil, logger.CreateDetails(actLoc, err)
+	}
+
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		file.Close()
+		return nil, nil, logger.CreateDetails(actLoc, err)
+	}
+
+	return file, fileBytes, nil
+}
+
 // ====================================================================================
 
 func ReadFromConsole() (string, error) {
-	const logInfo = "shared.ReadFromConsole->"
+	const actLoc = "shared.ReadFromConsole->"
 	fmt.Print("Enter value here: ")
 	reader := bufio.NewReader(os.Stdin)
 	// ReadString will block until the delimiter is entered
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		return "", logger.CreateDetails(logInfo, err)
+		return "", logger.CreateDetails(actLoc, err)
 	}
 
 	// remove the delimiter from the string
@@ -142,25 +159,25 @@ func ReadFromConsole() (string, error) {
 // ====================================================================================
 
 func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
-	const logInfo = "shared.CalcRootHash->"
+	const actLoc = "shared.CalcRootHash->"
 
 	arrLen := len(hashArr)
 
 	if arrLen == 0 {
-		return "", nil, logger.CreateDetails(logInfo, errors.New("hash array is empty"))
+		return "", nil, logger.CreateDetails(actLoc, errors.New("hash array is empty"))
 	}
 
 	base := make([][]byte, 0, arrLen+1)
 
 	emptyValue, err := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
 	if err != nil {
-		return "", nil, logger.CreateDetails(logInfo, err)
+		return "", nil, logger.CreateDetails(actLoc, err)
 	}
 
 	for _, v := range hashArr {
 		decoded, err := hex.DecodeString(v)
 		if err != nil {
-			return "", nil, logger.CreateDetails(logInfo, err)
+			return "", nil, logger.CreateDetails(actLoc, err)
 		}
 		base = append(base, decoded)
 	}
