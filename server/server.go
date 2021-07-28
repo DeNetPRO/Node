@@ -806,14 +806,6 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 	}
 	defer confFile.Close()
 
-	fileBytes, err = io.ReadAll(confFile)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Account config problem", 500)
-		return
-	}
-
 	var nodeConfig config.SecondaryNodeConfig
 
 	err = json.Unmarshal(fileBytes, &nodeConfig)
