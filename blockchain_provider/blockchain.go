@@ -369,7 +369,7 @@ func StartMining(password string) {
 				continue
 			}
 
-			diffIsMuch, err := instance.IsMatchDifficulty(&bind.CallOpts{}, decodedBigInt, baseDfficulty)
+			diffIsMuch, err := instance.IsMatchDifficulty(&bind.CallOpts{}, decodedBigInt, big.NewInt(int64(blockNum)))
 			if err != nil {
 				logger.Log(logger.CreateDetails(actLoc, err))
 				continue
