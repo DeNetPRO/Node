@@ -488,6 +488,8 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 
 	if signedFSRootHash[len(signedFSRootHash)-1] == 1 { //ecdsa version fix
 		signedFSRootHash[len(signedFSRootHash)-1] = 28
+	} else {
+		signedFSRootHash = signedFSRootHash[:64]
 	}
 
 	signatureIsValid, err := instance.IsValidSign(&bind.CallOpts{}, common.HexToAddress(spAddress), fsRootNonceBytes, signedFSRootHash)
