@@ -369,19 +369,21 @@ func StartMining(password string) {
 				continue
 			}
 
-			diffIsMuch, err := instance.IsMatchDifficulty(&bind.CallOpts{}, decodedBigInt, big.NewInt(int64(blockNum)))
-			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
-				continue
-			}
+			// fmt.Println("decodedBigInt", decodedBigInt)
+			// fmt.Println("baseDfficulty", baseDfficulty)
+			// fmt.Println("userDifficulty", userDifficulty)
 
-			fmt.Println("diffIsMuch", diffIsMuch)
+			// diffIsMuch, err := instance.IsMatchDifficulty(&bind.CallOpts{}, decodedBigInt, userDifficulty)
+			// if err != nil {
+			// 	logger.Log(logger.CreateDetails(actLoc, err))
+			// 	continue
+			// }
+
+			// fmt.Println("diffIsMuch", diffIsMuch)
 
 			remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
 
 			remainderIsLessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
-
-			fmt.Println("remainderIsLessUserDifficulty", remainderIsLessUserDifficulty)
 
 			if remainderIsLessUserDifficulty {
 				fmt.Println("checking file:", fileName)
@@ -457,11 +459,6 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 
 	treeToFsRoot = nil
 
-	signedFSRootHash, err := hex.DecodeString(spFs.SignedFsRoot)
-	if err != nil {
-		return logger.CreateDetails(actLoc, err)
-	}
-
 	opts, err := initTrxOpts(ctx, client, nodeAddr, password, blockNum)
 	if err != nil {
 		return logger.CreateDetails(actLoc, err)
@@ -484,7 +481,16 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 
 	fsRootNonceBytes := append(fsRootHashBytes[:], nonce32...)
 
-	signatureIsValid, err := instance.IsValidSign(&bind.CallOpts{}, common.HexToAddress(spAddress), fsRootNonceBytes, signedFSRootHash[:64])
+	signedFSRootHash, err := hex.DecodeString(spFs.SignedFsRoot)
+	if err != nil {
+		return logger.CreateDetails(actLoc, err)
+	}
+
+	if signedFSRootHash[len(signedFSRootHash)-1] == 1 { //ecdsa version fix
+		signedFSRootHash[len(signedFSRootHash)-1] = 28
+	}
+
+	signatureIsValid, err := instance.IsValidSign(&bind.CallOpts{}, common.HexToAddress(spAddress), fsRootNonceBytes, signedFSRootHash)
 	if err != nil {
 		return logger.CreateDetails(actLoc, err)
 	}
@@ -493,7 +499,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return logger.CreateDetails(actLoc, errors.New(spAddress+" signature is not valid"))
 	}
 
-	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash[:64], bytesToProve, proof)
+	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, bytesToProve, proof)
 	if err != nil {
 		return logger.CreateDetails(actLoc, err)
 	}
