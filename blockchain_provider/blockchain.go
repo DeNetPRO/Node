@@ -363,29 +363,23 @@ func StartMining(password string) {
 				continue
 			}
 
-			baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
-			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
-				continue
-			}
-
-			// fmt.Println("decodedBigInt", decodedBigInt)
-			// fmt.Println("baseDfficulty", baseDfficulty)
-			// fmt.Println("userDifficulty", userDifficulty)
-
-			// diffIsMuch, err := instance.IsMatchDifficulty(&bind.CallOpts{}, decodedBigInt, userDifficulty)
+			// baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
 			// if err != nil {
 			// 	logger.Log(logger.CreateDetails(actLoc, err))
 			// 	continue
 			// }
 
-			// fmt.Println("diffIsMuch", diffIsMuch)
+			diffIsMuch, err := instance.IsMatchDifficulty(&bind.CallOpts{}, decodedBigInt, userDifficulty)
+			if err != nil {
+				logger.Log(logger.CreateDetails(actLoc, err))
+				continue
+			}
 
-			remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
+			// remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
 
-			remainderIsLessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
+			// remainderIsLessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
 
-			if remainderIsLessUserDifficulty {
+			if diffIsMuch {
 				fmt.Println("checking file:", fileName)
 				fmt.Println("Trying proof", fileName, "for reward:", reward)
 
