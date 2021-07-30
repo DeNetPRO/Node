@@ -340,7 +340,7 @@ func StartMining(password string) {
 				continue
 			}
 
-			proved, err := instance.VerifyFileProof(&bind.CallOpts{}, shared.NodeAddr, storedFileBytes, uint32(blockNum-6), userDifficulty)
+			proved, err := instance.VerifyFileProof(&bind.CallOpts{}, shared.NodeAddr, storedFileBytes[:eightKB], uint32(blockNum-6), userDifficulty)
 			if err != nil {
 				logger.Log(logger.CreateDetails(actLoc, err))
 				continue
@@ -393,8 +393,6 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 	}
 
 	eightKBHashes := []string{}
-
-	bytesToProve := fileBytes[:eightKB]
 
 	for i := 0; i < len(fileBytes); i += eightKB {
 		hSum := sha256.Sum256(fileBytes[i : i+eightKB])
@@ -468,7 +466,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return logger.CreateDetails(actLoc, errors.New(spAddress+" signature is not valid"))
 	}
 
-	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, bytesToProve, proof)
+	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
 		return logger.CreateDetails(actLoc, err)
 	}
