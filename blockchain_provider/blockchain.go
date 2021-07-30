@@ -38,13 +38,13 @@ const NFT = "0xBfAfdaE6B77a02A4684D39D1528c873961528342"
 const ethClientAddr = "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f"
 
 func RegisterNode(ctx context.Context, address, password string, ip []string, port string) error {
-	const actLoc = "blockchainprovider.RegisterNode->"
+	const logLoc = "blockchainprovider.RegisterNode->"
 	ipAddr := [4]uint8{}
 
 	for i, v := range ip {
 		intIPPart, err := strconv.Atoi(v)
 		if err != nil {
-			return logger.CreateDetails(actLoc, err)
+			return logger.CreateDetails(logLoc, err)
 		}
 
 		ipAddr[i] = uint8(intIPPart)
@@ -52,24 +52,24 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 
 	intPort, err := strconv.Atoi(port)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	client, err := ethclient.Dial(ethClientAddr)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	defer client.Close()
 
 	blockNum, err := client.BlockNumber(ctx)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	balance, err := client.BalanceAt(ctx, common.HexToAddress(address), big.NewInt(int64(blockNum-1)))
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	balanceIsInsufficient := balance.Cmp(big.NewInt(200000000000000)) == -1
@@ -82,17 +82,17 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 
 	node, err := nodeAbi.NewNodeNft(common.HexToAddress(NFT), client)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	opts, err := initTrxOpts(ctx, client, shared.NodeAddr, password, blockNum)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	_, err = node.CreateNode(opts, ipAddr, uint16(intPort))
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	return nil
@@ -101,24 +101,24 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 // ====================================================================================
 
 func GetNodeInfoByID() (nodeAbi.SimpleMetaDataDeNetNode, error) {
-	const actLoc = "blockchainprovider.GetNodeInfoByID->"
+	const logLoc = "blockchainprovider.GetNodeInfoByID->"
 	var nodeInfo nodeAbi.SimpleMetaDataDeNetNode
 
 	client, err := ethclient.Dial(ethClientAddr)
 	if err != nil {
-		return nodeInfo, logger.CreateDetails(actLoc, err)
+		return nodeInfo, logger.CreateDetails(logLoc, err)
 	}
 
 	defer client.Close()
 
 	node, err := nodeAbi.NewNodeNft(common.HexToAddress(NFT), client)
 	if err != nil {
-		return nodeInfo, logger.CreateDetails(actLoc, err)
+		return nodeInfo, logger.CreateDetails(logLoc, err)
 	}
 
 	nodeInfo, err = node.GetNodeById(&bind.CallOpts{}, big.NewInt(2))
 	if err != nil {
-		return nodeInfo, logger.CreateDetails(actLoc, err)
+		return nodeInfo, logger.CreateDetails(logLoc, err)
 	}
 
 	return nodeInfo, nil
@@ -127,7 +127,7 @@ func GetNodeInfoByID() (nodeAbi.SimpleMetaDataDeNetNode, error) {
 // ====================================================================================
 
 func GetNodeNFT() (*nodeAbi.NodeNft, error) {
-	const actLoc = "blockchainprovider.getNodeNFT->"
+	const logLoc = "blockchainprovider.getNodeNFT->"
 
 	nftAddr := common.HexToAddress("0xBfAfdaE6B77a02A4684D39D1528c873961528342")
 
@@ -135,14 +135,14 @@ func GetNodeNFT() (*nodeAbi.NodeNft, error) {
 
 	client, err := ethclient.Dial("https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f")
 	if err != nil {
-		return nil, logger.CreateDetails(actLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	defer client.Close()
 
 	node, err := nodeAbi.NewNodeNft(nftAddr, client)
 	if err != nil {
-		return nil, logger.CreateDetails(actLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	return node, err
@@ -151,13 +151,13 @@ func GetNodeNFT() (*nodeAbi.NodeNft, error) {
 // ====================================================================================
 
 func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newPort string, newIP []string) error {
-	const actLoc = "blockchainprovider.UpdateNodeInfo->"
+	const logLoc = "blockchainprovider.UpdateNodeInfo->"
 	ipInfo := [4]uint8{}
 
 	for i, v := range newIP {
 		intPart, err := strconv.Atoi(v)
 		if err != nil {
-			return logger.CreateDetails(actLoc, err)
+			return logger.CreateDetails(logLoc, err)
 		}
 
 		ipInfo[i] = uint8(intPart)
@@ -165,34 +165,34 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 
 	intPort, err := strconv.Atoi(newPort)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	client, err := ethclient.Dial(ethClientAddr)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	defer client.Close()
 
 	node, err := nodeAbi.NewNodeNft(common.HexToAddress(NFT), client)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	blockNum, err := client.BlockNumber(ctx)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	opts, err := initTrxOpts(ctx, client, nodeAddr, password, blockNum)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	_, err = node.UpdateNode(opts, big.NewInt(2), ipInfo, uint16(intPort))
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	return nil
@@ -201,7 +201,7 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 // ====================================================================================
 
 func StartMining(password string) {
-	const actLoc = "blockchainprovider.StartMining->"
+	const logLoc = "blockchainprovider.StartMining->"
 
 	pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName)
 
@@ -210,14 +210,14 @@ func StartMining(password string) {
 
 	client, err := ethclient.Dial(ethClientAddr)
 	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 	}
 	defer client.Close()
 
 	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
 	instance, err := abiPOS.NewStore(tokenAddress, client)
 	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 	}
 
 	for {
@@ -227,7 +227,7 @@ func StartMining(password string) {
 		err = filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
 				if err != nil {
-					logger.Log(logger.CreateDetails(actLoc, err))
+					logger.Log(logger.CreateDetails(logLoc, err))
 				}
 
 				if regAddr.MatchString(info.Name()) {
@@ -238,7 +238,7 @@ func StartMining(password string) {
 			})
 
 		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			continue
 		}
 
@@ -250,13 +250,13 @@ func StartMining(password string) {
 
 		blockNum, err := client.BlockNumber(ctx)
 		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			continue
 		}
 
 		nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-1)))
 		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			continue
 		}
 
@@ -275,7 +275,7 @@ func StartMining(password string) {
 			storageProviderAddr := common.HexToAddress(spAddress)
 			_, reward, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
 			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
+				logger.Log(logger.CreateDetails(logLoc, err))
 			}
 
 			fileNames := []string{}
@@ -285,7 +285,7 @@ func StartMining(password string) {
 			err = filepath.WalkDir(pathToStorProviderFiles,
 				func(path string, info fs.DirEntry, err error) error {
 					if err != nil {
-						logger.Log(logger.CreateDetails(actLoc, err))
+						logger.Log(logger.CreateDetails(logLoc, err))
 					}
 
 					if regFileName.MatchString(info.Name()) && len(info.Name()) == 64 {
@@ -295,14 +295,14 @@ func StartMining(password string) {
 					return nil
 				})
 			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
+				logger.Log(logger.CreateDetails(logLoc, err))
 				continue
 			}
 
 			if len(fileNames) == 0 {
 				err = os.RemoveAll(pathToStorProviderFiles)
 				if err != nil {
-					logger.Log(logger.CreateDetails(actLoc, err))
+					logger.Log(logger.CreateDetails(logLoc, err))
 				}
 				continue
 			}
@@ -325,7 +325,7 @@ func StartMining(password string) {
 
 			storedFile, storedFileBytes, err := shared.ReadFile(filepath.Join(pathToStorProviderFiles, fileName))
 			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
+				logger.Log(logger.CreateDetails(logLoc, err))
 				continue
 			}
 
@@ -336,13 +336,13 @@ func StartMining(password string) {
 
 			blockNum, err := client.BlockNumber(ctx)
 			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
+				logger.Log(logger.CreateDetails(logLoc, err))
 				continue
 			}
 
 			proved, err := instance.VerifyFileProof(&bind.CallOpts{}, shared.NodeAddr, storedFileBytes[:eightKB], uint32(blockNum-6), userDifficulty)
 			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
+				logger.Log(logger.CreateDetails(logLoc, err))
 				continue
 			}
 
@@ -358,7 +358,7 @@ func StartMining(password string) {
 
 				err := sendProof(ctx, client, password, storedFileBytes, shared.NodeAddr, spAddress, blockNum-6, instance)
 				if err != nil {
-					logger.Log(logger.CreateDetails(actLoc, err))
+					logger.Log(logger.CreateDetails(logLoc, err))
 					continue
 				}
 			}
@@ -371,7 +371,7 @@ func StartMining(password string) {
 
 func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte,
 	nodeAddr common.Address, spAddress string, blockNum uint64, instance *abiPOS.Store) error {
-	const actLoc = "blockchainprovider.sendProof->"
+	const logLoc = "blockchainprovider.sendProof->"
 	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, paths.SpFsFilename)
 
 	shared.MU.Lock()
@@ -379,7 +379,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 	spFsFile, spFsBytes, err := shared.ReadFile(pathToFsTree)
 	if err != nil {
 		shared.MU.Unlock()
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	spFsFile.Close()
@@ -389,7 +389,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 
 	err = json.Unmarshal(spFsBytes, &spFs)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	eightKBHashes := []string{}
@@ -401,7 +401,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 
 	_, fileTree, err := shared.CalcRootHash(eightKBHashes)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	eightKBHashes = nil
@@ -426,19 +426,19 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 
 	opts, err := initTrxOpts(ctx, client, nodeAddr, password, blockNum)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	nonceInt, err := strconv.Atoi(spFs.Nonce)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
 
 	nonceBytes, err := hex.DecodeString(nonceHex)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	nonce32 := make([]byte, 32-len(nonceBytes))
@@ -448,7 +448,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 
 	signedFSRootHash, err := hex.DecodeString(spFs.SignedFsRoot)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	if signedFSRootHash[len(signedFSRootHash)-1] == 1 { //ecdsa version fix
@@ -459,16 +459,16 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 
 	signatureIsValid, err := instance.IsValidSign(&bind.CallOpts{}, common.HexToAddress(spAddress), fsRootNonceBytes, signedFSRootHash)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	if !signatureIsValid {
-		return logger.CreateDetails(actLoc, errors.New(spAddress+" signature is not valid"))
+		return logger.CreateDetails(logLoc, errors.New(spAddress+" signature is not valid"))
 	}
 
 	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
-		return logger.CreateDetails(actLoc, err)
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	proof = nil
@@ -479,16 +479,16 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 // ====================================================================================
 
 func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.Address, password string, blockNum uint64) (*bind.TransactOpts, error) {
-	const actLoc = "blockchainprovider.initTrxOpts->"
+	const logLoc = "blockchainprovider.initTrxOpts->"
 
 	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
 	if err != nil {
-		return nil, logger.CreateDetails(actLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	chnID, err := client.ChainID(ctx)
 	if err != nil {
-		return nil, logger.CreateDetails(actLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	opts := &bind.TransactOpts{

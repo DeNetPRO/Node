@@ -18,21 +18,21 @@ var (
 // ====================================================================================
 
 func EncryptAES(key, data []byte) ([]byte, error) {
-	const actLoc = "shared.encryptAES->"
+	const logLoc = "shared.encryptAES->"
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, logger.CreateDetails(actLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, logger.CreateDetails(actLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	_, err = io.ReadFull(rand.Reader, nonce)
 	if err != nil {
-		return nil, logger.CreateDetails(actLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	ciphertext := gcm.Seal(nonce, nonce, data, nil)
@@ -44,19 +44,19 @@ func EncryptAES(key, data []byte) ([]byte, error) {
 // ====================================================================================
 
 func DecryptAES(key, data []byte) ([]byte, error) {
-	const actLoc = "shared.decryptAES->"
+	const logLoc = "shared.decryptAES->"
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, logger.CreateDetails(actLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, logger.CreateDetails(actLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 	nonce, encrData := data[:gcm.NonceSize()], data[gcm.NonceSize():]
 	decrData, err := gcm.Open(nil, nonce, encrData, nil)
 	if err != nil {
-		return nil, logger.CreateDetails(actLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	return decrData, nil
@@ -65,11 +65,11 @@ func DecryptAES(key, data []byte) ([]byte, error) {
 // ====================================================================================
 
 func GetDeviceMacAddr() (string, error) {
-	const actLoc = "shared.GetDeviceMacAddr->"
+	const logLoc = "shared.GetDeviceMacAddr->"
 	var addr string
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		return "", logger.CreateDetails(actLoc, err)
+		return "", logger.CreateDetails(logLoc, err)
 	}
 
 	for _, i := range interfaces {
