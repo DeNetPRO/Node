@@ -342,7 +342,7 @@ func StartMining(password string) {
 				continue
 			}
 
-			blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-12))
+			blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-6))
 			if err != nil {
 				logger.Log(logger.CreateDetails(actLoc, err))
 				continue
@@ -383,7 +383,7 @@ func StartMining(password string) {
 				fmt.Println("checking file:", fileName)
 				fmt.Println("Trying proof", fileName, "for reward:", reward)
 
-				err := sendProof(ctx, client, password, storedFileBytes, shared.NodeAddr, spAddress, blockNum, instance)
+				err := sendProof(ctx, client, password, storedFileBytes, shared.NodeAddr, spAddress, blockNum-6, instance)
 				if err != nil {
 					logger.Log(logger.CreateDetails(actLoc, err))
 					continue
