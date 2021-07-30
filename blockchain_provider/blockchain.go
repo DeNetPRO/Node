@@ -16,7 +16,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	abiPOS "git.denetwork.xyz/dfile/dfile-secondary-node/POS_abi"
@@ -27,7 +26,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -342,54 +340,23 @@ func StartMining(password string) {
 				continue
 			}
 
-			blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-1))
+			proved, err := instance.VerifyFileProof(&bind.CallOpts{}, shared.NodeAddr, storedFileBytes[:eightKB], uint32(blockNum-6), userDifficulty)
 			if err != nil {
 				logger.Log(logger.CreateDetails(actLoc, err))
 				continue
 			}
 
-			fileBytesAddrBlockHash := append(storedFileBytes, shared.NodeAddr.Bytes()...)
-			fileBytesAddrBlockHash = append(fileBytesAddrBlockHash, blockHash[:]...)
-
-			hashedFileAddrBlock := sha256.Sum256(fileBytesAddrBlockHash)
-
-			stringFileAddrBlock := hex.EncodeToString(hashedFileAddrBlock[:])
-
-			stringFileAddrBlock = strings.TrimLeft(stringFileAddrBlock, "0")
-
-			decodedBigInt, err := hexutil.DecodeBig("0x" + stringFileAddrBlock)
-			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
-				continue
+			if !proved {
+				fmt.Println(spAddress, "not proved")
 			}
 
-			baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
-			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
-				continue
-			}
+			if proved {
+				fmt.Println(spAddress, "proved")
 
-			// fmt.Println("decodedBigInt", decodedBigInt)
-			// fmt.Println("baseDfficulty", baseDfficulty)
-			// fmt.Println("userDifficulty", userDifficulty)
-
-			// diffIsMuch, err := instance.IsMatchDifficulty(&bind.CallOpts{}, decodedBigInt, userDifficulty)
-			// if err != nil {
-			// 	logger.Log(logger.CreateDetails(actLoc, err))
-			// 	continue
-			// }
-
-			// fmt.Println("diffIsMuch", diffIsMuch)
-
-			remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
-
-			remainderIsLessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
-
-			if remainderIsLessUserDifficulty {
 				fmt.Println("checking file:", fileName)
 				fmt.Println("Trying proof", fileName, "for reward:", reward)
 
-				err := sendProof(ctx, client, password, storedFileBytes, shared.NodeAddr, spAddress, blockNum, instance)
+				err := sendProof(ctx, client, password, storedFileBytes, shared.NodeAddr, spAddress, blockNum-6, instance)
 				if err != nil {
 					logger.Log(logger.CreateDetails(actLoc, err))
 					continue
@@ -426,8 +393,6 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 	}
 
 	eightKBHashes := []string{}
-
-	bytesToProve := fileBytes[:eightKB]
 
 	for i := 0; i < len(fileBytes); i += eightKB {
 		hSum := sha256.Sum256(fileBytes[i : i+eightKB])
@@ -501,7 +466,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return logger.CreateDetails(actLoc, errors.New(spAddress+" signature is not valid"))
 	}
 
-	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, bytesToProve, proof)
+	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
 		return logger.CreateDetails(actLoc, err)
 	}
