@@ -224,7 +224,7 @@ func StartMining(password string) {
 
 	for {
 		fmt.Println("Sleeping...")
-		time.Sleep(time.Minute * 10)
+		time.Sleep(time.Second * 10)
 		storageProviderAddresses := []string{}
 		err = filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
@@ -363,12 +363,6 @@ func StartMining(password string) {
 				continue
 			}
 
-			// baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
-			// if err != nil {
-			// 	logger.Log(logger.CreateDetails(actLoc, err))
-			// 	continue
-			// }
-
 			diffIsMuch, err := instance.IsMatchDifficulty(&bind.CallOpts{}, decodedBigInt, userDifficulty)
 			if err != nil {
 				logger.Log(logger.CreateDetails(actLoc, err))
@@ -380,17 +374,19 @@ func StartMining(password string) {
 				continue
 			}
 
-			// remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
-
-			// diffIsMuch := remainder.CmpAbs(userDifficulty) == -1
-
-			prooved, err := instance.VerifyFileProof(&bind.CallOpts{}, shared.NodeAddr, storedFileBytes, uint32(blockNum-6), userDifficulty)
+			proved, err := instance.VerifyFileProof(&bind.CallOpts{}, shared.NodeAddr, storedFileBytes, uint32(blockNum-6), userDifficulty)
 			if err != nil {
 				logger.Log(logger.CreateDetails(actLoc, err))
 				continue
 			}
 
-			if prooved {
+			if !proved {
+				fmt.Println(spAddress, "not proved")
+			}
+
+			if proved {
+				fmt.Println(spAddress, "proved")
+
 				fmt.Println("checking file:", fileName)
 				fmt.Println("Trying proof", fileName, "for reward:", reward)
 
