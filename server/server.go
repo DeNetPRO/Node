@@ -145,72 +145,14 @@ func checkSignature(h http.Handler) http.Handler {
 func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	const logLoc = "server.SaveFiles->"
 
-	vars := mux.Vars(req)
-	fileSize := vars["size"]
-
-	intFileSize, err := strconv.Atoi(fileSize)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, "Couldn't parse address", 500)
-		return
-	}
-
-	if intFileSize == 0 {
-		logger.Log(logger.CreateDetails(logLoc, errors.New("file size is 0")))
-		http.Error(w, "file size is 0", 400)
-		return
-	}
-
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
-	shared.MU.Lock()
-	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
+	intFileSize, _, _, err := checkSpace(req, pathToConfig)
 	if err != nil {
-		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, "Account config problem", 500)
+		http.Error(w, "space check problem", 500)
 		return
 	}
-	defer confFile.Close()
-
-	var nodeConfig config.SecondaryNodeConfig
-
-	err = json.Unmarshal(fileBytes, &nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, "Account config problem", 500)
-		return
-	}
-
-	sharedSpaceInBytes := int64(nodeConfig.StorageLimit) * gbBytes
-
-	nodeConfig.UsedStorageSpace += int64(intFileSize)
-
-	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
-		shared.MU.Unlock()
-		err := errors.New("insufficient memory avaliable")
-		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, err.Error(), 400)
-		return
-	}
-
-	avaliableSpaceLeft := sharedSpaceInBytes - nodeConfig.UsedStorageSpace
-
-	if avaliableSpaceLeft < oneHunderdMBBytes {
-		fmt.Println("Shared storage memory is running low,", avaliableSpaceLeft/(1024*1024), "MB of space is avaliable")
-		fmt.Println("You may need additional space for storing data. Total shared space can be changed in account configuration")
-	}
-
-	err = config.Save(confFile, nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, "Couldn't update config file", 500)
-		return
-	}
-	confFile.Close()
-	shared.MU.Unlock()
 
 	spData, err := parseRequest(req)
 	if err != nil {
@@ -694,61 +636,14 @@ func CopyFile(w http.ResponseWriter, req *http.Request) {
 	logLoc := "server.CopyFile->"
 	fmt.Println("Copy file")
 
-	vars := mux.Vars(req)
-	fileSize := vars["size"]
-
-	intFileSize, err := strconv.Atoi(fileSize)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, "Couldn't parse address", 500)
-		return
-	}
-
-	if intFileSize == 0 {
-		logger.Log(logger.CreateDetails(logLoc, errors.New("file size is 0")))
-		http.Error(w, "file size is 0", 400)
-		return
-	}
-
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
-	shared.MU.Lock()
-	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
+	intFileSize, enoughSpace, nodeConfig, err := checkSpace(req, pathToConfig)
 	if err != nil {
-		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, "Account config problem", 500)
+		http.Error(w, "space check problem", 500)
 		return
 	}
-	defer confFile.Close()
-
-	var nodeConfig config.SecondaryNodeConfig
-
-	err = json.Unmarshal(fileBytes, &nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, "Account config problem", 500)
-		return
-	}
-
-	sharedSpaceInBytes := int64(nodeConfig.StorageLimit) * gbBytes
-
-	enoughSpace := nodeConfig.UsedStorageSpace > sharedSpaceInBytes
-
-	if enoughSpace {
-		nodeConfig.UsedStorageSpace += int64(intFileSize)
-	}
-
-	err = config.Save(confFile, nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, "Couldn't update config file", 500)
-		return
-	}
-	confFile.Close()
-	shared.MU.Unlock()
 
 	spData, err := parseRequest(req)
 	if err != nil {
@@ -966,72 +861,15 @@ func CopyFile(w http.ResponseWriter, req *http.Request) {
 
 func BackUp(w http.ResponseWriter, req *http.Request) {
 	logLoc := "server.BackUp->"
-	vars := mux.Vars(req)
-	fileSize := vars["size"]
-
-	intFileSize, err := strconv.Atoi(fileSize)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, "Couldn't parse address", 500)
-		return
-	}
-
-	if intFileSize == 0 {
-		logger.Log(logger.CreateDetails(logLoc, errors.New("file size is 0")))
-		http.Error(w, "file size is 0", 400)
-		return
-	}
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
-	shared.MU.Lock()
-	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
+	intFileSize, _, _, err := checkSpace(req, pathToConfig)
 	if err != nil {
-		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, "Account config problem", 500)
+		http.Error(w, "space check problem", 500)
 		return
 	}
-	defer confFile.Close()
-
-	var nodeConfig config.SecondaryNodeConfig
-
-	err = json.Unmarshal(fileBytes, &nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, "Account config problem", 500)
-		return
-	}
-
-	sharedSpaceInBytes := int64(nodeConfig.StorageLimit) * gbBytes
-
-	nodeConfig.UsedStorageSpace += int64(intFileSize)
-
-	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
-		shared.MU.Unlock()
-		err := errors.New("insufficient memory avaliable")
-		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, err.Error(), 400)
-		return
-	}
-
-	avaliableSpaceLeft := sharedSpaceInBytes - nodeConfig.UsedStorageSpace
-
-	if avaliableSpaceLeft < oneHunderdMBBytes {
-		fmt.Println("Shared storage memory is running low,", avaliableSpaceLeft/(1024*1024), "MB of space is avaliable")
-		fmt.Println("You may need additional space for mining. Total shared space can be changed in account configuration")
-	}
-
-	err = config.Save(confFile, nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, "Couldn't update config file", 500)
-		return
-	}
-	confFile.Close()
-	shared.MU.Unlock()
 
 	spData, err := parseRequest(req)
 	if err != nil {
@@ -1264,38 +1102,34 @@ func BackUp(w http.ResponseWriter, req *http.Request) {
 
 // ====================================================================================
 
-func parseRequest(r *http.Request) (shared.StorageProviderData, error) {
+func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.SecondaryNodeConfig, error) {
 
-	const logLoc = "server.parseRequest"
+	const logLoc = "server.checkSpace"
 
-	var spData shared.StorageProviderData
+	var nodeConfig config.SecondaryNodeConfig
 
 	vars := mux.Vars(r)
 	fileSize := vars["size"]
 
 	intFileSize, err := strconv.Atoi(fileSize)
 	if err != nil {
-		return spData, logger.CreateDetails(logLoc, err)
+		return 0, false, nodeConfig, logger.CreateDetails(logLoc, err)
 	}
 
 	if intFileSize == 0 {
-		return spData, logger.CreateDetails(logLoc, err)
+		return 0, false, nodeConfig, logger.CreateDetails(logLoc, err)
 	}
-
-	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
 	shared.MU.Lock()
 	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
 	if err != nil {
-		return spData, logger.CreateDetails(logLoc, err)
+		return 0, false, nodeConfig, logger.CreateDetails(logLoc, err)
 	}
 	defer confFile.Close()
 
-	var nodeConfig config.SecondaryNodeConfig
-
 	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
-		return spData, logger.CreateDetails(logLoc, err)
+		return 0, false, nodeConfig, logger.CreateDetails(logLoc, err)
 	}
 
 	sharedSpaceInBytes := int64(nodeConfig.StorageLimit) * gbBytes
@@ -1303,7 +1137,7 @@ func parseRequest(r *http.Request) (shared.StorageProviderData, error) {
 	nodeConfig.UsedStorageSpace += int64(intFileSize)
 
 	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
-		return spData, logger.CreateDetails(logLoc, err)
+		return 0, false, nodeConfig, logger.CreateDetails(logLoc, errors.New("not enough space"))
 	}
 
 	avaliableSpaceLeft := sharedSpaceInBytes - nodeConfig.UsedStorageSpace
@@ -1315,12 +1149,24 @@ func parseRequest(r *http.Request) (shared.StorageProviderData, error) {
 
 	err = config.Save(confFile, nodeConfig)
 	if err != nil {
-		return spData, logger.CreateDetails(logLoc, err)
+		return 0, false, nodeConfig, logger.CreateDetails(logLoc, err)
 	}
 	confFile.Close()
 	shared.MU.Unlock()
 
-	err = r.ParseMultipartForm(1 << 20) // maxMemory 32MB
+	return intFileSize, true, nodeConfig, nil
+
+}
+
+// ====================================================================================
+
+func parseRequest(r *http.Request) (shared.StorageProviderData, error) {
+
+	const logLoc = "server.parseRequest"
+
+	var spData shared.StorageProviderData
+
+	err := r.ParseMultipartForm(1 << 20) // maxMemory 32MB
 	if err != nil {
 		return spData, logger.CreateDetails(logLoc, err)
 	}
