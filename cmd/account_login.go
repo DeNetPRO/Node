@@ -43,7 +43,7 @@ var accountLoginCmd = &cobra.Command{
 
 		var nodeConfig config.SecondaryNodeConfig
 
-		pathToConfigFile := filepath.Join(pathToConfigDir, "config.json")
+		pathToConfigFile := filepath.Join(pathToConfigDir, paths.ConfFileName)
 
 		stat, err := os.Stat(pathToConfigFile)
 		err = shared.CheckStatErr(err)

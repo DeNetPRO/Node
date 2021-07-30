@@ -372,7 +372,7 @@ func StartMining(password string) {
 func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte,
 	nodeAddr common.Address, spAddress string, blockNum uint64, instance *abiPOS.Store) error {
 	const actLoc = "blockchainprovider.sendProof->"
-	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, "tree.json")
+	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, paths.SpFsFilename)
 
 	shared.MU.Lock()
 

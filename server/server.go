@@ -162,7 +162,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, "config.json")
+	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
 	shared.MU.Lock()
 	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
@@ -320,7 +320,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	}
 
 	shared.MU.Lock()
-	spFsFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
+	spFsFile, err := os.Create(filepath.Join(addressPath, paths.SpFsFilename))
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(actLoc, err))
@@ -572,7 +572,7 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	}
 
 	shared.MU.Lock()
-	spFsFile, fileBytes, err := shared.ReadFile(filepath.Join(addressPath, "tree.json"))
+	spFsFile, fileBytes, err := shared.ReadFile(filepath.Join(addressPath, paths.SpFsFilename))
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(actLoc, err))
@@ -718,7 +718,7 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	shared.MU.Lock()
 
-	spFsFile, err = os.Create(filepath.Join(addressPath, "tree.json"))
+	spFsFile, err = os.Create(filepath.Join(addressPath, paths.SpFsFilename))
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(actLoc, err))
@@ -794,7 +794,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, "config.json")
+	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
 	shared.MU.Lock()
 	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
@@ -818,20 +818,10 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 
 	sharedSpaceInBytes := int64(nodeConfig.StorageLimit) * gbBytes
 
-	nodeConfig.UsedStorageSpace += int64(intFileSize)
+	enoughSpace := nodeConfig.UsedStorageSpace > sharedSpaceInBytes
 
-	noMemory := false
-
-	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
-		noMemory = true
-		nodeConfig.UsedStorageSpace -= int64(intFileSize)
-	}
-
-	avaliableSpaceLeft := sharedSpaceInBytes - nodeConfig.UsedStorageSpace
-
-	if avaliableSpaceLeft < oneHunderdMBBytes {
-		fmt.Println("Shared storage memory is running low,", avaliableSpaceLeft/(1024*1024), "MB of space is avaliable")
-		fmt.Println("You may need additional space for mining. Total shared space can be changed in account configuration")
+	if enoughSpace {
+		nodeConfig.UsedStorageSpace += int64(intFileSize)
 	}
 
 	err = config.Save(confFile, nodeConfig)
@@ -950,7 +940,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if noMemory {
+	if !enoughSpace {
 		nftNode, err := blockchainprovider.GetNodeNFT()
 		if err != nil {
 			logger.Log(logger.CreateDetails(logInfo, err))
@@ -1022,7 +1012,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	shared.MU.Lock()
-	spFsFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
+	spFsFile, err := os.Create(filepath.Join(addressPath, paths.SpFsFilename))
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -1159,10 +1149,10 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, "config.json")
+	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
 	shared.MU.Lock()
-	confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
+	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -1170,14 +1160,6 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer confFile.Close()
-
-	fileBytes, err := io.ReadAll(confFile)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Account config problem", 500)
-		return
-	}
 
 	var nodeConfig config.SecondaryNodeConfig
 
@@ -1325,7 +1307,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	shared.MU.Lock()
-	spFsFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
+	spFsFile, err := os.Create(filepath.Join(addressPath, paths.SpFsFilename))
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
@@ -1534,20 +1516,13 @@ func restoreMemoryInfo(pathToConfig string, intFileSize int) {
 	logInfo := "server.restoreMemoryInfo->"
 
 	shared.MU.Lock()
-	confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
+	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(logInfo, err))
 		return
 	}
 	defer confFile.Close()
-
-	fileBytes, err := io.ReadAll(confFile)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		return
-	}
 
 	var nodeConfig config.SecondaryNodeConfig
 

@@ -106,7 +106,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		}
 	}
 
-	confFile, err := os.Create(filepath.Join(pathToConfig, "config.json"))
+	confFile, err := os.Create(filepath.Join(pathToConfig, paths.ConfFileName))
 	if err != nil {
 		return nodeConfig, logger.CreateDetails(actLoc, err)
 	}
