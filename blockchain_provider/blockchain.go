@@ -222,7 +222,7 @@ func StartMining(password string) {
 
 	for {
 		fmt.Println("Sleeping...")
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Minute * 10)
 		storageProviderAddresses := []string{}
 		err = filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
