@@ -363,23 +363,34 @@ func StartMining(password string) {
 				continue
 			}
 
-			baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
-			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
-				continue
-			}
-
-			// diffIsMuch, err := instance.IsMatchDifficulty(&bind.CallOpts{}, decodedBigInt, userDifficulty)
+			// baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
 			// if err != nil {
 			// 	logger.Log(logger.CreateDetails(actLoc, err))
 			// 	continue
 			// }
 
-			remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
+			diffIsMuch, err := instance.IsMatchDifficulty(&bind.CallOpts{}, decodedBigInt, userDifficulty)
+			if err != nil {
+				logger.Log(logger.CreateDetails(actLoc, err))
+				continue
+			}
 
-			diffIsMuch := remainder.CmpAbs(userDifficulty) == -1
+			if !diffIsMuch {
+				logger.Log(logger.CreateDetails(actLoc, errors.New("not much dificulty")))
+				continue
+			}
 
-			if diffIsMuch {
+			// remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
+
+			// diffIsMuch := remainder.CmpAbs(userDifficulty) == -1
+
+			prooved, err := instance.VerifyFileProof(&bind.CallOpts{}, shared.NodeAddr, storedFileBytes, uint32(blockNum-6), userDifficulty)
+			if err != nil {
+				logger.Log(logger.CreateDetails(actLoc, err))
+				continue
+			}
+
+			if prooved {
 				fmt.Println("checking file:", fileName)
 				fmt.Println("Trying proof", fileName, "for reward:", reward)
 
