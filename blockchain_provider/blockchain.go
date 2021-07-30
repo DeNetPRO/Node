@@ -342,7 +342,7 @@ func StartMining(password string) {
 				continue
 			}
 
-			blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-1))
+			blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-12))
 			if err != nil {
 				logger.Log(logger.CreateDetails(actLoc, err))
 				continue
@@ -363,21 +363,21 @@ func StartMining(password string) {
 				continue
 			}
 
-			// baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
-			// if err != nil {
-			// 	logger.Log(logger.CreateDetails(actLoc, err))
-			// 	continue
-			// }
-
-			diffIsMuch, err := instance.IsMatchDifficulty(&bind.CallOpts{}, decodedBigInt, userDifficulty)
+			baseDfficulty, err := instance.BaseDifficulty(&bind.CallOpts{})
 			if err != nil {
 				logger.Log(logger.CreateDetails(actLoc, err))
 				continue
 			}
 
-			// remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
+			// diffIsMuch, err := instance.IsMatchDifficulty(&bind.CallOpts{}, decodedBigInt, userDifficulty)
+			// if err != nil {
+			// 	logger.Log(logger.CreateDetails(actLoc, err))
+			// 	continue
+			// }
 
-			// remainderIsLessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
+			remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
+
+			diffIsMuch := remainder.CmpAbs(userDifficulty) == -1
 
 			if diffIsMuch {
 				fmt.Println("checking file:", fileName)
