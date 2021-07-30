@@ -16,7 +16,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	abiPOS "git.denetwork.xyz/dfile/dfile-secondary-node/POS_abi"
@@ -27,7 +26,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -339,38 +337,6 @@ func StartMining(password string) {
 			blockNum, err := client.BlockNumber(ctx)
 			if err != nil {
 				logger.Log(logger.CreateDetails(actLoc, err))
-				continue
-			}
-
-			blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-6))
-			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
-				continue
-			}
-
-			fileBytesAddrBlockHash := append(storedFileBytes, shared.NodeAddr.Bytes()...)
-			fileBytesAddrBlockHash = append(fileBytesAddrBlockHash, blockHash[:]...)
-
-			hashedFileAddrBlock := sha256.Sum256(fileBytesAddrBlockHash)
-
-			stringFileAddrBlock := hex.EncodeToString(hashedFileAddrBlock[:])
-
-			stringFileAddrBlock = strings.TrimLeft(stringFileAddrBlock, "0")
-
-			decodedBigInt, err := hexutil.DecodeBig("0x" + stringFileAddrBlock)
-			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
-				continue
-			}
-
-			diffIsMuch, err := instance.IsMatchDifficulty(&bind.CallOpts{}, decodedBigInt, userDifficulty)
-			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
-				continue
-			}
-
-			if !diffIsMuch {
-				logger.Log(logger.CreateDetails(actLoc, errors.New("not much dificulty")))
 				continue
 			}
 
