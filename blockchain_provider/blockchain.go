@@ -385,7 +385,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 	spFsFile.Close()
 	shared.MU.Unlock()
 
-	var spFs shared.StorageProviderFs
+	var spFs shared.StorageProviderData
 
 	err = json.Unmarshal(spFsBytes, &spFs)
 	if err != nil {

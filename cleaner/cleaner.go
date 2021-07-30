@@ -91,7 +91,7 @@ func Start() {
 			fileFsTree.Close()
 			shared.MU.Unlock()
 
-			var spFs shared.StorageProviderFs
+			var spFs shared.StorageProviderData
 
 			err = json.Unmarshal(treeBytes, &spFs)
 			if err != nil {

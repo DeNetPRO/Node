@@ -41,7 +41,6 @@ type updatedFsInfo struct {
 	Nonce            string
 	SignedFsRootHash string
 }
-
 type NodeAddressResponse struct {
 	NodeAddress string `json:"node_address"`
 }
@@ -213,7 +212,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	confFile.Close()
 	shared.MU.Unlock()
 
-	err = req.ParseMultipartForm(1 << 20) // maxMemory 32MB
+	spData, err := parseRequest(req)
 	if err != nil {
 		logger.Log(logger.CreateDetails(actLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
@@ -221,84 +220,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fs := req.MultipartForm.Value["fs"]
-
-	sort.Strings(fs)
-
-	fsRootHash, fsTree, err := shared.CalcRootHash(fs)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	signedFsRootHash := req.MultipartForm.Value["fsRootHash"]
-
-	signature, err := hex.DecodeString(signedFsRootHash[0])
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonce := req.MultipartForm.Value["nonce"]
-
-	nonceInt, err := strconv.Atoi(nonce[0])
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
-
-	nonceBytes, err := hex.DecodeString(nonceHex)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonce32 := make([]byte, 32-len(nonceBytes))
-	nonce32 = append(nonce32, nonceBytes...)
-
-	fsRootBytes, err := hex.DecodeString(fsRootHash)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	fsRootNonceBytes := append(fsRootBytes, nonce32...)
-
-	hash := sha256.Sum256(fsRootNonceBytes)
-
-	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	storageProviderAddress := req.MultipartForm.Value["address"]
-
-	senderAddress := crypto.PubkeyToAddress(*sigPublicKey)
-
-	if storageProviderAddress[0] != fmt.Sprint(senderAddress) {
-		err := errors.New("wrong signature")
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-
-	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, storageProviderAddress[0])
+	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spData.Address)
 
 	stat, err := os.Stat(addressPath)
 	err = shared.CheckStatErr(err)
@@ -330,13 +252,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	}
 	defer spFsFile.Close()
 
-	spFs := shared.StorageProviderFs{
-		Nonce:        nonce[0],
-		SignedFsRoot: signedFsRootHash[0],
-		Tree:         fsTree,
-	}
-
-	js, err := json.Marshal(spFs)
+	js, err := json.Marshal(spData)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(actLoc, err))
@@ -433,7 +349,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	for _, fileHash := range fs {
+	for _, fileHash := range spData.Fs {
 		if fileHash == wholeFileHash {
 			fsContainsFile = true
 		}
@@ -482,7 +398,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		logger.Log("Saved file " + reqFilePart.Filename + " (" + fmt.Sprint(count) + "/" + fmt.Sprint(total) + ")" + " from " + storageProviderAddress[0]) //TODO remove
+		logger.Log("Saved file " + reqFilePart.Filename + " (" + fmt.Sprint(count) + "/" + fmt.Sprint(total) + ")" + " from " + spData.Address) //TODO remove
 
 		newFile.Sync()
 		rqFile.Close()
@@ -581,7 +497,7 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	}
 	defer spFsFile.Close()
 
-	var spFs shared.StorageProviderFs
+	var spFs shared.StorageProviderData
 
 	err = json.Unmarshal(fileBytes, &spFs)
 	if err != nil {
@@ -727,7 +643,7 @@ func updateFsInfo(w http.ResponseWriter, req *http.Request) {
 	}
 	defer spFsFile.Close()
 
-	spFs = shared.StorageProviderFs{
+	spFs = shared.StorageProviderData{
 		Nonce:        updatedFs.Nonce,
 		SignedFsRoot: updatedFs.SignedFsRootHash,
 		Tree:         fsTree,
@@ -774,22 +690,22 @@ func getNodeIP(nodeInfo nodeAbi.SimpleMetaDataDeNetNode) string {
 
 // ====================================================================================
 
-func CopyFile(w http.ResponseWriter, r *http.Request) {
-	logInfo := "server.CopyFile->"
+func CopyFile(w http.ResponseWriter, req *http.Request) {
+	logLoc := "server.CopyFile->"
 	fmt.Println("Copy file")
 
-	vars := mux.Vars(r)
+	vars := mux.Vars(req)
 	fileSize := vars["size"]
 
 	intFileSize, err := strconv.Atoi(fileSize)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, "Couldn't parse address", 500)
 		return
 	}
 
 	if intFileSize == 0 {
-		logger.Log(logger.CreateDetails(logInfo, errors.New("file size is 0")))
+		logger.Log(logger.CreateDetails(logLoc, errors.New("file size is 0")))
 		http.Error(w, "file size is 0", 400)
 		return
 	}
@@ -800,7 +716,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, "Account config problem", 500)
 		return
 	}
@@ -811,7 +727,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, "Account config problem", 500)
 		return
 	}
@@ -827,104 +743,27 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 	err = config.Save(confFile, nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, "Couldn't update config file", 500)
 		return
 	}
 	confFile.Close()
 	shared.MU.Unlock()
 
-	err = r.ParseMultipartForm(1 << 20) // maxMemory 32MB
+	spData, err := parseRequest(req)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "Parse multiform problem", 400)
 		return
 	}
 
-	fs := r.MultipartForm.Value["fs"]
-
-	sort.Strings(fs)
-
-	fsRootHash, fsTree, err := shared.CalcRootHash(fs)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	signedFsRootHash := r.MultipartForm.Value["fsRootHash"]
-
-	signature, err := hex.DecodeString(signedFsRootHash[0])
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonce := r.MultipartForm.Value["nonce"]
-
-	nonceInt, err := strconv.Atoi(nonce[0])
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
-
-	nonceBytes, err := hex.DecodeString(nonceHex)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonce32 := make([]byte, 32-len(nonceBytes))
-	nonce32 = append(nonce32, nonceBytes...)
-
-	fsRootBytes, err := hex.DecodeString(fsRootHash)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	fsRootNonceBytes := append(fsRootBytes, nonce32...)
-
-	hash := sha256.Sum256(fsRootNonceBytes)
-
-	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	storageProviderAddress := r.MultipartForm.Value["address"]
-
-	senderAddress := crypto.PubkeyToAddress(*sigPublicKey)
-
-	if storageProviderAddress[0] != fmt.Sprint(senderAddress) {
-		err := errors.New("wrong signature")
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-
-	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, storageProviderAddress[0])
+	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spData.Address)
 
 	stat, err := os.Stat(addressPath)
 	err = shared.CheckStatErr(err)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
 		return
@@ -933,7 +772,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 	if stat == nil {
 		err = os.Mkdir(addressPath, 0700)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			http.Error(w, "File saving problem", 500)
 			return
@@ -943,14 +782,14 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 	if !enoughSpace {
 		nftNode, err := blockchainprovider.GetNodeNFT()
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			http.Error(w, err.Error(), 400)
 			return
 		}
 
 		total, err := nftNode.TotalSupply(&bind.CallOpts{})
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			http.Error(w, err.Error(), 400)
 			return
 		}
@@ -988,7 +827,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			nodeAddress, err := backUpTo(nodeIP, addressPath, r.MultipartForm, intFileSize)
+			nodeAddress, err := backUpTo(nodeIP, addressPath, req.MultipartForm, intFileSize)
 			if err != nil {
 				continue
 			}
@@ -1015,23 +854,17 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 	spFsFile, err := os.Create(filepath.Join(addressPath, paths.SpFsFilename))
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
 		return
 	}
 	defer spFsFile.Close()
 
-	spFs := shared.StorageProviderFs{
-		Nonce:        nonce[0],
-		SignedFsRoot: signedFsRootHash[0],
-		Tree:         fsTree,
-	}
-
-	js, err := json.Marshal(spFs)
+	js, err := json.Marshal(spData)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
 		return
@@ -1040,7 +873,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 	_, err = spFsFile.Write(js)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
 		return
@@ -1050,10 +883,10 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 	spFsFile.Close()
 	shared.MU.Unlock()
 
-	hashes := r.MultipartForm.File["hashes"]
+	hashes := req.MultipartForm.File["hashes"]
 	hashesFile, err := hashes[0].Open()
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
 		return
@@ -1062,7 +895,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 	hashesBody, err := io.ReadAll(hashesFile)
 	if err != nil {
 		hashesFile.Close()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
 		return
@@ -1072,7 +905,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(hashesBody, &hashDif)
 	if err != nil {
 		hashesFile.Close()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
 		return
@@ -1084,7 +917,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 		path := filepath.Join(addressPath, old)
 		file, err := os.Open(path)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			http.Error(w, "File saving problem", 500)
 			return
@@ -1095,7 +928,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 		newPath := filepath.Join(addressPath, new)
 		newFile, err := os.Create(newPath)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			http.Error(w, "File saving problem", 500)
 			return
@@ -1105,7 +938,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 
 		_, err = io.Copy(newFile, file)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			http.Error(w, "File saving problem", 500)
 			return
@@ -1121,7 +954,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 
 	js, err = json.Marshal(resp)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -1131,20 +964,20 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 
 // ====================================================================================
 
-func BackUp(w http.ResponseWriter, r *http.Request) {
-	logInfo := "server.BackUp->"
-	vars := mux.Vars(r)
+func BackUp(w http.ResponseWriter, req *http.Request) {
+	logLoc := "server.BackUp->"
+	vars := mux.Vars(req)
 	fileSize := vars["size"]
 
 	intFileSize, err := strconv.Atoi(fileSize)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, "Couldn't parse address", 500)
 		return
 	}
 
 	if intFileSize == 0 {
-		logger.Log(logger.CreateDetails(logInfo, errors.New("file size is 0")))
+		logger.Log(logger.CreateDetails(logLoc, errors.New("file size is 0")))
 		http.Error(w, "file size is 0", 400)
 		return
 	}
@@ -1155,7 +988,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, "Account config problem", 500)
 		return
 	}
@@ -1166,7 +999,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, "Account config problem", 500)
 		return
 	}
@@ -1178,7 +1011,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
 		shared.MU.Unlock()
 		err := errors.New("insufficient memory avaliable")
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, err.Error(), 400)
 		return
 	}
@@ -1193,104 +1026,27 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 	err = config.Save(confFile, nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, "Couldn't update config file", 500)
 		return
 	}
 	confFile.Close()
 	shared.MU.Unlock()
 
-	err = r.ParseMultipartForm(1 << 20) // maxMemory 32MB
+	spData, err := parseRequest(req)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "Parse multiform problem", 400)
 		return
 	}
 
-	fs := r.MultipartForm.Value["fs"]
-
-	sort.Strings(fs)
-
-	fsRootHash, fsTree, err := shared.CalcRootHash(fs)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	signedFsRootHash := r.MultipartForm.Value["fsRootHash"]
-
-	signature, err := hex.DecodeString(signedFsRootHash[0])
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonce := r.MultipartForm.Value["nonce"]
-
-	nonceInt, err := strconv.Atoi(nonce[0])
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
-
-	nonceBytes, err := hex.DecodeString(nonceHex)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonce32 := make([]byte, 32-len(nonceBytes))
-	nonce32 = append(nonce32, nonceBytes...)
-
-	fsRootBytes, err := hex.DecodeString(fsRootHash)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	fsRootNonceBytes := append(fsRootBytes, nonce32...)
-
-	hash := sha256.Sum256(fsRootNonceBytes)
-
-	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	storageProviderAddress := r.MultipartForm.Value["address"]
-
-	senderAddress := crypto.PubkeyToAddress(*sigPublicKey)
-
-	if storageProviderAddress[0] != fmt.Sprint(senderAddress) {
-		err := errors.New("wrong signature")
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-
-	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, storageProviderAddress[0])
+	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spData.Address)
 
 	stat, err := os.Stat(addressPath)
 	err = shared.CheckStatErr(err)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
 		return
@@ -1299,7 +1055,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 	if stat == nil {
 		err = os.Mkdir(addressPath, 0700)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			http.Error(w, "File saving problem", 500)
 			return
@@ -1310,23 +1066,17 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 	spFsFile, err := os.Create(filepath.Join(addressPath, paths.SpFsFilename))
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
 		return
 	}
 	defer spFsFile.Close()
 
-	spFs := shared.StorageProviderFs{
-		Nonce:        nonce[0],
-		SignedFsRoot: signedFsRootHash[0],
-		Tree:         fsTree,
-	}
-
-	js, err := json.Marshal(spFs)
+	js, err := json.Marshal(spData)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
 		return
@@ -1335,7 +1085,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 	_, err = spFsFile.Write(js)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
 		return
@@ -1345,7 +1095,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 	spFsFile.Close()
 	shared.MU.Unlock()
 
-	reqFileParts := r.MultipartForm.File["files"]
+	reqFileParts := req.MultipartForm.File["files"]
 
 	const eightKB = 8192
 
@@ -1359,7 +1109,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 
 		rqFile, err := reqFilePart.Open()
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			http.Error(w, "File check problem", 500)
 			return
@@ -1367,7 +1117,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 
 		_, err = io.Copy(&buf, rqFile)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			rqFile.Close()
 			http.Error(w, "File check problem", 500)
@@ -1385,7 +1135,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 
 		oneMBHash, _, err := shared.CalcRootHash(eightKBHashes)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			http.Error(w, "Wrong file", 400)
 			return
@@ -1393,7 +1143,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 
 		if reqFilePart.Filename != oneMBHash {
 			err := errors.New("wrong file")
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			http.Error(w, err.Error(), 400)
 			return
@@ -1413,14 +1163,14 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 		sort.Strings(oneMBHashes)
 		wholeFileHash, _, err = shared.CalcRootHash(oneMBHashes)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			http.Error(w, "Wrong file", 400)
 			return
 		}
 	}
 
-	for _, fileHash := range fs {
+	for _, fileHash := range spData.Fs {
 		if fileHash == wholeFileHash {
 			fsContainsFile = true
 		}
@@ -1428,7 +1178,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 
 	if !fsContainsFile {
 		err := errors.New("wrong file")
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, err.Error(), 400)
 		return
@@ -1437,10 +1187,10 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 	count := 1
 	total := len(oneMBHashes)
 
-	hashes := r.MultipartForm.File["hashes"]
+	hashes := req.MultipartForm.File["hashes"]
 	hashesFile, err := hashes[0].Open()
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
 		return
@@ -1449,7 +1199,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 	hashesBody, err := io.ReadAll(hashesFile)
 	if err != nil {
 		hashesFile.Close()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
 		return
@@ -1459,7 +1209,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(hashesBody, &hashDif)
 	if err != nil {
 		hashesFile.Close()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		restoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, "File saving problem", 500)
 		return
@@ -1470,7 +1220,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 	for _, reqFilePart := range reqFileParts {
 		rqFile, err := reqFilePart.Open()
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			deleteFileParts(addressPath, oneMBHashes)
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			http.Error(w, "File saving problem", 500)
@@ -1482,7 +1232,7 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 
 		newFile, err := os.Create(pathToFile)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			deleteFileParts(addressPath, oneMBHashes)
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			http.Error(w, "File saving problem", 500)
@@ -1492,14 +1242,14 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 
 		_, err = io.Copy(newFile, rqFile)
 		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			deleteFileParts(addressPath, oneMBHashes)
 			restoreMemoryInfo(pathToConfig, intFileSize)
 			http.Error(w, "File saving problem", 500)
 			return
 		}
 
-		logger.Log("Saved file " + hashDif[reqFilePart.Filename] + " (" + fmt.Sprint(count) + "/" + fmt.Sprint(total) + ")" + " from " + storageProviderAddress[0]) //TODO remove
+		logger.Log("Saved file " + hashDif[reqFilePart.Filename] + " (" + fmt.Sprint(count) + "/" + fmt.Sprint(total) + ")" + " from " + spData.Address) //TODO remove
 
 		newFile.Sync()
 		rqFile.Close()
@@ -1512,14 +1262,93 @@ func BackUp(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "OK")
 }
 
+// ====================================================================================
+
+func parseRequest(r *http.Request) (shared.StorageProviderData, error) {
+
+	var spData shared.StorageProviderData
+
+	err := r.ParseMultipartForm(1 << 20) // maxMemory 32MB
+	if err != nil {
+		return spData, err
+	}
+
+	fs := r.MultipartForm.Value["fs"]
+
+	sort.Strings(fs)
+
+	fsRootHash, fsTree, err := shared.CalcRootHash(fs)
+	if err != nil {
+		return spData, err
+	}
+
+	signedFsRootHash := r.MultipartForm.Value["fsRootHash"]
+
+	signature, err := hex.DecodeString(signedFsRootHash[0])
+	if err != nil {
+		return spData, err
+	}
+
+	nonce := r.MultipartForm.Value["nonce"]
+
+	nonceInt, err := strconv.Atoi(nonce[0])
+	if err != nil {
+		return spData, err
+	}
+
+	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
+
+	nonceBytes, err := hex.DecodeString(nonceHex)
+	if err != nil {
+		return spData, err
+	}
+
+	nonce32 := make([]byte, 32-len(nonceBytes))
+	nonce32 = append(nonce32, nonceBytes...)
+
+	fsRootBytes, err := hex.DecodeString(fsRootHash)
+	if err != nil {
+		return spData, err
+	}
+
+	fsRootNonceBytes := append(fsRootBytes, nonce32...)
+
+	hash := sha256.Sum256(fsRootNonceBytes)
+
+	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
+	if err != nil {
+		return spData, err
+	}
+
+	storageProviderAddress := r.MultipartForm.Value["address"]
+
+	senderAddress := crypto.PubkeyToAddress(*sigPublicKey)
+
+	if storageProviderAddress[0] != fmt.Sprint(senderAddress) {
+		return spData, errors.New("wrong signature")
+	}
+
+	spData = shared.StorageProviderData{
+		Address:      storageProviderAddress[0],
+		Fs:           fs,
+		Nonce:        nonce[0],
+		SignedFsRoot: signedFsRootHash[0],
+		Tree:         fsTree,
+	}
+
+	return spData, nil
+}
+
+// ====================================================================================
+
 func restoreMemoryInfo(pathToConfig string, intFileSize int) {
-	logInfo := "server.restoreMemoryInfo->"
+	logLoc := "server.restoreMemoryInfo->"
 
 	shared.MU.Lock()
 	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		return
 	}
 	defer confFile.Close()
@@ -1529,7 +1358,7 @@ func restoreMemoryInfo(pathToConfig string, intFileSize int) {
 	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		return
 	}
 
@@ -1538,14 +1367,16 @@ func restoreMemoryInfo(pathToConfig string, intFileSize int) {
 	err = config.Save(confFile, nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		return
 	}
 	shared.MU.Unlock()
 }
 
+// ====================================================================================
+
 func backUpTo(nodeAddress, addressPath string, multiForm *multipart.Form, fileSize int) (string, error) {
-	const logInfo = "server.logInfo->"
+	const logLoc = "server.logLoc->"
 
 	pipeConns := fasthttputil.NewPipeConns()
 	pr := pipeConns.Conn1()
@@ -1644,19 +1475,19 @@ func backUpTo(nodeAddress, addressPath string, multiForm *multipart.Form, fileSi
 
 	req, err := http.NewRequest("POST", "http://"+nodeAddress+"/backup/"+strconv.Itoa(fileSize), pr)
 	if err != nil {
-		return "", logger.CreateDetails(logInfo, err)
+		return "", logger.CreateDetails(logLoc, err)
 	}
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", logger.CreateDetails(logInfo, err)
+		return "", logger.CreateDetails(logLoc, err)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", logger.CreateDetails(logInfo, err)
+		return "", logger.CreateDetails(logLoc, err)
 	}
 
 	defer resp.Body.Close()
@@ -1664,7 +1495,7 @@ func backUpTo(nodeAddress, addressPath string, multiForm *multipart.Form, fileSi
 	fmt.Println(string(body))
 	if string(body) != "OK" {
 
-		return "", logger.CreateDetails(logInfo, errors.New("saving problem"))
+		return "", logger.CreateDetails(logLoc, errors.New("saving problem"))
 	}
 
 	return nodeAddress, nil
