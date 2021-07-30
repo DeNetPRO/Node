@@ -378,6 +378,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 
 	signature, err := hex.DecodeString(signatureFromReq)
 	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, "File serving problem", 400)
 		return
 	}
@@ -386,6 +387,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 
 	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
 	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, "File serving problem", 400)
 		return
 	}
@@ -393,6 +395,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
 	if spAddress != signatureAddress.String() {
+		logger.Log(logger.CreateDetails(logLoc, errors.New("wrong signature")))
 		http.Error(w, "Wrong signature", http.StatusForbidden)
 		return
 	}
@@ -401,6 +404,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 
 	_, err = os.Stat(pathToFile)
 	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, "File not found", http.StatusNotFound)
 		return
 	}
