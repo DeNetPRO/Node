@@ -32,10 +32,10 @@ var accountLoginCmd = &cobra.Command{
 	Short: "log in a blockchain accounts",
 	Long:  "log in a blockchain accounts",
 	Run: func(cmd *cobra.Command, args []string) {
-		const actLoc = "accountLoginCmd->"
+		const logLoc = "accountLoginCmd->"
 		etherAccount, password, err := account.ValidateUser()
 		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(accLoginFatalError)
 		}
 
@@ -54,20 +54,20 @@ var accountLoginCmd = &cobra.Command{
 		if stat == nil {
 			nodeConfig, err = config.Create(etherAccount.Address.String(), password)
 			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
+				logger.Log(logger.CreateDetails(logLoc, err))
 				log.Fatal("couldn't create config file")
 			}
 		} else {
 			confFile, fileBytes, err := shared.ReadFile(pathToConfigFile)
 			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
+				logger.Log(logger.CreateDetails(logLoc, err))
 				log.Fatal("couldn't open config file")
 			}
 			defer confFile.Close()
 
 			err = json.Unmarshal(fileBytes, &nodeConfig)
 			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
+				logger.Log(logger.CreateDetails(logLoc, err))
 				log.Fatal("couldn't read config file")
 			}
 
@@ -78,7 +78,7 @@ var accountLoginCmd = &cobra.Command{
 			if upnp.InternetDevice != nil {
 				ip, err := upnp.InternetDevice.PublicIP()
 				if err != nil {
-					logger.Log(logger.CreateDetails(actLoc, err))
+					logger.Log(logger.CreateDetails(logLoc, err))
 				}
 
 				if nodeConfig.IpAddress != ip {
@@ -91,7 +91,7 @@ var accountLoginCmd = &cobra.Command{
 
 					err = blockchainprovider.UpdateNodeInfo(ctx, etherAccount.Address, password, nodeConfig.HTTPPort, splitIPAddr)
 					if err != nil {
-						logger.Log(logger.CreateDetails(actLoc, err))
+						logger.Log(logger.CreateDetails(logLoc, err))
 						log.Fatal(ipUpdateFatalError)
 					}
 
@@ -99,7 +99,7 @@ var accountLoginCmd = &cobra.Command{
 
 					err = config.Save(confFile, nodeConfig) // we dont't use mutex because race condition while login is impossible
 					if err != nil {
-						logger.Log(logger.CreateDetails(actLoc, err))
+						logger.Log(logger.CreateDetails(logLoc, err))
 						log.Fatal(ipUpdateFatalError)
 					}
 				}
