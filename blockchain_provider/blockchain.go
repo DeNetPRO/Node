@@ -37,6 +37,8 @@ const NFT = "0xBfAfdaE6B77a02A4684D39D1528c873961528342"
 
 const ethClientAddr = "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f"
 
+//RegisterNode registers a node in the ethereum network.
+//It is important that the account has a balance of more than 200000000000000 wei
 func RegisterNode(ctx context.Context, address, password string, ip []string, port string) error {
 	const logLoc = "blockchainprovider.RegisterNode->"
 	ipAddr := [4]uint8{}
@@ -100,6 +102,7 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 
 // ====================================================================================
 
+//Returns the node by ID from ethereum network
 func GetNodeInfoByID() (nodeAbi.SimpleMetaDataDeNetNode, error) {
 	const logLoc = "blockchainprovider.GetNodeInfoByID->"
 	var nodeInfo nodeAbi.SimpleMetaDataDeNetNode
@@ -126,6 +129,7 @@ func GetNodeInfoByID() (nodeAbi.SimpleMetaDataDeNetNode, error) {
 
 // ====================================================================================
 
+//Return instance of NodeNft, bound to a specific deployed contract.
 func GetNodeNFT() (*nodeAbi.NodeNft, error) {
 	const logLoc = "blockchainprovider.getNodeNFT->"
 
@@ -150,6 +154,7 @@ func GetNodeNFT() (*nodeAbi.NodeNft, error) {
 
 // ====================================================================================
 
+//UpdateNodeInfo provides to update node ip address or port
 func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newPort string, newIP []string) error {
 	const logLoc = "blockchainprovider.UpdateNodeInfo->"
 	ipInfo := [4]uint8{}
@@ -200,6 +205,9 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 
 // ====================================================================================
 
+//StartMining is goes to "storage" dir and check each account for reward.
+//If account has enough wei on balance then starts the check each saved account files.
+//If user difficulty is enough it sends proof to ethereum network.
 func StartMining(password string) {
 	const logLoc = "blockchainprovider.StartMining->"
 
@@ -367,6 +375,8 @@ func StartMining(password string) {
 
 // ====================================================================================
 
+//Makes merkle tree by current file.
+//Then taken one part of the file and compare hashes.
 func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte,
 	nodeAddr common.Address, spAddress string, blockNum uint64, instance *abiPOS.Store) error {
 	const logLoc = "blockchainprovider.sendProof->"

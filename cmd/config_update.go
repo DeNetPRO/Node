@@ -64,7 +64,7 @@ var configUpdateCmd = &cobra.Command{
 
 		fmt.Println("Please enter disk space for usage in GB (should be positive number), or just press enter button to skip")
 
-		err = config.SetStorageLimit(pathToConfigDir, config.State.Update, &nodeConfig)
+		err = config.SetStorageLimit(pathToConfigDir, config.UpdateStatus, &nodeConfig)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(confUpdateFatalMessage)
@@ -72,7 +72,7 @@ var configUpdateCmd = &cobra.Command{
 
 		fmt.Println("Please enter new ip address, or just press enter button to skip")
 
-		splitIPAddr, err := config.SetIpAddr(&nodeConfig, config.State.Update)
+		splitIPAddr, err := config.SetIpAddr(&nodeConfig, config.UpdateStatus)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(confUpdateFatalMessage)
@@ -80,7 +80,7 @@ var configUpdateCmd = &cobra.Command{
 
 		fmt.Println("Please enter new http port number, or just press enter button to skip")
 
-		err = config.SetPort(&nodeConfig, config.State.Update)
+		err = config.SetPort(&nodeConfig, config.UpdateStatus)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(confUpdateFatalMessage)
@@ -88,7 +88,7 @@ var configUpdateCmd = &cobra.Command{
 
 		fmt.Println("Do you want to send bug reports to developers? [y/n] (or just press enter button to skip)")
 
-		err = config.ChangeAgreeSendLogs(&nodeConfig, config.State.Update)
+		err = config.ChangeAgreeSendLogs(&nodeConfig, config.UpdateStatus)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(confUpdateFatalMessage)

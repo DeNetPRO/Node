@@ -28,8 +28,10 @@ type StorageProviderData struct {
 }
 
 var (
-	NodeAddr     common.Address
-	MU           sync.Mutex
+	NodeAddr common.Address
+	MU       sync.Mutex
+
+	//Tests variables used in TestMode
 	TestMode     = false
 	TestPassword = "test"
 	TestLimit    = 1
@@ -37,6 +39,7 @@ var (
 	TestPort     = "8081"
 )
 
+//Return nodes available space in GB
 func GetAvailableSpace(storagePath string) int {
 	var KB = uint64(1024)
 	usage := du.NewDiskUsage(storagePath)
@@ -45,6 +48,7 @@ func GetAvailableSpace(storagePath string) int {
 
 // ====================================================================================
 
+//Initializes default node paths
 func InitPaths() error {
 	const logLoc = "shared.InitPaths->"
 	homeDir, err := os.UserHomeDir()
@@ -61,6 +65,7 @@ func InitPaths() error {
 
 // ====================================================================================
 
+//Creates account dir
 func CreateIfNotExistAccDirs() error {
 	const logLoc = "shared.CreateIfNotExistAccDirs->"
 	statWDP, err := os.Stat(paths.WorkDirPath)
@@ -94,6 +99,7 @@ func CreateIfNotExistAccDirs() error {
 
 // ====================================================================================
 
+//Сromplatform error checking for file stat
 func CheckStatErr(statErr error) error {
 	if statErr == nil {
 		return nil
@@ -123,6 +129,9 @@ func ContainsAccount(accounts []string, address string) bool {
 	return false
 }
 
+// ====================================================================================
+
+//Read file by certain path
 func ReadFile(path string) (*os.File, []byte, error) {
 	const logLoc = "shared.ReadFile->"
 	file, err := os.OpenFile(path, os.O_RDWR, 0700)
@@ -160,6 +169,7 @@ func ReadFromConsole() (string, error) {
 
 // ====================================================================================
 
+//Calculate root hash by making merkle tree
 func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 	const logLoc = "shared.CalcRootHash->"
 
@@ -215,6 +225,9 @@ func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 	return hex.EncodeToString(resByte[len(resByte)-1][0]), resByte, nil
 }
 
+// ====================================================================================
+
+//Hash password with SHA-256
 func GetHashPassword(password string) string {
 	pBytes := sha256.Sum256([]byte(password))
 	return hex.EncodeToString(pBytes[:])

@@ -29,15 +29,10 @@ type SecondaryNodeConfig struct {
 	AgreeSendLogs    bool   `json:"agreeSendLogs"`
 }
 
-type configState struct {
-	Create string
-	Update string
-}
-
-var State = configState{
-	Create: "Create",
-	Update: "Update",
-}
+const (
+	CreateStatus = "Create"
+	UpdateStatus = "Update"
+)
 
 var fullyReservedIPs = map[string]bool{
 	"0":   true,
@@ -50,6 +45,7 @@ var partiallyReservedIPs = map[string]int{
 	"192": 168,
 }
 
+//Creates config file in ~/dfile-node/accounts/{account}/config/config.json
 func Create(address, password string) (SecondaryNodeConfig, error) {
 	const logLoc = "config.Create->"
 	nodeConfig := SecondaryNodeConfig{
@@ -63,7 +59,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 	fmt.Println("Please enter disk space for usage in GB (should be positive number)")
 
-	err := SetStorageLimit(pathToConfig, State.Create, &nodeConfig)
+	err := SetStorageLimit(pathToConfig, CreateStatus, &nodeConfig)
 	if err != nil {
 		return nodeConfig, logger.CreateDetails(logLoc, err)
 	}
@@ -81,13 +77,13 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		fmt.Println("Your public IP address", ip, "is added to config")
 	} else {
 		fmt.Println("Please enter your public ip address")
-		splitIPAddr, err = SetIpAddr(&nodeConfig, State.Update)
+		splitIPAddr, err = SetIpAddr(&nodeConfig, UpdateStatus)
 		if err != nil {
 			return nodeConfig, logger.CreateDetails(logLoc, err)
 		}
 	}
 
-	err = SetPort(&nodeConfig, State.Create)
+	err = SetPort(&nodeConfig, CreateStatus)
 	if err != nil {
 		return nodeConfig, logger.CreateDetails(logLoc, err)
 	}
@@ -131,6 +127,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 
 // ====================================================================================
 
+//Set storage limit in config file
 func SetStorageLimit(pathToConfig, state string, nodeConfig *SecondaryNodeConfig) error {
 	const logLoc = "config.SetStorageLimit->"
 	regNum := regexp.MustCompile(("[0-9]+"))
@@ -148,7 +145,7 @@ func SetStorageLimit(pathToConfig, state string, nodeConfig *SecondaryNodeConfig
 			return logger.CreateDetails(logLoc, err)
 		}
 
-		if state == State.Update && space == "" {
+		if state == UpdateStatus && space == "" {
 			break
 		}
 
@@ -179,6 +176,7 @@ func SetStorageLimit(pathToConfig, state string, nodeConfig *SecondaryNodeConfig
 
 // ====================================================================================
 
+//Set ip address in config file
 func SetIpAddr(nodeConfig *SecondaryNodeConfig, state string) ([]string, error) {
 	const logLoc = "config.SetIpAddr->"
 
@@ -199,7 +197,7 @@ func SetIpAddr(nodeConfig *SecondaryNodeConfig, state string) ([]string, error) 
 			return nil, logger.CreateDetails(logLoc, err)
 		}
 
-		if state == State.Update && ipAddr == "" {
+		if state == UpdateStatus && ipAddr == "" {
 			break
 		}
 
@@ -240,6 +238,7 @@ func SetIpAddr(nodeConfig *SecondaryNodeConfig, state string) ([]string, error) 
 
 // ====================================================================================
 
+//Set port in config file
 func SetPort(nodeConfig *SecondaryNodeConfig, state string) error {
 	const logLoc = "config.SetPort->"
 
@@ -258,12 +257,12 @@ func SetPort(nodeConfig *SecondaryNodeConfig, state string) error {
 			return logger.CreateDetails(logLoc, err)
 		}
 
-		if state == State.Create && httpPort == "" {
+		if state == CreateStatus && httpPort == "" {
 			nodeConfig.HTTPPort = fmt.Sprint(55050)
 			break
 		}
 
-		if state == State.Update && httpPort == "" {
+		if state == UpdateStatus && httpPort == "" {
 			break
 		}
 
@@ -294,6 +293,7 @@ func SetPort(nodeConfig *SecondaryNodeConfig, state string) error {
 
 // ====================================================================================
 
+//Changing the sending logs agreement
 func ChangeAgreeSendLogs(nodeConfig *SecondaryNodeConfig, state string) error {
 	const logLoc = "config.ChangeAgreeSendLogs->"
 	regPort := regexp.MustCompile("^(?:y|n)$")
@@ -304,7 +304,7 @@ func ChangeAgreeSendLogs(nodeConfig *SecondaryNodeConfig, state string) error {
 			return logger.CreateDetails(logLoc, err)
 		}
 
-		if state == State.Update && agree == "" {
+		if state == UpdateStatus && agree == "" {
 			break
 		}
 
@@ -329,6 +329,7 @@ func ChangeAgreeSendLogs(nodeConfig *SecondaryNodeConfig, state string) error {
 
 // ====================================================================================
 
+//Saving config file
 func Save(confFile *os.File, nodeConfig SecondaryNodeConfig) error {
 	confJSON, err := json.Marshal(nodeConfig)
 	if err != nil {

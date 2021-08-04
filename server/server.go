@@ -1101,6 +1101,9 @@ func BackUp(w http.ResponseWriter, req *http.Request) {
 
 // ====================================================================================
 
+//Checks space on the node.
+//Returns the size of the input file, true -> if there is enough space and false -> if otherwise.
+//And also node's config.
 func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.SecondaryNodeConfig, error) {
 	const logLoc = "server.checkSpace"
 
@@ -1157,15 +1160,13 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.Seconda
 
 // ====================================================================================
 
-func parseRequest(r *http.Request) (shared.StorageProviderData, error) {
-
+//Parse the request multipartForm
+func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 	const logLoc = "server.parseRequest"
-
-	var spData shared.StorageProviderData
 
 	err := r.ParseMultipartForm(1 << 20) // maxMemory 32MB
 	if err != nil {
-		return spData, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	fs := r.MultipartForm.Value["fs"]
@@ -1174,28 +1175,28 @@ func parseRequest(r *http.Request) (shared.StorageProviderData, error) {
 
 	fsRootHash, fsTree, err := shared.CalcRootHash(fs)
 	if err != nil {
-		return spData, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	signedFsRootHash := r.MultipartForm.Value["fsRootHash"]
 
 	signature, err := hex.DecodeString(signedFsRootHash[0])
 	if err != nil {
-		return spData, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	nonce := r.MultipartForm.Value["nonce"]
 
 	nonceInt, err := strconv.Atoi(nonce[0])
 	if err != nil {
-		return spData, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
 
 	nonceBytes, err := hex.DecodeString(nonceHex)
 	if err != nil {
-		return spData, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	nonce32 := make([]byte, 32-len(nonceBytes))
@@ -1203,7 +1204,7 @@ func parseRequest(r *http.Request) (shared.StorageProviderData, error) {
 
 	fsRootBytes, err := hex.DecodeString(fsRootHash)
 	if err != nil {
-		return spData, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	fsRootNonceBytes := append(fsRootBytes, nonce32...)
@@ -1212,7 +1213,7 @@ func parseRequest(r *http.Request) (shared.StorageProviderData, error) {
 
 	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
 	if err != nil {
-		return spData, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	storageProviderAddress := r.MultipartForm.Value["address"]
@@ -1220,22 +1221,21 @@ func parseRequest(r *http.Request) (shared.StorageProviderData, error) {
 	senderAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
 	if storageProviderAddress[0] != fmt.Sprint(senderAddress) {
-		return spData, logger.CreateDetails(logLoc, errors.New("wrong signature"))
+		return nil, logger.CreateDetails(logLoc, errors.New("wrong signature"))
 	}
 
-	spData = shared.StorageProviderData{
+	return &shared.StorageProviderData{
 		Address:      storageProviderAddress[0],
 		Fs:           fs,
 		Nonce:        nonce[0],
 		SignedFsRoot: signedFsRootHash[0],
 		Tree:         fsTree,
-	}
-
-	return spData, nil
+	}, nil
 }
 
 // ====================================================================================
 
+//Restore certain file size
 func restoreMemoryInfo(pathToConfig string, intFileSize int) {
 	logLoc := "server.restoreMemoryInfo->"
 
@@ -1270,6 +1270,7 @@ func restoreMemoryInfo(pathToConfig string, intFileSize int) {
 
 // ====================================================================================
 
+//Provides back up to "node Address" using old multipart form. Returning ip address node if successful
 func backUpTo(nodeAddress, addressPath string, multiForm *multipart.Form, fileSize int) (string, error) {
 	const logLoc = "server.logLoc->"
 

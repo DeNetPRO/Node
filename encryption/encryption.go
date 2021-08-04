@@ -12,11 +12,12 @@ import (
 )
 
 var (
-	PrivateKey []byte
+	PrivateKey []byte //encrypted private key
 )
 
 // ====================================================================================
 
+//EncryptAES provides encrypts "data" by "key" using AES
 func EncryptAES(key, data []byte) ([]byte, error) {
 	const logLoc = "shared.encryptAES->"
 	block, err := aes.NewCipher(key)
@@ -38,11 +39,11 @@ func EncryptAES(key, data []byte) ([]byte, error) {
 	ciphertext := gcm.Seal(nonce, nonce, data, nil)
 
 	return ciphertext, nil
-
 }
 
 // ====================================================================================
 
+//DecryptAES provides decrypts "data" by "key" using AES
 func DecryptAES(key, data []byte) ([]byte, error) {
 	const logLoc = "shared.decryptAES->"
 	block, err := aes.NewCipher(key)
@@ -64,6 +65,7 @@ func DecryptAES(key, data []byte) ([]byte, error) {
 
 // ====================================================================================
 
+//Return MAC-address of device
 func GetDeviceMacAddr() (string, error) {
 	const logLoc = "shared.GetDeviceMacAddr->"
 	var addr string

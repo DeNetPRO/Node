@@ -25,14 +25,14 @@ var (
 	IpAddr string
 )
 
-//GetAllAccounts go to the folder ~/dfile/accounts and return all accounts addresses in string format
+//List go to the folder ~/dfile-node/accounts and return all accounts addresses in string format
 func List() []string {
 	var blockchainAccounts []string
 
 	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccounts := ks.Accounts()
 
-	blockchainAccounts = make([]string, 0, 1)
+	blockchainAccounts = make([]string, 0)
 
 	for _, a := range etherAccounts {
 		blockchainAccounts = append(blockchainAccounts, a.Address.String())
@@ -41,7 +41,7 @@ func List() []string {
 	return blockchainAccounts
 }
 
-// CreateAccount creates account and keystore file with encryption with password
+// Create account and keystore file with encryption with password
 func Create(password string) (string, config.SecondaryNodeConfig, error) {
 	const logLoc = "account.Create->"
 	var nodeConf config.SecondaryNodeConfig
@@ -66,6 +66,7 @@ func Create(password string) (string, config.SecondaryNodeConfig, error) {
 	return etherAccount.Address.String(), nodeConf, nil
 }
 
+//Import account with private key
 func Import() (string, config.SecondaryNodeConfig, error) {
 	const logLoc = "account.Import->"
 	var nodeConfig config.SecondaryNodeConfig
@@ -125,6 +126,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 	return etherAccount.Address.String(), nodeConfig, nil
 }
 
+//Login to account with password
 func Login(blockchainAccountString, password string) (*accounts.Account, error) {
 	const logLoc = "account.Login->"
 	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
@@ -173,6 +175,8 @@ func Login(blockchainAccountString, password string) (*accounts.Account, error) 
 	return account, nil
 }
 
+//CheckPassword is go to KeyStore and try to decrypt store with incoming account and password.
+//Return nil if password is valid
 func CheckPassword(password, address string) error {
 	const logLoc = "account.CheckPassword->"
 	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
@@ -191,6 +195,8 @@ func CheckPassword(password, address string) error {
 	return nil
 }
 
+//ValidateUser provides entry into the node.
+//It gives 3 attemps to enter into the choosen account
 func ValidateUser() (*accounts.Account, string, error) {
 	const logLoc = "account.ValidateUser->"
 	var accountAddress, password string
@@ -274,6 +280,8 @@ func ValidateUser() (*accounts.Account, string, error) {
 	return etherAccount, password, nil
 }
 
+//initAccount creates the necessary environment for the account.
+//It creates dir "storage" and config file. And also encrypts private key
 func initAccount(ks *keystore.KeyStore, account *accounts.Account, password string) (config.SecondaryNodeConfig, error) {
 	const logLoc = "account.initAccount->"
 	var nodeConf config.SecondaryNodeConfig

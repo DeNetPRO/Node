@@ -17,8 +17,8 @@ import (
 
 const oneMB = 1048576
 
+//Delete unnecessary files every one minute
 func Start() {
-
 	const logLoc = "cleaner.Start->"
 
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
@@ -158,7 +158,5 @@ func Start() {
 			confFile.Close()
 			shared.MU.Unlock()
 		}
-
 	}
-
 }
