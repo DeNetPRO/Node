@@ -43,7 +43,7 @@ var configUpdateCmd = &cobra.Command{
 		}
 
 		pathToConfigDir := filepath.Join(paths.AccsDirPath, etherAccount.Address.String(), paths.ConfDirName)
-		pathToConfigFile := filepath.Join(pathToConfigDir, "config.json")
+		pathToConfigFile := filepath.Join(pathToConfigDir, paths.ConfFileName)
 
 		var nodeConfig config.SecondaryNodeConfig
 

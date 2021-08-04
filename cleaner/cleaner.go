@@ -78,7 +78,7 @@ func Start() {
 				continue
 			}
 
-			pathToFsTree := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress, "tree.json")
+			pathToFsTree := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress, paths.SpFsFilename)
 
 			shared.MU.Lock()
 			fileFsTree, treeBytes, err := shared.ReadFile(pathToFsTree)
@@ -91,7 +91,7 @@ func Start() {
 			fileFsTree.Close()
 			shared.MU.Unlock()
 
-			var spFs shared.StorageProviderFs
+			var spFs shared.StorageProviderData
 
 			err = json.Unmarshal(treeBytes, &spFs)
 			if err != nil {
@@ -126,7 +126,7 @@ func Start() {
 		}
 
 		if removedTotal > 0 {
-			pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, "config.json")
+			pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
 			shared.MU.Lock()
 			confFile, fileBytes, err := shared.ReadFile(pathToConfig)
