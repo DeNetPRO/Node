@@ -217,14 +217,11 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	shared.MU.Unlock()
 
 	reqFileParts := req.MultipartForm.File["files"]
-
 	const eightKB = 8192
-
 	oneMBHashes := make([]string, 0, len(reqFileParts))
+	eightKBHashes := make([]string, 0, 128)
 
 	for _, reqFilePart := range reqFileParts {
-
-		eightKBHashes := make([]string, 0, 128)
 
 		var buf bytes.Buffer
 
@@ -248,6 +245,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		rqFile.Close()
 
 		bufBytes := buf.Bytes()
+		eightKBHashes = eightKBHashes[:0]
 
 		for i := 0; i < len(bufBytes); i += eightKB {
 			hSum := sha256.Sum256(bufBytes[i : i+eightKB])
@@ -271,7 +269,6 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		}
 
 		oneMBHashes = append(oneMBHashes, oneMBHash)
-
 	}
 
 	fsContainsFile := false
@@ -319,7 +316,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		}
 		defer rqFile.Close()
 
-		pathToFile := filepath.Join(validator.AccountPath, reqFilePart.Filename)
+		pathToFile := filepath.Join(addressPath, reqFilePart.Filename)
 
 		newFile, err := os.Create(pathToFile)
 		if err != nil {
@@ -356,7 +353,6 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 // ====================================================================================
 
 func deleteFileParts(addressPath string, fileHashes []string) {
-
 	logger.Log("deleting file parts after error...")
 
 	for _, hash := range fileHashes {
@@ -992,7 +988,6 @@ func BackUp(w http.ResponseWriter, req *http.Request) {
 		}
 
 		oneMBHashes = append(oneMBHashes, oneMBHash)
-
 	}
 
 	fsContainsFile := false
@@ -1070,7 +1065,7 @@ func BackUp(w http.ResponseWriter, req *http.Request) {
 		}
 		defer rqFile.Close()
 
-		pathToFile := filepath.Join(validator.AccountPath, hashDif[reqFilePart.Filename])
+		pathToFile := filepath.Join(addressPath, hashDif[reqFilePart.Filename])
 
 		newFile, err := os.Create(pathToFile)
 		if err != nil {
@@ -1107,7 +1102,6 @@ func BackUp(w http.ResponseWriter, req *http.Request) {
 // ====================================================================================
 
 func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.SecondaryNodeConfig, error) {
-
 	const logLoc = "server.checkSpace"
 
 	var nodeConfig config.SecondaryNodeConfig
@@ -1159,7 +1153,6 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.Seconda
 	shared.MU.Unlock()
 
 	return intFileSize, true, nodeConfig, nil
-
 }
 
 // ====================================================================================
@@ -1400,196 +1393,4 @@ func backUpTo(nodeAddress, addressPath string, multiForm *multipart.Form, fileSi
 	}
 
 	return nodeAddress, nil
-}
-
-func validateRequest(r *http.Request) (*validator, error) {
-	const logInfo = "server.validateRequest->"
-
-	vars := mux.Vars(r)
-	fileSize := vars["size"]
-
-	intFileSize, err := strconv.Atoi(fileSize)
-	if err != nil {
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	if intFileSize == 0 {
-		return nil, logger.CreateDetails(logInfo, errors.New("file size is 0"))
-	}
-
-	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, "config.json")
-
-	shared.MU.Lock()
-	confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
-	if err != nil {
-		shared.MU.Unlock()
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	defer confFile.Close()
-
-	fileBytes, err := io.ReadAll(confFile)
-	if err != nil {
-		shared.MU.Unlock()
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	var nodeConfig config.SecondaryNodeConfig
-
-	err = json.Unmarshal(fileBytes, &nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	sharedSpaceInBytes := int64(nodeConfig.StorageLimit) * gbBytes
-
-	nodeConfig.UsedStorageSpace += int64(intFileSize)
-
-	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
-		shared.MU.Unlock()
-		err := errors.New("insufficient memory avaliable")
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	avaliableSpaceLeft := sharedSpaceInBytes - nodeConfig.UsedStorageSpace
-
-	if avaliableSpaceLeft < oneHunderdMBBytes {
-		fmt.Println("Shared storage memory is running low,", avaliableSpaceLeft/(1024*1024), "MB of space is avaliable")
-		fmt.Println("You may need additional space for mining. Total shared space can be changed in account configuration")
-	}
-
-	err = config.Save(confFile, nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-	confFile.Close()
-	shared.MU.Unlock()
-
-	err = r.ParseMultipartForm(1 << 20) // maxMemory 32MB
-	if err != nil {
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	fs := r.MultipartForm.Value["fs"]
-
-	sort.Strings(fs)
-
-	fsRootHash, fsTree, err := shared.CalcRootHash(fs)
-	if err != nil {
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	signedFsRootHash := r.MultipartForm.Value["fsRootHash"]
-
-	signature, err := hex.DecodeString(signedFsRootHash[0])
-	if err != nil {
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	nonce := r.MultipartForm.Value["nonce"]
-
-	nonceInt, err := strconv.Atoi(nonce[0])
-	if err != nil {
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
-
-	nonceBytes, err := hex.DecodeString(nonceHex)
-	if err != nil {
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	nonce32 := make([]byte, 32-len(nonceBytes))
-	nonce32 = append(nonce32, nonceBytes...)
-
-	fsRootBytes, err := hex.DecodeString(fsRootHash)
-	if err != nil {
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	fsRootNonceBytes := append(fsRootBytes, nonce32...)
-
-	hash := sha256.Sum256(fsRootNonceBytes)
-
-	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
-	if err != nil {
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	storageProviderAddress := r.MultipartForm.Value["address"]
-
-	senderAddress := crypto.PubkeyToAddress(*sigPublicKey)
-
-	if storageProviderAddress[0] != fmt.Sprint(senderAddress) {
-		err := errors.New("wrong signature")
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, storageProviderAddress[0])
-
-	stat, err := os.Stat(addressPath)
-	err = shared.CheckStatErr(err)
-	if err != nil {
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	if stat == nil {
-		err = os.Mkdir(addressPath, 0700)
-		if err != nil {
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			return nil, logger.CreateDetails(logInfo, err)
-		}
-	}
-
-	shared.MU.Lock()
-	spFsFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
-	if err != nil {
-		shared.MU.Unlock()
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-	defer spFsFile.Close()
-
-	spFs := shared.StorageProviderFs{
-		Nonce:        nonce[0],
-		SignedFsRoot: signedFsRootHash[0],
-		Tree:         fsTree,
-	}
-
-	js, err := json.Marshal(spFs)
-	if err != nil {
-		shared.MU.Unlock()
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	_, err = spFsFile.Write(js)
-	if err != nil {
-		shared.MU.Unlock()
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		return nil, logger.CreateDetails(logInfo, err)
-	}
-
-	spFsFile.Sync()
-	spFsFile.Close()
-	shared.MU.Unlock()
-
-	return &validator{
-		StorageProviderAddress: storageProviderAddress[0],
-		AccountPath:            addressPath,
-		ConfigPath:             pathToConfig,
-		FileSize:               intFileSize,
-	}, nil
 }

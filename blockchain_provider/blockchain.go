@@ -269,7 +269,6 @@ func StartMining(password string) {
 		}
 
 		for _, spAddress := range storageProviderAddresses {
-
 			time.Sleep(time.Second * 5)
 
 			storageProviderAddr := common.HexToAddress(spAddress)
@@ -348,19 +347,18 @@ func StartMining(password string) {
 
 			if !proved {
 				fmt.Println(spAddress, "not proved")
+				continue
 			}
 
-			if proved {
-				fmt.Println(spAddress, "proved")
+			fmt.Println(spAddress, "proved")
 
-				fmt.Println("checking file:", fileName)
-				fmt.Println("Trying proof", fileName, "for reward:", reward)
+			fmt.Println("checking file:", fileName)
+			fmt.Println("Trying proof", fileName, "for reward:", reward)
 
-				err := sendProof(ctx, client, password, storedFileBytes, shared.NodeAddr, spAddress, blockNum-6, instance)
-				if err != nil {
-					logger.Log(logger.CreateDetails(logLoc, err))
-					continue
-				}
+			err = sendProof(ctx, client, password, storedFileBytes, shared.NodeAddr, spAddress, blockNum-6, instance)
+			if err != nil {
+				logger.Log(logger.CreateDetails(logLoc, err))
+				continue
 			}
 
 		}

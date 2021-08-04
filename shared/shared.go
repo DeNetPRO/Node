@@ -205,12 +205,10 @@ func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
 			hSum := sha256.Sum256(concatBytes)
 
 			resByte[len(resByte)-1] = append(resByte[len(resByte)-1], hSum[:])
-
 		}
 
 		if len(resByte[len(resByte)-1])%2 != 0 && len(prevList) > 2 {
 			resByte[len(resByte)-1] = append(resByte[len(resByte)-1], emptyValue)
-
 		}
 	}
 
