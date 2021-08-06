@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -146,6 +147,22 @@ func ReadFile(path string) (*os.File, []byte, error) {
 	}
 
 	return file, fileBytes, nil
+}
+
+func WriteFile(file *os.File, data interface{}) error {
+	const logLoc = "shared.ReadFromConsole->"
+
+	js, err := json.Marshal(data)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	_, err = file.Write(js)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	return nil
 }
 
 // ====================================================================================

@@ -25,7 +25,7 @@ var (
 	IpAddr string
 )
 
-//List go to the folder ~/dfile-node/accounts and return all accounts addresses in string format
+//List goes to the folder ~/dfile-node/accounts and return all accounts addresses in string format
 func List() []string {
 	var blockchainAccounts []string
 
