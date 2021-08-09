@@ -114,7 +114,6 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 
 	etherAccount, err := ks.ImportECDSA(ecdsaPrivKey, password)
 	if err != nil {
-		fmt.Println(err)
 		return "", nodeConfig, logger.CreateDetails(logLoc, err)
 	}
 
