@@ -21,11 +21,23 @@ import (
 )
 
 type StorageProviderData struct {
-	Address      string
-	Fs           []string
+	Address      string     `json:"address"`
 	Nonce        string     `json:"nonce"`
 	SignedFsRoot string     `json:"signedFsRoot"`
 	Tree         [][][]byte `json:"tree"`
+	Fs           []string
+}
+
+type RatingInfo struct {
+	Rating                float32                               `json:"rating"`
+	StorageProviders      map[string]map[string]*RatingFileInfo `json:"storage_providers"`
+	ConnectedNodes        map[string]int                        `json:"connected_nodes"`
+	NumberOfAuthorityConn int                                   `json:"nac"`
+}
+
+type RatingFileInfo struct {
+	FileKey string   `json:"file_key"`
+	Nodes   []string `json:"nodes"`
 }
 
 var (
@@ -38,6 +50,18 @@ var (
 	TestLimit    = 1
 	TestAddress  = "127.0.0.1"
 	TestPort     = "8081"
+)
+
+var (
+	ErrWrongFile          = errors.New("wrong file")
+	ErrFileSaving         = errors.New("file saving problem")
+	ErrUpdateFsInfo       = errors.New("fs info update problem")
+	ErrWrongSignature     = errors.New("wrong signature")
+	ErrFileCheck          = errors.New("file check problem")
+	ErrParseMultipartForm = errors.New("parse multipart form problem")
+	ErrSpaceCheck         = errors.New("space check problem")
+	ErrInternal           = errors.New("node internal error")
+	ErrInvalidArgument    = errors.New("invalid argument")
 )
 
 //Return nodes available space in GB
@@ -58,8 +82,8 @@ func InitPaths() error {
 	}
 
 	paths.WorkDirPath = filepath.Join(homeDir, paths.WorkDirName)
-
 	paths.AccsDirPath = filepath.Join(paths.WorkDirPath, "accounts")
+	paths.RatingFilePath = filepath.Join(paths.WorkDirPath, paths.RatingFilename)
 
 	return nil
 }
@@ -93,6 +117,289 @@ func CreateIfNotExistAccDirs() error {
 		if err != nil {
 			return logger.CreateDetails(logLoc, err)
 		}
+	}
+	rating, err := os.Stat(paths.RatingFilePath)
+	err = CheckStatErr(err)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	if rating == nil {
+		file, err := os.Create(paths.RatingFilePath)
+		if err != nil {
+			return logger.CreateDetails(logLoc, err)
+		}
+
+		ratingInfo := NewRatingInfo()
+
+		err = WriteFile(file, ratingInfo)
+		if err != nil {
+			return logger.CreateDetails(logLoc, err)
+		}
+
+		file.Close()
+	}
+
+	return nil
+}
+
+// ====================================================================================
+
+func NewRatingInfo() *RatingInfo {
+	return &RatingInfo{
+		Rating:           0,
+		StorageProviders: make(map[string]map[string]*RatingFileInfo),
+		ConnectedNodes:   make(map[string]int),
+	}
+}
+
+// ====================================================================================
+
+func UpdateStorageProviderInfo(spAddress string, fileKeys, nodes []string) error {
+	const logLoc = "shared.UpdateStorageProviderInfo->"
+
+	MU.Lock()
+	defer MU.Unlock()
+
+	file, bytes, err := ReadFile(paths.RatingFilePath)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	defer file.Close()
+
+	ratingInfo := RatingInfo{}
+	err = json.Unmarshal(bytes, &ratingInfo)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	_, ok := ratingInfo.StorageProviders[spAddress]
+	if !ok {
+		ratingInfo.StorageProviders[spAddress] = make(map[string]*RatingFileInfo)
+	}
+
+	sp := ratingInfo.StorageProviders[spAddress]
+
+	for _, fileKey := range fileKeys {
+		sp[fileKey] = &RatingFileInfo{
+			FileKey: fileKey,
+			Nodes:   nodes,
+		}
+	}
+
+	err = WriteFile(file, ratingInfo)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	return nil
+}
+
+// ====================================================================================
+
+func GetFileInfoNodes(spAddress, fileKey string) ([]string, error) {
+	const logLoc = "shared.UpdateStorageProviderInfo->"
+
+	MU.Lock()
+	defer MU.Unlock()
+
+	file, bytes, err := ReadFile(paths.RatingFilePath)
+	if err != nil {
+		return nil, logger.CreateDetails(logLoc, err)
+	}
+
+	file.Close()
+
+	ratingInfo := RatingInfo{}
+	err = json.Unmarshal(bytes, &ratingInfo)
+	if err != nil {
+		return nil, logger.CreateDetails(logLoc, err)
+	}
+
+	_, ok := ratingInfo.StorageProviders[spAddress]
+	if !ok {
+		return nil, logger.CreateDetails(logLoc, errors.New("no sp"))
+	}
+
+	sp := ratingInfo.StorageProviders[spAddress]
+
+	fileInfo, ok := sp[fileKey]
+	if !ok {
+		return nil, logger.CreateDetails(logLoc, errors.New("no filekey"))
+	}
+
+	return fileInfo.Nodes, nil
+}
+
+// ====================================================================================
+
+func GetRating() (float32, error) {
+	const logLoc = "shared.GetRating->"
+
+	MU.Lock()
+	defer MU.Unlock()
+
+	file, bytes, err := ReadFile(paths.RatingFilePath)
+	if err != nil {
+		return 0, logger.CreateDetails(logLoc, err)
+	}
+
+	file.Close()
+
+	ratingInfo := RatingInfo{}
+	err = json.Unmarshal(bytes, &ratingInfo)
+	if err != nil {
+		return 0, logger.CreateDetails(logLoc, err)
+	}
+
+	return ratingInfo.Rating, nil
+}
+
+// ====================================================================================
+
+func RemoveFileKeySavedNode(spAddress, fileKey, brokeNode string) error {
+	const logLoc = "shared.RemoveFileKeySavedNode->"
+
+	MU.Lock()
+	defer MU.Unlock()
+
+	file, bytes, err := ReadFile(paths.RatingFilePath)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	defer file.Close()
+
+	ratingInfo := RatingInfo{}
+	err = json.Unmarshal(bytes, &ratingInfo)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	_, ok := ratingInfo.StorageProviders[spAddress]
+	if !ok {
+		return logger.CreateDetails(logLoc, errors.New("no sp"))
+	}
+
+	sp := ratingInfo.StorageProviders[spAddress]
+
+	fileInfo, ok := sp[fileKey]
+	if !ok {
+		return logger.CreateDetails(logLoc, errors.New("no filekey"))
+	}
+
+	newNodes := make([]string, 0)
+	for _, node := range fileInfo.Nodes {
+		if node != brokeNode {
+			newNodes = append(newNodes, node)
+		}
+	}
+
+	sp[fileKey].Nodes = newNodes
+	ratingInfo.StorageProviders[spAddress] = sp
+
+	err = WriteFile(file, ratingInfo)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	return nil
+}
+
+// ====================================================================================
+
+func RemoveConnectionNode(node string) error {
+	const logLoc = "shared.RemoveConnectionNode->"
+
+	MU.Lock()
+	defer MU.Unlock()
+
+	file, bytes, err := ReadFile(paths.RatingFilePath)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	defer file.Close()
+
+	ratingInfo := RatingInfo{}
+	err = json.Unmarshal(bytes, &ratingInfo)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	delete(ratingInfo.ConnectedNodes, node)
+
+	err = WriteFile(file, ratingInfo)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	return nil
+}
+
+// ====================================================================================
+
+func GetConnectionNodes() ([]string, error) {
+	const logLoc = "shared.GetConnectionNodes->"
+
+	MU.Lock()
+	defer MU.Unlock()
+
+	file, bytes, err := ReadFile(paths.RatingFilePath)
+	if err != nil {
+		return nil, logger.CreateDetails(logLoc, err)
+	}
+
+	file.Close()
+
+	ratingInfo := RatingInfo{}
+	err = json.Unmarshal(bytes, &ratingInfo)
+	if err != nil {
+		return nil, logger.CreateDetails(logLoc, err)
+	}
+
+	connNodes := make([]string, 0, len(ratingInfo.ConnectedNodes))
+
+	for nodes := range ratingInfo.ConnectedNodes {
+		connNodes = append(connNodes, nodes)
+	}
+
+	return connNodes, nil
+}
+
+// ====================================================================================
+
+func ChangeRating(rating float32) error {
+	const logLoc = "shared.ChangeRatingetRating->"
+
+	MU.Lock()
+	defer MU.Unlock()
+
+	file, bytes, err := ReadFile(paths.RatingFilePath)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	defer file.Close()
+
+	ratingInfo := RatingInfo{}
+	err = json.Unmarshal(bytes, &ratingInfo)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	if ratingInfo.Rating < 100 {
+		fmt.Println("change rating:", rating)
+
+		ratingInfo.Rating += rating
+
+		fmt.Println("current rating:", ratingInfo.Rating)
+	}
+
+	err = WriteFile(file, ratingInfo)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
 	}
 
 	return nil
@@ -157,10 +464,22 @@ func WriteFile(file *os.File, data interface{}) error {
 		return logger.CreateDetails(logLoc, err)
 	}
 
+	err = file.Truncate(0)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
 	_, err = file.Write(js)
 	if err != nil {
 		return logger.CreateDetails(logLoc, err)
 	}
+
+	file.Sync()
 
 	return nil
 }

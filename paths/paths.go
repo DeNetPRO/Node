@@ -8,4 +8,6 @@ var (
 	ConfFileName   = "config.json"
 	StorageDirName = "storage"
 	SpFsFilename   = "tree.json"
+	RatingFilePath string
+	RatingFilename = "rating.json"
 )

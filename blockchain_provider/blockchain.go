@@ -283,6 +283,7 @@ func StartMining(password string) {
 			_, reward, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
 			if err != nil {
 				logger.Log(logger.CreateDetails(logLoc, err))
+				continue
 			}
 
 			fileNames := []string{}
