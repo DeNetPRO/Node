@@ -1,13 +1,9 @@
 package server
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
-	"math/big"
-	"mime/multipart"
 	"os/signal"
-	"strings"
 
 	"encoding/hex"
 	"encoding/json"
@@ -21,26 +17,17 @@ import (
 	"sort"
 	"strconv"
 
-	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/internal"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	nodeAbi "git.denetwork.xyz/dfile/dfile-secondary-node/node_abi"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"github.com/valyala/fasthttp"
-	"github.com/valyala/fasthttp/fasthttputil"
 )
-
-type updatedFsInfo struct {
-	NewFs            []string
-	Nonce            string
-	SignedFsRootHash string
-}
 
 type NodeAddressResponse struct {
 	NodeAddress string `json:"node_address"`
@@ -51,14 +38,22 @@ const oneHunderdMBBytes = int64(1024 * 1024 * 100)
 const serverStartFatalMessage = "Couldn't start server"
 
 func Start(port string) {
-	const actLoc = "server.Start->"
+	const logLoc = "server.Start->"
 	r := mux.NewRouter()
 
 	r.HandleFunc("/upload/{size}", SaveFiles).Methods("POST")
 	r.HandleFunc("/download/{spAddress}/{fileKey}/{signature}", ServeFiles).Methods("GET")
-	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}", updateFsInfo).Methods("POST")
+	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}", UpdateFsInfo).Methods("POST")
 	r.HandleFunc("/copy/{size}", CopyFile).Methods("POST")
-	r.HandleFunc("/backup/{size}", BackUp).Methods("POST")
+
+	r.HandleFunc("/backup/copy/{size}", BackUpCopy).Methods("POST")
+	//r.HandleFunc("/backup/new/{size}", BackUpNew).Methods("POST")
+
+	//r.HandleFunc("/info/{spAddress}/{size}/{signature}", Info).Methods("POST")
+	//r.HandleFunc("/info/send/{spAddress}/{size}/{signature}", InfoSend).Methods("POST")
+
+	//r.HandleFunc("/auth/download/{spAddress}/{fileKey}", AuthDownload).Methods("GET")
+	//r.HandleFunc("/check/{spAddress}/{fileKey}", CheckFile).Methods("GET")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -81,7 +76,7 @@ func Start(port string) {
 
 	intPort, err := strconv.Atoi(port)
 	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		log.Fatal(serverStartFatalMessage)
 	}
 
@@ -100,7 +95,7 @@ func Start(port string) {
 	go func() {
 		err = server.ListenAndServe()
 		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(serverStartFatalMessage)
 		}
 	}()
@@ -112,7 +107,7 @@ func Start(port string) {
 
 	err = server.Shutdown(context.Background())
 	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
+		logger.Log(logger.CreateDetails(logLoc, err))
 		log.Fatal(err)
 	}
 }
@@ -129,7 +124,7 @@ func checkSignature(h http.Handler) http.Handler {
 
 		// verified, err := verifySignature(sessionKeyBytes, reqURL, signature)
 		// if err != nil {
-		// 	http.Error(w, "session key verification error", 500)
+		// 	http.Error(w, "session key verification error", http.StatusInternalServerError)
 		// 	return
 		// }
 
@@ -144,44 +139,620 @@ func checkSignature(h http.Handler) http.Handler {
 // ========================================================================================================
 
 func SaveFiles(w http.ResponseWriter, req *http.Request) {
-	const actLoc = "server.SaveFiles->"
+	const logLoc = "server.SaveFiles->"
+
+	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
+
+	intFileSize, _, _, err := checkSpace(req, pathToConfig)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrSpaceCheck.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	spData, err := parseRequest(req)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		internal.RestoreMemoryInfo(pathToConfig, intFileSize)
+		http.Error(w, shared.ErrParseMultipartForm.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = internal.SaveFile(req, spData, pathToConfig, intFileSize)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	changer := float32(1024 * 1024 * 512)
+	rating := float32(intFileSize) / changer
+
+	err = shared.ChangeRating(rating)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+	}
+
+	w.WriteHeader(http.StatusOK)
+	io.WriteString(w, "OK")
+}
+
+// ====================================================================================
+
+func ServeFiles(w http.ResponseWriter, req *http.Request) {
+	const logLoc = "server.ServeFiles->"
 
 	vars := mux.Vars(req)
+	spAddress := vars["spAddress"]
+	fileKey := vars["fileKey"]
+	signatureFromReq := vars["signature"]
+
+	if spAddress == "" || fileKey == "" || signatureFromReq == "" {
+		logger.Log(logger.CreateDetails(logLoc, shared.ErrInvalidArgument))
+		http.Error(w, shared.ErrInvalidArgument.Error(), http.StatusBadRequest)
+		return
+	}
+
+	pathToFile, err := internal.ServeFile(spAddress, fileKey, signatureFromReq)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	logger.Log("serving file: " + fileKey)
+
+	changer := float32(1024 * 1024 * 512)
+	rating := float32(1) / changer
+
+	err = shared.ChangeRating(rating)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+	}
+
+	http.ServeFile(w, req, pathToFile)
+}
+
+// ====================================================================================
+
+func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
+	const logLoc = "server.UpdateFsInfo->"
+
+	vars := mux.Vars(req)
+	spAddress := vars["spAddress"]
+	signedFsys := vars["signedFsys"]
+
+	if spAddress == "" || signedFsys == "" {
+		logger.Log(logger.CreateDetails(logLoc, shared.ErrInvalidArgument))
+		http.Error(w, shared.ErrInvalidArgument.Error(), http.StatusBadRequest)
+		return
+	}
+
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInvalidArgument.Error(), http.StatusBadRequest)
+		return
+	}
+	defer req.Body.Close()
+
+	updatedFs := &internal.UpdatedFsInfo{}
+	err = json.Unmarshal(body, &updatedFs)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrUpdateFsInfo.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = internal.UpdateFileSystemInfo(updatedFs, spAddress, signedFsys)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println("Updated!")
+}
+
+// ====================================================================================
+
+func CopyFile(w http.ResponseWriter, req *http.Request) {
+	logLoc := "server.CopyFile->"
+
+	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
+
+	intFileSize, enoughSpace, nodeConfig, err := checkSpace(req, pathToConfig)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrSpaceCheck.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	spData, err := parseRequest(req)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		internal.RestoreMemoryInfo(pathToConfig, intFileSize)
+		http.Error(w, shared.ErrParseMultipartForm.Error(), http.StatusBadRequest)
+		return
+	}
+
+	nodeAddress, err := internal.CopyFile(req, spData, &nodeConfig, pathToConfig, intFileSize, enoughSpace)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	js, err := json.Marshal(nodeAddress)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+// ====================================================================================
+
+func BackUpCopy(w http.ResponseWriter, req *http.Request) {
+	logLoc := "server.BackUpCopy->"
+
+	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
+
+	intFileSize, _, _, err := checkSpace(req, pathToConfig)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrSpaceCheck.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	spData, err := parseRequest(req)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		internal.RestoreMemoryInfo(pathToConfig, intFileSize)
+		http.Error(w, shared.ErrParseMultipartForm.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = internal.BackUpCopy(req, spData, pathToConfig, intFileSize)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	io.WriteString(w, "OK")
+}
+
+func BackUpNew(w http.ResponseWriter, req *http.Request) {
+	logLoc := "server.BackUpNew->"
+
+	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
+
+	intFileSize, enoughSpace, config, err := checkSpace(req, pathToConfig)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrSpaceCheck.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = req.ParseMultipartForm(1 << 20) // maxMemory 32MB
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrParseMultipartForm.Error(), http.StatusBadRequest)
+		return
+	}
+
+	signedFsRootHash := req.MultipartForm.Value["fsRootHash"]
+	nonce := req.MultipartForm.Value["nonce"]
+	storageProviderAddress := req.MultipartForm.Value["address"]
+
+	spData := &shared.StorageProviderData{
+		Address:      storageProviderAddress[0],
+		Nonce:        nonce[0],
+		SignedFsRoot: signedFsRootHash[0],
+	}
+
+	if !enoughSpace {
+		connectedNodes, err := shared.GetConnectionNodes()
+		if err != nil {
+			logger.Log(logger.CreateDetails(logLoc, err))
+			http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		successfulNodes := &internal.NodesResponse{
+			Nodes: make([]string, 0),
+		}
+
+		for _, node := range connectedNodes {
+			nodes, err := internal.BackUpFileParts(node, spData, intFileSize, req.MultipartForm.File["files"])
+			if err != nil {
+				logger.Log(logger.CreateDetails(logLoc, err))
+				continue
+			}
+
+			successfulNodes.Nodes = append(successfulNodes.Nodes, nodes...)
+		}
+
+		js, err := json.Marshal(successfulNodes)
+		if err != nil {
+			logger.Log(logger.CreateDetails(logLoc, err))
+			http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+		return
+	}
+
+	fmt.Println("Back up saving file from:", spData.Address)
+
+	err = internal.BackUpNew(req, spData, pathToConfig, intFileSize)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	changer := float32(1024 * 1024 * 512)
+	rating := float32(intFileSize) / changer
+
+	err = shared.ChangeRating(rating)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+	}
+
+	nodes := &internal.NodesResponse{
+		Nodes: []string{config.IpAddress + ":" + config.HTTPPort},
+	}
+
+	js, err := json.Marshal(nodes)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+// ====================================================================================
+
+func Info(w http.ResponseWriter, r *http.Request) {
+	const logLoc = "server.Info"
+
+	rating, err := shared.GetRating()
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if rating < 100 {
+		http.Error(w, "access denied", http.StatusForbidden)
+		return
+	}
+
+	vars := mux.Vars(r)
+	spAddress := vars["spAddress"]
+	fileSize := vars["size"]
+	signatureFromReq := vars["signature"]
+
+	if spAddress == "" || fileSize == "" || signatureFromReq == "" {
+		logger.Log(logger.CreateDetails(logLoc, shared.ErrInvalidArgument))
+		http.Error(w, shared.ErrInvalidArgument.Error(), http.StatusBadRequest)
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	type requestJSON struct {
+		IP       string   `json:"ip"`
+		FileKeys []string `json:"file_keys"`
+	}
+
+	data := &requestJSON{}
+	err = json.Unmarshal(body, data)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInvalidArgument.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = internal.VerifyStorageProviderAddress(spAddress, fileSize, signatureFromReq, data.FileKeys)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrWrongSignature.Error(), http.StatusForbidden)
+		return
+	}
+
+	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
+
+	_, enoughSpace, config, err := checkSpace(r, pathToConfig)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	type ipAddresses struct {
+		IP       []string `json:"ip"`
+		FileKeys []string `json:"file_keys"`
+	}
+
+	connectedNode, err := shared.GetConnectionNodes()
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	ip := make([]string, 0)
+	for _, conn := range connectedNode {
+		if conn == data.IP {
+			continue
+		}
+
+		ip = append(ip, conn)
+	}
+
+	currentAddress := config.IpAddress + ":" + config.HTTPPort
+
+	if enoughSpace {
+		ip = append(ip, currentAddress)
+	}
+
+	nodes := ipAddresses{
+		IP:       ip,
+		FileKeys: data.FileKeys,
+	}
+
+	js, err := json.Marshal(nodes)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	req := fasthttp.AcquireRequest()
+	resp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseRequest(req)
+	defer fasthttp.ReleaseResponse(resp)
+
+	req.SetRequestURI("http://" + data.IP + "/info/send/" + spAddress + "/" + fileSize + "/" + signatureFromReq)
+	req.SetBody(js)
+	req.Header.SetMethod("POST")
+
+	err = fasthttp.Do(req, resp)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if resp.StatusCode() != 200 {
+		logger.Log(logger.CreateDetails(logLoc, shared.ErrInternal))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	sendInfoResp := &internal.NodesResponse{}
+
+	err = json.Unmarshal(resp.Body(), sendInfoResp)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	nodes.IP = sendInfoResp.Nodes
+
+	if data.IP != currentAddress {
+		nodes.IP = append(nodes.IP, data.IP)
+	}
+
+	err = shared.UpdateStorageProviderInfo(spAddress, nodes.FileKeys, nodes.IP)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	nodes.FileKeys = make([]string, 0)
+
+	js, err = json.Marshal(nodes)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+// ====================================================================================
+
+func InfoSend(w http.ResponseWriter, r *http.Request) {
+	const logLoc = "server.InfoSend"
+
+	vars := mux.Vars(r)
+	spAddress := vars["spAddress"]
+	fileSize := vars["size"]
+	signatureFromReq := vars["signature"]
+
+	if spAddress == "" || fileSize == "" || signatureFromReq == "" {
+		logger.Log(logger.CreateDetails(logLoc, shared.ErrInvalidArgument))
+		http.Error(w, shared.ErrInvalidArgument.Error(), http.StatusBadRequest)
+		return
+	}
+
+	intFileSize, err := strconv.Atoi(fileSize)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInvalidArgument.Error(), http.StatusBadRequest)
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	type requestJSON struct {
+		IP       []string `json:"ip"`
+		FileKeys []string `json:"file_keys"`
+	}
+
+	data := &requestJSON{}
+	err = json.Unmarshal(body, data)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = internal.VerifyStorageProviderAddress(spAddress, fileSize, signatureFromReq, data.FileKeys)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrWrongSignature.Error(), http.StatusForbidden)
+		return
+	}
+
+	nodeResponse, err := internal.InfoSend(spAddress, data.IP, data.FileKeys, intFileSize)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	js, err := json.Marshal(nodeResponse)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func AuthDownload(w http.ResponseWriter, r *http.Request) {
+	const logLoc = "server.AuthDownload"
+
+	rating, err := shared.GetRating()
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if rating < 100 {
+		http.Error(w, "access denied", http.StatusForbidden)
+		return
+	}
+
+	vars := mux.Vars(r)
+	spAddress := vars["spAddress"]
+	fileKey := vars["fileKey"]
+
+	if spAddress == "" || fileKey == "" {
+		logger.Log(logger.CreateDetails(logLoc, shared.ErrInvalidArgument))
+		http.Error(w, shared.ErrInvalidArgument.Error(), http.StatusBadRequest)
+		return
+	}
+
+	nodeAddress, err := internal.AuthDownload(spAddress, fileKey)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	js, err := json.Marshal(nodeAddress)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func CheckFile(w http.ResponseWriter, r *http.Request) {
+	const logLoc = "server.AuthDownload"
+
+	vars := mux.Vars(r)
+	spAddress := vars["spAddress"]
+	fileKey := vars["fileKey"]
+
+	if spAddress == "" || fileKey == "" {
+		logger.Log(logger.CreateDetails(logLoc, shared.ErrInvalidArgument))
+		http.Error(w, shared.ErrInvalidArgument.Error(), http.StatusBadRequest)
+		return
+	}
+
+	nodeAddress, err := internal.CheckFile(spAddress, fileKey)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	js, err := json.Marshal(nodeAddress)
+	if err != nil {
+		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+// ====================================================================================
+
+//Checks space on the node.
+//Returns the size of the input file, true -> if there is enough space and false -> if otherwise.
+//And also node's config.
+func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.SecondaryNodeConfig, error) {
+	const logLoc = "server.checkSpace"
+
+	var nodeConfig config.SecondaryNodeConfig
+
+	vars := mux.Vars(r)
 	fileSize := vars["size"]
 
 	intFileSize, err := strconv.Atoi(fileSize)
 	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, "Couldn't parse address", 500)
-		return
+		return 0, false, nodeConfig, logger.CreateDetails(logLoc, err)
 	}
 
 	if intFileSize == 0 {
-		logger.Log(logger.CreateDetails(actLoc, errors.New("file size is 0")))
-		http.Error(w, "file size is 0", 400)
-		return
+		return 0, false, nodeConfig, logger.CreateDetails(logLoc, err)
 	}
-
-	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, "config.json")
 
 	shared.MU.Lock()
 	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
 	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, "Account config problem", 500)
-		return
+		return 0, false, nodeConfig, logger.CreateDetails(logLoc, err)
 	}
 	defer confFile.Close()
 
-	var nodeConfig config.SecondaryNodeConfig
-
 	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, "Account config problem", 500)
-		return
+		return 0, false, nodeConfig, logger.CreateDetails(logLoc, err)
 	}
 
 	sharedSpaceInBytes := int64(nodeConfig.StorageLimit) * gbBytes
@@ -189,11 +760,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	nodeConfig.UsedStorageSpace += int64(intFileSize)
 
 	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
-		shared.MU.Unlock()
-		err := errors.New("insufficient memory avaliable")
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, err.Error(), 400)
-		return
+		return 0, false, nodeConfig, logger.CreateDetails(logLoc, errors.New("not enough space"))
 	}
 
 	avaliableSpaceLeft := sharedSpaceInBytes - nodeConfig.UsedStorageSpace
@@ -205,651 +772,23 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	err = config.Save(confFile, nodeConfig)
 	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, "Couldn't update config file", 500)
-		return
+		return 0, false, nodeConfig, logger.CreateDetails(logLoc, err)
 	}
 	confFile.Close()
 	shared.MU.Unlock()
 
-	err = req.ParseMultipartForm(1 << 20) // maxMemory 32MB
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "Parse multiform problem", 400)
-		return
-	}
-
-	fs := req.MultipartForm.Value["fs"]
-
-	sort.Strings(fs)
-
-	fsRootHash, fsTree, err := shared.CalcRootHash(fs)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	signedFsRootHash := req.MultipartForm.Value["fsRootHash"]
-
-	signature, err := hex.DecodeString(signedFsRootHash[0])
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonce := req.MultipartForm.Value["nonce"]
-
-	nonceInt, err := strconv.Atoi(nonce[0])
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
-
-	nonceBytes, err := hex.DecodeString(nonceHex)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonce32 := make([]byte, 32-len(nonceBytes))
-	nonce32 = append(nonce32, nonceBytes...)
-
-	fsRootBytes, err := hex.DecodeString(fsRootHash)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	fsRootNonceBytes := append(fsRootBytes, nonce32...)
-
-	hash := sha256.Sum256(fsRootNonceBytes)
-
-	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	storageProviderAddress := req.MultipartForm.Value["address"]
-
-	senderAddress := crypto.PubkeyToAddress(*sigPublicKey)
-
-	if storageProviderAddress[0] != fmt.Sprint(senderAddress) {
-		err := errors.New("wrong signature")
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-
-	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, storageProviderAddress[0])
-
-	stat, err := os.Stat(addressPath)
-	err = shared.CheckStatErr(err)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-
-	if stat == nil {
-		err = os.Mkdir(addressPath, 0700)
-		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "File saving problem", 500)
-			return
-		}
-	}
-
-	shared.MU.Lock()
-	spFsFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-	defer spFsFile.Close()
-
-	spFs := shared.StorageProviderFs{
-		Nonce:        nonce[0],
-		SignedFsRoot: signedFsRootHash[0],
-		Tree:         fsTree,
-	}
-
-	js, err := json.Marshal(spFs)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-
-	_, err = spFsFile.Write(js)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-
-	spFsFile.Sync()
-	spFsFile.Close()
-	shared.MU.Unlock()
-
-	reqFileParts := req.MultipartForm.File["files"]
-
-	const eightKB = 8192
-
-	oneMBHashes := make([]string, 0, len(reqFileParts))
-
-	for _, reqFilePart := range reqFileParts {
-
-		eightKBHashes := make([]string, 0, 128)
-
-		var buf bytes.Buffer
-
-		rqFile, err := reqFilePart.Open()
-		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "File check problem", 500)
-			return
-		}
-
-		_, err = io.Copy(&buf, rqFile)
-		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			rqFile.Close()
-			http.Error(w, "File check problem", 500)
-			return
-		}
-
-		rqFile.Close()
-
-		bufBytes := buf.Bytes()
-
-		for i := 0; i < len(bufBytes); i += eightKB {
-			hSum := sha256.Sum256(bufBytes[i : i+eightKB])
-			eightKBHashes = append(eightKBHashes, hex.EncodeToString(hSum[:]))
-		}
-
-		oneMBHash, _, err := shared.CalcRootHash(eightKBHashes)
-		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "Wrong file", 400)
-			return
-		}
-
-		if reqFilePart.Filename != oneMBHash {
-			err := errors.New("wrong file")
-			logger.Log(logger.CreateDetails(actLoc, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, err.Error(), 400)
-			return
-		}
-
-		oneMBHashes = append(oneMBHashes, oneMBHash)
-
-	}
-
-	fsContainsFile := false
-
-	var wholeFileHash string
-
-	if len(oneMBHashes) == 1 {
-		wholeFileHash = oneMBHashes[0]
-	} else {
-		sort.Strings(oneMBHashes)
-		wholeFileHash, _, err = shared.CalcRootHash(oneMBHashes)
-		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "Wrong file", 400)
-			return
-		}
-	}
-
-	for _, fileHash := range fs {
-		if fileHash == wholeFileHash {
-			fsContainsFile = true
-		}
-	}
-
-	if !fsContainsFile {
-		err := errors.New("wrong file")
-		logger.Log(logger.CreateDetails(actLoc, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, err.Error(), 400)
-		return
-	}
-
-	count := 1
-	total := len(oneMBHashes)
-
-	for _, reqFilePart := range reqFileParts {
-		rqFile, err := reqFilePart.Open()
-		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
-			deleteFileParts(addressPath, oneMBHashes)
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "File saving problem", 500)
-			return
-		}
-		defer rqFile.Close()
-
-		pathToFile := filepath.Join(addressPath, reqFilePart.Filename)
-
-		newFile, err := os.Create(pathToFile)
-		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
-			deleteFileParts(addressPath, oneMBHashes)
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "File saving problem", 500)
-			return
-		}
-		defer newFile.Close()
-
-		_, err = io.Copy(newFile, rqFile)
-		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
-			deleteFileParts(addressPath, oneMBHashes)
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "File saving problem", 500)
-			return
-		}
-
-		logger.Log("Saved file " + reqFilePart.Filename + " (" + fmt.Sprint(count) + "/" + fmt.Sprint(total) + ")" + " from " + storageProviderAddress[0]) //TODO remove
-
-		newFile.Sync()
-		rqFile.Close()
-		newFile.Close()
-
-		count++
-	}
-
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, "OK")
+	return intFileSize, true, nodeConfig, nil
 }
 
 // ====================================================================================
 
-func deleteFileParts(addressPath string, fileHashes []string) {
+//Parse the request multipartForm
+func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
+	const logLoc = "server.parseRequest"
 
-	logger.Log("deleting file parts after error...")
-
-	for _, hash := range fileHashes {
-		pathToFile := filepath.Join(addressPath, hash)
-
-		os.Remove(pathToFile)
-	}
-}
-
-// ====================================================================================
-
-func ServeFiles(w http.ResponseWriter, req *http.Request) {
-	const actLoc = "server.ServeFiles->"
-
-	vars := mux.Vars(req)
-	spAddress := vars["spAddress"]
-	fileKey := vars["fileKey"]
-	signatureFromReq := vars["signature"]
-
-	signature, err := hex.DecodeString(signatureFromReq)
+	err := r.ParseMultipartForm(1 << 20) // maxMemory 32MB
 	if err != nil {
-		http.Error(w, "File serving problem", 400)
-		return
-	}
-
-	hash := sha256.Sum256([]byte(fileKey + spAddress))
-
-	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
-	if err != nil {
-		http.Error(w, "File serving problem", 400)
-		return
-	}
-
-	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
-
-	if spAddress != signatureAddress.String() {
-		http.Error(w, "Wrong signature", http.StatusForbidden)
-		return
-	}
-
-	pathToFile := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress, fileKey)
-
-	_, err = os.Stat(pathToFile)
-	if err != nil {
-		http.Error(w, "File not found", http.StatusNotFound)
-		return
-	}
-
-	logger.Log("serving file: " + fileKey)
-
-	http.ServeFile(w, req, pathToFile)
-}
-
-// ====================================================================================
-
-func updateFsInfo(w http.ResponseWriter, req *http.Request) {
-	const actLoc = "server.UpdateFsInfo->"
-
-	const httpErrorMsg = "Fs info update problem"
-
-	vars := mux.Vars(req)
-	spAddress := vars["spAddress"]
-	signedFsys := vars["signedFsys"]
-
-	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress)
-
-	_, err := os.Stat(addressPath)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, errors.New("no files of "+spAddress)))
-		return
-	}
-
-	shared.MU.Lock()
-	spFsFile, fileBytes, err := shared.ReadFile(filepath.Join(addressPath, "tree.json"))
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, httpErrorMsg, 500)
-		return
-	}
-	defer spFsFile.Close()
-
-	var spFs shared.StorageProviderFs
-
-	err = json.Unmarshal(fileBytes, &spFs)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, httpErrorMsg, 500)
-		return
-	}
-
-	spFsFile.Close()
-	shared.MU.Unlock()
-
-	body, err := io.ReadAll(req.Body)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, httpErrorMsg, 500)
-		return
-	}
-	defer req.Body.Close()
-
-	var updatedFs updatedFsInfo
-
-	err = json.Unmarshal(body, &updatedFs)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, httpErrorMsg, 500)
-		return
-	}
-
-	newNonceInt, err := strconv.Atoi(updatedFs.Nonce)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, httpErrorMsg, 400)
-		return
-	}
-
-	currentNonceInt, err := strconv.Atoi(spFs.Nonce)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, httpErrorMsg, 400)
-		return
-	}
-
-	if newNonceInt < currentNonceInt {
-		logger.Log(spAddress + " fs info is up to date")
-		http.Error(w, httpErrorMsg, 400)
-		return
-	}
-
-	nonceHex := strconv.FormatInt(int64(newNonceInt), 16)
-
-	nonceBytes, err := hex.DecodeString(nonceHex)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, httpErrorMsg, 400)
-		return
-	}
-
-	nonce32 := make([]byte, 32-len(nonceBytes))
-	nonce32 = append(nonce32, nonceBytes...)
-
-	sort.Strings(updatedFs.NewFs)
-
-	concatFsHashes := ""
-
-	for _, hash := range updatedFs.NewFs {
-		concatFsHashes += hash
-	}
-
-	fsTreeNonceBytes := append([]byte(concatFsHashes), nonce32...)
-
-	fsTreeNonceSha := sha256.Sum256(fsTreeNonceBytes)
-
-	fsysSignature, err := hex.DecodeString(signedFsys)
-	if err != nil {
-		http.Error(w, httpErrorMsg, 500)
-		return
-	}
-
-	sigPublicKey, err := crypto.SigToPub(fsTreeNonceSha[:], fsysSignature)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, "Wrong signature", 400)
-		return
-	}
-
-	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
-
-	if spAddress != signatureAddress.String() {
-		logger.Log(logger.CreateDetails(actLoc, errors.New("wrong signature")))
-		http.Error(w, "Wrong signature", http.StatusForbidden)
-		return
-	}
-
-	fsRootHash, fsTree, err := shared.CalcRootHash(updatedFs.NewFs)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, httpErrorMsg, 500)
-		return
-	}
-
-	rootSignature, err := hex.DecodeString(updatedFs.SignedFsRootHash)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, httpErrorMsg, 500)
-		return
-	}
-
-	fsRootBytes, err := hex.DecodeString(fsRootHash)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, httpErrorMsg, 500)
-		return
-	}
-
-	fsRootNonceBytes := append(fsRootBytes, nonce32...)
-
-	hash := sha256.Sum256(fsRootNonceBytes)
-
-	sigPublicKey, err = crypto.SigToPub(hash[:], rootSignature)
-	if err != nil {
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, httpErrorMsg, 500)
-		return
-	}
-
-	signatureAddress = crypto.PubkeyToAddress(*sigPublicKey)
-
-	if spAddress != signatureAddress.String() {
-		logger.Log(logger.CreateDetails(actLoc, errors.New("wrong signature")))
-		http.Error(w, "Wrong signature", http.StatusForbidden)
-		return
-	}
-
-	shared.MU.Lock()
-
-	spFsFile, err = os.Create(filepath.Join(addressPath, "tree.json"))
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, httpErrorMsg, 500)
-		return
-	}
-	defer spFsFile.Close()
-
-	spFs = shared.StorageProviderFs{
-		Nonce:        updatedFs.Nonce,
-		SignedFsRoot: updatedFs.SignedFsRootHash,
-		Tree:         fsTree,
-	}
-
-	js, err := json.Marshal(spFs)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, httpErrorMsg, 500)
-		return
-	}
-
-	_, err = spFsFile.Write(js)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(actLoc, err))
-		http.Error(w, httpErrorMsg, 500)
-		return
-	}
-
-	spFsFile.Sync()
-	shared.MU.Unlock()
-
-}
-
-func getNodeIP(nodeInfo nodeAbi.SimpleMetaDataDeNetNode) string {
-	ipBuilder := strings.Builder{}
-	for i, v := range nodeInfo.IpAddress {
-		stringPart := strconv.Itoa(int(v))
-		ipBuilder.WriteString(stringPart)
-
-		if i < 3 {
-			ipBuilder.WriteString(".")
-		}
-	}
-
-	stringPort := strconv.Itoa(int(nodeInfo.Port))
-	ipBuilder.WriteString(":")
-	ipBuilder.WriteString(stringPort)
-
-	return ipBuilder.String()
-}
-
-// ====================================================================================
-
-func CopyFile(w http.ResponseWriter, r *http.Request) {
-	logInfo := "server.CopyFile->"
-	fmt.Println("Copy file")
-
-	vars := mux.Vars(r)
-	fileSize := vars["size"]
-
-	intFileSize, err := strconv.Atoi(fileSize)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Couldn't parse address", 500)
-		return
-	}
-
-	if intFileSize == 0 {
-		logger.Log(logger.CreateDetails(logInfo, errors.New("file size is 0")))
-		http.Error(w, "file size is 0", 400)
-		return
-	}
-
-	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, "config.json")
-
-	shared.MU.Lock()
-	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Account config problem", 500)
-		return
-	}
-	defer confFile.Close()
-
-	var nodeConfig config.SecondaryNodeConfig
-
-	err = json.Unmarshal(fileBytes, &nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Account config problem", 500)
-		return
-	}
-
-	sharedSpaceInBytes := int64(nodeConfig.StorageLimit) * gbBytes
-
-	nodeConfig.UsedStorageSpace += int64(intFileSize)
-
-	noMemory := false
-
-	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
-		noMemory = true
-		nodeConfig.UsedStorageSpace -= int64(intFileSize)
-	}
-
-	avaliableSpaceLeft := sharedSpaceInBytes - nodeConfig.UsedStorageSpace
-
-	if avaliableSpaceLeft < oneHunderdMBBytes {
-		fmt.Println("Shared storage memory is running low,", avaliableSpaceLeft/(1024*1024), "MB of space is avaliable")
-		fmt.Println("You may need additional space for mining. Total shared space can be changed in account configuration")
-	}
-
-	err = config.Save(confFile, nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Couldn't update config file", 500)
-		return
-	}
-	confFile.Close()
-	shared.MU.Unlock()
-
-	err = r.ParseMultipartForm(1 << 20) // maxMemory 32MB
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "Parse multiform problem", 400)
-		return
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	fs := r.MultipartForm.Value["fs"]
@@ -858,40 +797,28 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 
 	fsRootHash, fsTree, err := shared.CalcRootHash(fs)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	signedFsRootHash := r.MultipartForm.Value["fsRootHash"]
 
 	signature, err := hex.DecodeString(signedFsRootHash[0])
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	nonce := r.MultipartForm.Value["nonce"]
 
 	nonceInt, err := strconv.Atoi(nonce[0])
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
 
 	nonceBytes, err := hex.DecodeString(nonceHex)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	nonce32 := make([]byte, 32-len(nonceBytes))
@@ -899,10 +826,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 
 	fsRootBytes, err := hex.DecodeString(fsRootHash)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	fsRootNonceBytes := append(fsRootBytes, nonce32...)
@@ -911,10 +835,7 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 
 	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
+		return nil, logger.CreateDetails(logLoc, err)
 	}
 
 	storageProviderAddress := r.MultipartForm.Value["address"]
@@ -922,775 +843,14 @@ func CopyFile(w http.ResponseWriter, r *http.Request) {
 	senderAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
 	if storageProviderAddress[0] != fmt.Sprint(senderAddress) {
-		err := errors.New("wrong signature")
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
+		return nil, logger.CreateDetails(logLoc, shared.ErrWrongSignature)
 	}
 
-	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, storageProviderAddress[0])
-
-	stat, err := os.Stat(addressPath)
-	err = shared.CheckStatErr(err)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-
-	if stat == nil {
-		err = os.Mkdir(addressPath, 0700)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "File saving problem", 500)
-			return
-		}
-	}
-
-	if noMemory {
-		nftNode, err := blockchainprovider.GetNodeNFT()
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-			http.Error(w, err.Error(), 400)
-			return
-		}
-
-		total, err := nftNode.TotalSupply(&bind.CallOpts{})
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-			http.Error(w, err.Error(), 400)
-			return
-		}
-
-		intTotal := total.Int64()
-
-		fastReq := fasthttp.AcquireRequest()
-		fastResp := fasthttp.AcquireResponse()
-		defer fasthttp.ReleaseRequest(fastReq)
-		defer fasthttp.ReleaseResponse(fastResp)
-
-		for i := int64(0); i < intTotal; i++ {
-			node, err := nftNode.GetNodeById(&bind.CallOpts{}, big.NewInt(i))
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-
-			nodeIP := getNodeIP(node)
-
-			if nodeIP == nodeConfig.IpAddress+":"+nodeConfig.HTTPPort {
-				continue
-			}
-
-			url := "http://" + nodeIP
-			fastReq.Reset()
-			fastResp.Reset()
-
-			fastReq.Header.SetRequestURI(url)
-			fastReq.Header.SetMethod("GET")
-			fastReq.Header.Set("Connection", "close")
-
-			err = fasthttp.Do(fastReq, fastResp)
-			if err != nil {
-				continue
-			}
-
-			nodeAddress, err := backUpTo(nodeIP, addressPath, r.MultipartForm, intFileSize)
-			if err != nil {
-				continue
-			}
-
-			resp := NodeAddressResponse{
-				NodeAddress: nodeAddress,
-			}
-
-			js, err := json.Marshal(resp)
-			if err != nil {
-				continue
-			}
-
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(js)
-			return
-		}
-
-		http.Error(w, "no available nodes", 500)
-		return
-	}
-
-	shared.MU.Lock()
-	spFsFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-	defer spFsFile.Close()
-
-	spFs := shared.StorageProviderFs{
+	return &shared.StorageProviderData{
+		Address:      storageProviderAddress[0],
+		Fs:           fs,
 		Nonce:        nonce[0],
 		SignedFsRoot: signedFsRootHash[0],
 		Tree:         fsTree,
-	}
-
-	js, err := json.Marshal(spFs)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-
-	_, err = spFsFile.Write(js)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-
-	spFsFile.Sync()
-	spFsFile.Close()
-	shared.MU.Unlock()
-
-	hashes := r.MultipartForm.File["hashes"]
-	hashesFile, err := hashes[0].Open()
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-
-	hashesBody, err := io.ReadAll(hashesFile)
-	if err != nil {
-		hashesFile.Close()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-
-	hashDif := make(map[string]string)
-	err = json.Unmarshal(hashesBody, &hashDif)
-	if err != nil {
-		hashesFile.Close()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-
-	hashesFile.Close()
-
-	for old, new := range hashDif {
-		path := filepath.Join(addressPath, old)
-		file, err := os.Open(path)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "File saving problem", 500)
-			return
-		}
-
-		defer file.Close()
-
-		newPath := filepath.Join(addressPath, new)
-		newFile, err := os.Create(newPath)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "File saving problem", 500)
-			return
-		}
-
-		defer newFile.Close()
-
-		_, err = io.Copy(newFile, file)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "File saving problem", 500)
-			return
-		}
-
-		newFile.Sync()
-		newFile.Close()
-	}
-
-	resp := NodeAddressResponse{
-		NodeAddress: nodeConfig.IpAddress + ":" + nodeConfig.HTTPPort,
-	}
-
-	js, err = json.Marshal(resp)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
-}
-
-// ====================================================================================
-
-func BackUp(w http.ResponseWriter, r *http.Request) {
-	logInfo := "server.BackUp->"
-	vars := mux.Vars(r)
-	fileSize := vars["size"]
-
-	intFileSize, err := strconv.Atoi(fileSize)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Couldn't parse address", 500)
-		return
-	}
-
-	if intFileSize == 0 {
-		logger.Log(logger.CreateDetails(logInfo, errors.New("file size is 0")))
-		http.Error(w, "file size is 0", 400)
-		return
-	}
-
-	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, "config.json")
-
-	shared.MU.Lock()
-	confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Account config problem", 500)
-		return
-	}
-	defer confFile.Close()
-
-	fileBytes, err := io.ReadAll(confFile)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Account config problem", 500)
-		return
-	}
-
-	var nodeConfig config.SecondaryNodeConfig
-
-	err = json.Unmarshal(fileBytes, &nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Account config problem", 500)
-		return
-	}
-
-	sharedSpaceInBytes := int64(nodeConfig.StorageLimit) * gbBytes
-
-	nodeConfig.UsedStorageSpace += int64(intFileSize)
-
-	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
-		shared.MU.Unlock()
-		err := errors.New("insufficient memory avaliable")
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, err.Error(), 400)
-		return
-	}
-
-	avaliableSpaceLeft := sharedSpaceInBytes - nodeConfig.UsedStorageSpace
-
-	if avaliableSpaceLeft < oneHunderdMBBytes {
-		fmt.Println("Shared storage memory is running low,", avaliableSpaceLeft/(1024*1024), "MB of space is avaliable")
-		fmt.Println("You may need additional space for mining. Total shared space can be changed in account configuration")
-	}
-
-	err = config.Save(confFile, nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		http.Error(w, "Couldn't update config file", 500)
-		return
-	}
-	confFile.Close()
-	shared.MU.Unlock()
-
-	err = r.ParseMultipartForm(1 << 20) // maxMemory 32MB
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "Parse multiform problem", 400)
-		return
-	}
-
-	fs := r.MultipartForm.Value["fs"]
-
-	sort.Strings(fs)
-
-	fsRootHash, fsTree, err := shared.CalcRootHash(fs)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	signedFsRootHash := r.MultipartForm.Value["fsRootHash"]
-
-	signature, err := hex.DecodeString(signedFsRootHash[0])
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonce := r.MultipartForm.Value["nonce"]
-
-	nonceInt, err := strconv.Atoi(nonce[0])
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
-
-	nonceBytes, err := hex.DecodeString(nonceHex)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	nonce32 := make([]byte, 32-len(nonceBytes))
-	nonce32 = append(nonce32, nonceBytes...)
-
-	fsRootBytes, err := hex.DecodeString(fsRootHash)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	fsRootNonceBytes := append(fsRootBytes, nonce32...)
-
-	hash := sha256.Sum256(fsRootNonceBytes)
-
-	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 400)
-		return
-	}
-
-	storageProviderAddress := r.MultipartForm.Value["address"]
-
-	senderAddress := crypto.PubkeyToAddress(*sigPublicKey)
-
-	if storageProviderAddress[0] != fmt.Sprint(senderAddress) {
-		err := errors.New("wrong signature")
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, err.Error(), http.StatusForbidden)
-		return
-	}
-
-	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, storageProviderAddress[0])
-
-	stat, err := os.Stat(addressPath)
-	err = shared.CheckStatErr(err)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-
-	if stat == nil {
-		err = os.Mkdir(addressPath, 0700)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "File saving problem", 500)
-			return
-		}
-	}
-
-	shared.MU.Lock()
-	spFsFile, err := os.Create(filepath.Join(addressPath, "tree.json"))
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-	defer spFsFile.Close()
-
-	spFs := shared.StorageProviderFs{
-		Nonce:        nonce[0],
-		SignedFsRoot: signedFsRootHash[0],
-		Tree:         fsTree,
-	}
-
-	js, err := json.Marshal(spFs)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-
-	_, err = spFsFile.Write(js)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-
-	spFsFile.Sync()
-	spFsFile.Close()
-	shared.MU.Unlock()
-
-	reqFileParts := r.MultipartForm.File["files"]
-
-	const eightKB = 8192
-
-	oneMBHashes := make([]string, 0, len(reqFileParts))
-
-	for _, reqFilePart := range reqFileParts {
-
-		eightKBHashes := make([]string, 0, 128)
-
-		var buf bytes.Buffer
-
-		rqFile, err := reqFilePart.Open()
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "File check problem", 500)
-			return
-		}
-
-		_, err = io.Copy(&buf, rqFile)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			rqFile.Close()
-			http.Error(w, "File check problem", 500)
-			return
-		}
-
-		rqFile.Close()
-
-		bufBytes := buf.Bytes()
-
-		for i := 0; i < len(bufBytes); i += eightKB {
-			hSum := sha256.Sum256(bufBytes[i : i+eightKB])
-			eightKBHashes = append(eightKBHashes, hex.EncodeToString(hSum[:]))
-		}
-
-		oneMBHash, _, err := shared.CalcRootHash(eightKBHashes)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "Wrong file", 400)
-			return
-		}
-
-		if reqFilePart.Filename != oneMBHash {
-			err := errors.New("wrong file")
-			logger.Log(logger.CreateDetails(logInfo, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, err.Error(), 400)
-			return
-		}
-
-		oneMBHashes = append(oneMBHashes, oneMBHash)
-
-	}
-
-	fsContainsFile := false
-
-	var wholeFileHash string
-
-	if len(oneMBHashes) == 1 {
-		wholeFileHash = oneMBHashes[0]
-	} else {
-		sort.Strings(oneMBHashes)
-		wholeFileHash, _, err = shared.CalcRootHash(oneMBHashes)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "Wrong file", 400)
-			return
-		}
-	}
-
-	for _, fileHash := range fs {
-		if fileHash == wholeFileHash {
-			fsContainsFile = true
-		}
-	}
-
-	if !fsContainsFile {
-		err := errors.New("wrong file")
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, err.Error(), 400)
-		return
-	}
-
-	count := 1
-	total := len(oneMBHashes)
-
-	hashes := r.MultipartForm.File["hashes"]
-	hashesFile, err := hashes[0].Open()
-	if err != nil {
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-
-	hashesBody, err := io.ReadAll(hashesFile)
-	if err != nil {
-		hashesFile.Close()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-
-	hashDif := make(map[string]string)
-	err = json.Unmarshal(hashesBody, &hashDif)
-	if err != nil {
-		hashesFile.Close()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		restoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, "File saving problem", 500)
-		return
-	}
-
-	hashesFile.Close()
-
-	for _, reqFilePart := range reqFileParts {
-		rqFile, err := reqFilePart.Open()
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-			deleteFileParts(addressPath, oneMBHashes)
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "File saving problem", 500)
-			return
-		}
-		defer rqFile.Close()
-
-		pathToFile := filepath.Join(addressPath, hashDif[reqFilePart.Filename])
-
-		newFile, err := os.Create(pathToFile)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-			deleteFileParts(addressPath, oneMBHashes)
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "File saving problem", 500)
-			return
-		}
-		defer newFile.Close()
-
-		_, err = io.Copy(newFile, rqFile)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logInfo, err))
-			deleteFileParts(addressPath, oneMBHashes)
-			restoreMemoryInfo(pathToConfig, intFileSize)
-			http.Error(w, "File saving problem", 500)
-			return
-		}
-
-		logger.Log("Saved file " + hashDif[reqFilePart.Filename] + " (" + fmt.Sprint(count) + "/" + fmt.Sprint(total) + ")" + " from " + storageProviderAddress[0]) //TODO remove
-
-		newFile.Sync()
-		rqFile.Close()
-		newFile.Close()
-
-		count++
-	}
-
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, "OK")
-}
-
-func restoreMemoryInfo(pathToConfig string, intFileSize int) {
-	logInfo := "server.restoreMemoryInfo->"
-
-	shared.MU.Lock()
-	confFile, err := os.OpenFile(pathToConfig, os.O_RDWR, 0755)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		return
-	}
-	defer confFile.Close()
-
-	fileBytes, err := io.ReadAll(confFile)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		return
-	}
-
-	var nodeConfig config.SecondaryNodeConfig
-
-	err = json.Unmarshal(fileBytes, &nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		return
-	}
-
-	nodeConfig.UsedStorageSpace -= int64(intFileSize)
-
-	err = config.Save(confFile, nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logInfo, err))
-		return
-	}
-	shared.MU.Unlock()
-}
-
-func backUpTo(nodeAddress, addressPath string, multiForm *multipart.Form, fileSize int) (string, error) {
-	const logInfo = "server.logInfo->"
-
-	pipeConns := fasthttputil.NewPipeConns()
-	pr := pipeConns.Conn1()
-	pw := pipeConns.Conn2()
-
-	writer := multipart.NewWriter(pw)
-
-	go func() {
-		defer pw.Close()
-
-		address := multiForm.Value["address"]
-		err := writer.WriteField("address", address[0])
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		wholeFileHashes := multiForm.Value["fs"]
-		for _, wholeHash := range wholeFileHashes {
-			err = writer.WriteField("fs", wholeHash)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-		}
-
-		nonce := multiForm.Value["nonce"]
-		err = writer.WriteField("nonce", nonce[0])
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		fsRootHash := multiForm.Value["fsRootHash"]
-		err = writer.WriteField("fsRootHash", fsRootHash[0])
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		hashes := multiForm.File["hashes"]
-		hashesFile, err := hashes[0].Open()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		defer hashesFile.Close()
-
-		hashesBody, err := io.ReadAll(hashesFile)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		h, err := writer.CreateFormFile("hashes", "hashes")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		h.Write(hashesBody)
-
-		hashDif := make(map[string]string)
-		err = json.Unmarshal(hashesBody, &hashDif)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		for old := range hashDif {
-			path := filepath.Join(addressPath, old)
-			file, err := os.Open(path)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-
-			defer file.Close()
-
-			filePart, err := writer.CreateFormFile("files", old)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-
-			_, err = io.Copy(filePart, file)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-		}
-
-		writer.Close()
-	}()
-
-	req, err := http.NewRequest("POST", "http://"+nodeAddress+"/backup/"+strconv.Itoa(fileSize), pr)
-	if err != nil {
-		return "", logger.CreateDetails(logInfo, err)
-	}
-
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", logger.CreateDetails(logInfo, err)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", logger.CreateDetails(logInfo, err)
-	}
-
-	defer resp.Body.Close()
-
-	fmt.Println(string(body))
-	if string(body) != "OK" {
-
-		return "", logger.CreateDetails(logInfo, errors.New("saving problem"))
-	}
-
-	return nodeAddress, nil
+	}, nil
 }

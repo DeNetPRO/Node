@@ -218,7 +218,7 @@ func createConfigForTests(address, password, ipAddress, storageLimit, port strin
 		nodeConfig.HTTPPort = fmt.Sprint(intHttpPort)
 	}
 
-	confFile, err := os.Create(filepath.Join(pathToConfig, "config.json"))
+	confFile, err := os.Create(filepath.Join(pathToConfig, paths.ConfFileName))
 	if err != nil {
 		return nodeConfig, err
 	}

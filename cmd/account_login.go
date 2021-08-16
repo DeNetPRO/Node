@@ -32,10 +32,10 @@ var accountLoginCmd = &cobra.Command{
 	Short: "log in a blockchain accounts",
 	Long:  "log in a blockchain accounts",
 	Run: func(cmd *cobra.Command, args []string) {
-		const actLoc = "accountLoginCmd->"
+		const logLoc = "accountLoginCmd->"
 		etherAccount, password, err := account.ValidateUser()
 		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(accLoginFatalError)
 		}
 
@@ -43,31 +43,32 @@ var accountLoginCmd = &cobra.Command{
 
 		var nodeConfig config.SecondaryNodeConfig
 
-		pathToConfigFile := filepath.Join(pathToConfigDir, "config.json")
+		pathToConfigFile := filepath.Join(pathToConfigDir, paths.ConfFileName)
 
 		stat, err := os.Stat(pathToConfigFile)
 		err = shared.CheckStatErr(err)
 		if err != nil {
+			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(accLoginFatalError)
 		}
 
 		if stat == nil {
 			nodeConfig, err = config.Create(etherAccount.Address.String(), password)
 			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
+				logger.Log(logger.CreateDetails(logLoc, err))
 				log.Fatal("couldn't create config file")
 			}
 		} else {
 			confFile, fileBytes, err := shared.ReadFile(pathToConfigFile)
 			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
+				logger.Log(logger.CreateDetails(logLoc, err))
 				log.Fatal("couldn't open config file")
 			}
 			defer confFile.Close()
 
 			err = json.Unmarshal(fileBytes, &nodeConfig)
 			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
+				logger.Log(logger.CreateDetails(logLoc, err))
 				log.Fatal("couldn't read config file")
 			}
 
@@ -78,7 +79,7 @@ var accountLoginCmd = &cobra.Command{
 			if upnp.InternetDevice != nil {
 				ip, err := upnp.InternetDevice.PublicIP()
 				if err != nil {
-					logger.Log(logger.CreateDetails(actLoc, err))
+					logger.Log(logger.CreateDetails(logLoc, err))
 				}
 
 				if nodeConfig.IpAddress != ip {
@@ -91,7 +92,7 @@ var accountLoginCmd = &cobra.Command{
 
 					err = blockchainprovider.UpdateNodeInfo(ctx, etherAccount.Address, password, nodeConfig.HTTPPort, splitIPAddr)
 					if err != nil {
-						logger.Log(logger.CreateDetails(actLoc, err))
+						logger.Log(logger.CreateDetails(logLoc, err))
 						log.Fatal(ipUpdateFatalError)
 					}
 
@@ -99,7 +100,7 @@ var accountLoginCmd = &cobra.Command{
 
 					err = config.Save(confFile, nodeConfig) // we dont't use mutex because race condition while login is impossible
 					if err != nil {
-						logger.Log(logger.CreateDetails(actLoc, err))
+						logger.Log(logger.CreateDetails(logLoc, err))
 						log.Fatal(ipUpdateFatalError)
 					}
 				}
@@ -109,6 +110,38 @@ var accountLoginCmd = &cobra.Command{
 		}
 
 		account.IpAddr = fmt.Sprint(nodeConfig.IpAddress, ":", nodeConfig.HTTPPort)
+
+		rating, err := os.Stat(paths.RatingFilePath)
+		err = shared.CheckStatErr(err)
+		if err != nil {
+			logger.Log(logger.CreateDetails(logLoc, err))
+			log.Fatal(accLoginFatalError)
+		}
+
+		if rating == nil {
+			file, err := os.Create(paths.RatingFilePath)
+			if err != nil {
+				logger.Log(logger.CreateDetails(logLoc, err))
+				log.Fatal(accLoginFatalError)
+			}
+
+			ratingInfo := shared.NewRatingInfo()
+
+			if nodeConfig.IpAddress == "46.101.202.151" {
+				ratingInfo.Rating = 100
+				ratingInfo.ConnectedNodes["68.183.215.241:55050"] = 0
+				ratingInfo.ConnectedNodes["157.230.98.89:55050"] = 0
+				ratingInfo.NumberOfAuthorityConn = 99
+			}
+
+			err = shared.WriteFile(file, ratingInfo)
+			if err != nil {
+				logger.Log(logger.CreateDetails(logLoc, err))
+				log.Fatal(accLoginFatalError)
+			}
+
+			file.Close()
+		}
 
 		fmt.Println("Logged in")
 

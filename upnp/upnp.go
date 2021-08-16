@@ -8,6 +8,8 @@ import (
 
 var InternetDevice *fastupnp.Device
 
+//Initializes internet gateway device.
+//Remember to enable UPnP on your router.
 func Init() {
 	fmt.Println("Checking UPnP devices...")
 

@@ -26,7 +26,7 @@ var configUpdateCmd = &cobra.Command{
 	Short: "updates your account configuration",
 	Long:  "updates your account configuration",
 	Run: func(cmd *cobra.Command, args []string) {
-		const actLoc = "configUpdateCmd->"
+		const logLoc = "configUpdateCmd->"
 		accounts := account.List()
 
 		if len(accounts) > 1 {
@@ -38,25 +38,25 @@ var configUpdateCmd = &cobra.Command{
 
 		etherAccount, password, err := account.ValidateUser()
 		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
 		pathToConfigDir := filepath.Join(paths.AccsDirPath, etherAccount.Address.String(), paths.ConfDirName)
-		pathToConfigFile := filepath.Join(pathToConfigDir, "config.json")
+		pathToConfigFile := filepath.Join(pathToConfigDir, paths.ConfFileName)
 
 		var nodeConfig config.SecondaryNodeConfig
 
 		confFile, fileBytes, err := shared.ReadFile(pathToConfigFile)
 		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 		defer confFile.Close()
 
 		err = json.Unmarshal(fileBytes, &nodeConfig)
 		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
@@ -64,33 +64,33 @@ var configUpdateCmd = &cobra.Command{
 
 		fmt.Println("Please enter disk space for usage in GB (should be positive number), or just press enter button to skip")
 
-		err = config.SetStorageLimit(pathToConfigDir, config.State.Update, &nodeConfig)
+		err = config.SetStorageLimit(pathToConfigDir, config.UpdateStatus, &nodeConfig)
 		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
 		fmt.Println("Please enter new ip address, or just press enter button to skip")
 
-		splitIPAddr, err := config.SetIpAddr(&nodeConfig, config.State.Update)
+		splitIPAddr, err := config.SetIpAddr(&nodeConfig, config.UpdateStatus)
 		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
 		fmt.Println("Please enter new http port number, or just press enter button to skip")
 
-		err = config.SetPort(&nodeConfig, config.State.Update)
+		err = config.SetPort(&nodeConfig, config.UpdateStatus)
 		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
 		fmt.Println("Do you want to send bug reports to developers? [y/n] (or just press enter button to skip)")
 
-		err = config.ChangeAgreeSendLogs(&nodeConfig, config.State.Update)
+		err = config.ChangeAgreeSendLogs(&nodeConfig, config.UpdateStatus)
 		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
@@ -107,14 +107,14 @@ var configUpdateCmd = &cobra.Command{
 
 			err := blockchainprovider.UpdateNodeInfo(ctx, etherAccount.Address, password, nodeConfig.HTTPPort, splitIPAddr)
 			if err != nil {
-				logger.Log(logger.CreateDetails(actLoc, err))
+				logger.Log(logger.CreateDetails(logLoc, err))
 				log.Fatal(confUpdateFatalMessage)
 			}
 		}
 
 		err = config.Save(confFile, nodeConfig) // we dont't use mutex because race condition while config update is impossible
 		if err != nil {
-			logger.Log(logger.CreateDetails(actLoc, err))
+			logger.Log(logger.CreateDetails(logLoc, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
