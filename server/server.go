@@ -3,9 +3,7 @@ package server
 import (
 	"context"
 	"crypto/sha256"
-	"math/rand"
 	"os/signal"
-	"time"
 
 	"encoding/hex"
 	"encoding/json"
@@ -49,13 +47,13 @@ func Start(port string) {
 	r.HandleFunc("/copy/{size}", CopyFile).Methods("POST")
 
 	r.HandleFunc("/backup/copy/{size}", BackUpCopy).Methods("POST")
-	r.HandleFunc("/backup/new/{size}", BackUpNew).Methods("POST")
+	//r.HandleFunc("/backup/new/{size}", BackUpNew).Methods("POST")
 
-	r.HandleFunc("/info/{spAddress}/{size}/{signature}", Info).Methods("POST")
-	r.HandleFunc("/info/send/{spAddress}/{size}/{signature}", InfoSend).Methods("POST")
+	//r.HandleFunc("/info/{spAddress}/{size}/{signature}", Info).Methods("POST")
+	//r.HandleFunc("/info/send/{spAddress}/{size}/{signature}", InfoSend).Methods("POST")
 
-	r.HandleFunc("/auth/download/{spAddress}/{fileKey}", AuthDownload).Methods("GET")
-	r.HandleFunc("/check/{spAddress}/{fileKey}", CheckFile).Methods("GET")
+	//r.HandleFunc("/auth/download/{spAddress}/{fileKey}", AuthDownload).Methods("GET")
+	//r.HandleFunc("/check/{spAddress}/{fileKey}", CheckFile).Methods("GET")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -483,6 +481,8 @@ func Info(w http.ResponseWriter, r *http.Request) {
 	_, enoughSpace, config, err := checkSpace(r, pathToConfig)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
+		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	type ipAddresses struct {
@@ -631,60 +631,14 @@ func InfoSend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress)
-
-	_, err = os.Stat(addressPath)
+	nodeResponse, err := internal.InfoSend(spAddress, data.IP, data.FileKeys, intFileSize)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	shared.MU.Lock()
-	spFsFile, fileBytes, err := shared.ReadFile(filepath.Join(addressPath, paths.SpFsFilename))
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	defer spFsFile.Close()
-
-	spFs := &shared.StorageProviderData{}
-
-	err = json.Unmarshal(fileBytes, spFs)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
-		return
-	}
-	spFs.Address = spAddress
-
-	shared.MU.Unlock()
-	spFsFile.Close()
-
-	succesfulNodes := make([]string, 0)
-	for _, node := range data.IP {
-		backUpNodes, err := internal.BackUpFileKeys(node, addressPath, spFs, intFileSize, data.FileKeys)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logLoc, err))
-		}
-
-		succesfulNodes = append(succesfulNodes, backUpNodes...)
-	}
-
-	if len(succesfulNodes) == 0 {
-		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	resp := &internal.NodesResponse{
-		Nodes: succesfulNodes,
-	}
-
-	js, err := json.Marshal(resp)
+	js, err := json.Marshal(nodeResponse)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
@@ -720,47 +674,9 @@ func AuthDownload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nodes, err := shared.GetFileInfoNodes(spAddress, fileKey)
+	nodeAddress, err := internal.AuthDownload(spAddress, fileKey)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	fastReq := fasthttp.AcquireRequest()
-	fastResp := fasthttp.AcquireResponse()
-	defer fasthttp.ReleaseRequest(fastReq)
-	defer fasthttp.ReleaseResponse(fastResp)
-
-	var nodeAddress *internal.NodeAddressResponse
-
-	rand.Seed(time.Now().UnixNano())
-	rand.Shuffle(len(nodes), func(i, j int) { nodes[i], nodes[j] = nodes[j], nodes[i] })
-
-	for _, node := range nodes {
-		fastReq.Reset()
-		fastResp.Reset()
-
-		nodeAddress, err = checkFileOnNode(node, spAddress, fileKey, fastReq, fastResp)
-		if err != nil {
-			err = shared.RemoveConnectionNode(node)
-			if err != nil {
-				logger.Log(logger.CreateDetails(logLoc, err))
-			}
-
-			err = shared.RemoveFileKeySavedNode(spAddress, fileKey, node)
-			if err != nil {
-				logger.Log(logger.CreateDetails(logLoc, err))
-			}
-
-			continue
-		}
-
-		break
-	}
-
-	if nodeAddress == nil {
-		logger.Log(logger.CreateDetails(logLoc, shared.ErrInternal))
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -788,92 +704,11 @@ func CheckFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filePath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress, fileKey)
-	file, err := os.Stat(filePath)
-	err = shared.CheckStatErr(err)
+	nodeAddress, err := internal.CheckFile(spAddress, fileKey)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
 		return
-	}
-
-	if file == nil {
-		rating, err := shared.GetRating()
-		if err != nil {
-			logger.Log(logger.CreateDetails(logLoc, shared.ErrInternal))
-			http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		if rating < 40 {
-			http.Error(w, "no file", http.StatusInternalServerError)
-			return
-		}
-
-		connectedNode, err := shared.GetConnectionNodes()
-		if err != nil {
-			logger.Log(logger.CreateDetails(logLoc, shared.ErrInvalidArgument))
-			http.Error(w, shared.ErrInvalidArgument.Error(), http.StatusBadRequest)
-			return
-		}
-
-		fastReq := fasthttp.AcquireRequest()
-		fastResp := fasthttp.AcquireResponse()
-		defer fasthttp.ReleaseRequest(fastReq)
-		defer fasthttp.ReleaseResponse(fastResp)
-
-		var nodeAddress *internal.NodeAddressResponse
-
-		for _, node := range connectedNode {
-			fastReq.Reset()
-			fastResp.Reset()
-
-			nodeAddress, err = checkFileOnNode(node, spAddress, fileKey, fastReq, fastResp)
-			if err != nil {
-				err = shared.RemoveConnectionNode(node)
-				if err != nil {
-					logger.Log(logger.CreateDetails(logLoc, err))
-				}
-				continue
-			}
-
-			js, err := json.Marshal(nodeAddress)
-			if err != nil {
-				logger.Log(logger.CreateDetails(logLoc, err))
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
-
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(js)
-			return
-		}
-	}
-
-	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
-
-	var nodeConfig config.SecondaryNodeConfig
-
-	shared.MU.Lock()
-	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, shared.ErrInternal))
-		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	confFile.Close()
-
-	err = json.Unmarshal(fileBytes, &nodeConfig)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, shared.ErrInternal))
-		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	shared.MU.Unlock()
-
-	nodeAddress := internal.NodeAddressResponse{
-		NodeAddress: nodeConfig.IpAddress + ":" + nodeConfig.HTTPPort,
 	}
 
 	js, err := json.Marshal(nodeAddress)
@@ -884,32 +719,6 @@ func CheckFile(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
-}
-
-func checkFileOnNode(node, spAddress, fileKey string, req *fasthttp.Request, resp *fasthttp.Response) (*internal.NodeAddressResponse, error) {
-	const logLoc = "server.checkFileOnNode"
-
-	req.SetRequestURI("http://" + node + "/check/" + spAddress + "/" + fileKey)
-	req.Header.SetMethod("GET")
-
-	err := fasthttp.Do(req, resp)
-	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
-	}
-
-	if string(resp.Body()) == "no file" {
-		fmt.Println(string(resp.Body()))
-		return nil, logger.CreateDetails(logLoc, err)
-	}
-
-	nodeAddress := &internal.NodeAddressResponse{}
-
-	err = json.Unmarshal(resp.Body(), nodeAddress)
-	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
-	}
-
-	return nodeAddress, nil
 }
 
 // ====================================================================================

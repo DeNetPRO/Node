@@ -241,31 +241,7 @@ func BackUpFileKeys(nodeAddress, addressPath string, spData *shared.StorageProvi
 		writer.Close()
 	}()
 
-	req, err := http.NewRequest("POST", "http://"+nodeAddress+"/backup/new/"+strconv.Itoa(fileSize), pr)
-	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
-	}
-
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
-	}
-
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return nil, logger.CreateDetails(logLoc, shared.ErrFileSaving)
-	}
-
-	nodesResp := NodesResponse{}
-	err = json.Unmarshal(body, &nodesResp)
+	nodesResp, err := getNodeResponse(nodeAddress, strconv.Itoa(fileSize), writer, pr)
 	if err != nil {
 		return nil, logger.CreateDetails(logLoc, err)
 	}
@@ -307,7 +283,18 @@ func BackUpFileParts(nodeAddress string, spData *shared.StorageProviderData, fil
 		writer.Close()
 	}()
 
-	req, err := http.NewRequest("POST", "http://"+nodeAddress+"/backup/new/"+strconv.Itoa(fileSize), pr)
+	nodesResp, err := getNodeResponse(nodeAddress, strconv.Itoa(fileSize), writer, pr)
+	if err != nil {
+		return nil, logger.CreateDetails(logLoc, err)
+	}
+
+	return nodesResp.Nodes, nil
+}
+
+func getNodeResponse(nodeAddress, fileSize string, writer *multipart.Writer, reader io.Reader) (*NodesResponse, error) {
+	const logLoc = "internal.getNodeResponse->"
+
+	req, err := http.NewRequest("POST", "http://"+nodeAddress+"/backup/new/"+fileSize, reader)
 	if err != nil {
 		return nil, logger.CreateDetails(logLoc, err)
 	}
@@ -336,7 +323,7 @@ func BackUpFileParts(nodeAddress string, spData *shared.StorageProviderData, fil
 		return nil, logger.CreateDetails(logLoc, err)
 	}
 
-	return nodesResp.Nodes, nil
+	return &nodesResp, nil
 }
 
 func VerifyStorageProviderAddress(spAddress, fileSize, signatureFromReq string, fileKeys []string) error {
