@@ -157,14 +157,6 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	changer := float32(1024 * 1024 * 512)
-	rating := float32(intFileSize) / changer
-
-	err = shared.ChangeRating(rating)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
-	}
-
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "OK")
 }
@@ -193,14 +185,6 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	}
 
 	logger.Log("serving file: " + fileKey)
-
-	changer := float32(1024 * 1024 * 512)
-	rating := float32(1) / changer
-
-	err = shared.ChangeRating(rating)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
-	}
 
 	http.ServeFile(w, req, pathToFile)
 }
