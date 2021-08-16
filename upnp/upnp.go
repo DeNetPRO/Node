@@ -3,7 +3,7 @@ package upnp
 import (
 	"fmt"
 
-	"github.com/alex-gubin/fastupnp"
+	fastupnp "github.com/DeNetPRO/turbo-upnp"
 )
 
 var InternetDevice *fastupnp.Device

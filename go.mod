@@ -3,7 +3,7 @@ module git.denetwork.xyz/dfile/dfile-secondary-node
 go 1.16
 
 require (
-	github.com/alex-gubin/fastupnp v0.0.0-20210721091124-91c97907063c
+	github.com/DeNetPRO/turbo-upnp v0.0.0-20210816150325-67fe96bbf7fb
 	github.com/ethereum/go-ethereum v1.10.5
 	github.com/gorilla/mux v1.8.0
 	github.com/ricochet2200/go-disk-usage/du v0.0.0-20210707232629-ac9918953285
