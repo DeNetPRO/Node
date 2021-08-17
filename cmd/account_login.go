@@ -111,38 +111,6 @@ var accountLoginCmd = &cobra.Command{
 
 		account.IpAddr = fmt.Sprint(nodeConfig.IpAddress, ":", nodeConfig.HTTPPort)
 
-		rating, err := os.Stat(paths.RatingFilePath)
-		err = shared.CheckStatErr(err)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logLoc, err))
-			log.Fatal(accLoginFatalError)
-		}
-
-		if rating == nil {
-			file, err := os.Create(paths.RatingFilePath)
-			if err != nil {
-				logger.Log(logger.CreateDetails(logLoc, err))
-				log.Fatal(accLoginFatalError)
-			}
-
-			ratingInfo := shared.NewRatingInfo()
-
-			if nodeConfig.IpAddress == "46.101.202.151" {
-				ratingInfo.Rating = 100
-				ratingInfo.ConnectedNodes["68.183.215.241:55050"] = 0
-				ratingInfo.ConnectedNodes["157.230.98.89:55050"] = 0
-				ratingInfo.NumberOfAuthorityConn = 99
-			}
-
-			err = shared.WriteFile(file, ratingInfo)
-			if err != nil {
-				logger.Log(logger.CreateDetails(logLoc, err))
-				log.Fatal(accLoginFatalError)
-			}
-
-			file.Close()
-		}
-
 		fmt.Println("Logged in")
 
 		go blockchainprovider.StartMining(password)
