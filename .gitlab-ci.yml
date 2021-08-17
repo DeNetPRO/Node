@@ -6,7 +6,6 @@ variables:
 
 before_script:
   - export GO111MODULE="on" 
-  - go env -w GOPRIVATE=github.com/DeNetPRO/turbo-upnp
   - go mod tidy
 
 stages:
