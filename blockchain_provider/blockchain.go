@@ -355,16 +355,16 @@ func StartMining(password string) {
 			}
 
 			if !proved {
-				fmt.Println(spAddress, "not proved")
+				fmt.Println("Proof is not verified!")
 				continue
 			}
 
-			fmt.Println(spAddress, "proved")
+			fmt.Println("Proof is verified")
 
 			fmt.Println("checking file:", fileName)
 			fmt.Println("Trying proof", fileName, "for reward:", reward)
 
-			err = sendProof(ctx, client, password, storedFileBytes, shared.NodeAddr, spAddress, blockNum-6, instance)
+			err = sendProof(ctx, client, password, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, instance)
 			if err != nil {
 				logger.Log(logger.CreateDetails(logLoc, err))
 				continue
@@ -379,9 +379,9 @@ func StartMining(password string) {
 //Makes merkle tree by current file.
 //Then taken one part of the file and compare hashes.
 func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte,
-	nodeAddr common.Address, spAddress string, blockNum uint64, instance *abiPOS.Store) error {
+	nodeAddr common.Address, spAddress common.Address, blockNum uint64, instance *abiPOS.Store) error {
 	const logLoc = "blockchainprovider.sendProof->"
-	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress, paths.SpFsFilename)
+	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress.String(), paths.SpFsFilename)
 
 	shared.MU.Lock()
 
@@ -431,16 +431,28 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 
 	fsRootHashBytes := proof[len(proof)-1]
 
-	treeToFsRoot = nil
-
-	opts, err := initTrxOpts(ctx, client, nodeAddr, password, blockNum)
+	currentRootHash, currentNonce, err := instance.GetUserRootHash(&bind.CallOpts{}, spAddress)
 	if err != nil {
 		return logger.CreateDetails(logLoc, err)
 	}
 
+	sameFsRoot := bytes.Equal(fsRootHashBytes[:], currentRootHash[:])
+	if !sameFsRoot {
+		fmt.Println("root hashes are different")
+		return logger.CreateDetails(logLoc, errors.New("root hashes are different"))
+	}
+
+	treeToFsRoot = nil
+
 	nonceInt, err := strconv.Atoi(spFs.Nonce)
 	if err != nil {
 		return logger.CreateDetails(logLoc, err)
+	}
+
+	if nonceInt != int(currentNonce.Int64()) {
+		fmt.Println("nonce value is different")
+		return logger.CreateDetails(logLoc, errors.New("nonce value is different"))
+
 	}
 
 	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
@@ -466,16 +478,21 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		signedFSRootHash = signedFSRootHash[:64]
 	}
 
-	signatureIsValid, err := instance.IsValidSign(&bind.CallOpts{}, common.HexToAddress(spAddress), fsRootNonceBytes, signedFSRootHash)
+	signatureIsValid, err := instance.IsValidSign(&bind.CallOpts{}, spAddress, fsRootNonceBytes, signedFSRootHash)
 	if err != nil {
 		return logger.CreateDetails(logLoc, err)
 	}
 
 	if !signatureIsValid {
-		return logger.CreateDetails(logLoc, errors.New(spAddress+" signature is not valid"))
+		return logger.CreateDetails(logLoc, errors.New(spAddress.String()+" signature is not valid"))
 	}
 
-	_, err = instance.SendProof(opts, common.HexToAddress(spAddress), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
+	opts, err := initTrxOpts(ctx, client, nodeAddr, password, blockNum)
+	if err != nil {
+		return logger.CreateDetails(logLoc, err)
+	}
+
+	_, err = instance.SendProof(opts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
 		return logger.CreateDetails(logLoc, err)
 	}
