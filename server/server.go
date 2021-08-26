@@ -2,8 +2,9 @@ package server
 
 import (
 	"context"
-	"crypto/sha256"
 	"os/signal"
+
+	"github.com/minio/sha256-simd"
 
 	"encoding/hex"
 	"encoding/json"

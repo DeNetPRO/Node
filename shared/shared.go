@@ -2,8 +2,9 @@ package shared
 
 import (
 	"bufio"
-	"crypto/sha256"
 	"io"
+
+	"github.com/minio/sha256-simd"
 
 	"encoding/hex"
 	"encoding/json"
