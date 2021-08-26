@@ -45,8 +45,6 @@ func Start(port string) {
 	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}", UpdateFsInfo).Methods("POST")
 	r.HandleFunc("/copy/{size}", CopyFile).Methods("POST")
 
-	r.HandleFunc("/backup/copy/{size}", BackUpCopy).Methods("POST")
-
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{
@@ -153,6 +151,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	err = files.Save(req, spData, pathToConfig, intFileSize)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
+		files.RestoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -255,6 +254,7 @@ func CopyFile(w http.ResponseWriter, req *http.Request) {
 	nodeAddress, err := files.Copy(req, spData, &nodeConfig, pathToConfig, intFileSize, enoughSpace)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
+		files.RestoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -267,39 +267,6 @@ func CopyFile(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
-}
-
-// ====================================================================================
-
-func BackUpCopy(w http.ResponseWriter, req *http.Request) {
-	logLoc := "server.BackUpCopy->"
-
-	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
-
-	intFileSize, _, _, err := checkSpace(req, pathToConfig)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, shared.ErrSpaceCheck.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	spData, err := parseRequest(req)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
-		files.RestoreMemoryInfo(pathToConfig, intFileSize)
-		http.Error(w, shared.ErrParseMultipartForm.Error(), http.StatusBadRequest)
-		return
-	}
-
-	err = files.BackUp(req, spData, pathToConfig, intFileSize)
-	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
-		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, "OK")
 }
 
 // ====================================================================================
