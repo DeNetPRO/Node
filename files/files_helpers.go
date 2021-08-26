@@ -1,7 +1,6 @@
 package files
 
 import (
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -14,6 +13,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/minio/sha256-simd"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
@@ -176,8 +177,8 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 // ====================================================================================
 
 //Provides back up to "node Address" using old multipart form. Returning ip address node if successful
-func backUpCopy(nodeAddress, addressPath string, multiForm *multipart.Form, fileSize int) (string, error) {
-	const logLoc = "files_helpers.backUpCopy->"
+func backUp(nodeAddress, addressPath string, multiForm *multipart.Form, fileSize int) (string, error) {
+	const logLoc = "files_helpers.backUp->"
 
 	pipeConns := fasthttputil.NewPipeConns()
 	pr := pipeConns.Conn1()
@@ -194,6 +195,7 @@ func backUpCopy(nodeAddress, addressPath string, multiForm *multipart.Form, file
 
 		err := prepareMultipartForm(writer, address[0], nonce[0], fsRootHash[0])
 		if err != nil {
+			logger.Log(logger.CreateDetails(logLoc, err))
 			return
 		}
 
@@ -201,15 +203,21 @@ func backUpCopy(nodeAddress, addressPath string, multiForm *multipart.Form, file
 		for _, wholeHash := range wholeFileHashes {
 			err = writer.WriteField("fs", wholeHash)
 			if err != nil {
-				fmt.Println(err)
+				logger.Log(logger.CreateDetails(logLoc, err))
 				return
 			}
 		}
 
 		hashes := multiForm.File["hashes"]
+
+		if len(hashes) == 0 {
+			logger.Log(logger.CreateDetails(logLoc, errors.New("empty hashes")))
+			return
+		}
+
 		hashesFile, err := hashes[0].Open()
 		if err != nil {
-			fmt.Println(err)
+			logger.Log(logger.CreateDetails(logLoc, err))
 			return
 		}
 
@@ -217,44 +225,36 @@ func backUpCopy(nodeAddress, addressPath string, multiForm *multipart.Form, file
 
 		hashesBody, err := io.ReadAll(hashesFile)
 		if err != nil {
-			fmt.Println(err)
+			logger.Log(logger.CreateDetails(logLoc, err))
 			return
 		}
-
-		h, err := writer.CreateFormFile("hashes", "hashes")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		h.Write(hashesBody)
 
 		hashDif := make(map[string]string)
 		err = json.Unmarshal(hashesBody, &hashDif)
 		if err != nil {
-			fmt.Println(err)
+			logger.Log(logger.CreateDetails(logLoc, err))
 			return
 		}
 
-		for old := range hashDif {
+		for old, new := range hashDif {
 			path := filepath.Join(addressPath, old)
 			file, err := os.Open(path)
 			if err != nil {
-				fmt.Println(err)
+				logger.Log(logger.CreateDetails(logLoc, err))
 				return
 			}
 
 			defer file.Close()
 
-			filePart, err := writer.CreateFormFile("files", old)
+			filePart, err := writer.CreateFormFile("files", new)
 			if err != nil {
-				fmt.Println(err)
+				logger.Log(logger.CreateDetails(logLoc, err))
 				return
 			}
 
 			_, err = io.Copy(filePart, file)
 			if err != nil {
-				fmt.Println(err)
+				logger.Log(logger.CreateDetails(logLoc, err))
 				return
 			}
 		}
@@ -262,7 +262,7 @@ func backUpCopy(nodeAddress, addressPath string, multiForm *multipart.Form, file
 		writer.Close()
 	}()
 
-	req, err := http.NewRequest("POST", "http://"+nodeAddress+"/backup/copy/"+strconv.Itoa(fileSize), pr)
+	req, err := http.NewRequest("POST", "http://"+nodeAddress+"/upload/"+strconv.Itoa(fileSize), pr)
 	if err != nil {
 		return "", logger.CreateDetails(logLoc, err)
 	}

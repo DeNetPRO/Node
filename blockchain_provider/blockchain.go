@@ -3,8 +3,9 @@ package blockchainprovider
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"errors"
+
+	"github.com/minio/sha256-simd"
 
 	"encoding/hex"
 	"encoding/json"
