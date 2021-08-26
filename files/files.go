@@ -355,8 +355,6 @@ func BackUp(req *http.Request, spData *shared.StorageProviderData, pathToConfig 
 		return logger.CreateDetails(logLoc, err)
 	}
 
-	fsContainsFile := false
-
 	var wholeFileHash string
 
 	if len(oneMBHashes) == 1 {
@@ -369,6 +367,8 @@ func BackUp(req *http.Request, spData *shared.StorageProviderData, pathToConfig 
 			return logger.CreateDetails(logLoc, err)
 		}
 	}
+
+	fsContainsFile := false
 
 	for _, fileHash := range spData.Fs {
 		if fileHash == wholeFileHash {
