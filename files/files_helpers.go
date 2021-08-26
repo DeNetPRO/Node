@@ -36,20 +36,20 @@ type UpdatedFsInfo struct {
 }
 
 func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem string) error {
-	const logLoc = "files.UpdateFileSystemInfo->"
+	const location = "files.UpdateFileSystemInfo->"
 
 	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress)
 
 	_, err := os.Stat(addressPath)
 	if err != nil {
-		return logger.CreateDetails(logLoc, errors.New("no files of "+spAddress))
+		return logger.CreateDetails(location, errors.New("no files of "+spAddress))
 	}
 
 	shared.MU.Lock()
 	spFsFile, fileBytes, err := shared.ReadFile(filepath.Join(addressPath, paths.SpFsFilename))
 	if err != nil {
 		shared.MU.Unlock()
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	defer spFsFile.Close()
@@ -59,7 +59,7 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 	err = json.Unmarshal(fileBytes, &spFs)
 	if err != nil {
 		shared.MU.Unlock()
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	spFsFile.Close()
@@ -67,23 +67,23 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 
 	newNonceInt, err := strconv.Atoi(updatedFs.Nonce)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	currentNonceInt, err := strconv.Atoi(spFs.Nonce)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	if newNonceInt < currentNonceInt {
-		return logger.CreateDetails(logLoc, fmt.Errorf("%v fs info is up to date", spAddress))
+		return logger.CreateDetails(location, fmt.Errorf("%v fs info is up to date", spAddress))
 	}
 
 	nonceHex := strconv.FormatInt(int64(newNonceInt), 16)
 
 	nonceBytes, err := hex.DecodeString(nonceHex)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	nonce32 := make([]byte, 32-len(nonceBytes))
@@ -98,52 +98,40 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 	}
 
 	fsTreeNonceBytes := append([]byte(concatFsHashesBuilder.String()), nonce32...)
-	fsTreeNonceSha := sha256.Sum256(fsTreeNonceBytes)
+	fsTreeNonceHash := sha256.Sum256(fsTreeNonceBytes)
 
-	fsysSignature, err := hex.DecodeString(signedFileSystem)
+	signedFsys, err := hex.DecodeString(signedFileSystem)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
-	sigPublicKey, err := crypto.SigToPub(fsTreeNonceSha[:], fsysSignature)
+	err = CheckDataSign(spAddress, signedFsys, fsTreeNonceHash)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
-	}
-
-	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
-
-	if spAddress != signatureAddress.String() {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	fsRootHash, fsTree, err := shared.CalcRootHash(updatedFs.NewFs)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
-	rootSignature, err := hex.DecodeString(updatedFs.SignedFsRootHash)
+	signedRootHash, err := hex.DecodeString(updatedFs.SignedFsRootHash)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	fsRootBytes, err := hex.DecodeString(fsRootHash)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	fsRootNonceBytes := append(fsRootBytes, nonce32...)
 
 	hash := sha256.Sum256(fsRootNonceBytes)
 
-	sigPublicKey, err = crypto.SigToPub(hash[:], rootSignature)
+	err = CheckDataSign(spAddress, signedRootHash, hash)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
-	}
-
-	signatureAddress = crypto.PubkeyToAddress(*sigPublicKey)
-
-	if spAddress != signatureAddress.String() {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	shared.MU.Lock()
@@ -151,7 +139,7 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 	spFsFile, err = os.Create(filepath.Join(addressPath, paths.SpFsFilename))
 	if err != nil {
 		shared.MU.Unlock()
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	defer spFsFile.Close()
@@ -165,7 +153,7 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 	err = shared.WriteFile(spFsFile, spFs)
 	if err != nil {
 		shared.MU.Unlock()
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	spFsFile.Sync()
@@ -178,7 +166,7 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 
 //Provides back up to "node Address" using old multipart form. Returning ip address node if successful
 func backUp(nodeAddress, pathToSpFiles string, multiForm *multipart.Form, hashesMap map[string]string, fileSize int) (string, error) {
-	const logLoc = "files_helpers.backUp->"
+	const location = "files_helpers.backUp->"
 
 	pipeConns := fasthttputil.NewPipeConns()
 	pr := pipeConns.Conn1()
@@ -196,19 +184,19 @@ func backUp(nodeAddress, pathToSpFiles string, multiForm *multipart.Form, hashes
 
 		err := writer.WriteField("address", address[0])
 		if err != nil {
-			logger.Log(logger.CreateDetails(logLoc, err))
+			logger.Log(logger.CreateDetails(location, err))
 			return
 		}
 
 		err = writer.WriteField("nonce", nonce[0])
 		if err != nil {
-			logger.Log(logger.CreateDetails(logLoc, err))
+			logger.Log(logger.CreateDetails(location, err))
 			return
 		}
 
 		err = writer.WriteField("fsRootHash", fsRootHash[0])
 		if err != nil {
-			logger.Log(logger.CreateDetails(logLoc, err))
+			logger.Log(logger.CreateDetails(location, err))
 			return
 		}
 
@@ -216,7 +204,7 @@ func backUp(nodeAddress, pathToSpFiles string, multiForm *multipart.Form, hashes
 		for _, wholeHash := range wholeFileHashes {
 			err = writer.WriteField("fs", wholeHash)
 			if err != nil {
-				logger.Log(logger.CreateDetails(logLoc, err))
+				logger.Log(logger.CreateDetails(location, err))
 				return
 			}
 		}
@@ -225,21 +213,21 @@ func backUp(nodeAddress, pathToSpFiles string, multiForm *multipart.Form, hashes
 			path := filepath.Join(pathToSpFiles, oldHash)
 			file, err := os.Open(path)
 			if err != nil {
-				logger.Log(logger.CreateDetails(logLoc, err))
+				logger.Log(logger.CreateDetails(location, err))
 				return
 			}
 
 			filePart, err := writer.CreateFormFile("files", newHash)
 			if err != nil {
 				file.Close()
-				logger.Log(logger.CreateDetails(logLoc, err))
+				logger.Log(logger.CreateDetails(location, err))
 				return
 			}
 
 			_, err = io.Copy(filePart, file)
 			if err != nil {
 				file.Close()
-				logger.Log(logger.CreateDetails(logLoc, err))
+				logger.Log(logger.CreateDetails(location, err))
 				return
 			}
 
@@ -249,25 +237,25 @@ func backUp(nodeAddress, pathToSpFiles string, multiForm *multipart.Form, hashes
 
 	req, err := http.NewRequest("POST", "http://"+nodeAddress+"/upload/"+strconv.Itoa(fileSize), pr)
 	if err != nil {
-		return "", logger.CreateDetails(logLoc, err)
+		return "", logger.CreateDetails(location, err)
 	}
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", logger.CreateDetails(logLoc, err)
+		return "", logger.CreateDetails(location, err)
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", logger.CreateDetails(logLoc, err)
+		return "", logger.CreateDetails(location, err)
 	}
 
 	defer resp.Body.Close()
 
 	if string(body) != "OK" {
-		return "", logger.CreateDetails(logLoc, shared.ErrFileSaving)
+		return "", logger.CreateDetails(location, shared.ErrFileSaving)
 	}
 
 	return nodeAddress, nil
@@ -277,13 +265,13 @@ func backUp(nodeAddress, pathToSpFiles string, multiForm *multipart.Form, hashes
 
 //Restore certain file size
 func RestoreMemoryInfo(pathToConfig string, intFileSize int) {
-	logLoc := "files.restoreMemoryInfo->"
+	location := "files.restoreMemoryInfo->"
 
 	shared.MU.Lock()
 	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		return
 	}
 	defer confFile.Close()
@@ -293,7 +281,7 @@ func RestoreMemoryInfo(pathToConfig string, intFileSize int) {
 	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		return
 	}
 
@@ -302,7 +290,7 @@ func RestoreMemoryInfo(pathToConfig string, intFileSize int) {
 	err = config.Save(confFile, nodeConfig)
 	if err != nil {
 		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		return
 	}
 	shared.MU.Unlock()
@@ -331,7 +319,7 @@ func getNodeIP(nodeInfo nodeAbi.SimpleMetaDataDeNetNode) string {
 // ====================================================================================
 
 func VerifyStorageProviderAddress(spAddress, fileSize, signatureFromReq string, fileKeys []string) error {
-	const logLoc = "files.VerifyStorageProviderAddress->"
+	const location = "files.VerifyStorageProviderAddress->"
 	var wholeFileHash string
 	var err error
 
@@ -341,26 +329,37 @@ func VerifyStorageProviderAddress(spAddress, fileSize, signatureFromReq string, 
 		sort.Strings(fileKeys)
 		wholeFileHash, _, err = shared.CalcRootHash(fileKeys)
 		if err != nil {
-			return logger.CreateDetails(logLoc, err)
+			return logger.CreateDetails(location, err)
 		}
 	}
 
 	signature, err := hex.DecodeString(signatureFromReq)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	hash := sha256.Sum256([]byte(spAddress + fileSize + wholeFileHash))
 
+	err = CheckDataSign(spAddress, signature, hash)
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
+	return nil
+}
+
+// ====================================================================================
+
+func CheckDataSign(spAddress string, signature []byte, hash [32]byte) error {
 	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return err
 	}
 
 	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
 	if spAddress != signatureAddress.String() {
-		return logger.CreateDetails(logLoc, shared.ErrWrongSignature)
+		return err
 	}
 
 	return nil
@@ -381,18 +380,18 @@ func DeleteParts(addressPath string, fileHashes []string) {
 // ====================================================================================
 
 func saveSpFsInfo(addressPath string, spData *shared.StorageProviderData) error {
-	const logLoc = "files.saveSpFsInfo->"
+	const location = "files.saveSpFsInfo->"
 
 	stat, err := os.Stat(addressPath)
 	err = shared.CheckStatErr(err)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	if stat == nil {
 		err = os.Mkdir(addressPath, 0700)
 		if err != nil {
-			return logger.CreateDetails(logLoc, err)
+			return logger.CreateDetails(location, err)
 		}
 	}
 
@@ -401,14 +400,14 @@ func saveSpFsInfo(addressPath string, spData *shared.StorageProviderData) error 
 
 	spFsFile, err := os.Create(filepath.Join(addressPath, paths.SpFsFilename))
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	defer spFsFile.Close()
 
 	err = shared.WriteFile(spFsFile, spData)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	spFsFile.Sync()

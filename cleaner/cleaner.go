@@ -19,7 +19,7 @@ const oneMB = 1048576
 
 //Delete unnecessary files every one minute
 func Start() {
-	const logLoc = "cleaner.Start->"
+	const location = "cleaner.Start->"
 
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
@@ -34,7 +34,7 @@ func Start() {
 		err := filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
 				if err != nil {
-					logger.Log(logger.CreateDetails(logLoc, err))
+					logger.Log(logger.CreateDetails(location, err))
 				}
 
 				if regAddr.MatchString(info.Name()) {
@@ -45,7 +45,7 @@ func Start() {
 			})
 
 		if err != nil {
-			logger.Log(logger.CreateDetails(logLoc, err))
+			logger.Log(logger.CreateDetails(location, err))
 			continue
 		}
 
@@ -64,7 +64,7 @@ func Start() {
 			err = filepath.WalkDir(pathToStorProviderFiles,
 				func(path string, info fs.DirEntry, err error) error {
 					if err != nil {
-						logger.Log(logger.CreateDetails(logLoc, err))
+						logger.Log(logger.CreateDetails(location, err))
 					}
 
 					if regFileName.MatchString(info.Name()) && len(info.Name()) == 64 {
@@ -74,7 +74,7 @@ func Start() {
 					return nil
 				})
 			if err != nil {
-				logger.Log(logger.CreateDetails(logLoc, err))
+				logger.Log(logger.CreateDetails(location, err))
 				continue
 			}
 
@@ -84,7 +84,7 @@ func Start() {
 			fileFsTree, treeBytes, err := shared.ReadFile(pathToFsTree)
 			if err != nil {
 				shared.MU.Unlock()
-				logger.Log(logger.CreateDetails(logLoc, err))
+				logger.Log(logger.CreateDetails(location, err))
 				continue
 			}
 
@@ -95,7 +95,7 @@ func Start() {
 
 			err = json.Unmarshal(treeBytes, &spFs)
 			if err != nil {
-				logger.Log(logger.CreateDetails(logLoc, err))
+				logger.Log(logger.CreateDetails(location, err))
 			}
 
 			fsFiles := map[string]bool{}
@@ -113,7 +113,7 @@ func Start() {
 					logger.Log("removing file: " + fileName + " of " + spAddress)
 					err = os.Remove(filepath.Join(pathToStorProviderFiles, fileName))
 					if err != nil {
-						logger.Log(logger.CreateDetails(logLoc, err))
+						logger.Log(logger.CreateDetails(location, err))
 						continue
 					}
 
@@ -132,7 +132,7 @@ func Start() {
 			confFile, fileBytes, err := shared.ReadFile(pathToConfig)
 			if err != nil {
 				shared.MU.Unlock()
-				logger.Log(logger.CreateDetails(logLoc, err))
+				logger.Log(logger.CreateDetails(location, err))
 				continue
 			}
 
@@ -142,7 +142,7 @@ func Start() {
 			if err != nil {
 				shared.MU.Unlock()
 				confFile.Close()
-				logger.Log(logger.CreateDetails(logLoc, err))
+				logger.Log(logger.CreateDetails(location, err))
 				continue
 			}
 
@@ -152,7 +152,7 @@ func Start() {
 			if err != nil {
 				shared.MU.Unlock()
 				confFile.Close()
-				logger.Log(logger.CreateDetails(logLoc, err))
+				logger.Log(logger.CreateDetails(location, err))
 				continue
 			}
 			confFile.Close()

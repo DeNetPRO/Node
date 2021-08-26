@@ -38,7 +38,7 @@ const oneHunderdMBBytes = int64(1024 * 1024 * 100)
 const serverStartFatalMessage = "Couldn't start server"
 
 func Start(port string) {
-	const logLoc = "server.Start->"
+	const location = "server.Start->"
 	r := mux.NewRouter()
 
 	r.HandleFunc("/upload/{size}", SaveFiles).Methods("POST")
@@ -67,7 +67,7 @@ func Start(port string) {
 
 	intPort, err := strconv.Atoi(port)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		log.Fatal(serverStartFatalMessage)
 	}
 
@@ -86,7 +86,7 @@ func Start(port string) {
 	go func() {
 		err = server.ListenAndServe()
 		if err != nil {
-			logger.Log(logger.CreateDetails(logLoc, err))
+			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(serverStartFatalMessage)
 		}
 	}()
@@ -98,7 +98,7 @@ func Start(port string) {
 
 	err = server.Shutdown(context.Background())
 	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		log.Fatal(err)
 	}
 }
@@ -130,20 +130,20 @@ func checkSignature(h http.Handler) http.Handler {
 // ========================================================================================================
 
 func SaveFiles(w http.ResponseWriter, req *http.Request) {
-	const logLoc = "server.SaveFiles->"
+	const location = "server.SaveFiles->"
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
 	intFileSize, _, _, err := checkSpace(req, pathToConfig)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, shared.ErrSpaceCheck.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	spData, err := parseRequest(req)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		files.RestoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, shared.ErrParseMultipartForm.Error(), http.StatusBadRequest)
 		return
@@ -151,7 +151,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	err = files.Save(req, spData, pathToConfig, intFileSize)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		files.RestoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
 		return
@@ -164,7 +164,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 // ====================================================================================
 
 func ServeFiles(w http.ResponseWriter, req *http.Request) {
-	const logLoc = "server.ServeFiles->"
+	const location = "server.ServeFiles->"
 
 	vars := mux.Vars(req)
 	spAddress := vars["spAddress"]
@@ -172,14 +172,14 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	signatureFromReq := vars["signature"]
 
 	if spAddress == "" || fileKey == "" || signatureFromReq == "" {
-		logger.Log(logger.CreateDetails(logLoc, shared.ErrInvalidArgument))
+		logger.Log(logger.CreateDetails(location, shared.ErrInvalidArgument))
 		http.Error(w, shared.ErrInvalidArgument.Error(), http.StatusBadRequest)
 		return
 	}
 
 	pathToFile, err := files.Serve(spAddress, fileKey, signatureFromReq)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -192,21 +192,21 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 // ====================================================================================
 
 func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
-	const logLoc = "server.UpdateFsInfo->"
+	const location = "server.UpdateFsInfo->"
 
 	vars := mux.Vars(req)
 	spAddress := vars["spAddress"]
 	signedFsys := vars["signedFsys"]
 
 	if spAddress == "" || signedFsys == "" {
-		logger.Log(logger.CreateDetails(logLoc, shared.ErrInvalidArgument))
+		logger.Log(logger.CreateDetails(location, shared.ErrInvalidArgument))
 		http.Error(w, shared.ErrInvalidArgument.Error(), http.StatusBadRequest)
 		return
 	}
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, shared.ErrInvalidArgument.Error(), http.StatusBadRequest)
 		return
 	}
@@ -215,14 +215,14 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 	updatedFs := &files.UpdatedFsInfo{}
 	err = json.Unmarshal(body, &updatedFs)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, shared.ErrUpdateFsInfo.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	err = files.UpdateFileSystemInfo(updatedFs, spAddress, signedFsys)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -233,20 +233,20 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 // ====================================================================================
 
 func CopyFile(w http.ResponseWriter, req *http.Request) {
-	logLoc := "server.CopyFile->"
+	location := "server.CopyFile->"
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
 	intFileSize, enoughSpace, nodeConfig, err := checkSpace(req, pathToConfig)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, shared.ErrSpaceCheck.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	spData, err := parseRequest(req)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		files.RestoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, shared.ErrParseMultipartForm.Error(), http.StatusBadRequest)
 		return
@@ -254,7 +254,7 @@ func CopyFile(w http.ResponseWriter, req *http.Request) {
 
 	nodeAddress, err := files.Copy(req, spData, &nodeConfig, pathToConfig, intFileSize, enoughSpace)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		files.RestoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
 		return
@@ -262,7 +262,7 @@ func CopyFile(w http.ResponseWriter, req *http.Request) {
 
 	js, err := json.Marshal(nodeAddress)
 	if err != nil {
-		logger.Log(logger.CreateDetails(logLoc, err))
+		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -276,7 +276,7 @@ func CopyFile(w http.ResponseWriter, req *http.Request) {
 //Returns the size of the input file, true -> if there is enough space and false -> if otherwise.
 //And also node's config.
 func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.SecondaryNodeConfig, error) {
-	const logLoc = "server.checkSpace"
+	const location = "server.checkSpace"
 
 	var nodeConfig config.SecondaryNodeConfig
 
@@ -285,23 +285,23 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.Seconda
 
 	intFileSize, err := strconv.Atoi(fileSize)
 	if err != nil {
-		return 0, false, nodeConfig, logger.CreateDetails(logLoc, err)
+		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
 
 	if intFileSize == 0 {
-		return 0, false, nodeConfig, logger.CreateDetails(logLoc, err)
+		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
 
 	shared.MU.Lock()
 	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
 	if err != nil {
-		return 0, false, nodeConfig, logger.CreateDetails(logLoc, err)
+		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
 	defer confFile.Close()
 
 	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
-		return 0, false, nodeConfig, logger.CreateDetails(logLoc, err)
+		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
 
 	sharedSpaceInBytes := int64(nodeConfig.StorageLimit) * gbBytes
@@ -309,7 +309,7 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.Seconda
 	nodeConfig.UsedStorageSpace += int64(intFileSize)
 
 	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
-		return 0, false, nodeConfig, logger.CreateDetails(logLoc, errors.New("not enough space"))
+		return 0, false, nodeConfig, logger.CreateDetails(location, errors.New("not enough space"))
 	}
 
 	avaliableSpaceLeft := sharedSpaceInBytes - nodeConfig.UsedStorageSpace
@@ -321,7 +321,7 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.Seconda
 
 	err = config.Save(confFile, nodeConfig)
 	if err != nil {
-		return 0, false, nodeConfig, logger.CreateDetails(logLoc, err)
+		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
 	confFile.Close()
 	shared.MU.Unlock()
@@ -333,11 +333,11 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.Seconda
 
 //Parse the request multipartForm
 func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
-	const logLoc = "server.parseRequest"
+	const location = "server.parseRequest"
 
 	err := r.ParseMultipartForm(1 << 20) // maxMemory 32MB
 	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(location, err)
 	}
 
 	fs := r.MultipartForm.Value["fs"]
@@ -346,28 +346,28 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 
 	fsRootHash, fsTree, err := shared.CalcRootHash(fs)
 	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(location, err)
 	}
 
 	signedFsRootHash := r.MultipartForm.Value["fsRootHash"]
 
 	signature, err := hex.DecodeString(signedFsRootHash[0])
 	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(location, err)
 	}
 
 	nonce := r.MultipartForm.Value["nonce"]
 
 	nonceInt, err := strconv.Atoi(nonce[0])
 	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(location, err)
 	}
 
 	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
 
 	nonceBytes, err := hex.DecodeString(nonceHex)
 	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(location, err)
 	}
 
 	nonce32 := make([]byte, 32-len(nonceBytes))
@@ -375,7 +375,7 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 
 	fsRootBytes, err := hex.DecodeString(fsRootHash)
 	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(location, err)
 	}
 
 	fsRootNonceBytes := append(fsRootBytes, nonce32...)
@@ -384,7 +384,7 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 
 	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
 	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(location, err)
 	}
 
 	storageProviderAddress := r.MultipartForm.Value["address"]
@@ -392,7 +392,7 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 	senderAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
 	if storageProviderAddress[0] != fmt.Sprint(senderAddress) {
-		return nil, logger.CreateDetails(logLoc, shared.ErrWrongSignature)
+		return nil, logger.CreateDetails(location, shared.ErrWrongSignature)
 	}
 
 	return &shared.StorageProviderData{

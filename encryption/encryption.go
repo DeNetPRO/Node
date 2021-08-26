@@ -19,21 +19,21 @@ var (
 
 //EncryptAES provides encrypts "data" by "key" using AES
 func EncryptAES(key, data []byte) ([]byte, error) {
-	const logLoc = "shared.encryptAES->"
+	const location = "shared.encryptAES->"
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(location, err)
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(location, err)
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	_, err = io.ReadFull(rand.Reader, nonce)
 	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(location, err)
 	}
 
 	ciphertext := gcm.Seal(nonce, nonce, data, nil)
@@ -45,19 +45,19 @@ func EncryptAES(key, data []byte) ([]byte, error) {
 
 //DecryptAES provides decrypts "data" by "key" using AES
 func DecryptAES(key, data []byte) ([]byte, error) {
-	const logLoc = "shared.decryptAES->"
+	const location = "shared.decryptAES->"
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(location, err)
 	}
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(location, err)
 	}
 	nonce, encrData := data[:gcm.NonceSize()], data[gcm.NonceSize():]
 	decrData, err := gcm.Open(nil, nonce, encrData, nil)
 	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
+		return nil, logger.CreateDetails(location, err)
 	}
 
 	return decrData, nil
@@ -67,11 +67,11 @@ func DecryptAES(key, data []byte) ([]byte, error) {
 
 //Return MAC-address of device
 func GetDeviceMacAddr() (string, error) {
-	const logLoc = "shared.GetDeviceMacAddr->"
+	const location = "shared.GetDeviceMacAddr->"
 	var addr string
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		return "", logger.CreateDetails(logLoc, err)
+		return "", logger.CreateDetails(location, err)
 	}
 
 	for _, i := range interfaces {
