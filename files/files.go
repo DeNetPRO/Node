@@ -37,7 +37,7 @@ const eightKB = 8192
 func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.SecondaryNodeConfig, pathToConfig string, fileSize int, enoughSpace bool) (*NodeAddressResponse, error) {
 	const logLoc = "files.Copy->"
 
-	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spData.Address)
+	pathToSpFiles := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spData.Address)
 
 	if !enoughSpace {
 		nftNode, err := blockchainprovider.GetNodeNFT()
@@ -84,7 +84,7 @@ func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.
 				continue
 			}
 
-			nodeAddress, err := backUp(nodeIP, addressPath, req.MultipartForm, fileSize)
+			nodeAddress, err := backUp(nodeIP, pathToSpFiles, req.MultipartForm, fileSize)
 			if err != nil {
 				continue
 			}
@@ -97,7 +97,7 @@ func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.
 		return nil, logger.CreateDetails(logLoc, errors.New("no available nodes"))
 	}
 
-	err := initSPFile(addressPath, spData)
+	err := saveSpFsInfo(pathToSpFiles, spData)
 	if err != nil {
 		return nil, logger.CreateDetails(logLoc, err)
 	}
@@ -132,18 +132,18 @@ func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.
 	for old, new := range hashDif {
 		savedParts = append(savedParts, new)
 
-		path := filepath.Join(addressPath, old)
+		path := filepath.Join(pathToSpFiles, old)
 		file, err := os.Open(path)
 		if err != nil {
-			DeleteParts(addressPath, savedParts)
+			DeleteParts(pathToSpFiles, savedParts)
 			return nil, logger.CreateDetails(logLoc, err)
 		}
 
 		defer file.Close()
 
-		err = saveFilePart(file, addressPath, new)
+		err = saveFilePart(file, pathToSpFiles, new)
 		if err != nil {
-			DeleteParts(addressPath, savedParts)
+			DeleteParts(pathToSpFiles, savedParts)
 			return nil, logger.CreateDetails(logLoc, err)
 		}
 	}
@@ -160,7 +160,7 @@ func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig st
 
 	pathToSpFiles := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spData.Address)
 
-	err := initSPFile(pathToSpFiles, spData)
+	err := saveSpFsInfo(pathToSpFiles, spData)
 	if err != nil {
 		return logger.CreateDetails(logLoc, err)
 	}
@@ -221,6 +221,8 @@ func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig st
 	return nil
 }
 
+// ====================================================================================
+
 func saveFilePart(file io.Reader, pathToSpFiles, fileName string) error {
 	const logLoc = "files.saveFilePart->"
 
@@ -242,6 +244,8 @@ func saveFilePart(file io.Reader, pathToSpFiles, fileName string) error {
 
 	return nil
 }
+
+// ====================================================================================
 
 func GetOneMbHashes(reqFileParts []*multipart.FileHeader) ([]string, error) {
 	const logLoc = "files.GetOneMbHashes->"

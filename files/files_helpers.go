@@ -177,7 +177,7 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 // ====================================================================================
 
 //Provides back up to "node Address" using old multipart form. Returning ip address node if successful
-func backUp(nodeAddress, addressPath string, multiForm *multipart.Form, fileSize int) (string, error) {
+func backUp(nodeAddress, pathToSpFiles string, multiForm *multipart.Form, fileSize int) (string, error) {
 	const logLoc = "files_helpers.backUp->"
 
 	pipeConns := fasthttputil.NewPipeConns()
@@ -187,13 +187,26 @@ func backUp(nodeAddress, addressPath string, multiForm *multipart.Form, fileSize
 	writer := multipart.NewWriter(pw)
 
 	go func() {
+		defer writer.Close()
 		defer pw.Close()
 
 		address := multiForm.Value["address"]
 		nonce := multiForm.Value["nonce"]
 		fsRootHash := multiForm.Value["fsRootHash"]
 
-		err := prepareMultipartForm(writer, address[0], nonce[0], fsRootHash[0])
+		err := writer.WriteField("address", address[0])
+		if err != nil {
+			logger.Log(logger.CreateDetails(logLoc, err))
+			return
+		}
+
+		err = writer.WriteField("nonce", nonce[0])
+		if err != nil {
+			logger.Log(logger.CreateDetails(logLoc, err))
+			return
+		}
+
+		err = writer.WriteField("fsRootHash", fsRootHash[0])
 		if err != nil {
 			logger.Log(logger.CreateDetails(logLoc, err))
 			return
@@ -215,51 +228,51 @@ func backUp(nodeAddress, addressPath string, multiForm *multipart.Form, fileSize
 			return
 		}
 
-		hashesFile, err := hashes[0].Open()
+		hashesFileHeader, err := hashes[0].Open()
 		if err != nil {
 			logger.Log(logger.CreateDetails(logLoc, err))
 			return
 		}
 
-		defer hashesFile.Close()
+		defer hashesFileHeader.Close()
 
-		hashesBody, err := io.ReadAll(hashesFile)
+		hashesInfo, err := io.ReadAll(hashesFileHeader)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logLoc, err))
 			return
 		}
 
-		hashDif := make(map[string]string)
-		err = json.Unmarshal(hashesBody, &hashDif)
+		hashesMap := make(map[string]string)
+		err = json.Unmarshal(hashesInfo, &hashesMap)
 		if err != nil {
 			logger.Log(logger.CreateDetails(logLoc, err))
 			return
 		}
 
-		for old, new := range hashDif {
-			path := filepath.Join(addressPath, old)
+		for oldHash, newHash := range hashesMap {
+			path := filepath.Join(pathToSpFiles, oldHash)
 			file, err := os.Open(path)
 			if err != nil {
 				logger.Log(logger.CreateDetails(logLoc, err))
 				return
 			}
 
-			defer file.Close()
-
-			filePart, err := writer.CreateFormFile("files", new)
+			filePart, err := writer.CreateFormFile("files", newHash)
 			if err != nil {
+				file.Close()
 				logger.Log(logger.CreateDetails(logLoc, err))
 				return
 			}
 
 			_, err = io.Copy(filePart, file)
 			if err != nil {
+				file.Close()
 				logger.Log(logger.CreateDetails(logLoc, err))
 				return
 			}
-		}
 
-		writer.Close()
+			file.Close()
+		}
 	}()
 
 	req, err := http.NewRequest("POST", "http://"+nodeAddress+"/upload/"+strconv.Itoa(fileSize), pr)
@@ -395,8 +408,8 @@ func DeleteParts(addressPath string, fileHashes []string) {
 
 // ====================================================================================
 
-func initSPFile(addressPath string, spData *shared.StorageProviderData) error {
-	const logLoc = "files.initSPFile->"
+func saveSpFsInfo(addressPath string, spData *shared.StorageProviderData) error {
+	const logLoc = "files.saveSpFsInfo->"
 
 	stat, err := os.Stat(addressPath)
 	err = shared.CheckStatErr(err)
@@ -427,28 +440,6 @@ func initSPFile(addressPath string, spData *shared.StorageProviderData) error {
 	}
 
 	spFsFile.Sync()
-
-	return nil
-}
-
-// ====================================================================================
-
-func prepareMultipartForm(writer *multipart.Writer, spAddress, nonce, fsRootHash string) error {
-	const logLoc = "files.initSPFile->"
-	err := writer.WriteField("address", spAddress)
-	if err != nil {
-		return logger.CreateDetails(logLoc, err)
-	}
-
-	err = writer.WriteField("nonce", nonce)
-	if err != nil {
-		return logger.CreateDetails(logLoc, err)
-	}
-
-	err = writer.WriteField("fsRootHash", fsRootHash)
-	if err != nil {
-		return logger.CreateDetails(logLoc, err)
-	}
 
 	return nil
 }
