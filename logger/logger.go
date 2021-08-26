@@ -41,7 +41,7 @@ func Log(msg interface{}) {
 // ====================================================================================
 
 //Сreates an informative error with line.
-func CreateDetails(logLoc string, errMsg error) error {
+func CreateDetails(location string, errMsg error) error {
 	_, _, line, _ := runtime.Caller(1)
-	return fmt.Errorf("%s line %d -> %w", logLoc, line, errMsg)
+	return fmt.Errorf("%s line %d -> %w", location, line, errMsg)
 }

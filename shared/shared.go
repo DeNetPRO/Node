@@ -76,10 +76,10 @@ func GetAvailableSpace(storagePath string) int {
 
 //Initializes default node paths
 func InitPaths() error {
-	const logLoc = "shared.InitPaths->"
+	const location = "shared.InitPaths->"
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	paths.WorkDirPath = filepath.Join(homeDir, paths.WorkDirName)
@@ -92,30 +92,30 @@ func InitPaths() error {
 
 //Creates account dir
 func CreateIfNotExistAccDirs() error {
-	const logLoc = "shared.CreateIfNotExistAccDirs->"
+	const location = "shared.CreateIfNotExistAccDirs->"
 	statWDP, err := os.Stat(paths.WorkDirPath)
 	err = CheckStatErr(err)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	if statWDP == nil {
 		err = os.MkdirAll(paths.WorkDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
-			return logger.CreateDetails(logLoc, err)
+			return logger.CreateDetails(location, err)
 		}
 	}
 
 	statADP, err := os.Stat(paths.AccsDirPath)
 	err = CheckStatErr(err)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	if statADP == nil {
 		err = os.MkdirAll(paths.AccsDirPath, os.ModePerm|os.ModeDir)
 		if err != nil {
-			return logger.CreateDetails(logLoc, err)
+			return logger.CreateDetails(location, err)
 		}
 	}
 
@@ -158,42 +158,42 @@ func ContainsAccount(accounts []string, address string) bool {
 
 //Read file by certain path
 func ReadFile(path string) (*os.File, []byte, error) {
-	const logLoc = "shared.ReadFile->"
+	const location = "shared.ReadFile->"
 	file, err := os.OpenFile(path, os.O_RDWR, 0700)
 	if err != nil {
-		return nil, nil, logger.CreateDetails(logLoc, err)
+		return nil, nil, logger.CreateDetails(location, err)
 	}
 
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
 		file.Close()
-		return nil, nil, logger.CreateDetails(logLoc, err)
+		return nil, nil, logger.CreateDetails(location, err)
 	}
 
 	return file, fileBytes, nil
 }
 
 func WriteFile(file *os.File, data interface{}) error {
-	const logLoc = "shared.ReadFromConsole->"
+	const location = "shared.ReadFromConsole->"
 
 	js, err := json.Marshal(data)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	err = file.Truncate(0)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	_, err = file.Seek(0, 0)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	_, err = file.Write(js)
 	if err != nil {
-		return logger.CreateDetails(logLoc, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	file.Sync()
@@ -204,13 +204,13 @@ func WriteFile(file *os.File, data interface{}) error {
 // ====================================================================================
 
 func ReadFromConsole() (string, error) {
-	const logLoc = "shared.ReadFromConsole->"
+	const location = "shared.ReadFromConsole->"
 	fmt.Print("Enter value here: ")
 	reader := bufio.NewReader(os.Stdin)
 	// ReadString will block until the delimiter is entered
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		return "", logger.CreateDetails(logLoc, err)
+		return "", logger.CreateDetails(location, err)
 	}
 
 	// remove the delimiter from the string
@@ -224,25 +224,25 @@ func ReadFromConsole() (string, error) {
 
 //Calculate root hash by making merkle tree
 func CalcRootHash(hashArr []string) (string, [][][]byte, error) {
-	const logLoc = "shared.CalcRootHash->"
+	const location = "shared.CalcRootHash->"
 
 	arrLen := len(hashArr)
 
 	if arrLen == 0 {
-		return "", nil, logger.CreateDetails(logLoc, errors.New("hash array is empty"))
+		return "", nil, logger.CreateDetails(location, errors.New("hash array is empty"))
 	}
 
 	base := make([][]byte, 0, arrLen+1)
 
 	emptyValue, err := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
 	if err != nil {
-		return "", nil, logger.CreateDetails(logLoc, err)
+		return "", nil, logger.CreateDetails(location, err)
 	}
 
 	for _, v := range hashArr {
 		decoded, err := hex.DecodeString(v)
 		if err != nil {
-			return "", nil, logger.CreateDetails(logLoc, err)
+			return "", nil, logger.CreateDetails(location, err)
 		}
 		base = append(base, decoded)
 	}
