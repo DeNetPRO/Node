@@ -18,7 +18,7 @@ import (
 	"strconv"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/internal"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/files"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
@@ -145,12 +145,12 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	spData, err := parseRequest(req)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
-		internal.RestoreMemoryInfo(pathToConfig, intFileSize)
+		files.RestoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, shared.ErrParseMultipartForm.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = internal.SaveFile(req, spData, pathToConfig, intFileSize)
+	err = files.Save(req, spData, pathToConfig, intFileSize)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
@@ -177,7 +177,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pathToFile, err := internal.ServeFile(spAddress, fileKey, signatureFromReq)
+	pathToFile, err := files.Serve(spAddress, fileKey, signatureFromReq)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
@@ -212,7 +212,7 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 	}
 	defer req.Body.Close()
 
-	updatedFs := &internal.UpdatedFsInfo{}
+	updatedFs := &files.UpdatedFsInfo{}
 	err = json.Unmarshal(body, &updatedFs)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
@@ -220,7 +220,7 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = internal.UpdateFileSystemInfo(updatedFs, spAddress, signedFsys)
+	err = files.UpdateFileSystemInfo(updatedFs, spAddress, signedFsys)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
@@ -247,12 +247,12 @@ func CopyFile(w http.ResponseWriter, req *http.Request) {
 	spData, err := parseRequest(req)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
-		internal.RestoreMemoryInfo(pathToConfig, intFileSize)
+		files.RestoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, shared.ErrParseMultipartForm.Error(), http.StatusBadRequest)
 		return
 	}
 
-	nodeAddress, err := internal.CopyFile(req, spData, &nodeConfig, pathToConfig, intFileSize, enoughSpace)
+	nodeAddress, err := files.Copy(req, spData, &nodeConfig, pathToConfig, intFileSize, enoughSpace)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
@@ -286,12 +286,12 @@ func BackUpCopy(w http.ResponseWriter, req *http.Request) {
 	spData, err := parseRequest(req)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
-		internal.RestoreMemoryInfo(pathToConfig, intFileSize)
+		files.RestoreMemoryInfo(pathToConfig, intFileSize)
 		http.Error(w, shared.ErrParseMultipartForm.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = internal.BackUpCopy(req, spData, pathToConfig, intFileSize)
+	err = files.BackUp(req, spData, pathToConfig, intFileSize)
 	if err != nil {
 		logger.Log(logger.CreateDetails(logLoc, err))
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
