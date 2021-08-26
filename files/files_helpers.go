@@ -1,13 +1,13 @@
 package files
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
-	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
@@ -22,7 +22,6 @@ import (
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/valyala/fasthttp/fasthttputil"
 )
 
 type NodesResponse struct {
@@ -105,7 +104,7 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 		return logger.CreateDetails(location, err)
 	}
 
-	err = CheckDataSign(spAddress, signedFsys, fsTreeNonceHash)
+	err = checkDataSign(spAddress, signedFsys, fsTreeNonceHash)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -129,7 +128,7 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 
 	hash := sha256.Sum256(fsRootNonceBytes)
 
-	err = CheckDataSign(spAddress, signedRootHash, hash)
+	err = checkDataSign(spAddress, signedRootHash, hash)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -160,105 +159,6 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 	shared.MU.Unlock()
 
 	return nil
-}
-
-// ====================================================================================
-
-//Provides back up to "node Address" using old multipart form. Returning ip address node if successful
-func backUp(nodeAddress, pathToSpFiles string, multiForm *multipart.Form, hashesMap map[string]string, fileSize int) (string, error) {
-	const location = "files_helpers.backUp->"
-
-	pipeConns := fasthttputil.NewPipeConns()
-	pr := pipeConns.Conn1()
-	pw := pipeConns.Conn2()
-
-	writer := multipart.NewWriter(pw)
-
-	go func() {
-		defer writer.Close()
-		defer pw.Close()
-
-		address := multiForm.Value["address"]
-		nonce := multiForm.Value["nonce"]
-		fsRootHash := multiForm.Value["fsRootHash"]
-
-		err := writer.WriteField("address", address[0])
-		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
-			return
-		}
-
-		err = writer.WriteField("nonce", nonce[0])
-		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
-			return
-		}
-
-		err = writer.WriteField("fsRootHash", fsRootHash[0])
-		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
-			return
-		}
-
-		wholeFileHashes := multiForm.Value["fs"]
-		for _, wholeHash := range wholeFileHashes {
-			err = writer.WriteField("fs", wholeHash)
-			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
-				return
-			}
-		}
-
-		for oldHash, newHash := range hashesMap {
-			path := filepath.Join(pathToSpFiles, oldHash)
-			file, err := os.Open(path)
-			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
-				return
-			}
-
-			filePart, err := writer.CreateFormFile("files", newHash)
-			if err != nil {
-				file.Close()
-				logger.Log(logger.CreateDetails(location, err))
-				return
-			}
-
-			_, err = io.Copy(filePart, file)
-			if err != nil {
-				file.Close()
-				logger.Log(logger.CreateDetails(location, err))
-				return
-			}
-
-			file.Close()
-		}
-	}()
-
-	req, err := http.NewRequest("POST", "http://"+nodeAddress+"/upload/"+strconv.Itoa(fileSize), pr)
-	if err != nil {
-		return "", logger.CreateDetails(location, err)
-	}
-
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", logger.CreateDetails(location, err)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", logger.CreateDetails(location, err)
-	}
-
-	defer resp.Body.Close()
-
-	if string(body) != "OK" {
-		return "", logger.CreateDetails(location, shared.ErrFileSaving)
-	}
-
-	return nodeAddress, nil
 }
 
 // ====================================================================================
@@ -318,39 +218,7 @@ func getNodeIP(nodeInfo nodeAbi.SimpleMetaDataDeNetNode) string {
 
 // ====================================================================================
 
-func VerifyStorageProviderAddress(spAddress, fileSize, signatureFromReq string, fileKeys []string) error {
-	const location = "files.VerifyStorageProviderAddress->"
-	var wholeFileHash string
-	var err error
-
-	if len(fileKeys) == 1 {
-		wholeFileHash = fileKeys[0]
-	} else {
-		sort.Strings(fileKeys)
-		wholeFileHash, _, err = shared.CalcRootHash(fileKeys)
-		if err != nil {
-			return logger.CreateDetails(location, err)
-		}
-	}
-
-	signature, err := hex.DecodeString(signatureFromReq)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	hash := sha256.Sum256([]byte(spAddress + fileSize + wholeFileHash))
-
-	err = CheckDataSign(spAddress, signature, hash)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	return nil
-}
-
-// ====================================================================================
-
-func CheckDataSign(spAddress string, signature []byte, hash [32]byte) error {
+func checkDataSign(spAddress string, signature []byte, hash [32]byte) error {
 	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
 	if err != nil {
 		return err
@@ -367,7 +235,7 @@ func CheckDataSign(spAddress string, signature []byte, hash [32]byte) error {
 
 // ====================================================================================
 
-func DeleteParts(addressPath string, fileHashes []string) {
+func deleteParts(addressPath string, fileHashes []string) {
 	logger.Log("deleting file parts after error...")
 
 	for _, hash := range fileHashes {
@@ -413,4 +281,51 @@ func saveSpFsInfo(addressPath string, spData *shared.StorageProviderData) error 
 	spFsFile.Sync()
 
 	return nil
+}
+
+// ====================================================================================
+
+func getOneMbHashes(reqFileParts []*multipart.FileHeader) ([]string, error) {
+	const location = "files.GetOneMbHashes->"
+	eightKBHashes := make([]string, 0, 128)
+	oneMBHashes := make([]string, 0, len(reqFileParts))
+
+	for _, reqFilePart := range reqFileParts {
+
+		var buf bytes.Buffer
+
+		rqFile, err := reqFilePart.Open()
+		if err != nil {
+			return nil, logger.CreateDetails(location, err)
+		}
+
+		_, err = io.Copy(&buf, rqFile)
+		if err != nil {
+			rqFile.Close()
+			return nil, logger.CreateDetails(location, err)
+		}
+
+		rqFile.Close()
+
+		bufBytes := buf.Bytes()
+		eightKBHashes = eightKBHashes[:0]
+
+		for i := 0; i < len(bufBytes); i += eightKB {
+			hSum := sha256.Sum256(bufBytes[i : i+eightKB])
+			eightKBHashes = append(eightKBHashes, hex.EncodeToString(hSum[:]))
+		}
+
+		oneMBHash, _, err := shared.CalcRootHash(eightKBHashes)
+		if err != nil {
+			return nil, logger.CreateDetails(location, err)
+		}
+
+		if reqFilePart.Filename != oneMBHash {
+			return nil, logger.CreateDetails(location, err)
+		}
+
+		oneMBHashes = append(oneMBHashes, oneMBHash)
+	}
+
+	return oneMBHashes, nil
 }
