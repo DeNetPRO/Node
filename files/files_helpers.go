@@ -177,7 +177,7 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 // ====================================================================================
 
 //Provides back up to "node Address" using old multipart form. Returning ip address node if successful
-func backUp(nodeAddress, pathToSpFiles string, multiForm *multipart.Form, fileSize int) (string, error) {
+func backUp(nodeAddress, pathToSpFiles string, multiForm *multipart.Form, hashesMap map[string]string, fileSize int) (string, error) {
 	const logLoc = "files_helpers.backUp->"
 
 	pipeConns := fasthttputil.NewPipeConns()
@@ -219,34 +219,6 @@ func backUp(nodeAddress, pathToSpFiles string, multiForm *multipart.Form, fileSi
 				logger.Log(logger.CreateDetails(logLoc, err))
 				return
 			}
-		}
-
-		hashes := multiForm.File["hashes"]
-
-		if len(hashes) == 0 {
-			logger.Log(logger.CreateDetails(logLoc, errors.New("empty hashes")))
-			return
-		}
-
-		hashesFileHeader, err := hashes[0].Open()
-		if err != nil {
-			logger.Log(logger.CreateDetails(logLoc, err))
-			return
-		}
-
-		defer hashesFileHeader.Close()
-
-		hashesInfo, err := io.ReadAll(hashesFileHeader)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logLoc, err))
-			return
-		}
-
-		hashesMap := make(map[string]string)
-		err = json.Unmarshal(hashesInfo, &hashesMap)
-		if err != nil {
-			logger.Log(logger.CreateDetails(logLoc, err))
-			return
 		}
 
 		for oldHash, newHash := range hashesMap {

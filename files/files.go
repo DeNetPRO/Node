@@ -39,6 +39,32 @@ func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.
 
 	pathToSpFiles := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spData.Address)
 
+	hashes := req.MultipartForm.File["hashes"]
+
+	if len(hashes) == 0 {
+		return nil, logger.CreateDetails(logLoc, errors.New("empty hashes"))
+	}
+
+	hashesFileHeader, err := hashes[0].Open()
+	if err != nil {
+		return nil, logger.CreateDetails(logLoc, err)
+	}
+
+	hashesInfo, err := io.ReadAll(hashesFileHeader)
+	if err != nil {
+		hashesFileHeader.Close()
+		return nil, logger.CreateDetails(logLoc, err)
+	}
+
+	hashesMap := make(map[string]string)
+	err = json.Unmarshal(hashesInfo, &hashesMap)
+	if err != nil {
+		hashesFileHeader.Close()
+		return nil, logger.CreateDetails(logLoc, err)
+	}
+
+	hashesFileHeader.Close()
+
 	if !enoughSpace {
 		nftNode, err := blockchainprovider.GetNodeNFT()
 		if err != nil {
@@ -84,7 +110,7 @@ func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.
 				continue
 			}
 
-			nodeAddress, err := backUp(nodeIP, pathToSpFiles, req.MultipartForm, fileSize)
+			nodeAddress, err := backUp(nodeIP, pathToSpFiles, req.MultipartForm, hashesMap, fileSize)
 			if err != nil {
 				continue
 			}
@@ -97,55 +123,31 @@ func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.
 		return nil, logger.CreateDetails(logLoc, errors.New("no available nodes"))
 	}
 
-	err := saveSpFsInfo(pathToSpFiles, spData)
+	err = saveSpFsInfo(pathToSpFiles, spData)
 	if err != nil {
 		return nil, logger.CreateDetails(logLoc, err)
 	}
 
-	hashes := req.MultipartForm.File["hashes"]
+	savedParts := make([]string, 0, len(hashesMap))
+	for oldHash, newHash := range hashesMap {
+		savedParts = append(savedParts, newHash)
 
-	if len(hashes) == 0 {
-		return nil, logger.CreateDetails(logLoc, errors.New("empty hashes"))
-	}
-
-	hashesFile, err := hashes[0].Open()
-	if err != nil {
-		return nil, logger.CreateDetails(logLoc, err)
-	}
-
-	hashesBody, err := io.ReadAll(hashesFile)
-	if err != nil {
-		hashesFile.Close()
-		return nil, logger.CreateDetails(logLoc, err)
-	}
-
-	hashDif := make(map[string]string)
-	err = json.Unmarshal(hashesBody, &hashDif)
-	if err != nil {
-		hashesFile.Close()
-		return nil, logger.CreateDetails(logLoc, err)
-	}
-
-	hashesFile.Close()
-
-	savedParts := make([]string, 0, len(hashDif))
-	for old, new := range hashDif {
-		savedParts = append(savedParts, new)
-
-		path := filepath.Join(pathToSpFiles, old)
+		path := filepath.Join(pathToSpFiles, oldHash)
 		file, err := os.Open(path)
 		if err != nil {
+			file.Close()
 			DeleteParts(pathToSpFiles, savedParts)
 			return nil, logger.CreateDetails(logLoc, err)
 		}
 
-		defer file.Close()
-
-		err = saveFilePart(file, pathToSpFiles, new)
+		err = saveFilePart(file, pathToSpFiles, newHash)
 		if err != nil {
+			file.Close()
 			DeleteParts(pathToSpFiles, savedParts)
 			return nil, logger.CreateDetails(logLoc, err)
 		}
+
+		file.Close()
 	}
 
 	return &NodeAddressResponse{
