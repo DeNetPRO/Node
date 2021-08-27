@@ -375,8 +375,7 @@ func StartMakingProofs(password string) {
 
 // ====================================================================================
 
-//Makes merkle tree by current file.
-//Then taken one part of the file and compare hashes.
+//SendProof checks Storage Providers's file system root hash and nounce info and sends proof to smart contract.
 func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte,
 	nodeAddr common.Address, spAddress common.Address, blockNum uint64, instance *abiPOS.Store) error {
 	const location = "blockchainprovider.sendProof->"
@@ -502,7 +501,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 }
 
 // ====================================================================================
-
+// InitTrxOpts makes transaction options that are needed when sending request to smart contract.
 func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.Address, password string, blockNum uint64) (*bind.TransactOpts, error) {
 	const location = "blockchainprovider.initTrxOpts->"
 
@@ -546,21 +545,9 @@ func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.
 
 // ====================================================================================
 
-func getPos(hash []byte, list [][]byte) int {
-	for i, v := range list {
-		diff := bytes.Compare(v, hash)
-		if diff == 0 {
-			return i
-		}
-	}
-
-	return -1
-}
-
-// ====================================================================================
-
-// Builds merkle tree proof
-func makeProof(start []byte, tree [][][]byte) [][32]byte { // returns slice of 32 bytes array because smart contract awaits this type
+// MakeProof builds merkle tree proof. Passed tree value is an array of file hashes that are located on different levels of merkle tree.
+// Returns slice of 32 bytes array for passing it to smart contract.
+func makeProof(start []byte, tree [][][]byte) [][32]byte {
 	stage := 0
 	proof := [][32]byte{}
 
@@ -614,4 +601,18 @@ func makeProof(start []byte, tree [][][]byte) [][32]byte { // returns slice of 3
 	}
 
 	return proof
+}
+
+// ====================================================================================
+
+// GetPos returns element's position in the merkle tree's checked level.
+func getPos(hash []byte, list [][]byte) int {
+	for i, v := range list {
+		diff := bytes.Compare(v, hash)
+		if diff == 0 {
+			return i
+		}
+	}
+
+	return -1
 }

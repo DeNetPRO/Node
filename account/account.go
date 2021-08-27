@@ -26,7 +26,7 @@ var (
 	IpAddr string
 )
 
-//List goes to the folder ~/dfile-node/accounts and return all accounts addresses in string format
+//List returns list of user's created/imported wallet adresses, that are used as user accounts.
 func List() []string {
 	var blockchainAccounts []string
 
@@ -42,7 +42,7 @@ func List() []string {
 	return blockchainAccounts
 }
 
-// Create account and keystore file with encryption with password
+// Create is used for creating a new crypto wallet with keystore file.
 func Create(password string) (string, config.SecondaryNodeConfig, error) {
 	const location = "account.Create->"
 	var nodeConf config.SecondaryNodeConfig
@@ -67,7 +67,7 @@ func Create(password string) (string, config.SecondaryNodeConfig, error) {
 	return etherAccount.Address.String(), nodeConf, nil
 }
 
-//Import account with private key
+//Import is used for importing crypto wallet. Private key is needed.
 func Import() (string, config.SecondaryNodeConfig, error) {
 	const location = "account.Import->"
 	var nodeConfig config.SecondaryNodeConfig
@@ -126,8 +126,8 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 	return etherAccount.Address.String(), nodeConfig, nil
 }
 
-//Login to account with password
-func Login(blockchainAccountString, password string) (*accounts.Account, error) {
+//Login checks wallet's address and user's password that was used for crypto wallet creation.
+func Login(accountAddress, password string) (*accounts.Account, error) {
 	const location = "account.Login->"
 	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 	etherAccounts := ks.Accounts()
@@ -135,14 +135,14 @@ func Login(blockchainAccountString, password string) (*accounts.Account, error) 
 	var account *accounts.Account
 
 	for _, a := range etherAccounts {
-		if blockchainAccountString == a.Address.String() {
+		if accountAddress == a.Address.String() {
 			account = &a
 			break
 		}
 	}
 
 	if account == nil {
-		err := errors.New("Account Not Found Error: cannot find account for " + blockchainAccountString)
+		err := errors.New(accountAddress + " address is not found")
 		return nil, logger.CreateDetails(location, err)
 	}
 
@@ -175,8 +175,7 @@ func Login(blockchainAccountString, password string) (*accounts.Account, error) 
 	return account, nil
 }
 
-//CheckPassword is go to KeyStore and try to decrypt store with incoming account and password.
-//Return nil if password is valid
+//CheckPassword checks crypto wallet's password.
 func CheckPassword(password, address string) error {
 	const location = "account.CheckPassword->"
 	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
@@ -195,8 +194,7 @@ func CheckPassword(password, address string) error {
 	return nil
 }
 
-//ValidateUser provides entry into the node.
-//It gives 3 attemps to enter into the choosen account
+//ValidateUser asks user for password and checks it.
 func ValidateUser() (*accounts.Account, string, error) {
 	const location = "account.ValidateUser->"
 	var accountAddress, password string
@@ -280,8 +278,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 	return etherAccount, password, nil
 }
 
-//initAccount creates the necessary environment for the account.
-//It creates dir "storage" and config file. And also encrypts private key
+//InitAccount creates directories and files needed for correct work.
 func initAccount(ks *keystore.KeyStore, account *accounts.Account, password string) (config.SecondaryNodeConfig, error) {
 	const location = "account.initAccount->"
 	var nodeConf config.SecondaryNodeConfig
