@@ -17,7 +17,7 @@ import (
 
 const oneMB = 1048576
 
-//Delete unnecessary files every one minute
+//Starts cleaner, that checks if stored file part is in Storage Provider's file system and deletes it if it was not found.
 func Start() {
 	const location = "cleaner.Start->"
 

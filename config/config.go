@@ -45,7 +45,7 @@ var partiallyReservedIPs = map[string]int{
 	"192": 168,
 }
 
-//Creates config file in ~/dfile-node/accounts/{account}/config/config.json
+//Create is used for creating a config file.
 func Create(address, password string) (SecondaryNodeConfig, error) {
 	const location = "config.Create->"
 	nodeConfig := SecondaryNodeConfig{

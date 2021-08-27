@@ -17,7 +17,7 @@ var (
 
 // ====================================================================================
 
-//EncryptAES provides encrypts "data" by "key" using AES
+//EncryptAES encrypts data using a provided key.
 func EncryptAES(key, data []byte) ([]byte, error) {
 	const location = "shared.encryptAES->"
 	block, err := aes.NewCipher(key)
@@ -43,7 +43,7 @@ func EncryptAES(key, data []byte) ([]byte, error) {
 
 // ====================================================================================
 
-//DecryptAES provides decrypts "data" by "key" using AES
+//DecryptAES decrypts data using a provided key.
 func DecryptAES(key, data []byte) ([]byte, error) {
 	const location = "shared.decryptAES->"
 	block, err := aes.NewCipher(key)
@@ -65,7 +65,7 @@ func DecryptAES(key, data []byte) ([]byte, error) {
 
 // ====================================================================================
 
-//Return MAC-address of device
+//GetDeviceMacAddr returns device's MAC address.
 func GetDeviceMacAddr() (string, error) {
 	const location = "shared.GetDeviceMacAddr->"
 	var addr string

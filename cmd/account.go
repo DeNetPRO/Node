@@ -6,7 +6,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// accountCmd represents the account command
+//AccountCmd is executed when "account" flag is passed to call a command for provided extra flag.
+//If there's no extra flag, lists flags that can be passed along with "account" flag.
 var accountCmd = &cobra.Command{
 	Use:   "account",
 	Short: "account is a command that lets you to manage accounts in the DFile blockchain network",

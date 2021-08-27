@@ -33,6 +33,7 @@ type NodeAddressResponse struct {
 
 const eightKB = 8192
 
+//Copy makes a copy of file parts that are stored on the node, or sends them on oher node for replication.
 func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.SecondaryNodeConfig, pathToConfig string, fileSize int, enoughSpace bool) (*NodeAddressResponse, error) {
 	const location = "files.Copy->"
 
@@ -155,7 +156,7 @@ func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.
 }
 
 // ====================================================================================
-
+//Save is used for chaecking and saving file parts from the inoming request to the node's storage.
 func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig string, fileSize int) error {
 	const location = "files.Save->"
 
@@ -223,7 +224,6 @@ func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig st
 }
 
 // ====================================================================================
-
 func savePart(file io.Reader, pathToSpFiles, fileName string) error {
 	const location = "files.saveFilePart->"
 

@@ -14,6 +14,7 @@ import (
 
 const showKeyFatalMessage = "Fatal error while extracting private key"
 
+// ShowKeyCmd is executed when when "key" flag is passed after "account" flag and is used for revealing crypto wallet's private key.
 var showKeyCmd = &cobra.Command{
 	Use:   "key",
 	Short: "discloses your private key",

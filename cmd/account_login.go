@@ -26,7 +26,7 @@ import (
 const accLoginFatalError = "Error while account log in"
 const ipUpdateFatalError = "Couldn't update public ip info"
 
-// accountListCmd represents the list command
+// AccountLoginCmd is executed when "login" flag is passed after "account" flag and is used for logging in to an account.
 var accountLoginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "log in a blockchain accounts",
