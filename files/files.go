@@ -208,13 +208,15 @@ func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig st
 		if err != nil {
 			return logger.CreateDetails(location, err)
 		}
-		defer rqFile.Close()
 
 		err = savePart(rqFile, pathToSpFiles, reqFilePart.Filename)
 		if err != nil {
+			rqFile.Close()
 			deleteParts(pathToSpFiles, savedParts)
 			return logger.CreateDetails(location, err)
 		}
+
+		rqFile.Close()
 
 		count++
 		logger.Log("Saved file " + reqFilePart.Filename + " (" + strconv.Itoa(count) + "/" + strconv.Itoa(len(oneMBHashes)) + ")" + " from " + spData.Address) //TODO remove
@@ -233,10 +235,10 @@ func savePart(file io.Reader, pathToSpFiles, fileName string) error {
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
-	defer newFile.Close()
 
 	_, err = io.Copy(newFile, file)
 	if err != nil {
+		newFile.Close()
 		return logger.CreateDetails(location, err)
 	}
 
