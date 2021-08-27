@@ -5,6 +5,7 @@ import (
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 )
 
@@ -13,7 +14,7 @@ func Restore(pathToConfig string, intFileSize int) {
 	location := "files.restoreMemoryInfo->"
 
 	shared.MU.Lock()
-	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
+	confFile, fileBytes, err := nodeFile.Read(pathToConfig)
 	if err != nil {
 		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(location, err))

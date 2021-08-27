@@ -9,7 +9,6 @@ import (
 	"github.com/minio/sha256-simd"
 
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -60,55 +59,6 @@ func GetAvailableSpace(storagePath string) int {
 	var KB = uint64(1024)
 	usage := du.NewDiskUsage(storagePath)
 	return int(usage.Free() / (KB * KB * KB))
-}
-
-// ====================================================================================
-
-//Read file by certain path
-func ReadFile(path string) (*os.File, []byte, error) {
-	const location = "shared.ReadFile->"
-	file, err := os.OpenFile(path, os.O_RDWR, 0700)
-	if err != nil {
-		return nil, nil, logger.CreateDetails(location, err)
-	}
-
-	fileBytes, err := io.ReadAll(file)
-	if err != nil {
-		file.Close()
-		return nil, nil, logger.CreateDetails(location, err)
-	}
-
-	return file, fileBytes, nil
-}
-
-// ====================================================================================
-
-func WriteFile(file *os.File, data interface{}) error {
-	const location = "shared.ReadFromConsole->"
-
-	js, err := json.Marshal(data)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	err = file.Truncate(0)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	_, err = file.Seek(0, 0)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	_, err = file.Write(js)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	file.Sync()
-
-	return nil
 }
 
 // ====================================================================================

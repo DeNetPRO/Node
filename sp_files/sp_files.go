@@ -1,4 +1,4 @@
-package files
+package spfiles
 
 import (
 	"encoding/hex"

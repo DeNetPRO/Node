@@ -9,6 +9,8 @@ import (
 	"regexp"
 	"time"
 
+	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
+
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
@@ -81,7 +83,7 @@ func Start() {
 			pathToFsTree := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress, paths.SpFsFilename)
 
 			shared.MU.Lock()
-			fileFsTree, treeBytes, err := shared.ReadFile(pathToFsTree)
+			fileFsTree, treeBytes, err := nodeFile.Read(pathToFsTree)
 			if err != nil {
 				shared.MU.Unlock()
 				logger.Log(logger.CreateDetails(location, err))
@@ -129,7 +131,7 @@ func Start() {
 			pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
 			shared.MU.Lock()
-			confFile, fileBytes, err := shared.ReadFile(pathToConfig)
+			confFile, fileBytes, err := nodeFile.Read(pathToConfig)
 			if err != nil {
 				shared.MU.Unlock()
 				logger.Log(logger.CreateDetails(location, err))

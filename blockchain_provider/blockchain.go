@@ -22,6 +22,8 @@ import (
 	abiPOS "git.denetwork.xyz/dfile/dfile-secondary-node/POS_abi"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	nodeAbi "git.denetwork.xyz/dfile/dfile-secondary-node/node_abi"
+	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
+
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -330,7 +332,7 @@ func StartMakingProofs(password string) {
 
 			shared.MU.Lock()
 
-			storedFile, storedFileBytes, err := shared.ReadFile(filepath.Join(pathToStorProviderFiles, fileName))
+			storedFile, storedFileBytes, err := nodeFile.Read(filepath.Join(pathToStorProviderFiles, fileName))
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				continue
@@ -383,7 +385,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 
 	shared.MU.Lock()
 
-	spFsFile, spFsBytes, err := shared.ReadFile(pathToFsTree)
+	spFsFile, spFsBytes, err := nodeFile.Read(pathToFsTree)
 	if err != nil {
 		shared.MU.Unlock()
 		return logger.CreateDetails(location, err)
