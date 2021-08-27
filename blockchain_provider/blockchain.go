@@ -39,7 +39,7 @@ const NFT = "0xBfAfdaE6B77a02A4684D39D1528c873961528342"
 const ethClientAddr = "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f"
 
 //RegisterNode registers a node in the ethereum network.
-//It is important that the account has a balance of more than 200000000000000 wei
+//Node's balance should have more than 200000000000000 wei to pay transaction comission.
 func RegisterNode(ctx context.Context, address, password string, ip []string, port string) error {
 	const location = "blockchainprovider.RegisterNode->"
 	ipAddr := [4]uint8{}
@@ -103,7 +103,7 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 
 // ====================================================================================
 
-//Returns the node by ID from ethereum network
+//GetNodeInfoByID gets the node info by its ID from ethereum network.
 func GetNodeInfoByID() (nodeAbi.SimpleMetaDataDeNetNode, error) {
 	const location = "blockchainprovider.GetNodeInfoByID->"
 	var nodeInfo nodeAbi.SimpleMetaDataDeNetNode
@@ -130,7 +130,7 @@ func GetNodeInfoByID() (nodeAbi.SimpleMetaDataDeNetNode, error) {
 
 // ====================================================================================
 
-//Return instance of NodeNft, bound to a specific deployed contract.
+//GetNodeNFT returns instance of NodeNft, bound to a specific deployed contract.
 func GetNodeNFT() (*nodeAbi.NodeNft, error) {
 	const location = "blockchainprovider.getNodeNFT->"
 
@@ -155,7 +155,7 @@ func GetNodeNFT() (*nodeAbi.NodeNft, error) {
 
 // ====================================================================================
 
-//UpdateNodeInfo provides to update node ip address or port
+//UpdateNodeInfo updates node's ip address or port info.
 func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newPort string, newIP []string) error {
 	const location = "blockchainprovider.UpdateNodeInfo->"
 	ipInfo := [4]uint8{}
@@ -206,10 +206,8 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 
 // ====================================================================================
 
-//StartMining is goes to "storage" dir and check each account for reward.
-//If account has enough wei on balance then starts the check each saved account files.
-//If user difficulty is enough it sends proof to ethereum network.
-func StartMining(password string) {
+//StartMakingProofs checks reward value for stored file part and sends proof to smart contract if reward is enough.
+func StartMakingProofs(password string) {
 	const location = "blockchainprovider.StartMining->"
 
 	pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName)

@@ -34,6 +34,7 @@ type UpdatedFsInfo struct {
 	SignedFsRootHash string
 }
 
+// UpdateFileSystemInfo updates Storage Provider's nounce and file system's root hash info.
 func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem string) error {
 	const location = "files.UpdateFileSystemInfo->"
 
@@ -163,7 +164,7 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 
 // ====================================================================================
 
-//Restore certain file size
+//RestoreMemoryInfo sets previous value of used storage space info.
 func RestoreMemoryInfo(pathToConfig string, intFileSize int) {
 	location := "files.restoreMemoryInfo->"
 
@@ -198,6 +199,7 @@ func RestoreMemoryInfo(pathToConfig string, intFileSize int) {
 
 // ====================================================================================
 
+//GetNodeIP Extracts node's ip address and used port info.
 func getNodeIP(nodeInfo nodeAbi.SimpleMetaDataDeNetNode) string {
 	ipBuilder := strings.Builder{}
 	for i, v := range nodeInfo.IpAddress {
@@ -218,6 +220,7 @@ func getNodeIP(nodeInfo nodeAbi.SimpleMetaDataDeNetNode) string {
 
 // ====================================================================================
 
+// CheckDataSign checks if signature belongs to the sender.
 func checkDataSign(spAddress string, signature []byte, hash [32]byte) error {
 	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
 	if err != nil {
@@ -235,6 +238,7 @@ func checkDataSign(spAddress string, signature []byte, hash [32]byte) error {
 
 // ====================================================================================
 
+// DeleteParts deletes parts of the file that wasn't fully uploaded to the node for some reason.
 func deleteParts(addressPath string, fileHashes []string) {
 	logger.Log("deleting file parts after error...")
 
@@ -247,6 +251,7 @@ func deleteParts(addressPath string, fileHashes []string) {
 
 // ====================================================================================
 
+// SaveSpFsInfo saves Storage Provider file system and nounce info from the request.
 func saveSpFsInfo(addressPath string, spData *shared.StorageProviderData) error {
 	const location = "files.saveSpFsInfo->"
 
@@ -285,6 +290,7 @@ func saveSpFsInfo(addressPath string, spData *shared.StorageProviderData) error 
 
 // ====================================================================================
 
+// GetOneMbHashes calculates and returns array of file part's root hash info.
 func getOneMbHashes(reqFileParts []*multipart.FileHeader) ([]string, error) {
 	const location = "files.GetOneMbHashes->"
 	eightKBHashes := make([]string, 0, 128)

@@ -113,7 +113,7 @@ var accountLoginCmd = &cobra.Command{
 
 		fmt.Println("Logged in")
 
-		go blockchainprovider.StartMining(password)
+		go blockchainprovider.StartMakingProofs(password)
 
 		go cleaner.Start()
 
