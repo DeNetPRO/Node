@@ -20,7 +20,9 @@ import (
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/files"
+	fsysInfo "git.denetwork.xyz/dfile/dfile-secondary-node/fsys_info"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	memInfo "git.denetwork.xyz/dfile/dfile-secondary-node/mem_info"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
@@ -144,7 +146,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	spData, err := parseRequest(req)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
-		files.RestoreMemoryInfo(pathToConfig, intFileSize)
+		memInfo.Restore(pathToConfig, intFileSize)
 		http.Error(w, shared.ErrParseMultipartForm.Error(), http.StatusBadRequest)
 		return
 	}
@@ -152,7 +154,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	err = files.Save(req, spData, pathToConfig, intFileSize)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
-		files.RestoreMemoryInfo(pathToConfig, intFileSize)
+		memInfo.Restore(pathToConfig, intFileSize)
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -212,7 +214,7 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 	}
 	defer req.Body.Close()
 
-	updatedFs := &files.UpdatedFsInfo{}
+	updatedFs := &fsysInfo.UpdatedFsInfo{}
 	err = json.Unmarshal(body, &updatedFs)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
@@ -220,7 +222,7 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = files.UpdateFileSystemInfo(updatedFs, spAddress, signedFsys)
+	err = fsysInfo.Update(updatedFs, spAddress, signedFsys)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
@@ -247,7 +249,7 @@ func CopyFile(w http.ResponseWriter, req *http.Request) {
 	spData, err := parseRequest(req)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
-		files.RestoreMemoryInfo(pathToConfig, intFileSize)
+		memInfo.Restore(pathToConfig, intFileSize)
 		http.Error(w, shared.ErrParseMultipartForm.Error(), http.StatusBadRequest)
 		return
 	}
@@ -255,7 +257,7 @@ func CopyFile(w http.ResponseWriter, req *http.Request) {
 	nodeAddress, err := files.Copy(req, spData, &nodeConfig, pathToConfig, intFileSize, enoughSpace)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
-		files.RestoreMemoryInfo(pathToConfig, intFileSize)
+		memInfo.Restore(pathToConfig, intFileSize)
 		http.Error(w, shared.ErrInternal.Error(), http.StatusInternalServerError)
 		return
 	}

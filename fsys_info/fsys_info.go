@@ -1,32 +1,22 @@
-package files
+package fsysinfo
 
 import (
-	"bytes"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"mime/multipart"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/minio/sha256-simd"
-
-	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
+	dnetsignature "git.denetwork.xyz/dfile/dfile-secondary-node/dnet_signature"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	nodeAbi "git.denetwork.xyz/dfile/dfile-secondary-node/node_abi"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
-	"github.com/ethereum/go-ethereum/crypto"
 )
-
-type NodesResponse struct {
-	Nodes []string `json:"nodes"`
-}
 
 type UpdatedFsInfo struct {
 	NewFs            []string
@@ -35,7 +25,7 @@ type UpdatedFsInfo struct {
 }
 
 // UpdateFileSystemInfo updates Storage Provider's nounce and file system's root hash info.
-func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem string) error {
+func Update(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem string) error {
 	const location = "files.UpdateFileSystemInfo->"
 
 	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress)
@@ -105,7 +95,7 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 		return logger.CreateDetails(location, err)
 	}
 
-	err = checkDataSign(spAddress, signedFsys, fsTreeNonceHash)
+	err = dnetsignature.Check(spAddress, signedFsys, fsTreeNonceHash)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -129,7 +119,7 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 
 	hash := sha256.Sum256(fsRootNonceBytes)
 
-	err = checkDataSign(spAddress, signedRootHash, hash)
+	err = dnetsignature.Check(spAddress, signedRootHash, hash)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -164,95 +154,8 @@ func UpdateFileSystemInfo(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem 
 
 // ====================================================================================
 
-//RestoreMemoryInfo sets previous value of used storage space info.
-func RestoreMemoryInfo(pathToConfig string, intFileSize int) {
-	location := "files.restoreMemoryInfo->"
-
-	shared.MU.Lock()
-	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(location, err))
-		return
-	}
-	defer confFile.Close()
-
-	var nodeConfig config.SecondaryNodeConfig
-
-	err = json.Unmarshal(fileBytes, &nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(location, err))
-		return
-	}
-
-	nodeConfig.UsedStorageSpace -= int64(intFileSize)
-
-	err = config.Save(confFile, nodeConfig)
-	if err != nil {
-		shared.MU.Unlock()
-		logger.Log(logger.CreateDetails(location, err))
-		return
-	}
-	shared.MU.Unlock()
-}
-
-// ====================================================================================
-
-//GetNodeIP Extracts node's ip address and used port info.
-func getNodeIP(nodeInfo nodeAbi.SimpleMetaDataDeNetNode) string {
-	ipBuilder := strings.Builder{}
-	for i, v := range nodeInfo.IpAddress {
-		stringPart := strconv.Itoa(int(v))
-		ipBuilder.WriteString(stringPart)
-
-		if i < 3 {
-			ipBuilder.WriteString(".")
-		}
-	}
-
-	stringPort := strconv.Itoa(int(nodeInfo.Port))
-	ipBuilder.WriteString(":")
-	ipBuilder.WriteString(stringPort)
-
-	return ipBuilder.String()
-}
-
-// ====================================================================================
-
-// CheckDataSign checks if signature belongs to the sender.
-func checkDataSign(spAddress string, signature []byte, hash [32]byte) error {
-	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
-	if err != nil {
-		return err
-	}
-
-	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
-
-	if spAddress != signatureAddress.String() {
-		return err
-	}
-
-	return nil
-}
-
-// ====================================================================================
-
-// DeleteParts deletes parts of the file that wasn't fully uploaded to the node for some reason.
-func deleteParts(addressPath string, fileHashes []string) {
-	logger.Log("deleting file parts after error...")
-
-	for _, hash := range fileHashes {
-		pathToFile := filepath.Join(addressPath, hash)
-
-		os.Remove(pathToFile)
-	}
-}
-
-// ====================================================================================
-
 // SaveSpFsInfo saves Storage Provider file system and nounce info from the request.
-func saveSpFsInfo(addressPath string, spData *shared.StorageProviderData) error {
+func Save(addressPath string, spData *shared.StorageProviderData) error {
 	const location = "files.saveSpFsInfo->"
 
 	stat, err := os.Stat(addressPath)
@@ -286,52 +189,4 @@ func saveSpFsInfo(addressPath string, spData *shared.StorageProviderData) error 
 	spFsFile.Sync()
 
 	return nil
-}
-
-// ====================================================================================
-
-// GetOneMbHashes calculates and returns array of file part's root hash info.
-func getOneMbHashes(reqFileParts []*multipart.FileHeader) ([]string, error) {
-	const location = "files.GetOneMbHashes->"
-	eightKBHashes := make([]string, 0, 128)
-	oneMBHashes := make([]string, 0, len(reqFileParts))
-
-	for _, reqFilePart := range reqFileParts {
-
-		var buf bytes.Buffer
-
-		rqFile, err := reqFilePart.Open()
-		if err != nil {
-			return nil, logger.CreateDetails(location, err)
-		}
-
-		_, err = io.Copy(&buf, rqFile)
-		if err != nil {
-			rqFile.Close()
-			return nil, logger.CreateDetails(location, err)
-		}
-
-		rqFile.Close()
-
-		bufBytes := buf.Bytes()
-		eightKBHashes = eightKBHashes[:0]
-
-		for i := 0; i < len(bufBytes); i += eightKB {
-			hSum := sha256.Sum256(bufBytes[i : i+eightKB])
-			eightKBHashes = append(eightKBHashes, hex.EncodeToString(hSum[:]))
-		}
-
-		oneMBHash, _, err := shared.CalcRootHash(eightKBHashes)
-		if err != nil {
-			return nil, logger.CreateDetails(location, err)
-		}
-
-		if reqFilePart.Filename != oneMBHash {
-			return nil, logger.CreateDetails(location, err)
-		}
-
-		oneMBHashes = append(oneMBHashes, oneMBHash)
-	}
-
-	return oneMBHashes, nil
 }
