@@ -21,6 +21,7 @@ import (
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/cmd"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 )
@@ -33,7 +34,7 @@ func main() {
 		shared.TestMode = true
 	}
 
-	err := shared.InitPaths()
+	err := paths.Init()
 	if err != nil {
 		logger.Log(logger.CreateDetails("main->", err))
 		log.Fatal("Fatal Error: couldn't locate home directory")

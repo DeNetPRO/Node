@@ -5,11 +5,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// rootCmd represents the base command when called without any subcommands
+// RootCmd is an entry point for executing CLI commands.
 var rootCmd = &cobra.Command{
-	Use:   "dfile-secondary-node",
-	Short: "dfile-secondary-node provides unused space for users that need it",
-	Long: `dfile-secondary-node is a CLI application that allows a user (miner) 
+	Use:   "dfile-node",
+	Short: "dfile-node provides unused space for users that need it",
+	Long: `dfile-node is a CLI application that allows a user (miner) 
 	to connect to the DeNet decentralized network and mine DFile tokens by granting access to their avaliable space for other users.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		accs := account.List()

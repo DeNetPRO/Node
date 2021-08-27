@@ -13,12 +13,17 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/minio/sha256-simd"
 
 	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
+	dnetsignature "git.denetwork.xyz/dfile/dfile-secondary-node/dnet_signature"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
+	fsysinfo "git.denetwork.xyz/dfile/dfile-secondary-node/fsys_info"
+
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
@@ -27,12 +32,17 @@ import (
 	"github.com/valyala/fasthttp/fasthttputil"
 )
 
+type NodesResponse struct {
+	Nodes []string `json:"nodes"`
+}
+
 type NodeAddressResponse struct {
 	NodeAddress string `json:"node_address"`
 }
 
 const eightKB = 8192
 
+//Copy makes a copy of file parts that are stored on the node, or sends them on oher node for replication.
 func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.SecondaryNodeConfig, pathToConfig string, fileSize int, enoughSpace bool) (*NodeAddressResponse, error) {
 	const location = "files.Copy->"
 
@@ -85,12 +95,26 @@ func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.
 
 		for i := int64(0); i < intTotal; i++ {
 			randID := rand.Int63n(intTotal)
-			node, err := nftNode.GetNodeById(&bind.CallOpts{}, big.NewInt(randID))
+			nodeInfo, err := nftNode.GetNodeById(&bind.CallOpts{}, big.NewInt(randID))
 			if err != nil {
 				continue
 			}
 
-			nodeIP := getNodeIP(node)
+			ipBuilder := strings.Builder{}
+			for i, v := range nodeInfo.IpAddress {
+				stringPart := strconv.Itoa(int(v))
+				ipBuilder.WriteString(stringPart)
+
+				if i < 3 {
+					ipBuilder.WriteString(".")
+				}
+			}
+
+			stringPort := strconv.Itoa(int(nodeInfo.Port))
+			ipBuilder.WriteString(":")
+			ipBuilder.WriteString(stringPort)
+
+			nodeIP := ipBuilder.String()
 
 			if nodeIP == config.IpAddress+":"+config.HTTPPort {
 				continue
@@ -122,7 +146,7 @@ func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.
 		return nil, logger.CreateDetails(location, errors.New("no available nodes"))
 	}
 
-	err = saveSpFsInfo(pathToSpFiles, spData)
+	err = fsysinfo.Save(pathToSpFiles, spData)
 	if err != nil {
 		return nil, logger.CreateDetails(location, err)
 	}
@@ -155,20 +179,20 @@ func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.
 }
 
 // ====================================================================================
-
+//Save is used for chaecking and saving file parts from the inoming request to the node's storage.
 func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig string, fileSize int) error {
 	const location = "files.Save->"
 
 	pathToSpFiles := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spData.Address)
 
-	err := saveSpFsInfo(pathToSpFiles, spData)
+	err := fsysinfo.Save(pathToSpFiles, spData)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
 
 	reqFileParts := req.MultipartForm.File["files"]
 
-	oneMBHashes, err := getOneMbHashes(reqFileParts)
+	oneMBHashes, err := shared.GetOneMbHashes(reqFileParts)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -195,7 +219,7 @@ func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig st
 	}
 
 	if !fsContainsFile {
-		return logger.CreateDetails(location, shared.ErrWrongFile)
+		return logger.CreateDetails(location, errs.WrongFile)
 	}
 
 	count := 0
@@ -207,13 +231,15 @@ func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig st
 		if err != nil {
 			return logger.CreateDetails(location, err)
 		}
-		defer rqFile.Close()
 
 		err = savePart(rqFile, pathToSpFiles, reqFilePart.Filename)
 		if err != nil {
+			rqFile.Close()
 			deleteParts(pathToSpFiles, savedParts)
 			return logger.CreateDetails(location, err)
 		}
+
+		rqFile.Close()
 
 		count++
 		logger.Log("Saved file " + reqFilePart.Filename + " (" + strconv.Itoa(count) + "/" + strconv.Itoa(len(oneMBHashes)) + ")" + " from " + spData.Address) //TODO remove
@@ -223,7 +249,6 @@ func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig st
 }
 
 // ====================================================================================
-
 func savePart(file io.Reader, pathToSpFiles, fileName string) error {
 	const location = "files.saveFilePart->"
 
@@ -233,10 +258,10 @@ func savePart(file io.Reader, pathToSpFiles, fileName string) error {
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
-	defer newFile.Close()
 
 	_, err = io.Copy(newFile, file)
 	if err != nil {
+		newFile.Close()
 		return logger.CreateDetails(location, err)
 	}
 
@@ -258,7 +283,7 @@ func Serve(spAddress, fileKey, signatureFromReq string) (string, error) {
 
 	hash := sha256.Sum256([]byte(fileKey + spAddress))
 
-	err = checkDataSign(spAddress, signature, hash)
+	err = dnetsignature.Check(spAddress, signature, hash)
 	if err != nil {
 		return "", logger.CreateDetails(location, err)
 	}
@@ -366,8 +391,21 @@ func copyOnOtherNode(nodeAddress, pathToSpFiles string, multiForm *multipart.For
 	defer resp.Body.Close()
 
 	if string(body) != "OK" {
-		return logger.CreateDetails(location, shared.ErrFileSaving)
+		return logger.CreateDetails(location, errs.FileSaving)
 	}
 
 	return nil
+}
+
+// ====================================================================================
+
+// DeleteParts deletes parts of the file that wasn't fully uploaded to the node for some reason.
+func deleteParts(addressPath string, fileHashes []string) {
+	logger.Log("deleting file parts after error...")
+
+	for _, hash := range fileHashes {
+		pathToFile := filepath.Join(addressPath, hash)
+
+		os.Remove(pathToFile)
+	}
 }

@@ -15,6 +15,7 @@ import (
 	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/cleaner"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/server"
@@ -26,7 +27,7 @@ import (
 const accLoginFatalError = "Error while account log in"
 const ipUpdateFatalError = "Couldn't update public ip info"
 
-// accountListCmd represents the list command
+// AccountLoginCmd is executed when "login" flag is passed after "account" flag and is used for logging in to an account.
 var accountLoginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "log in a blockchain accounts",
@@ -46,7 +47,7 @@ var accountLoginCmd = &cobra.Command{
 		pathToConfigFile := filepath.Join(pathToConfigDir, paths.ConfFileName)
 
 		stat, err := os.Stat(pathToConfigFile)
-		err = shared.CheckStatErr(err)
+		err = errs.CheckStatErr(err)
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(accLoginFatalError)
@@ -113,7 +114,7 @@ var accountLoginCmd = &cobra.Command{
 
 		fmt.Println("Logged in")
 
-		go blockchainprovider.StartMining(password)
+		go blockchainprovider.StartMakingProofs(password)
 
 		go cleaner.Start()
 

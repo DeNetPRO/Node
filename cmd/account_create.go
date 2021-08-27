@@ -17,7 +17,7 @@ import (
 
 const accCreateFatalMessage = "Fatal error while creating an account"
 
-// accountCreateCmd represents the accountCreate command
+// AccountCreateCmd is executed when "create" flag is passed after "account" flag and is used for crypto wallet creation.
 var accountCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "create a new blockchain account",

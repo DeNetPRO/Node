@@ -20,7 +20,8 @@ import (
 
 const confUpdateFatalMessage = "Fatal error while configuration update"
 
-// accountListCmd represents the list command
+// ConfigUpdateCmd is execited when "update" flag is passed after "config" flag and id used for updating
+// user's configuration file.
 var configUpdateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "updates your account configuration",

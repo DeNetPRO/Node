@@ -118,7 +118,7 @@ func TestCheckRightPassword(t *testing.T) {
 
 func accountCreateTest(password, ipAddress, storageLimit, port string) (string, *config.SecondaryNodeConfig, error) {
 	var nodeConf *config.SecondaryNodeConfig
-	err := shared.CreateIfNotExistAccDirs()
+	err := paths.CreateAccDirs()
 	if err != nil {
 		return "", nil, err
 	}

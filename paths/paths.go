@@ -1,5 +1,13 @@
 package paths
 
+import (
+	"os"
+	"path/filepath"
+
+	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+)
+
 var (
 	WorkDirPath    string
 	AccsDirPath    string
@@ -11,3 +19,53 @@ var (
 	RatingFilePath string
 	RatingFilename = "rating.json"
 )
+
+// ====================================================================================
+
+//Initializes default node paths
+func Init() error {
+	const location = "shared.InitPaths->"
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
+	WorkDirPath = filepath.Join(homeDir, WorkDirName)
+	AccsDirPath = filepath.Join(WorkDirPath, "accounts")
+
+	return nil
+}
+
+// ====================================================================================
+
+//Creates account dir if it doesn't already exist
+func CreateAccDirs() error {
+	const location = "shared.CreateIfNotExistAccDirs->"
+	statWDP, err := os.Stat(WorkDirPath)
+	err = errs.CheckStatErr(err)
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
+	if statWDP == nil {
+		err = os.MkdirAll(WorkDirPath, os.ModePerm|os.ModeDir)
+		if err != nil {
+			return logger.CreateDetails(location, err)
+		}
+	}
+
+	statADP, err := os.Stat(AccsDirPath)
+	err = errs.CheckStatErr(err)
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
+	if statADP == nil {
+		err = os.MkdirAll(AccsDirPath, os.ModePerm|os.ModeDir)
+		if err != nil {
+			return logger.CreateDetails(location, err)
+		}
+	}
+
+	return nil
+}

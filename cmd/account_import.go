@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// accountListCmd represents the list command
+// AccountListCmd is executed when "import" flag is passed after "account" flag and is used for importing crypto wallet.
 var accountImportCmd = &cobra.Command{
 	Use:   "import",
 	Short: "imports your account by private key",

@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// accountListCmd represents the list command
+// AccountListCmd is executed when "list" flag is passed after "account" flag and is used for listing created/imported accounts.
 var accountListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "display addresses of all blockchain accounts",
