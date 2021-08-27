@@ -236,7 +236,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 			accountAddress = accounts[accountNumber-1]
 		}
 
-		if !shared.ContainsAccount(accounts, accountAddress) {
+		if !accExists(accounts, accountAddress) {
 			fmt.Println("There is no such account address:")
 			for i, a := range accounts {
 				fmt.Println(i+1, a)
@@ -327,4 +327,15 @@ func initAccount(ks *keystore.KeyStore, account *accounts.Account, password stri
 	}
 
 	return nodeConf, nil
+}
+
+// ====================================================================================
+
+func accExists(accounts []string, address string) bool {
+	for _, a := range accounts {
+		if a == address {
+			return true
+		}
+	}
+	return false
 }

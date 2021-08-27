@@ -64,17 +64,6 @@ func GetAvailableSpace(storagePath string) int {
 
 // ====================================================================================
 
-func ContainsAccount(accounts []string, address string) bool {
-	for _, a := range accounts {
-		if a == address {
-			return true
-		}
-	}
-	return false
-}
-
-// ====================================================================================
-
 //Read file by certain path
 func ReadFile(path string) (*os.File, []byte, error) {
 	const location = "shared.ReadFile->"
@@ -91,6 +80,8 @@ func ReadFile(path string) (*os.File, []byte, error) {
 
 	return file, fileBytes, nil
 }
+
+// ====================================================================================
 
 func WriteFile(file *os.File, data interface{}) error {
 	const location = "shared.ReadFromConsole->"
