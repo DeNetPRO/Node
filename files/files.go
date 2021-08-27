@@ -21,6 +21,7 @@ import (
 	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
 	dnetsignature "git.denetwork.xyz/dfile/dfile-secondary-node/dnet_signature"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
 	fsysinfo "git.denetwork.xyz/dfile/dfile-secondary-node/fsys_info"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
@@ -218,7 +219,7 @@ func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig st
 	}
 
 	if !fsContainsFile {
-		return logger.CreateDetails(location, shared.ErrWrongFile)
+		return logger.CreateDetails(location, errs.WrongFile)
 	}
 
 	count := 0
@@ -390,7 +391,7 @@ func copyOnOtherNode(nodeAddress, pathToSpFiles string, multiForm *multipart.For
 	defer resp.Body.Close()
 
 	if string(body) != "OK" {
-		return logger.CreateDetails(location, shared.ErrFileSaving)
+		return logger.CreateDetails(location, errs.FileSaving)
 	}
 
 	return nil

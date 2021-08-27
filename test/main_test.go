@@ -6,13 +6,12 @@ import (
 	"testing"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 )
 
 func TestMain(m *testing.M) {
 	paths.WorkDirName = "dfile-test"
 
-	err := shared.InitPaths()
+	err := paths.Init()
 	if err != nil {
 		log.Fatal("Fatal Error: couldn't locate home directory")
 	}

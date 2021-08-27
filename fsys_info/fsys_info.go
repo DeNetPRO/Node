@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	dnetsignature "git.denetwork.xyz/dfile/dfile-secondary-node/dnet_signature"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
@@ -159,7 +160,7 @@ func Save(addressPath string, spData *shared.StorageProviderData) error {
 	const location = "files.saveSpFsInfo->"
 
 	stat, err := os.Stat(addressPath)
-	err = shared.CheckStatErr(err)
+	err = errs.CheckStatErr(err)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}

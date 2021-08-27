@@ -47,7 +47,7 @@ func Create(password string) (string, config.SecondaryNodeConfig, error) {
 	const location = "account.Create->"
 	var nodeConf config.SecondaryNodeConfig
 
-	err := shared.CreateIfNotExistAccDirs()
+	err := paths.CreateAccDirs()
 	if err != nil {
 		return "", nodeConf, logger.CreateDetails(location, err)
 	}
@@ -106,7 +106,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 	password := shared.GetHashPassword(originalPassword)
 	originalPassword = ""
 
-	err = shared.CreateIfNotExistAccDirs()
+	err = paths.CreateAccDirs()
 	if err != nil {
 		return "", nodeConfig, logger.CreateDetails(location, err)
 	}

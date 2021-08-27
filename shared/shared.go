@@ -13,12 +13,10 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ricochet2200/go-disk-usage/du"
 )
@@ -57,94 +55,11 @@ var (
 	TestPort     = "8081"
 )
 
-var (
-	ErrWrongFile          = errors.New("wrong file")
-	ErrFileSaving         = errors.New("file saving problem")
-	ErrUpdateFsInfo       = errors.New("fs info update problem")
-	ErrWrongSignature     = errors.New("wrong signature")
-	ErrFileCheck          = errors.New("file check problem")
-	ErrParseMultipartForm = errors.New("parse multipart form problem")
-	ErrSpaceCheck         = errors.New("space check problem")
-	ErrInternal           = errors.New("node internal error")
-	ErrInvalidArgument    = errors.New("invalid argument")
-)
-
 //Return nodes available space in GB
 func GetAvailableSpace(storagePath string) int {
 	var KB = uint64(1024)
 	usage := du.NewDiskUsage(storagePath)
 	return int(usage.Free() / (KB * KB * KB))
-}
-
-// ====================================================================================
-
-//Initializes default node paths
-func InitPaths() error {
-	const location = "shared.InitPaths->"
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	paths.WorkDirPath = filepath.Join(homeDir, paths.WorkDirName)
-	paths.AccsDirPath = filepath.Join(paths.WorkDirPath, "accounts")
-
-	return nil
-}
-
-// ====================================================================================
-
-//Creates account dir
-func CreateIfNotExistAccDirs() error {
-	const location = "shared.CreateIfNotExistAccDirs->"
-	statWDP, err := os.Stat(paths.WorkDirPath)
-	err = CheckStatErr(err)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	if statWDP == nil {
-		err = os.MkdirAll(paths.WorkDirPath, os.ModePerm|os.ModeDir)
-		if err != nil {
-			return logger.CreateDetails(location, err)
-		}
-	}
-
-	statADP, err := os.Stat(paths.AccsDirPath)
-	err = CheckStatErr(err)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	if statADP == nil {
-		err = os.MkdirAll(paths.AccsDirPath, os.ModePerm|os.ModeDir)
-		if err != nil {
-			return logger.CreateDetails(location, err)
-		}
-	}
-
-	return nil
-}
-
-// ====================================================================================
-
-//Сromplatform error checking for file stat
-func CheckStatErr(statErr error) error {
-	if statErr == nil {
-		return nil
-	}
-
-	errParts := strings.Split(statErr.Error(), ":")
-
-	if len(errParts) == 3 && strings.Trim(errParts[2], " ") == "The system cannot find the file specified." {
-		return nil
-	}
-
-	if len(errParts) == 2 && strings.Trim(errParts[1], " ") == "no such file or directory" {
-		return nil
-	}
-
-	return statErr
 }
 
 // ====================================================================================
