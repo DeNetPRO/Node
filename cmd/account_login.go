@@ -17,9 +17,9 @@ import (
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/server"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 	"github.com/spf13/cobra"
 )
@@ -60,7 +60,7 @@ var accountLoginCmd = &cobra.Command{
 				log.Fatal("couldn't create config file")
 			}
 		} else {
-			confFile, fileBytes, err := shared.ReadFile(pathToConfigFile)
+			confFile, fileBytes, err := nodeFile.Read(pathToConfigFile)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				log.Fatal("couldn't open config file")

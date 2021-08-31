@@ -15,6 +15,7 @@ import (
 	dnetsignature "git.denetwork.xyz/dfile/dfile-secondary-node/dnet_signature"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 )
@@ -37,7 +38,7 @@ func Update(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem string) error 
 	}
 
 	shared.MU.Lock()
-	spFsFile, fileBytes, err := shared.ReadFile(filepath.Join(addressPath, paths.SpFsFilename))
+	spFsFile, fileBytes, err := nodeFile.Read(filepath.Join(addressPath, paths.SpFsFilename))
 	if err != nil {
 		shared.MU.Unlock()
 		return logger.CreateDetails(location, err)
@@ -141,7 +142,7 @@ func Update(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem string) error 
 		Tree:         fsTree,
 	}
 
-	err = shared.WriteFile(spFsFile, spFs)
+	err = nodeFile.Write(spFsFile, spFs)
 	if err != nil {
 		shared.MU.Unlock()
 		return logger.CreateDetails(location, err)
@@ -182,7 +183,7 @@ func Save(addressPath string, spData *shared.StorageProviderData) error {
 
 	defer spFsFile.Close()
 
-	err = shared.WriteFile(spFsFile, spData)
+	err = nodeFile.Write(spFsFile, spData)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}

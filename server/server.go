@@ -20,12 +20,14 @@ import (
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/files"
 	fsysInfo "git.denetwork.xyz/dfile/dfile-secondary-node/fsys_info"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	memInfo "git.denetwork.xyz/dfile/dfile-secondary-node/mem_info"
+	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
+
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
+	spFiles "git.denetwork.xyz/dfile/dfile-secondary-node/sp_files"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
@@ -152,7 +154,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = files.Save(req, spData, pathToConfig, intFileSize)
+	err = spFiles.Save(req, spData, pathToConfig, intFileSize)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		memInfo.Restore(pathToConfig, intFileSize)
@@ -180,7 +182,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pathToFile, err := files.Serve(spAddress, fileKey, signatureFromReq)
+	pathToFile, err := spFiles.Serve(spAddress, fileKey, signatureFromReq)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
@@ -255,7 +257,7 @@ func CopyFile(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	nodeAddress, err := files.Copy(req, spData, &nodeConfig, pathToConfig, intFileSize, enoughSpace)
+	nodeAddress, err := spFiles.Copy(req, spData, &nodeConfig, pathToConfig, intFileSize, enoughSpace)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		memInfo.Restore(pathToConfig, intFileSize)
@@ -296,7 +298,7 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.Seconda
 	}
 
 	shared.MU.Lock()
-	confFile, fileBytes, err := shared.ReadFile(pathToConfig)
+	confFile, fileBytes, err := nodeFile.Read(pathToConfig)
 	if err != nil {
 		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}

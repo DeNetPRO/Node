@@ -13,8 +13,8 @@ import (
 	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"github.com/spf13/cobra"
 )
 
@@ -48,7 +48,7 @@ var configUpdateCmd = &cobra.Command{
 
 		var nodeConfig config.SecondaryNodeConfig
 
-		confFile, fileBytes, err := shared.ReadFile(pathToConfigFile)
+		confFile, fileBytes, err := nodeFile.Read(pathToConfigFile)
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(confUpdateFatalMessage)
