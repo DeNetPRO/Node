@@ -12,12 +12,13 @@ import (
 	"strconv"
 	"strings"
 
-	dnetsignature "git.denetwork.xyz/dfile/dfile-secondary-node/dnet_signature"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/sign"
 )
 
 type UpdatedFsInfo struct {
@@ -97,12 +98,12 @@ func Update(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem string) error 
 		return logger.CreateDetails(location, err)
 	}
 
-	err = dnetsignature.Check(spAddress, signedFsys, fsTreeNonceHash)
+	err = sign.Check(spAddress, signedFsys, fsTreeNonceHash)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
 
-	fsRootHash, fsTree, err := shared.CalcRootHash(updatedFs.NewFs)
+	fsRootHash, fsTree, err := hash.CalcRoot(updatedFs.NewFs)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -121,7 +122,7 @@ func Update(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem string) error 
 
 	hash := sha256.Sum256(fsRootNonceBytes)
 
-	err = dnetsignature.Check(spAddress, signedRootHash, hash)
+	err = sign.Check(spAddress, signedRootHash, hash)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}

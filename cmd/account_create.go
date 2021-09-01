@@ -8,6 +8,7 @@ import (
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/cleaner"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/server"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
@@ -62,7 +63,7 @@ var accountCreateCmd = &cobra.Command{
 			password1 = shared.TestPassword
 		}
 
-		password := shared.GetHashPassword(password1)
+		password := hash.Password(password1)
 		password1 = ""
 
 		_, nodeConfig, err := account.Create(password)

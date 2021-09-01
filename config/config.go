@@ -17,6 +17,7 @@ import (
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
+	termEmul "git.denetwork.xyz/dfile/dfile-secondary-node/term_emul"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 )
 
@@ -140,7 +141,7 @@ func SetStorageLimit(pathToConfig, state string, nodeConfig *SecondaryNodeConfig
 	for {
 		availableSpace := shared.GetAvailableSpace(pathToConfig)
 		fmt.Println("Available space:", availableSpace, "GB")
-		space, err := shared.ReadFromConsole()
+		space, err := termEmul.ReadInput()
 		if err != nil {
 			return logger.CreateDetails(location, err)
 		}
@@ -192,7 +193,7 @@ func SetIpAddr(nodeConfig *SecondaryNodeConfig, state string) ([]string, error) 
 	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
 
 	for {
-		ipAddr, err := shared.ReadFromConsole()
+		ipAddr, err := termEmul.ReadInput()
 		if err != nil {
 			return nil, logger.CreateDetails(location, err)
 		}
@@ -252,7 +253,7 @@ func SetPort(nodeConfig *SecondaryNodeConfig, state string) error {
 	for {
 		fmt.Println("Enter http port number (value from 49152 to 65535) or press enter to use default port number 55050")
 
-		httpPort, err := shared.ReadFromConsole()
+		httpPort, err := termEmul.ReadInput()
 		if err != nil {
 			return logger.CreateDetails(location, err)
 		}
@@ -299,7 +300,7 @@ func ChangeAgreeSendLogs(nodeConfig *SecondaryNodeConfig, state string) error {
 	regPort := regexp.MustCompile("^(?:y|n)$")
 
 	for {
-		agree, err := shared.ReadFromConsole()
+		agree, err := termEmul.ReadInput()
 		if err != nil {
 			return logger.CreateDetails(location, err)
 		}
