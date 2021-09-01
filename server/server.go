@@ -21,6 +21,7 @@ import (
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
 	fsysInfo "git.denetwork.xyz/dfile/dfile-secondary-node/fsys_info"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	memInfo "git.denetwork.xyz/dfile/dfile-secondary-node/mem_info"
 	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
@@ -349,7 +350,7 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 
 	sort.Strings(fs)
 
-	fsRootHash, fsTree, err := shared.CalcRootHash(fs)
+	fsRootHash, fsTree, err := hash.CalcRoot(fs)
 	if err != nil {
 		return nil, logger.CreateDetails(location, err)
 	}
