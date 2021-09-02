@@ -74,11 +74,18 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 	const location = "account.Import->"
 	var nodeConfig config.SecondaryNodeConfig
 
-	fmt.Println("Please enter private key of the account you want to import:")
+	var privKey string
+	var err error
 
-	privKey, err := termEmul.ReadInput()
-	if err != nil {
-		return "", nodeConfig, logger.CreateDetails(location, err)
+	if !shared.TestMode {
+		fmt.Println("Please enter private key of the account you want to import:")
+
+		privKey, err = termEmul.ReadInput()
+		if err != nil {
+			return "", nodeConfig, logger.CreateDetails(location, err)
+		}
+	} else {
+		privKey = shared.TestPrivateKey
 	}
 
 	ecdsaPrivKey, err := crypto.HexToECDSA(privKey)
@@ -86,27 +93,32 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 		return "", nodeConfig, logger.CreateDetails(location, err)
 	}
 
-	fmt.Println("Please enter your password:")
+	var password string
+	if !shared.TestMode {
+		fmt.Println("Please enter your password:")
 
-	var originalPassword string
+		var originalPassword string
 
-	for {
-		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
-		if err != nil {
-			return "", nodeConfig, logger.CreateDetails(location, err)
+		for {
+			bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
+			if err != nil {
+				return "", nodeConfig, logger.CreateDetails(location, err)
+			}
+
+			originalPassword = string(bytePassword)
+			if strings.Trim(originalPassword, " ") == "" {
+				fmt.Println("Empty string can't be used as a password. Please try again")
+				continue
+			}
+
+			break
 		}
 
-		originalPassword = string(bytePassword)
-		if strings.Trim(originalPassword, " ") == "" {
-			fmt.Println("Empty string can't be used as a password. Please try again")
-			continue
-		}
-
-		break
+		password = hash.Password(originalPassword)
+		originalPassword = ""
+	} else {
+		password = shared.TestPassword
 	}
-
-	password := hash.Password(originalPassword)
-	originalPassword = ""
 
 	err = paths.CreateAccDirs()
 	if err != nil {

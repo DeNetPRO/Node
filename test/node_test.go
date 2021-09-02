@@ -1,22 +1,25 @@
 package test
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
+	meminfo "git.denetwork.xyz/dfile/dfile-secondary-node/mem_info"
+	nodefile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
-	"github.com/ethereum/go-ethereum/accounts"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/sign"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,22 +27,10 @@ var (
 	accountPassword      = "123"
 	accountAddress       string
 	nodeAddress          []byte
-	ErrorInvalidPassword = errors.New("could not decrypt key with given password")
-	configPort           = "55051"
-	configStorageLimit   = "1"
-	ip                   = "185.140.19.95"
+	ErrorInvalidPassword = errors.New(" could not decrypt key with given password")
+	configPath           string
+	storagePath          string
 )
-
-var fullyReservedIPs = map[string]bool{
-	"0":   true,
-	"10":  true,
-	"127": true,
-}
-
-var partiallyReservedIPs = map[string]int{
-	"172": 31,
-	"192": 168,
-}
 
 func TestEmptyAccountListBeforeCreating(t *testing.T) {
 	accs := account.List()
@@ -49,8 +40,54 @@ func TestEmptyAccountListBeforeCreating(t *testing.T) {
 	require.Equal(t, want, get)
 }
 
+func TestSetIpAddrWhenCreateConfig(t *testing.T) {
+	get := config.SecondaryNodeConfig{}
+	ip, err := config.SetIpAddr(&get, config.CreateStatus)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(ip) != 4 {
+		t.Errorf("len of ip must be 4 instead of %v", len(ip))
+	}
+
+	want := config.SecondaryNodeConfig{
+		IpAddress: shared.TestAddress,
+	}
+
+	require.Equal(t, want, get)
+}
+
+func TestSetPortWhenCreateConfig(t *testing.T) {
+	get := config.SecondaryNodeConfig{}
+	err := config.SetPort(&get, config.CreateStatus)
+	if err != nil {
+		t.Error(err)
+	}
+
+	want := config.SecondaryNodeConfig{
+		HTTPPort: shared.TestPort,
+	}
+
+	require.Equal(t, want, get)
+}
+
+func TestSetStorageLimitWhenCreateConfig(t *testing.T) {
+	get := config.SecondaryNodeConfig{}
+	err := config.SetStorageLimit("", config.CreateStatus, &get)
+	if err != nil {
+		t.Error(err)
+	}
+
+	want := config.SecondaryNodeConfig{
+		StorageLimit: shared.TestLimit,
+	}
+
+	require.Equal(t, want, get)
+}
+
 func TestCreateAccount(t *testing.T) {
-	address, config, err := accountCreateTest(accountPassword, ip, configStorageLimit, configPort)
+	address, config, err := account.Create(accountPassword)
 	if err != nil {
 		t.Error(err)
 	}
@@ -67,8 +104,8 @@ func TestCreateAccount(t *testing.T) {
 
 	require.Equal(t, want, get)
 
-	storagePath := filepath.Join(paths.AccsDirPath, accountAddress, paths.StorageDirName)
-	configPath := filepath.Join(paths.AccsDirPath, accountAddress, paths.ConfDirName)
+	storagePath = filepath.Join(paths.AccsDirPath, accountAddress, paths.StorageDirName)
+	configPath = filepath.Join(paths.AccsDirPath, accountAddress, paths.ConfDirName, paths.ConfFileName)
 
 	if _, err := os.Stat(storagePath); err != nil {
 		t.Error(err)
@@ -78,8 +115,7 @@ func TestCreateAccount(t *testing.T) {
 		t.Error(err)
 	}
 
-	intConfigStorageLimit, _ := strconv.Atoi(configStorageLimit)
-	if config.Address != address || !config.AgreeSendLogs || config.HTTPPort != configPort || config.IpAddress != ip || config.StorageLimit != intConfigStorageLimit {
+	if config.Address != address || !config.AgreeSendLogs || config.HTTPPort != shared.TestPort || config.IpAddress != shared.TestAddress || config.StorageLimit != shared.TestLimit {
 		t.Error("config is invalid")
 	}
 
@@ -87,7 +123,7 @@ func TestCreateAccount(t *testing.T) {
 }
 
 func TestLoginAccountWithCorrectAddressAndPassword(t *testing.T) {
-	account, err := testLogin(accountAddress, accountPassword)
+	account, err := account.Login(accountAddress, accountPassword)
 	if err != nil {
 		t.Error(err)
 	}
@@ -95,18 +131,21 @@ func TestLoginAccountWithCorrectAddressAndPassword(t *testing.T) {
 }
 
 func TestLoginAccountWithInvalidPassword(t *testing.T) {
-	_, err := testLogin(accountAddress, "invalid")
+	_, err := account.Login(accountAddress, "invalid")
 	want := ErrorInvalidPassword
 
-	require.EqualError(t, want, err.Error())
+	splitErr := strings.Split(err.Error(), "->")
+
+	require.EqualError(t, want, splitErr[len(splitErr)-1])
 }
 
 func TestLoginAccountWithUnknownAddress(t *testing.T) {
 	unknownAddress := "accountAddress"
-	_, err := testLogin(unknownAddress, accountPassword)
-	want := errors.New("Account Not Found Error: cannot find account for " + unknownAddress)
+	_, err := account.Login(unknownAddress, accountPassword)
+	want := errors.New(" accountAddress address is not found")
+	splitErr := strings.Split(err.Error(), "->")
 
-	require.EqualError(t, want, err.Error())
+	require.EqualError(t, want, splitErr[len(splitErr)-1])
 }
 
 func TestCheckRightPassword(t *testing.T) {
@@ -116,182 +155,106 @@ func TestCheckRightPassword(t *testing.T) {
 	}
 }
 
-func accountCreateTest(password, ipAddress, storageLimit, port string) (string, *config.SecondaryNodeConfig, error) {
-	var nodeConf *config.SecondaryNodeConfig
-	err := paths.CreateAccDirs()
+func TestImportAccount(t *testing.T) {
+	accountAddress, c, err := account.Import()
 	if err != nil {
-		return "", nil, err
+		t.Error(err)
 	}
 
-	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
-
-	etherAccount, err := ks.NewAccount(password)
-	if err != nil {
-		return "", nil, err
+	if accountAddress == "" {
+		t.Errorf("import account address must not to be empty")
 	}
 
-	nodeConf, err = initTestAccount(&etherAccount, password, ipAddress, storageLimit, port)
-	if err != nil {
-		return "", nodeConf, err
+	wantConfig := config.SecondaryNodeConfig{
+		Address:       accountAddress,
+		HTTPPort:      shared.TestPort,
+		StorageLimit:  shared.TestLimit,
+		IpAddress:     shared.TestAddress,
+		AgreeSendLogs: true,
 	}
 
-	return etherAccount.Address.String(), nodeConf, nil
+	require.Equal(t, wantConfig, c)
 }
 
-func createConfigForTests(address, password, ipAddress, storageLimit, port string) (*config.SecondaryNodeConfig, error) {
-	nodeConfig := &config.SecondaryNodeConfig{Address: address, AgreeSendLogs: true}
-	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-	regNum := regexp.MustCompile(("[0-9]+"))
-
-	availableSpace := shared.GetAvailableSpace(pathToConfig)
-	space := storageLimit
-
-	match := regNum.MatchString(space)
-
-	if !match {
-		return nil, fmt.Errorf("storage limit is incorrect")
-	}
-
-	intSpace, err := strconv.Atoi(space)
+func TestCheckSignature(t *testing.T) {
+	macAddress, err := encryption.GetDeviceMacAddr()
 	if err != nil {
-		return nil, fmt.Errorf("storage limit failed parse")
+		t.Error(err)
 	}
 
-	if intSpace < 0 || intSpace >= availableSpace {
-		return nil, fmt.Errorf("storage limit is incorrect")
-	}
-
-	nodeConfig.StorageLimit = intSpace
-
-	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
-
-	var splitIPAddr []string
-	ipAddr := ipAddress
-	match = regIp.MatchString(ipAddr)
-
-	if !match {
-		return nil, fmt.Errorf("ip is incorrect, please try again")
-	}
-
-	splitIPAddr = strings.Split(ipAddr, ".")
-
-	if fullyReservedIPs[splitIPAddr[0]] {
-		return nil, errors.New("Address" + ipAddr + "can't be used as a public ip address")
-	}
-
-	reservedSecAddrPart, isReserved := partiallyReservedIPs[splitIPAddr[0]]
-
-	if isReserved {
-		secondAddrPart, err := strconv.Atoi(splitIPAddr[1])
-		if err != nil {
-			return nodeConfig, fmt.Errorf("ip  part is incorrect, please try again")
-		}
-
-		if secondAddrPart <= reservedSecAddrPart {
-			return nil, errors.New("Address" + ipAddr + "can't be used as a public ip address")
-		}
-	}
-
-	nodeConfig.IpAddress = ipAddr
-
-	regPort := regexp.MustCompile("[0-9]+|")
-
-	httpPort := port
-
-	if httpPort == "" {
-		nodeConfig.HTTPPort = fmt.Sprint(55050)
-	} else {
-		match = regPort.MatchString(httpPort)
-		if !match {
-			return nil, fmt.Errorf("port is incorrect, please try again")
-		}
-
-		intHttpPort, err := strconv.Atoi(httpPort)
-		if err != nil {
-			return nil, fmt.Errorf("port is incorrect, please try again")
-		}
-
-		if intHttpPort < 49152 || intHttpPort > 65535 {
-			return nil, fmt.Errorf("port is incorrect, please try again")
-		}
-
-		nodeConfig.HTTPPort = fmt.Sprint(intHttpPort)
-	}
-
-	confFile, err := os.Create(filepath.Join(pathToConfig, paths.ConfFileName))
+	encrForKey := sha256.Sum256([]byte(macAddress))
+	privateKeyBytes, err := encryption.DecryptAES(encrForKey[:], encryption.PrivateKey)
 	if err != nil {
-		return nodeConfig, err
+		t.Error(err)
 	}
-	defer confFile.Close()
 
-	confJSON, err := json.Marshal(nodeConfig)
+	privateKey, err := crypto.ToECDSA(privateKeyBytes)
 	if err != nil {
-		return nodeConfig, err
+		t.Error(err)
 	}
 
-	_, err = confFile.Write(confJSON)
+	data := make([]byte, 100)
+	rand.Seed(time.Now().Unix())
+	rand.Read(data)
+
+	hashData := sha256.Sum256(data)
+
+	signedData, err := crypto.Sign(hashData[:], privateKey)
 	if err != nil {
-		return nodeConfig, err
+		t.Error(err)
 	}
 
-	confFile.Sync()
-
-	return nodeConfig, nil
+	err = sign.Check(accountAddress, signedData, hashData)
+	if err != nil {
+		t.Error(encrForKey)
+	}
 }
 
-func initTestAccount(account *accounts.Account, password, ipAddress, storageLimit, port string) (*config.SecondaryNodeConfig, error) {
-	nodeConf := &config.SecondaryNodeConfig{}
-	addressString := account.Address.String()
+func TestRestoreNodeMemory(t *testing.T) {
+	fileSize := 1024 * 1024
 
-	err := os.MkdirAll(filepath.Join(paths.AccsDirPath, addressString, paths.StorageDirName), 0700)
+	confFile, nodeConfig, err := getConfig()
 	if err != nil {
-		return nodeConf, err
+		t.Error(err)
 	}
 
-	err = os.MkdirAll(filepath.Join(paths.AccsDirPath, addressString, paths.ConfDirName), 0700)
+	want := nodeConfig.UsedStorageSpace
+
+	nodeConfig.UsedStorageSpace += int64(fileSize)
+
+	err = config.Save(confFile, *nodeConfig)
 	if err != nil {
-		return nodeConf, err
+		confFile.Close()
+		t.Error(err)
 	}
 
-	shared.NodeAddr = account.Address
+	confFile.Close()
 
-	nodeConf, err = createConfigForTests(account.Address.String(), password, ipAddress, storageLimit, port)
+	meminfo.Restore(configPath, fileSize)
+
+	confFile, nodeConfig, err = getConfig()
 	if err != nil {
-		return nodeConf, err
+		t.Error(err)
 	}
 
-	return nodeConf, nil
+	confFile.Close()
+
+	require.Equal(t, want, nodeConfig.UsedStorageSpace)
 }
 
-func testLogin(blockchainAccountString, password string) (*accounts.Account, error) {
-	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
-	etherAccounts := ks.Accounts()
-
-	var account *accounts.Account
-
-	for _, a := range etherAccounts {
-		if blockchainAccountString == a.Address.String() {
-			account = &a
-			break
-		}
-	}
-
-	if account == nil {
-		err := errors.New("Account Not Found Error: cannot find account for " + blockchainAccountString)
-		return nil, err
-	}
-
-	keyJson, err := ks.Export(*account, password, password)
+func getConfig() (*os.File, *config.SecondaryNodeConfig, error) {
+	confFile, fileBytes, err := nodefile.Read(configPath)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	_, err = keystore.DecryptKey(keyJson, password)
+	var nodeConfig *config.SecondaryNodeConfig
+
+	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
-		return nil, err
+		confFile.Close()
+		return nil, nil, err
 	}
 
-	shared.NodeAddr = account.Address
-
-	return account, nil
+	return confFile, nodeConfig, nil
 }
