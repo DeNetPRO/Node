@@ -6,9 +6,12 @@ import (
 	"testing"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 )
 
 func TestMain(m *testing.M) {
+	shared.TestMode = true
+
 	paths.WorkDirName = "dfile-test"
 
 	err := paths.Init()
