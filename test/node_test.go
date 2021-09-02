@@ -13,12 +13,12 @@ import (
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
-	dnetsignature "git.denetwork.xyz/dfile/dfile-secondary-node/dnet_signature"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
 	meminfo "git.denetwork.xyz/dfile/dfile-secondary-node/mem_info"
 	nodefile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/sign"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 )
@@ -204,7 +204,7 @@ func TestCheckSignature(t *testing.T) {
 		t.Error(err)
 	}
 
-	err = dnetsignature.Check(accountAddress, signedData, hashData)
+	err = sign.Check(accountAddress, signedData, hashData)
 	if err != nil {
 		t.Error(encrForKey)
 	}

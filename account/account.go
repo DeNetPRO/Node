@@ -80,7 +80,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 	if !shared.TestMode {
 		fmt.Println("Please enter private key of the account you want to import:")
 
-		privKey, err = shared.ReadFromConsole()
+		privKey, err = termEmul.ReadInput()
 		if err != nil {
 			return "", nodeConfig, logger.CreateDetails(location, err)
 		}
@@ -114,7 +114,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 			break
 		}
 
-		password = shared.GetHashPassword(originalPassword)
+		password = hash.Password(originalPassword)
 		originalPassword = ""
 	} else {
 		password = shared.TestPassword
