@@ -1,4 +1,4 @@
-package dnetsignature
+package sign
 
 import "github.com/ethereum/go-ethereum/crypto"
 

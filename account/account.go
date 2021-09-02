@@ -8,10 +8,12 @@ import (
 	"strconv"
 	"strings"
 
+	termEmul "git.denetwork.xyz/dfile/dfile-secondary-node/term_emul"
 	"github.com/minio/sha256-simd"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
@@ -227,7 +229,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 		if len(accounts) == 1 {
 			accountAddress = accounts[0]
 		} else {
-			number, err := shared.ReadFromConsole()
+			number, err := termEmul.ReadInput()
 			if err != nil {
 				return nil, "", logger.CreateDetails(location, err)
 			}
@@ -269,7 +271,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 			continue
 		}
 
-		password = shared.GetHashPassword(originalPassword)
+		password = hash.Password(originalPassword)
 		originalPassword = ""
 		bytePassword = nil
 

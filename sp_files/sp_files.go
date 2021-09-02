@@ -20,9 +20,10 @@ import (
 
 	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
-	dnetsignature "git.denetwork.xyz/dfile/dfile-secondary-node/dnet_signature"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
 	fsysinfo "git.denetwork.xyz/dfile/dfile-secondary-node/fsys_info"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/sign"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
@@ -39,8 +40,6 @@ type NodesResponse struct {
 type NodeAddressResponse struct {
 	NodeAddress string `json:"node_address"`
 }
-
-const eightKB = 8192
 
 //Copy makes a copy of file parts that are stored on the node, or sends them on oher node for replication.
 func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.SecondaryNodeConfig, pathToConfig string, fileSize int, enoughSpace bool) (*NodeAddressResponse, error) {
@@ -192,7 +191,7 @@ func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig st
 
 	reqFileParts := req.MultipartForm.File["files"]
 
-	oneMBHashes, err := shared.GetOneMbHashes(reqFileParts)
+	oneMBHashes, err := hash.OneMbParts(reqFileParts)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -203,7 +202,7 @@ func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig st
 		wholeFileHash = oneMBHashes[0]
 	} else {
 		sort.Strings(oneMBHashes)
-		wholeFileHash, _, err = shared.CalcRootHash(oneMBHashes)
+		wholeFileHash, _, err = hash.CalcRoot(oneMBHashes)
 		if err != nil {
 			return logger.CreateDetails(location, err)
 		}
@@ -283,7 +282,7 @@ func Serve(spAddress, fileKey, signatureFromReq string) (string, error) {
 
 	hash := sha256.Sum256([]byte(fileKey + spAddress))
 
-	err = dnetsignature.Check(spAddress, signature, hash)
+	err = sign.Check(spAddress, signature, hash)
 	if err != nil {
 		return "", logger.CreateDetails(location, err)
 	}

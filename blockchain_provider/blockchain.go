@@ -20,6 +20,7 @@ import (
 	"time"
 
 	abiPOS "git.denetwork.xyz/dfile/dfile-secondary-node/POS_abi"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	nodeAbi "git.denetwork.xyz/dfile/dfile-secondary-node/node_abi"
 	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
@@ -408,7 +409,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		eightKBHashes = append(eightKBHashes, hex.EncodeToString(hSum[:]))
 	}
 
-	_, fileTree, err := shared.CalcRootHash(eightKBHashes)
+	_, fileTree, err := hash.CalcRoot(eightKBHashes)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
