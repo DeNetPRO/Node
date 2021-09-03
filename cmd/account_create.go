@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
@@ -12,8 +11,8 @@ import (
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/server"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
+	"github.com/howeyc/gopass"
 	"github.com/spf13/cobra"
-	"golang.org/x/term"
 )
 
 const accCreateFatalMessage = "Fatal error while creating an account"
@@ -32,7 +31,7 @@ var accountCreateCmd = &cobra.Command{
 
 		if !shared.TestMode {
 			for {
-				bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
+				bytePassword, err := gopass.GetPasswdMasked()
 				if err != nil {
 					logger.Log(logger.CreateDetails(location, err))
 					log.Fatal(accCreateFatalMessage)
@@ -45,7 +44,7 @@ var accountCreateCmd = &cobra.Command{
 				}
 
 				fmt.Println("Enter password again: ")
-				bytePassword, err = term.ReadPassword(int(os.Stdin.Fd()))
+				bytePassword, err = gopass.GetPasswdMasked()
 				if err != nil {
 					logger.Log(logger.CreateDetails(location, err))
 					log.Println(accCreateFatalMessage)

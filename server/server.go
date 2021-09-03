@@ -190,7 +190,9 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	logger.Log("serving file: " + fileKey)
+	if !shared.TestMode {
+		logger.Log("serving file: " + fileKey)
+	}
 
 	http.ServeFile(w, req, pathToFile)
 }
@@ -398,6 +400,7 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 	senderAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
 	if storageProviderAddress[0] != fmt.Sprint(senderAddress) {
+		fmt.Println(storageProviderAddress[0], fmt.Sprint(senderAddress))
 		return nil, logger.CreateDetails(location, errs.WrongSignature)
 	}
 
