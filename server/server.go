@@ -163,6 +163,10 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if !shared.TestMode {
+		logger.SendStatistic(spData.Address, logger.Upload, int64(intFileSize))
+	}
+
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "OK")
 }
@@ -192,6 +196,14 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 
 	if !shared.TestMode {
 		logger.Log("serving file: " + fileKey)
+		stat, err := os.Stat(pathToFile)
+		if err != nil {
+			logger.Log(logger.CreateDetails(location, err))
+			http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		logger.SendStatistic(spAddress, logger.Download, stat.Size())
 	}
 
 	http.ServeFile(w, req, pathToFile)

@@ -14,9 +14,10 @@ func Restore(pathToConfig string, intFileSize int) {
 	location := "files.restoreMemoryInfo->"
 
 	shared.MU.Lock()
+	defer shared.MU.Unlock()
+
 	confFile, fileBytes, err := nodeFile.Read(pathToConfig)
 	if err != nil {
-		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(location, err))
 		return
 	}
@@ -26,7 +27,6 @@ func Restore(pathToConfig string, intFileSize int) {
 
 	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
-		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(location, err))
 		return
 	}
@@ -35,9 +35,7 @@ func Restore(pathToConfig string, intFileSize int) {
 
 	err = config.Save(confFile, nodeConfig)
 	if err != nil {
-		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(location, err))
 		return
 	}
-	shared.MU.Unlock()
 }
