@@ -163,6 +163,10 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if !shared.TestMode {
+		logger.SendStatistic(spData.Address, logger.Upload, int64(intFileSize))
+	}
+
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "OK")
 }
@@ -190,7 +194,17 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	logger.Log("serving file: " + fileKey)
+	if !shared.TestMode {
+		logger.Log("serving file: " + fileKey)
+		stat, err := os.Stat(pathToFile)
+		if err != nil {
+			logger.Log(logger.CreateDetails(location, err))
+			http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		logger.SendStatistic(spAddress, logger.Download, stat.Size())
+	}
 
 	http.ServeFile(w, req, pathToFile)
 }
@@ -398,6 +412,7 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 	senderAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
 	if storageProviderAddress[0] != fmt.Sprint(senderAddress) {
+		fmt.Println(storageProviderAddress[0], fmt.Sprint(senderAddress))
 		return nil, logger.CreateDetails(location, errs.WrongSignature)
 	}
 

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	termEmul "git.denetwork.xyz/dfile/dfile-secondary-node/term_emul"
+	"github.com/howeyc/gopass"
 	"github.com/minio/sha256-simd"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
@@ -21,7 +22,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/crypto"
-	"golang.org/x/term"
 )
 
 var (
@@ -100,7 +100,7 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 		var originalPassword string
 
 		for {
-			bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
+			bytePassword, err := gopass.GetPasswdMasked()
 			if err != nil {
 				return "", nodeConfig, logger.CreateDetails(location, err)
 			}
@@ -223,9 +223,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 		}
 	}
 
-	loggedIn := false
-
-	for i := 0; i < 3; i++ {
+	for {
 		if len(accounts) == 1 {
 			accountAddress = accounts[0]
 		} else {
@@ -236,7 +234,11 @@ func ValidateUser() (*accounts.Account, string, error) {
 
 			accountNumber, err := strconv.Atoi(number)
 			if err != nil {
-				return nil, "", logger.CreateDetails(location, err)
+				fmt.Println("Number is incorrect")
+				for i, a := range accounts {
+					fmt.Println(i+1, a)
+				}
+				continue
 			}
 
 			if accountNumber < 1 || accountNumber > len(accounts) {
@@ -258,9 +260,16 @@ func ValidateUser() (*accounts.Account, string, error) {
 			continue
 		}
 
-		fmt.Println("Please enter your password:")
+		break
+	}
 
-		bytePassword, err := term.ReadPassword(int(os.Stdin.Fd()))
+	loggedIn := false
+	attempts := 3
+	for i := 0; i < attempts; i++ {
+		fmt.Println("Please enter your password:")
+		fmt.Println("Attempts remained:", attempts-i)
+
+		bytePassword, err := gopass.GetPasswdMasked()
 		if err != nil {
 			return nil, "", logger.CreateDetails(location, err)
 		}

@@ -2,7 +2,6 @@ package spfiles
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"io"
 	"math/big"
@@ -47,134 +46,81 @@ func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.
 
 	pathToSpFiles := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spData.Address)
 
-	hashes := req.MultipartForm.File["hashes"]
+	hashes := req.MultipartForm.Value["hashes"]
 
 	if len(hashes) == 0 {
 		return nil, logger.CreateDetails(location, errors.New("empty hashes"))
 	}
 
-	hashesFileHeader, err := hashes[0].Open()
+	nftNode, err := blockchainprovider.GetNodeNFT()
 	if err != nil {
 		return nil, logger.CreateDetails(location, err)
 	}
 
-	hashesInfo, err := io.ReadAll(hashesFileHeader)
-	if err != nil {
-		hashesFileHeader.Close()
-		return nil, logger.CreateDetails(location, err)
-	}
-
-	hashesMap := make(map[string]string)
-	err = json.Unmarshal(hashesInfo, &hashesMap)
-	if err != nil {
-		hashesFileHeader.Close()
-		return nil, logger.CreateDetails(location, err)
-	}
-
-	hashesFileHeader.Close()
-
-	if !enoughSpace {
-		nftNode, err := blockchainprovider.GetNodeNFT()
-		if err != nil {
-			return nil, logger.CreateDetails(location, err)
-		}
-
-		totalNodes, err := nftNode.TotalSupply(&bind.CallOpts{})
-		if err != nil {
-			return nil, logger.CreateDetails(location, err)
-		}
-
-		intTotal := totalNodes.Int64()
-		fastReq := fasthttp.AcquireRequest()
-		fastResp := fasthttp.AcquireResponse()
-		defer fasthttp.ReleaseRequest(fastReq)
-		defer fasthttp.ReleaseResponse(fastResp)
-
-		rand.Seed(time.Now().UnixNano())
-
-		for i := int64(0); i < intTotal; i++ {
-			randID := rand.Int63n(intTotal)
-			nodeInfo, err := nftNode.GetNodeById(&bind.CallOpts{}, big.NewInt(randID))
-			if err != nil {
-				continue
-			}
-
-			ipBuilder := strings.Builder{}
-			for i, v := range nodeInfo.IpAddress {
-				stringPart := strconv.Itoa(int(v))
-				ipBuilder.WriteString(stringPart)
-
-				if i < 3 {
-					ipBuilder.WriteString(".")
-				}
-			}
-
-			stringPort := strconv.Itoa(int(nodeInfo.Port))
-			ipBuilder.WriteString(":")
-			ipBuilder.WriteString(stringPort)
-
-			nodeIP := ipBuilder.String()
-
-			if nodeIP == config.IpAddress+":"+config.HTTPPort {
-				continue
-			}
-
-			url := "http://" + nodeIP
-			fastReq.Reset()
-			fastResp.Reset()
-
-			fastReq.Header.SetRequestURI(url)
-			fastReq.Header.SetMethod("GET")
-			fastReq.Header.Set("Connection", "close")
-
-			err = fasthttp.Do(fastReq, fastResp)
-			if err != nil {
-				continue
-			}
-
-			err = copyOnOtherNode(nodeIP, pathToSpFiles, req.MultipartForm, hashesMap, fileSize)
-			if err != nil {
-				continue
-			}
-
-			return &NodeAddressResponse{
-				NodeAddress: nodeIP,
-			}, nil
-		}
-
-		return nil, logger.CreateDetails(location, errors.New("no available nodes"))
-	}
-
-	err = fsysinfo.Save(pathToSpFiles, spData)
+	totalNodes, err := nftNode.TotalSupply(&bind.CallOpts{})
 	if err != nil {
 		return nil, logger.CreateDetails(location, err)
 	}
 
-	savedParts := make([]string, 0, len(hashesMap))
-	for oldHash, newHash := range hashesMap {
-		savedParts = append(savedParts, newHash)
+	intTotal := totalNodes.Int64()
+	fastReq := fasthttp.AcquireRequest()
+	fastResp := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseRequest(fastReq)
+	defer fasthttp.ReleaseResponse(fastResp)
 
-		path := filepath.Join(pathToSpFiles, oldHash)
-		file, err := os.Open(path)
+	rand.Seed(time.Now().UnixNano())
+
+	for i := int64(0); i < intTotal; i++ {
+		randID := rand.Int63n(intTotal)
+		nodeInfo, err := nftNode.GetNodeById(&bind.CallOpts{}, big.NewInt(randID))
 		if err != nil {
-			file.Close()
-			deleteParts(pathToSpFiles, savedParts)
-			return nil, logger.CreateDetails(location, err)
+			continue
 		}
 
-		err = savePart(file, pathToSpFiles, newHash)
-		if err != nil {
-			file.Close()
-			deleteParts(pathToSpFiles, savedParts)
-			return nil, logger.CreateDetails(location, err)
+		ipBuilder := strings.Builder{}
+		for i, v := range nodeInfo.IpAddress {
+			stringPart := strconv.Itoa(int(v))
+			ipBuilder.WriteString(stringPart)
+
+			if i < 3 {
+				ipBuilder.WriteString(".")
+			}
 		}
 
-		file.Close()
+		stringPort := strconv.Itoa(int(nodeInfo.Port))
+		ipBuilder.WriteString(":")
+		ipBuilder.WriteString(stringPort)
+
+		nodeIP := ipBuilder.String()
+
+		if nodeIP == config.IpAddress+":"+config.HTTPPort {
+			continue
+		}
+
+		url := "http://" + nodeIP
+		fastReq.Reset()
+		fastResp.Reset()
+
+		fastReq.Header.SetRequestURI(url)
+		fastReq.Header.SetMethod("GET")
+		fastReq.Header.Set("Connection", "close")
+
+		err = fasthttp.Do(fastReq, fastResp)
+		if err != nil {
+			continue
+		}
+
+		err = copyOnOtherNode(nodeIP, pathToSpFiles, req.MultipartForm, hashes, fileSize)
+		if err != nil {
+			continue
+		}
+
+		return &NodeAddressResponse{
+			NodeAddress: nodeIP,
+		}, nil
 	}
 
-	return &NodeAddressResponse{
-		NodeAddress: config.IpAddress + ":" + config.HTTPPort,
-	}, nil
+	return nil, logger.CreateDetails(location, errors.New("no available nodes"))
 }
 
 // ====================================================================================
@@ -241,7 +187,9 @@ func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig st
 		rqFile.Close()
 
 		count++
-		logger.Log("Saved file " + reqFilePart.Filename + " (" + strconv.Itoa(count) + "/" + strconv.Itoa(len(oneMBHashes)) + ")" + " from " + spData.Address) //TODO remove
+		if !shared.TestMode {
+			logger.Log("Saved file " + reqFilePart.Filename + " (" + strconv.Itoa(count) + "/" + strconv.Itoa(len(oneMBHashes)) + ")" + " from " + spData.Address) //TODO remove
+		}
 	}
 
 	return nil
@@ -300,7 +248,7 @@ func Serve(spAddress, fileKey, signatureFromReq string) (string, error) {
 // ====================================================================================
 
 //Sends files to other node if they can't be copied locally and returns that nodes address
-func copyOnOtherNode(nodeAddress, pathToSpFiles string, multiForm *multipart.Form, hashesMap map[string]string, fileSize int) error {
+func copyOnOtherNode(nodeAddress, pathToSpFiles string, multiForm *multipart.Form, hashes []string, fileSize int) error {
 	const location = "files_helpers.backUp->"
 
 	pipeConns := fasthttputil.NewPipeConns()
@@ -344,15 +292,15 @@ func copyOnOtherNode(nodeAddress, pathToSpFiles string, multiForm *multipart.For
 			}
 		}
 
-		for oldHash, newHash := range hashesMap {
-			path := filepath.Join(pathToSpFiles, oldHash)
+		for _, hash := range hashes {
+			path := filepath.Join(pathToSpFiles, hash)
 			file, err := os.Open(path)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				return
 			}
 
-			filePart, err := writer.CreateFormFile("files", newHash)
+			filePart, err := writer.CreateFormFile("files", hash)
 			if err != nil {
 				file.Close()
 				logger.Log(logger.CreateDetails(location, err))
