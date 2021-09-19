@@ -318,9 +318,9 @@ func StartMakingProofs(password string) {
 			}
 
 			fmt.Println("reward for", spAddress, "files is", reward) //TODO remove
-			fmt.Println("Min reward value:", 350000000000000000)
+			fmt.Println("Min reward value:", 200000000000000)
 
-			rewardisEnough := reward.Cmp(big.NewInt(350000000000000000)) == 1
+			rewardisEnough := reward.Cmp(big.NewInt(200000000000000)) == 1
 
 			if !rewardisEnough {
 				continue
@@ -432,29 +432,38 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 
 	fsRootHashBytes := proof[len(proof)-1]
 
-	currentRootHash, currentNonce, err := instance.GetUserRootHash(&bind.CallOpts{}, spAddress)
+	contractRootHash, contractNonce, err := instance.GetUserRootHash(&bind.CallOpts{}, spAddress)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
 
-	sameFsRoot := bytes.Equal(fsRootHashBytes[:], currentRootHash[:])
-	if !sameFsRoot {
-		fmt.Println("root hashes are different")
-		return logger.CreateDetails(location, errors.New("root hashes are different"))
-	}
+	var zeroHash [32]byte
 
-	treeToFsRoot = nil
+	сontractFsHashIsZero := bytes.Equal(zeroHash[:], contractRootHash[:])
+
+	curentNonceIsZero := contractNonce.Cmp(big.NewInt(int64(0))) == 0
+
+	firstProof := curentNonceIsZero && сontractFsHashIsZero
 
 	nonceInt, err := strconv.Atoi(spFs.Nonce)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
 
-	if nonceInt != int(currentNonce.Int64()) {
-		fmt.Println("nonce value is different")
-		return logger.CreateDetails(location, errors.New("nonce value is different"))
+	if !firstProof {
+		contractNonceIsBigger := contractNonce.Cmp(big.NewInt(int64(nonceInt))) == 1
+
+		rootHashesEqual := bytes.Equal(fsRootHashBytes[:], contractRootHash[:])
+
+		if contractNonceIsBigger && !rootHashesEqual {
+			msg := fmt.Sprint("Fs root hash info is not valid", "fs nonce:", nonceInt, "contract nonce:", contractNonce, "\nfs root hash bytes", fsRootHashBytes, "contract root hash", contractRootHash)
+			fmt.Println(msg)
+			return logger.CreateDetails(location, errors.New(msg))
+		}
 
 	}
+
+	treeToFsRoot = nil
 
 	nonceHex := strconv.FormatInt(int64(nonceInt), 16)
 
