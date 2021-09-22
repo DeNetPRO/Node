@@ -52,6 +52,7 @@ func Start(port string) {
 	r.HandleFunc("/download/{spAddress}/{fileKey}/{signature}", ServeFiles).Methods("GET")
 	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}", UpdateFsInfo).Methods("POST")
 	r.HandleFunc("/copy/{size}", CopyFile).Methods("POST")
+	r.HandleFunc("/check/space/{size}", SpaceCheck).Methods("GET")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -147,6 +148,9 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	const location = "server.SaveFiles->"
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
+
+	shared.MU.Lock()
+	defer shared.MU.Unlock()
 
 	intFileSize, _, _, err := checkSpace(req, pathToConfig)
 	if err != nil {
@@ -320,7 +324,6 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.Seconda
 		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
 
-	shared.MU.Lock()
 	confFile, fileBytes, err := nodeFile.Read(pathToConfig)
 	if err != nil {
 		return 0, false, nodeConfig, logger.CreateDetails(location, err)
@@ -351,8 +354,6 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.Seconda
 	if err != nil {
 		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
-	confFile.Close()
-	shared.MU.Unlock()
 
 	return intFileSize, true, nodeConfig, nil
 }
@@ -431,4 +432,78 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 		SignedFsRoot: signedFsRootHash[0],
 		Tree:         fsTree,
 	}, nil
+}
+
+func SpaceCheck(w http.ResponseWriter, r *http.Request) {
+	const location = "server.SpaceCheck"
+	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
+
+	var nodeConfig config.SecondaryNodeConfig
+
+	vars := mux.Vars(r)
+	fileSize := vars["size"]
+
+	intFileSize, err := strconv.Atoi(fileSize)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if intFileSize == 0 {
+		http.Error(w, "empty file", http.StatusBadRequest)
+		return
+	}
+
+	shared.MU.Lock()
+	defer shared.MU.Unlock()
+
+	confFile, fileBytes, err := nodeFile.Read(pathToConfig)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer confFile.Close()
+
+	err = json.Unmarshal(fileBytes, &nodeConfig)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	sharedSpaceInBytes := int64(nodeConfig.StorageLimit) * gbBytes
+
+	nodeConfig.UsedStorageSpace += int64(intFileSize)
+
+	type checkSpaceResponse struct {
+		Status bool `json:"status"`
+	}
+
+	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
+		resp := checkSpaceResponse{
+			Status: false,
+		}
+
+		js, err := json.Marshal(resp)
+		if err != nil {
+			logger.Log(logger.CreateDetails(location, err))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+		return
+	}
+
+	resp := checkSpaceResponse{
+		Status: true,
+	}
+
+	js, err := json.Marshal(resp)
+	if err != nil {
+		logger.Log(logger.CreateDetails(location, err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }
