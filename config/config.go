@@ -78,7 +78,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 		fmt.Println("Your public IP address", ip, "is added to config")
 	} else {
 		fmt.Println("Please enter your public ip address")
-		splitIPAddr, err = SetIpAddr(&nodeConfig, UpdateStatus)
+		splitIPAddr, err = SetIpAddr(&nodeConfig, CreateStatus)
 		if err != nil {
 			return nodeConfig, logger.CreateDetails(location, err)
 		}
