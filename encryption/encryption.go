@@ -7,8 +7,10 @@ import (
 	"crypto/rand"
 	"io"
 	"net"
+	"runtime"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
 )
 
 var (
@@ -85,3 +87,12 @@ func GetDeviceMacAddr() (string, error) {
 }
 
 // ====================================================================================
+
+func GetScryptParams() (int, int) {
+
+	if runtime.NumCPU() == 1 {
+		return keystore.LightScryptN, keystore.LightScryptP
+	}
+
+	return keystore.StandardScryptN, keystore.StandardScryptP
+}
