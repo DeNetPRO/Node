@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
@@ -29,7 +30,9 @@ var showKeyCmd = &cobra.Command{
 			log.Fatal(showKeyFatalMessage)
 		}
 
-		ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+		scryptN, scryptP := encryption.GetScryptParams()
+
+		ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
 
 		keyJson, err := ks.Export(*etherAccount, password, password)
 		if err != nil {

@@ -20,6 +20,7 @@ import (
 	"time"
 
 	abiPOS "git.denetwork.xyz/dfile/dfile-secondary-node/POS_abi"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	nodeAbi "git.denetwork.xyz/dfile/dfile-secondary-node/node_abi"
@@ -531,11 +532,12 @@ func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.
 		From:  nodeAddr,
 		Nonce: big.NewInt(int64(transactNonce)),
 		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
-			ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+			scryptN, scryptP := encryption.GetScryptParams()
+
+			ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
 			acs := ks.Accounts()
 			for _, ac := range acs {
 				if ac.Address == a {
-					ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 					err := ks.TimedUnlock(ac, password, 1)
 					if err != nil {
 						return t, err
