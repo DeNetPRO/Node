@@ -337,8 +337,6 @@ func StartMakingProofs(password string) {
 			fmt.Println("reward for", spAddress, "files is", reward) //TODO remove
 			fmt.Println("Min reward value:", 200000000000000)
 
-			shared.PrintMemUsage()
-
 			rewardisEnough := reward.Cmp(big.NewInt(200000000000000)) == 1
 
 			if !rewardisEnough {
@@ -528,6 +526,8 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
+
+	debug.FreeOSMemory()
 
 	proof = nil
 
