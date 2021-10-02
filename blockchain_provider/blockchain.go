@@ -525,6 +525,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 
 	_, err = instance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
+		debug.FreeOSMemory()
 		return logger.CreateDetails(location, err)
 	}
 
