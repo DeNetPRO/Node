@@ -91,7 +91,7 @@ func GetDeviceMacAddr() (string, error) {
 func GetScryptParams() (int, int) {
 
 	if runtime.NumCPU() == 1 {
-		return keystore.LightScryptN, keystore.LightScryptP
+		return keystore.LightScryptN * 8, keystore.StandardScryptP
 	}
 
 	return keystore.StandardScryptN, keystore.StandardScryptP
