@@ -352,6 +352,7 @@ func StartMakingProofs(password string) {
 
 			storedFile, storedFileBytes, err := nodeFile.Read(filepath.Join(pathToStorProviderFiles, fileName))
 			if err != nil {
+				shared.MU.Unlock()
 				logger.Log(logger.CreateDetails(location, err))
 				continue
 			}
