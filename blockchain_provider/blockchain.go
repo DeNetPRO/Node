@@ -185,7 +185,7 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 
 	defer client.Close()
 
-	node, err := nodeAbi.NewNodeNft(common.HexToAddress(NFT), client)
+	nodeNft, err := nodeAbi.NewNodeNft(common.HexToAddress(NFT), client)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -200,7 +200,7 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 		return logger.CreateDetails(location, err)
 	}
 
-	_, err = node.UpdateNode(opts, big.NewInt(2), ipInfo, uint16(intPort))
+	_, err = nodeNft.UpdateNode(opts, big.NewInt(2), ipInfo, uint16(intPort)) // !!!!!!!!!!!!!!!
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
