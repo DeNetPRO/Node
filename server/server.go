@@ -326,12 +326,14 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.Seconda
 
 	confFile, fileBytes, err := nodeFile.Read(pathToConfig)
 	if err != nil {
+		shared.MU.Unlock()
 		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
 	defer confFile.Close()
 
 	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
+		shared.MU.Unlock()
 		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
 
@@ -340,6 +342,7 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.Seconda
 	nodeConfig.UsedStorageSpace += int64(intFileSize)
 
 	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
+		shared.MU.Unlock()
 		return 0, false, nodeConfig, logger.CreateDetails(location, errors.New("not enough space"))
 	}
 
@@ -352,6 +355,7 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.Seconda
 
 	err = config.Save(confFile, nodeConfig)
 	if err != nil {
+		shared.MU.Unlock()
 		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
 

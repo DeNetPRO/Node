@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"runtime/debug"
 
 	"github.com/minio/sha256-simd"
 
@@ -20,6 +21,7 @@ import (
 	"time"
 
 	abiPOS "git.denetwork.xyz/dfile/dfile-secondary-node/POS_abi"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	nodeAbi "git.denetwork.xyz/dfile/dfile-secondary-node/node_abi"
@@ -36,10 +38,9 @@ import (
 
 const eightKB = 8192
 const NFT = "0xBfAfdaE6B77a02A4684D39D1528c873961528342"
-
-//const ethClientAddr = "https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2"
-
 const ethClientAddr = "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f"
+
+var proofOpts *bind.TransactOpts
 
 //RegisterNode registers a node in the ethereum network.
 //Node's balance should have more than 200000000000000 wei to pay transaction comission.
@@ -230,6 +231,22 @@ func StartMakingProofs(password string) {
 		logger.Log(logger.CreateDetails(location, err))
 	}
 
+	ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
+
+	blockNum, err := client.BlockNumber(ctx)
+	if err != nil {
+		logger.Log(logger.CreateDetails(location, err))
+	}
+
+	opts, err := initTrxOpts(ctx, client, shared.NodeAddr, password, blockNum)
+	if err != nil {
+		logger.Log(logger.CreateDetails(location, err))
+	}
+
+	debug.FreeOSMemory()
+
+	proofOpts = opts
+
 	for {
 		fmt.Println("Sleeping...")
 		time.Sleep(time.Minute * 10)
@@ -335,20 +352,13 @@ func StartMakingProofs(password string) {
 
 			storedFile, storedFileBytes, err := nodeFile.Read(filepath.Join(pathToStorProviderFiles, fileName))
 			if err != nil {
+				shared.MU.Unlock()
 				logger.Log(logger.CreateDetails(location, err))
 				continue
 			}
 
 			storedFile.Close()
 			shared.MU.Unlock()
-
-			ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
-
-			blockNum, err := client.BlockNumber(ctx)
-			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
-				continue
-			}
 
 			proved, err := instance.VerifyFileProof(&bind.CallOpts{}, shared.NodeAddr, storedFileBytes[:eightKB], uint32(blockNum-6), userDifficulty)
 			if err != nil {
@@ -366,7 +376,15 @@ func StartMakingProofs(password string) {
 			fmt.Println("checking file:", fileName)
 			fmt.Println("Trying proof", fileName, "for reward:", reward)
 
-			err = sendProof(ctx, client, password, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, instance)
+			ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
+
+			blockNum, err := client.BlockNumber(ctx)
+			if err != nil {
+				logger.Log(logger.CreateDetails(location, err))
+				continue
+			}
+
+			err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, instance)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				continue
@@ -379,7 +397,7 @@ func StartMakingProofs(password string) {
 // ====================================================================================
 
 //SendProof checks Storage Providers's file system root hash and nounce info and sends proof to smart contract.
-func sendProof(ctx context.Context, client *ethclient.Client, password string, fileBytes []byte,
+func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 	nodeAddr common.Address, spAddress common.Address, blockNum uint64, instance *abiPOS.Store) error {
 	const location = "blockchainprovider.sendProof->"
 	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress.String(), paths.SpFsFilename)
@@ -497,15 +515,21 @@ func sendProof(ctx context.Context, client *ethclient.Client, password string, f
 		return logger.CreateDetails(location, errors.New(spAddress.String()+" signature is not valid"))
 	}
 
-	opts, err := initTrxOpts(ctx, client, nodeAddr, password, blockNum)
+	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
 
-	_, err = instance.SendProof(opts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
+	proofOpts.Nonce = big.NewInt(int64(transactNonce))
+	proofOpts.Context = ctx
+
+	_, err = instance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
+		debug.FreeOSMemory()
 		return logger.CreateDetails(location, err)
 	}
+
+	debug.FreeOSMemory()
 
 	proof = nil
 
@@ -531,11 +555,12 @@ func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.
 		From:  nodeAddr,
 		Nonce: big.NewInt(int64(transactNonce)),
 		Signer: func(a common.Address, t *types.Transaction) (*types.Transaction, error) {
-			ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+			scryptN, scryptP := encryption.GetScryptParams()
+
+			ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
 			acs := ks.Accounts()
 			for _, ac := range acs {
 				if ac.Address == a {
-					ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
 					err := ks.TimedUnlock(ac, password, 1)
 					if err != nil {
 						return t, err

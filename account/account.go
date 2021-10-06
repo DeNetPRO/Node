@@ -32,7 +32,9 @@ var (
 func List() []string {
 	var blockchainAccounts []string
 
-	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+	scryptN, scryptP := encryption.GetScryptParams()
+
+	ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
 	etherAccounts := ks.Accounts()
 
 	blockchainAccounts = make([]string, 0)
@@ -54,7 +56,9 @@ func Create(password string) (string, config.SecondaryNodeConfig, error) {
 		return "", nodeConf, logger.CreateDetails(location, err)
 	}
 
-	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+	scryptN, scryptP := encryption.GetScryptParams()
+
+	ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
 
 	etherAccount, err := ks.NewAccount(password)
 	if err != nil {
@@ -125,7 +129,9 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 		return "", nodeConfig, logger.CreateDetails(location, err)
 	}
 
-	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+	scryptN, scryptP := encryption.GetScryptParams()
+
+	ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
 
 	etherAccount, err := ks.ImportECDSA(ecdsaPrivKey, password)
 	if err != nil {
@@ -143,7 +149,9 @@ func Import() (string, config.SecondaryNodeConfig, error) {
 //Login checks wallet's address and user's password that was used for crypto wallet creation.
 func Login(accountAddress, password string) (*accounts.Account, error) {
 	const location = "account.Login->"
-	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+	scryptN, scryptP := encryption.GetScryptParams()
+
+	ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
 	etherAccounts := ks.Accounts()
 
 	var account *accounts.Account
@@ -192,7 +200,9 @@ func Login(accountAddress, password string) (*accounts.Account, error) {
 //CheckPassword checks crypto wallet's password.
 func CheckPassword(password, address string) error {
 	const location = "account.CheckPassword->"
-	ks := keystore.NewKeyStore(paths.AccsDirPath, keystore.StandardScryptN, keystore.StandardScryptP)
+	scryptN, scryptP := encryption.GetScryptParams()
+
+	ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
 	acc, err := utils.MakeAddress(ks, address)
 	if err != nil {
 		return logger.CreateDetails(location, err)
