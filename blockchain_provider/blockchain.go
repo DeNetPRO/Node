@@ -352,6 +352,7 @@ func StartMakingProofs(password string) {
 
 			storedFile, storedFileBytes, err := nodeFile.Read(filepath.Join(pathToStorProviderFiles, fileName))
 			if err != nil {
+				shared.MU.Unlock()
 				logger.Log(logger.CreateDetails(location, err))
 				continue
 			}
@@ -524,6 +525,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 
 	_, err = instance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
+		debug.FreeOSMemory()
 		return logger.CreateDetails(location, err)
 	}
 
