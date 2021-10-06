@@ -93,7 +93,7 @@ func GetDeviceMacAddr() (string, error) {
 func GetScryptParams() (int, int) {
 
 	fmt.Println("cpu ", runtime.NumCPU())
-	fmt.Println("RAM", memory.TotalMemory())
+	fmt.Println("RAM", memory.TotalMemory()/1024/1024)
 
 	if memory.TotalMemory()/1024/1024 < 1000 {
 		return keystore.LightScryptN * 16, keystore.StandardScryptP
