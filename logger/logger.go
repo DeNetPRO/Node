@@ -10,8 +10,9 @@ import (
 )
 
 type StatsInfoData struct {
-	Type     string
-	FileSize int64
+	Type       string
+	FileSize   int64
+	RemoteAddr string
 }
 
 type StatType int
@@ -61,12 +62,13 @@ func CreateDetails(location string, errMsg error) error {
 	return fmt.Errorf("%s line %d -> %w", location, line, errMsg)
 }
 
-func SendStatistic(spAddress string, statType StatType, fileSize int64) {
+func SendStatistic(spAddress, remoteAddr string, statType StatType, fileSize int64) {
 	const location = "logger.SendStatistic->"
 	url := loggerAddress + "/stats/" + spAddress
 	body := StatsInfoData{
-		Type:     statType.String(),
-		FileSize: fileSize,
+		Type:       statType.String(),
+		FileSize:   fileSize,
+		RemoteAddr: remoteAddr,
 	}
 
 	js, err := json.Marshal(body)

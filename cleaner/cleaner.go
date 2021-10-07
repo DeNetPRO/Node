@@ -126,7 +126,7 @@ func Start() {
 					}
 
 					if !shared.TestMode {
-						logger.SendStatistic(spAddress, logger.Delete, stat.Size())
+						logger.SendStatistic(spAddress, "", logger.Delete, stat.Size())
 					}
 
 					removedTotal++
@@ -148,7 +148,7 @@ func Start() {
 				continue
 			}
 
-			var nodeConfig config.SecondaryNodeConfig
+			var nodeConfig config.NodeConfig
 
 			err = json.Unmarshal(fileBytes, &nodeConfig)
 			if err != nil {
