@@ -23,8 +23,10 @@ import (
 
 type NodeConfig struct {
 	Address          string `json:"nodeAddress"`
+	ChnClntAddr      string `json:"chainAddress"`
 	IpAddress        string `json:"ipAddress"`
 	HTTPPort         string `json:"portHTTP"`
+	NFT              string `json:"nft"`
 	StorageLimit     int    `json:"storageLimit"`
 	UsedStorageSpace int64  `json:"usedStorageSpace"`
 	AgreeSendLogs    bool   `json:"agreeSendLogs"`
@@ -52,7 +54,12 @@ func Create(address, password string) (NodeConfig, error) {
 	nodeConfig := NodeConfig{
 		Address:       address,
 		AgreeSendLogs: true,
+		ChnClntAddr:   "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f",
+		NFT:           "0xBfAfdaE6B77a02A4684D39D1528c873961528342",
 	}
+
+	blockchainprovider.NFT = nodeConfig.NFT
+	blockchainprovider.ChainClientAddr = nodeConfig.ChnClntAddr
 
 	fmt.Println("Now, a config file creation is needed.")
 

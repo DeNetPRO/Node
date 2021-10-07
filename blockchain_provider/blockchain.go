@@ -37,10 +37,12 @@ import (
 )
 
 const eightKB = 8192
-const NFT = "0xBfAfdaE6B77a02A4684D39D1528c873961528342"
-const EthClientAddr = "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f"
 
-var proofOpts *bind.TransactOpts
+var (
+	proofOpts       *bind.TransactOpts
+	NFT             string
+	ChainClientAddr string
+)
 
 //RegisterNode registers a node in the ethereum network.
 //Node's balance should have more than 200000000000000 wei to pay transaction comission.
@@ -62,7 +64,7 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 		return logger.CreateDetails(location, err)
 	}
 
-	client, err := ethclient.Dial(EthClientAddr)
+	client, err := ethclient.Dial(ChainClientAddr)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -112,7 +114,7 @@ func GetNodeInfoByID() (nodeAbi.SimpleMetaDataDeNetNode, error) {
 	const location = "blockchainprovider.GetNodeInfoByID->"
 	var nodeInfo nodeAbi.SimpleMetaDataDeNetNode
 
-	client, err := ethclient.Dial(EthClientAddr)
+	client, err := ethclient.Dial(ChainClientAddr)
 	if err != nil {
 		return nodeInfo, logger.CreateDetails(location, err)
 	}
@@ -178,7 +180,7 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 		return logger.CreateDetails(location, err)
 	}
 
-	client, err := ethclient.Dial(EthClientAddr)
+	client, err := ethclient.Dial(ChainClientAddr)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -219,7 +221,7 @@ func StartMakingProofs(password string) {
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
 
-	client, err := ethclient.Dial(EthClientAddr)
+	client, err := ethclient.Dial(ChainClientAddr)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 	}

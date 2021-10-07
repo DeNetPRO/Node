@@ -73,6 +73,9 @@ var accountLoginCmd = &cobra.Command{
 				log.Fatal("couldn't read config file")
 			}
 
+			blockchainprovider.ChainClientAddr = nodeConfig.ChnClntAddr
+			blockchainprovider.NFT = nodeConfig.NFT
+
 			if nodeConfig.StorageLimit <= 0 {
 				log.Fatal(accLoginFatalError)
 			}
@@ -99,7 +102,7 @@ var accountLoginCmd = &cobra.Command{
 
 					nodeConfig.IpAddress = ip
 
-					err = config.Save(confFile, nodeConfig) // we dont't use mutex because race condition while login is impossible
+					err = config.Save(confFile, nodeConfig)
 					if err != nil {
 						logger.Log(logger.CreateDetails(location, err))
 						log.Fatal(ipUpdateFatalError)
