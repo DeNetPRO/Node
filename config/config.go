@@ -21,7 +21,7 @@ import (
 	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 )
 
-type SecondaryNodeConfig struct {
+type NodeConfig struct {
 	Address          string `json:"nodeAddress"`
 	IpAddress        string `json:"ipAddress"`
 	HTTPPort         string `json:"portHTTP"`
@@ -47,9 +47,9 @@ var partiallyReservedIPs = map[string]int{
 }
 
 //Create is used for creating a config file.
-func Create(address, password string) (SecondaryNodeConfig, error) {
+func Create(address, password string) (NodeConfig, error) {
 	const location = "config.Create->"
-	nodeConfig := SecondaryNodeConfig{
+	nodeConfig := NodeConfig{
 		Address:       address,
 		AgreeSendLogs: true,
 	}
@@ -129,7 +129,7 @@ func Create(address, password string) (SecondaryNodeConfig, error) {
 // ====================================================================================
 
 //Set storage limit in config file
-func SetStorageLimit(pathToConfig, state string, nodeConfig *SecondaryNodeConfig) error {
+func SetStorageLimit(pathToConfig, state string, nodeConfig *NodeConfig) error {
 	const location = "config.SetStorageLimit->"
 	regNum := regexp.MustCompile(("[0-9]+"))
 
@@ -178,7 +178,7 @@ func SetStorageLimit(pathToConfig, state string, nodeConfig *SecondaryNodeConfig
 // ====================================================================================
 
 //Set ip address in config file
-func SetIpAddr(nodeConfig *SecondaryNodeConfig, state string) ([]string, error) {
+func SetIpAddr(nodeConfig *NodeConfig, state string) ([]string, error) {
 	const location = "config.SetIpAddr->"
 
 	var splitIPAddr []string
@@ -240,7 +240,7 @@ func SetIpAddr(nodeConfig *SecondaryNodeConfig, state string) ([]string, error) 
 // ====================================================================================
 
 //Set port in config file
-func SetPort(nodeConfig *SecondaryNodeConfig, state string) error {
+func SetPort(nodeConfig *NodeConfig, state string) error {
 	const location = "config.SetPort->"
 
 	if shared.TestMode {
@@ -295,7 +295,7 @@ func SetPort(nodeConfig *SecondaryNodeConfig, state string) error {
 // ====================================================================================
 
 //Changing the sending logs agreement
-func ChangeAgreeSendLogs(nodeConfig *SecondaryNodeConfig, state string) error {
+func ChangeAgreeSendLogs(nodeConfig *NodeConfig, state string) error {
 	const location = "config.ChangeAgreeSendLogs->"
 	regPort := regexp.MustCompile("^(?:y|n)$")
 
@@ -331,7 +331,7 @@ func ChangeAgreeSendLogs(nodeConfig *SecondaryNodeConfig, state string) error {
 // ====================================================================================
 
 //Saving config file
-func Save(confFile *os.File, nodeConfig SecondaryNodeConfig) error {
+func Save(confFile *os.File, nodeConfig NodeConfig) error {
 	confJSON, err := json.Marshal(nodeConfig)
 	if err != nil {
 		return err

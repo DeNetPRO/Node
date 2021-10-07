@@ -42,7 +42,7 @@ var accountLoginCmd = &cobra.Command{
 
 		pathToConfigDir := filepath.Join(paths.AccsDirPath, etherAccount.Address.String(), paths.ConfDirName)
 
-		var nodeConfig config.SecondaryNodeConfig
+		var nodeConfig config.NodeConfig
 
 		pathToConfigFile := filepath.Join(pathToConfigDir, paths.ConfFileName)
 

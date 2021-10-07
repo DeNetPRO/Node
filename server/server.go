@@ -308,10 +308,10 @@ func CopyFile(w http.ResponseWriter, req *http.Request) {
 //Checks space on the node.
 //Returns the size of the input file, true -> if there is enough space and false -> if otherwise.
 //And also node's config.
-func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.SecondaryNodeConfig, error) {
+func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.NodeConfig, error) {
 	const location = "server.checkSpace"
 
-	var nodeConfig config.SecondaryNodeConfig
+	var nodeConfig config.NodeConfig
 
 	vars := mux.Vars(r)
 	fileSize := vars["size"]
@@ -443,7 +443,7 @@ func SpaceCheck(w http.ResponseWriter, r *http.Request) {
 	const location = "server.SpaceCheck"
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
-	var nodeConfig config.SecondaryNodeConfig
+	var nodeConfig config.NodeConfig
 
 	vars := mux.Vars(r)
 	fileSize := vars["size"]

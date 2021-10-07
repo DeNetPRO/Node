@@ -64,7 +64,7 @@ func TestEmptyAccountListBeforeCreating(t *testing.T) {
 }
 
 func TestSetIpAddrWhenCreateConfig(t *testing.T) {
-	get := config.SecondaryNodeConfig{}
+	get := config.NodeConfig{}
 	ip, err := config.SetIpAddr(&get, config.CreateStatus)
 	if err != nil {
 		t.Error(err)
@@ -74,7 +74,7 @@ func TestSetIpAddrWhenCreateConfig(t *testing.T) {
 		t.Errorf("len of ip must be 4 instead of %v", len(ip))
 	}
 
-	want := config.SecondaryNodeConfig{
+	want := config.NodeConfig{
 		IpAddress: shared.TestAddress,
 	}
 
@@ -82,13 +82,13 @@ func TestSetIpAddrWhenCreateConfig(t *testing.T) {
 }
 
 func TestSetPortWhenCreateConfig(t *testing.T) {
-	get := config.SecondaryNodeConfig{}
+	get := config.NodeConfig{}
 	err := config.SetPort(&get, config.CreateStatus)
 	if err != nil {
 		t.Error(err)
 	}
 
-	want := config.SecondaryNodeConfig{
+	want := config.NodeConfig{
 		HTTPPort: shared.TestPort,
 	}
 
@@ -96,13 +96,13 @@ func TestSetPortWhenCreateConfig(t *testing.T) {
 }
 
 func TestSetStorageLimitWhenCreateConfig(t *testing.T) {
-	get := config.SecondaryNodeConfig{}
+	get := config.NodeConfig{}
 	err := config.SetStorageLimit("", config.CreateStatus, &get)
 	if err != nil {
 		t.Error(err)
 	}
 
-	want := config.SecondaryNodeConfig{
+	want := config.NodeConfig{
 		StorageLimit: shared.TestLimit,
 	}
 
@@ -188,7 +188,7 @@ func TestImportAccount(t *testing.T) {
 		t.Errorf("import account address must not to be empty")
 	}
 
-	wantConfig := config.SecondaryNodeConfig{
+	wantConfig := config.NodeConfig{
 		Address:       accountAddress,
 		HTTPPort:      shared.TestPort,
 		StorageLimit:  shared.TestLimit,
@@ -376,13 +376,13 @@ func TestUpload(t *testing.T) {
 	}
 }
 
-func getConfig() (*os.File, *config.SecondaryNodeConfig, error) {
+func getConfig() (*os.File, *config.NodeConfig, error) {
 	confFile, fileBytes, err := nodefile.Read(configPath)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var nodeConfig *config.SecondaryNodeConfig
+	var nodeConfig *config.NodeConfig
 
 	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
