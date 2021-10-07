@@ -25,11 +25,11 @@ import (
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	memInfo "git.denetwork.xyz/dfile/dfile-secondary-node/mem_info"
 	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	spFiles "git.denetwork.xyz/dfile/dfile-secondary-node/sp_files"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -175,8 +175,9 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	fmt.Println(req.RemoteAddr)
 	if !shared.TestMode {
-		logger.SendStatistic(spData.Address, logger.Upload, int64(intFileSize))
+		logger.SendStatistic(spData.Address, req.RemoteAddr, logger.Upload, int64(intFileSize))
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -215,7 +216,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		logger.SendStatistic(spAddress, logger.Download, stat.Size())
+		logger.SendStatistic(spAddress, req.RemoteAddr, logger.Download, stat.Size())
 	}
 
 	http.ServeFile(w, req, pathToFile)

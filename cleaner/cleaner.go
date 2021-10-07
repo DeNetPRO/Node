@@ -126,7 +126,7 @@ func Start() {
 					}
 
 					if !shared.TestMode {
-						logger.SendStatistic(spAddress, logger.Delete, stat.Size())
+						logger.SendStatistic(spAddress, "", logger.Delete, stat.Size())
 					}
 
 					removedTotal++
