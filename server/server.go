@@ -175,7 +175,6 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fmt.Println(req.RemoteAddr)
 	if !shared.TestMode {
 		logger.SendStatistic(spData.Address, req.RemoteAddr, logger.Upload, int64(intFileSize))
 	}
