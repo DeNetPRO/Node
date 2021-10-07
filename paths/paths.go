@@ -11,7 +11,7 @@ import (
 var (
 	WorkDirPath    string
 	AccsDirPath    string
-	WorkDirName    = "dfile-node"
+	WorkDirName    = "denet-node"
 	ConfDirName    = "config"
 	ConfFileName   = "config.json"
 	StorageDirName = "storage"
