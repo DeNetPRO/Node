@@ -23,7 +23,7 @@ func Restore(pathToConfig string, intFileSize int) {
 	}
 	defer confFile.Close()
 
-	var nodeConfig config.SecondaryNodeConfig
+	var nodeConfig config.NodeConfig
 
 	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {

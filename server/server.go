@@ -25,11 +25,11 @@ import (
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	memInfo "git.denetwork.xyz/dfile/dfile-secondary-node/mem_info"
 	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
+	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	spFiles "git.denetwork.xyz/dfile/dfile-secondary-node/sp_files"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -52,6 +52,7 @@ func Start(port string) {
 	r.HandleFunc("/download/{spAddress}/{fileKey}/{signature}", ServeFiles).Methods("GET")
 	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}", UpdateFsInfo).Methods("POST")
 	r.HandleFunc("/copy/{size}", CopyFile).Methods("POST")
+	r.HandleFunc("/check/space/{size}", SpaceCheck).Methods("GET")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -148,6 +149,9 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
+	shared.MU.Lock()
+	defer shared.MU.Unlock()
+
 	intFileSize, _, _, err := checkSpace(req, pathToConfig)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
@@ -171,8 +175,9 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	fmt.Println(req.RemoteAddr)
 	if !shared.TestMode {
-		logger.SendStatistic(spData.Address, logger.Upload, int64(intFileSize))
+		logger.SendStatistic(spData.Address, req.RemoteAddr, logger.Upload, int64(intFileSize))
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -211,7 +216,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		logger.SendStatistic(spAddress, logger.Download, stat.Size())
+		logger.SendStatistic(spAddress, req.RemoteAddr, logger.Download, stat.Size())
 	}
 
 	http.ServeFile(w, req, pathToFile)
@@ -303,10 +308,10 @@ func CopyFile(w http.ResponseWriter, req *http.Request) {
 //Checks space on the node.
 //Returns the size of the input file, true -> if there is enough space and false -> if otherwise.
 //And also node's config.
-func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.SecondaryNodeConfig, error) {
+func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.NodeConfig, error) {
 	const location = "server.checkSpace"
 
-	var nodeConfig config.SecondaryNodeConfig
+	var nodeConfig config.NodeConfig
 
 	vars := mux.Vars(r)
 	fileSize := vars["size"]
@@ -320,7 +325,6 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.Seconda
 		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
 
-	shared.MU.Lock()
 	confFile, fileBytes, err := nodeFile.Read(pathToConfig)
 	if err != nil {
 		shared.MU.Unlock()
@@ -355,8 +359,6 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.Seconda
 		shared.MU.Unlock()
 		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
-	confFile.Close()
-	shared.MU.Unlock()
 
 	return intFileSize, true, nodeConfig, nil
 }
@@ -435,4 +437,78 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 		SignedFsRoot: signedFsRootHash[0],
 		Tree:         fsTree,
 	}, nil
+}
+
+func SpaceCheck(w http.ResponseWriter, r *http.Request) {
+	const location = "server.SpaceCheck"
+	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
+
+	var nodeConfig config.NodeConfig
+
+	vars := mux.Vars(r)
+	fileSize := vars["size"]
+
+	intFileSize, err := strconv.Atoi(fileSize)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if intFileSize == 0 {
+		http.Error(w, "empty file", http.StatusBadRequest)
+		return
+	}
+
+	shared.MU.Lock()
+	defer shared.MU.Unlock()
+
+	confFile, fileBytes, err := nodeFile.Read(pathToConfig)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer confFile.Close()
+
+	err = json.Unmarshal(fileBytes, &nodeConfig)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	sharedSpaceInBytes := int64(nodeConfig.StorageLimit) * gbBytes
+
+	nodeConfig.UsedStorageSpace += int64(intFileSize)
+
+	type checkSpaceResponse struct {
+		Status bool `json:"status"`
+	}
+
+	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
+		resp := checkSpaceResponse{
+			Status: false,
+		}
+
+		js, err := json.Marshal(resp)
+		if err != nil {
+			logger.Log(logger.CreateDetails(location, err))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+		return
+	}
+
+	resp := checkSpaceResponse{
+		Status: true,
+	}
+
+	js, err := json.Marshal(resp)
+	if err != nil {
+		logger.Log(logger.CreateDetails(location, err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }

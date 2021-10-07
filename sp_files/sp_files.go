@@ -41,7 +41,7 @@ type NodeAddressResponse struct {
 }
 
 //Copy makes a copy of file parts that are stored on the node, or sends them on oher node for replication.
-func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.SecondaryNodeConfig, pathToConfig string, fileSize int, enoughSpace bool) (*NodeAddressResponse, error) {
+func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.NodeConfig, pathToConfig string, fileSize int, enoughSpace bool) (*NodeAddressResponse, error) {
 	const location = "files.Copy->"
 
 	pathToSpFiles := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spData.Address)

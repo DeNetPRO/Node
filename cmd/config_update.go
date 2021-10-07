@@ -46,7 +46,7 @@ var configUpdateCmd = &cobra.Command{
 		pathToConfigDir := filepath.Join(paths.AccsDirPath, etherAccount.Address.String(), paths.ConfDirName)
 		pathToConfigFile := filepath.Join(pathToConfigDir, paths.ConfFileName)
 
-		var nodeConfig config.SecondaryNodeConfig
+		var nodeConfig config.NodeConfig
 
 		confFile, fileBytes, err := nodeFile.Read(pathToConfigFile)
 		if err != nil {

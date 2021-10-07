@@ -47,9 +47,9 @@ func List() []string {
 }
 
 // Create is used for creating a new crypto wallet with keystore file.
-func Create(password string) (string, config.SecondaryNodeConfig, error) {
+func Create(password string) (string, config.NodeConfig, error) {
 	const location = "account.Create->"
-	var nodeConf config.SecondaryNodeConfig
+	var nodeConf config.NodeConfig
 
 	err := paths.CreateAccDirs()
 	if err != nil {
@@ -74,9 +74,9 @@ func Create(password string) (string, config.SecondaryNodeConfig, error) {
 }
 
 //Import is used for importing crypto wallet. Private key is needed.
-func Import() (string, config.SecondaryNodeConfig, error) {
+func Import() (string, config.NodeConfig, error) {
 	const location = "account.Import->"
-	var nodeConfig config.SecondaryNodeConfig
+	var nodeConfig config.NodeConfig
 
 	var privKey string
 	var err error
@@ -312,9 +312,9 @@ func ValidateUser() (*accounts.Account, string, error) {
 }
 
 //InitAccount creates directories and files needed for correct work.
-func initAccount(ks *keystore.KeyStore, account *accounts.Account, password string) (config.SecondaryNodeConfig, error) {
+func initAccount(ks *keystore.KeyStore, account *accounts.Account, password string) (config.NodeConfig, error) {
 	const location = "account.initAccount->"
-	var nodeConf config.SecondaryNodeConfig
+	var nodeConf config.NodeConfig
 
 	addressString := account.Address.String()
 
