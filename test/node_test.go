@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
+	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
@@ -190,6 +191,8 @@ func TestImportAccount(t *testing.T) {
 
 	wantConfig := config.NodeConfig{
 		Address:       accountAddress,
+		ChnClntAddr:   blockchainprovider.ChainClientAddr,
+		NFT:           blockchainprovider.NFT,
 		HTTPPort:      shared.TestPort,
 		StorageLimit:  shared.TestLimit,
 		IpAddress:     shared.TestAddress,
