@@ -12,7 +12,7 @@ import (
 func TestMain(m *testing.M) {
 	shared.TestMode = true
 
-	paths.WorkDirName = "dfile-test"
+	paths.WorkDirName = "denet-test"
 
 	err := paths.Init()
 	if err != nil {
