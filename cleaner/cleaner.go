@@ -108,6 +108,8 @@ func Start() {
 				}
 			}
 
+			testMode := os.Getenv("DENET_TEST")
+
 			for _, fileName := range fileNames {
 
 				if !fsFiles[fileName] {
@@ -125,7 +127,7 @@ func Start() {
 						continue
 					}
 
-					if !shared.TestMode {
+					if testMode != "1" {
 						logger.SendStatistic(spAddress, "", logger.Delete, stat.Size())
 					}
 

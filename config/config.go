@@ -59,7 +59,11 @@ func Create(address, password string) (NodeConfig, error) {
 	testMode := os.Getenv("DENET_TEST")
 
 	if testMode == "1" {
+		nodeConfig.IpAddress = "127.0.01"
 		nodeConfig.HTTPPort = "55050"
+		nodeConfig.Network = "kovan"
+		nodeConfig.StorageLimit = 1
+		nodeConfig.UsedStorageSpace = 0
 	}
 
 	network, err := SelectNetwork()
