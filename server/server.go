@@ -219,7 +219,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	testMode := os.Getenv("DENET_TEST")
 
 	if testMode != "1" {
-		logger.SendStatistic(spAddress, "", logger.Delete, stat.Size())
+		logger.SendStatistic(spAddress, req.RemoteAddr, logger.Download, stat.Size())
 	}
 
 	http.ServeFile(w, req, pathToFile)
