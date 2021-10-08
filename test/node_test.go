@@ -2,6 +2,7 @@ package test
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -69,6 +70,18 @@ func TestAccCreate(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
+	stat, err := os.Stat(paths.AccsDirPath)
+	if err != nil {
+		t.Error(err)
+	}
+
+	accs := account.List()
+	if len(accs) != 1 {
+		t.Error("Wrong accs count, must be one", accs)
+	}
+
+	fmt.Println(stat)
 }
 
 // func TestLoginAccountWithCorrectAddressAndPassword(t *testing.T) {
