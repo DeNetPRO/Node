@@ -79,44 +79,41 @@ func Import() (string, config.NodeConfig, error) {
 	var nodeConfig config.NodeConfig
 
 	var privKey string
+	var originalPassword string
 	var err error
 
-	// testMode := os.Getenv("DENET_TEST")
+	testMode := os.Getenv("DENET_TEST")
 
-	fmt.Println("Please enter private key of the account you want to import:")
+	if testMode == "1" {
+		privKey = "16f98d96422dd7f21965755bd64c9dcd9cfc5d36e029002d9cc579f42511c7ed"
+		originalPassword = "123"
+	} else {
+		fmt.Println("Please enter private key of the account you want to import:")
 
-	privKey, err = termEmul.ReadInput()
-	if err != nil {
-		return "", nodeConfig, logger.CreateDetails(location, err)
-	}
-
-	ecdsaPrivKey, err := crypto.HexToECDSA(privKey)
-	if err != nil {
-		return "", nodeConfig, logger.CreateDetails(location, err)
-	}
-
-	var password string
-
-	fmt.Println("Please enter your password:")
-
-	var originalPassword string
-
-	for {
-		bytePassword, err := gopass.GetPasswdMasked()
+		privKey, err = termEmul.ReadInput()
 		if err != nil {
 			return "", nodeConfig, logger.CreateDetails(location, err)
 		}
 
-		originalPassword = string(bytePassword)
-		if strings.Trim(originalPassword, " ") == "" {
-			fmt.Println("Empty string can't be used as a password. Please try again")
-			continue
-		}
+		fmt.Println("Please enter your password:")
 
-		break
+		for {
+			bytePassword, err := gopass.GetPasswdMasked()
+			if err != nil {
+				return "", nodeConfig, logger.CreateDetails(location, err)
+			}
+
+			originalPassword = string(bytePassword)
+			if strings.Trim(originalPassword, " ") == "" {
+				fmt.Println("Empty string can't be used as a password. Please try again")
+				continue
+			}
+
+			break
+		}
 	}
 
-	password = hash.Password(originalPassword)
+	password := hash.Password(originalPassword)
 	originalPassword = ""
 
 	err = paths.CreateAccDirs()
@@ -127,6 +124,11 @@ func Import() (string, config.NodeConfig, error) {
 	scryptN, scryptP := encryption.GetScryptParams()
 
 	ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
+
+	ecdsaPrivKey, err := crypto.HexToECDSA(privKey)
+	if err != nil {
+		return "", nodeConfig, logger.CreateDetails(location, err)
+	}
 
 	etherAccount, err := ks.ImportECDSA(ecdsaPrivKey, password)
 	if err != nil {

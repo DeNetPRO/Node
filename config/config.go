@@ -56,6 +56,8 @@ func Create(address, password string) (NodeConfig, error) {
 		AgreeSendLogs: true,
 	}
 
+	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
+
 	testMode := os.Getenv("DENET_TEST")
 
 	if testMode == "1" {
@@ -64,61 +66,57 @@ func Create(address, password string) (NodeConfig, error) {
 		nodeConfig.Network = "kovan"
 		nodeConfig.StorageLimit = 1
 		nodeConfig.UsedStorageSpace = 0
-
-		return nodeConfig, nil
-	}
-
-	network, err := SelectNetwork()
-	if err != nil {
-		return nodeConfig, logger.CreateDetails(location, err)
-	}
-
-	nodeConfig.Network = network
-	blckChain.Network = network
-
-	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-
-	fmt.Println("Please enter disk space for usage in GB (should be positive number)")
-
-	err = SetStorageLimit(pathToConfig, CreateStatus, &nodeConfig)
-	if err != nil {
-		return nodeConfig, logger.CreateDetails(location, err)
-	}
-
-	var splitIPAddr []string
-
-	if upnp.InternetDevice != nil {
-		ip, err := upnp.InternetDevice.PublicIP()
-		if err != nil {
-			return nodeConfig, logger.CreateDetails(location, err)
-		}
-
-		nodeConfig.IpAddress = ip
-		splitIPAddr = strings.Split(ip, ".")
-		fmt.Println("Your public IP address", ip, "is added to config")
 	} else {
-		fmt.Println("Please enter your public ip address")
-		splitIPAddr, err = SetIpAddr(&nodeConfig, CreateStatus)
+		network, err := SelectNetwork()
 		if err != nil {
 			return nodeConfig, logger.CreateDetails(location, err)
 		}
-	}
 
-	err = SetPort(&nodeConfig, CreateStatus)
-	if err != nil {
-		return nodeConfig, logger.CreateDetails(location, err)
-	}
+		nodeConfig.Network = network
+		blckChain.Network = network
 
-	fmt.Println("Due to testing stage bug reports from your device are going to be received by developers")
-	fmt.Println("You can stop sending reports by updating config")
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
+		fmt.Println("Please enter disk space for usage in GB (should be positive number)")
 
-	fmt.Println("Registering node...")
+		err = SetStorageLimit(pathToConfig, CreateStatus, &nodeConfig)
+		if err != nil {
+			return nodeConfig, logger.CreateDetails(location, err)
+		}
 
-	err = blckChain.RegisterNode(ctx, address, password, splitIPAddr, nodeConfig.HTTPPort)
-	if err != nil {
-		return nodeConfig, logger.CreateDetails(location, err)
+		var splitIPAddr []string
+
+		if upnp.InternetDevice != nil {
+			ip, err := upnp.InternetDevice.PublicIP()
+			if err != nil {
+				return nodeConfig, logger.CreateDetails(location, err)
+			}
+
+			nodeConfig.IpAddress = ip
+			splitIPAddr = strings.Split(ip, ".")
+			fmt.Println("Your public IP address", ip, "is added to config")
+		} else {
+			fmt.Println("Please enter your public ip address")
+			splitIPAddr, err = SetIpAddr(&nodeConfig, CreateStatus)
+			if err != nil {
+				return nodeConfig, logger.CreateDetails(location, err)
+			}
+		}
+
+		err = SetPort(&nodeConfig, CreateStatus)
+		if err != nil {
+			return nodeConfig, logger.CreateDetails(location, err)
+		}
+
+		fmt.Println("Due to testing stage bug reports from your device are going to be received by developers")
+		fmt.Println("You can stop sending reports by updating config")
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
+
+		fmt.Println("Registering node...")
+
+		err = blckChain.RegisterNode(ctx, address, password, splitIPAddr, nodeConfig.HTTPPort)
+		if err != nil {
+			return nodeConfig, logger.CreateDetails(location, err)
+		}
 	}
 
 	confFile, err := os.Create(filepath.Join(pathToConfig, paths.ConfFileName))

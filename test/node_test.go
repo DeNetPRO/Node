@@ -4,6 +4,8 @@ import (
 	"errors"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
@@ -66,75 +68,78 @@ func TestEmptyAccountListBeforeCreating(t *testing.T) {
 func TestAccCreate(t *testing.T) {
 	_, _, err := account.Create(accountPassword)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	_, err = os.Stat(paths.AccsDirPath)
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	accs := account.List()
 	if len(accs) != 1 {
-		t.Error("Wrong accs count, must be one", accs)
+		t.Fatal("Wrong accs count, must be one", accs)
 	}
 
-	// pathToAcc := filepath.Join(paths.AccsDirPath, accs[0])
+	accountAddress = accs[0]
 
-	// pathToStorage := filepath.Join(pathToAcc, paths.AccsDirPath, paths.StorageDirName)
+	pathToAcc := filepath.Join(paths.AccsDirPath, accountAddress)
 
-	// _, err = os.Stat(pathToStorage)
-	// if err != nil {
-	// 	t.Error(err)
-	// }
+	pathToStorage := filepath.Join(pathToAcc, paths.StorageDirName)
 
-	// pathToConfigFile := filepath.Join(pathToAcc, paths.ConfDirName, paths.ConfFileName)
+	_, err = os.Stat(pathToStorage)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	// _, err = os.Stat(pathToConfigFile)
-	// if err != nil {
-	// 	t.Error(err)
-	// }
+	pathToConfigFile := filepath.Join(pathToAcc, paths.ConfDirName, paths.ConfFileName)
+
+	_, err = os.Stat(pathToConfigFile)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 }
 
-// func TestLoginAccountWithCorrectAddressAndPassword(t *testing.T) {
-// 	account, err := account.Login(accountAddress, accountPassword)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// 	require.Equal(t, accountAddress, account.Address.String())
-// }
+func TestLogin(t *testing.T) {
+	account, err := account.Login(accountAddress, accountPassword)
+	if err != nil {
+		t.Fatal(err)
+	}
+	require.Equal(t, accountAddress, account.Address.String())
+}
 
-// func TestLoginAccountWithInvalidPassword(t *testing.T) {
-// 	_, err := account.Login(accountAddress, "invalid")
-// 	want := ErrorInvalidPassword
+func TestLoginInvalidPass(t *testing.T) {
+	_, err := account.Login(accountAddress, "invalid")
+	want := ErrorInvalidPassword
 
-// 	splitErr := strings.Split(err.Error(), "->")
+	splitErr := strings.Split(err.Error(), "->")
 
-// 	require.EqualError(t, want, splitErr[len(splitErr)-1])
-// }
+	require.EqualError(t, want, splitErr[len(splitErr)-1])
+}
 
-// func TestLoginAccountWithUnknownAddress(t *testing.T) {
-// 	unknownAddress := "accountAddress"
-// 	_, err := account.Login(unknownAddress, accountPassword)
-// 	want := errors.New(" accountAddress address is not found")
-// 	splitErr := strings.Split(err.Error(), "->")
+func TestLoginUnknownAddress(t *testing.T) {
+	unknownAddress := "accountAddress"
+	_, err := account.Login(unknownAddress, accountPassword)
+	want := errors.New(" accountAddress address is not found")
+	splitErr := strings.Split(err.Error(), "->")
 
-// 	require.EqualError(t, want, splitErr[len(splitErr)-1])
-// }
+	require.EqualError(t, want, splitErr[len(splitErr)-1])
+}
 
-// func TestCheckRightPassword(t *testing.T) {
-// 	err := account.CheckPassword(accountPassword, accountAddress)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-// }
+func TestCheckRightPassword(t *testing.T) {
+	err := account.CheckPassword(accountPassword, accountAddress)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 
 // func TestImportAccount(t *testing.T) {
 // 	accountAddress, c, err := account.Import()
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
+// }
 
 // 	if accountAddress == "" {
 // 		t.Errorf("import account address must not to b	e empty")
@@ -153,18 +158,18 @@ func TestAccCreate(t *testing.T) {
 // func TestCheckSignature(t *testing.T) {
 // 	macAddress, err := encryption.GetDeviceMacAddr()
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	encrForKey := sha256.Sum256([]byte(macAddress))
 // 	privateKeyBytes, err := encryption.DecryptAES(encrForKey[:], encryption.PrivateKey)
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	privateKey, err := crypto.ToECDSA(privateKeyBytes)
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	data := make([]byte, 100)
@@ -175,7 +180,7 @@ func TestAccCreate(t *testing.T) {
 
 // 	signedData, err := crypto.Sign(hashData[:], privateKey)
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	err = sign.Check(accountAddress, signedData, hashData)
@@ -189,7 +194,7 @@ func TestAccCreate(t *testing.T) {
 
 // 	confFile, nodeConfig, err := getConfig()
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	want := nodeConfig.UsedStorageSpace
@@ -199,7 +204,7 @@ func TestAccCreate(t *testing.T) {
 // 	err = config.Save(confFile, *nodeConfig)
 // 	if err != nil {
 // 		confFile.Close()
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	confFile.Close()
@@ -208,7 +213,7 @@ func TestAccCreate(t *testing.T) {
 
 // 	confFile, nodeConfig, err = getConfig()
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	confFile.Close()
