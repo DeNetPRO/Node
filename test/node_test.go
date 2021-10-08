@@ -2,7 +2,6 @@ package test
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -22,7 +21,6 @@ var (
 	accountAddress            string
 	nodeAddress               []byte
 	ErrorInvalidPassword      = errors.New(" could not decrypt key with given password")
-	configPath                string
 	storagePath               string
 	testFileName              = "file"
 	fileSize                  int64
@@ -71,7 +69,7 @@ func TestAccCreate(t *testing.T) {
 		t.Error(err)
 	}
 
-	stat, err := os.Stat(paths.AccsDirPath)
+	_, err = os.Stat(paths.AccsDirPath)
 	if err != nil {
 		t.Error(err)
 	}
@@ -81,7 +79,22 @@ func TestAccCreate(t *testing.T) {
 		t.Error("Wrong accs count, must be one", accs)
 	}
 
-	fmt.Println(stat)
+	// pathToAcc := filepath.Join(paths.AccsDirPath, accs[0])
+
+	// pathToStorage := filepath.Join(pathToAcc, paths.AccsDirPath, paths.StorageDirName)
+
+	// _, err = os.Stat(pathToStorage)
+	// if err != nil {
+	// 	t.Error(err)
+	// }
+
+	// pathToConfigFile := filepath.Join(pathToAcc, paths.ConfDirName, paths.ConfFileName)
+
+	// _, err = os.Stat(pathToConfigFile)
+	// if err != nil {
+	// 	t.Error(err)
+	// }
+
 }
 
 // func TestLoginAccountWithCorrectAddressAndPassword(t *testing.T) {
