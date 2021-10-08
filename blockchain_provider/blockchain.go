@@ -262,7 +262,7 @@ func StartMakingProofs(password string) {
 
 	proofOpts = opts
 
-	fmt.Println("Started in", Network, "network")
+	fmt.Println(Network, "network selected")
 
 	for {
 		fmt.Println("Sleeping...")
