@@ -1,4 +1,4 @@
-package blockchainprovider
+package blckChain
 
 import (
 	"bytes"
@@ -36,18 +36,28 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
+type NtwrkParams struct {
+	Addr string
+	NFT  string
+}
+
+var Networks = map[string]NtwrkParams{
+	"kovan": {
+		Addr: "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f",
+		NFT:  "0xBfAfdaE6B77a02A4684D39D1528c873961528342"},
+}
+
 const eightKB = 8192
 
 var (
-	proofOpts       *bind.TransactOpts
-	NFT             string
-	ChainClientAddr string
+	proofOpts *bind.TransactOpts
+	Network   string
 )
 
 //RegisterNode registers a node in the ethereum network.
 //Node's balance should have more than 200000000000000 wei to pay transaction comission.
 func RegisterNode(ctx context.Context, address, password string, ip []string, port string) error {
-	const location = "blockchainprovider.RegisterNode->"
+	const location = "blckChain.RegisterNode->"
 	ipAddr := [4]uint8{}
 
 	for i, v := range ip {
@@ -64,7 +74,7 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 		return logger.CreateDetails(location, err)
 	}
 
-	client, err := ethclient.Dial(ChainClientAddr)
+	client, err := ethclient.Dial(Networks[Network].Addr)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -89,7 +99,7 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 		os.Exit(0)
 	}
 
-	node, err := nodeAbi.NewNodeNft(common.HexToAddress(NFT), client)
+	node, err := nodeAbi.NewNodeNft(common.HexToAddress(Networks[Network].NFT), client)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -111,17 +121,17 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 
 //GetNodeInfoByID gets the node info by its ID from ethereum network.
 func GetNodeInfoByID() (nodeAbi.SimpleMetaDataDeNetNode, error) {
-	const location = "blockchainprovider.GetNodeInfoByID->"
+	const location = "blckChain.GetNodeInfoByID->"
 	var nodeInfo nodeAbi.SimpleMetaDataDeNetNode
 
-	client, err := ethclient.Dial(ChainClientAddr)
+	client, err := ethclient.Dial(Networks[Network].Addr)
 	if err != nil {
 		return nodeInfo, logger.CreateDetails(location, err)
 	}
 
 	defer client.Close()
 
-	node, err := nodeAbi.NewNodeNft(common.HexToAddress(NFT), client)
+	node, err := nodeAbi.NewNodeNft(common.HexToAddress(Networks[Network].NFT), client)
 	if err != nil {
 		return nodeInfo, logger.CreateDetails(location, err)
 	}
@@ -138,7 +148,7 @@ func GetNodeInfoByID() (nodeAbi.SimpleMetaDataDeNetNode, error) {
 
 //GetNodeNFT returns instance of NodeNft, bound to a specific deployed contract.
 func GetNodeNFT() (*nodeAbi.NodeNft, error) {
-	const location = "blockchainprovider.getNodeNFT->"
+	const location = "blckChain.getNodeNFT->"
 
 	nftAddr := common.HexToAddress("0xBfAfdaE6B77a02A4684D39D1528c873961528342")
 
@@ -163,7 +173,7 @@ func GetNodeNFT() (*nodeAbi.NodeNft, error) {
 
 //UpdateNodeInfo updates node's ip address or port info.
 func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newPort string, newIP []string) error {
-	const location = "blockchainprovider.UpdateNodeInfo->"
+	const location = "blckChain.UpdateNodeInfo->"
 	ipInfo := [4]uint8{}
 
 	for i, v := range newIP {
@@ -180,14 +190,14 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 		return logger.CreateDetails(location, err)
 	}
 
-	client, err := ethclient.Dial(ChainClientAddr)
+	client, err := ethclient.Dial(Networks[Network].Addr)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
 
 	defer client.Close()
 
-	nodeNft, err := nodeAbi.NewNodeNft(common.HexToAddress(NFT), client)
+	nodeNft, err := nodeAbi.NewNodeNft(common.HexToAddress(Networks[Network].NFT), client)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -214,14 +224,14 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 
 //StartMakingProofs checks reward value for stored file part and sends proof to smart contract if reward is enough.
 func StartMakingProofs(password string) {
-	const location = "blockchainprovider.StartMining->"
+	const location = "blckChain.StartMining->"
 
 	pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName)
 
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
 
-	client, err := ethclient.Dial(ChainClientAddr)
+	client, err := ethclient.Dial(Networks[Network].Addr)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 	}
@@ -248,6 +258,8 @@ func StartMakingProofs(password string) {
 	debug.FreeOSMemory()
 
 	proofOpts = opts
+
+	fmt.Println("Started in", Network, "network")
 
 	for {
 		fmt.Println("Sleeping...")
@@ -401,7 +413,7 @@ func StartMakingProofs(password string) {
 //SendProof checks Storage Providers's file system root hash and nounce info and sends proof to smart contract.
 func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 	nodeAddr common.Address, spAddress common.Address, blockNum uint64, instance *abiPOS.Store) error {
-	const location = "blockchainprovider.sendProof->"
+	const location = "blckChain.sendProof->"
 	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress.String(), paths.SpFsFilename)
 
 	shared.MU.Lock()
@@ -541,7 +553,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 // ====================================================================================
 // InitTrxOpts makes transaction options that are needed when sending request to smart contract.
 func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.Address, password string, blockNum uint64) (*bind.TransactOpts, error) {
-	const location = "blockchainprovider.initTrxOpts->"
+	const location = "blckChain.initTrxOpts->"
 
 	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
 	if err != nil {

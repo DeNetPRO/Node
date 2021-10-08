@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
-	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
+	blckChain "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
@@ -186,13 +186,12 @@ func TestImportAccount(t *testing.T) {
 	}
 
 	if accountAddress == "" {
-		t.Errorf("import account address must not to be empty")
+		t.Errorf("import account address must not to b	e empty")
 	}
 
 	wantConfig := config.NodeConfig{
 		Address:       accountAddress,
-		ChnClntAddr:   blockchainprovider.ChainClientAddr,
-		NFT:           blockchainprovider.NFT,
+		Network:       blckChain.Network,
 		HTTPPort:      shared.TestPort,
 		StorageLimit:  shared.TestLimit,
 		IpAddress:     shared.TestAddress,
