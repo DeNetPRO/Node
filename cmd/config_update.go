@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
-	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
+	blckChain "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
@@ -63,6 +63,14 @@ var configUpdateCmd = &cobra.Command{
 
 		stateBefore := nodeConfig
 
+		network, err := config.SelectNetwork()
+		if err != nil {
+			logger.Log(logger.CreateDetails(location, err))
+			log.Fatal(confUpdateFatalMessage)
+		}
+
+		nodeConfig.Network = network
+
 		fmt.Println("Please enter disk space for usage in GB (should be positive number), or just press enter button to skip")
 
 		err = config.SetStorageLimit(pathToConfigDir, config.UpdateStatus, &nodeConfig)
@@ -96,6 +104,7 @@ var configUpdateCmd = &cobra.Command{
 		}
 
 		if stateBefore.IpAddress == nodeConfig.IpAddress &&
+			stateBefore.Network == nodeConfig.Network &&
 			stateBefore.HTTPPort == nodeConfig.HTTPPort &&
 			stateBefore.StorageLimit == nodeConfig.StorageLimit &&
 			stateBefore.AgreeSendLogs == nodeConfig.AgreeSendLogs {
@@ -106,7 +115,7 @@ var configUpdateCmd = &cobra.Command{
 		if stateBefore.IpAddress != nodeConfig.IpAddress || stateBefore.HTTPPort != nodeConfig.HTTPPort {
 			ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
-			err := blockchainprovider.UpdateNodeInfo(ctx, etherAccount.Address, password, nodeConfig.HTTPPort, splitIPAddr)
+			err := blckChain.UpdateNodeInfo(ctx, etherAccount.Address, password, nodeConfig.HTTPPort, splitIPAddr)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				log.Fatal(confUpdateFatalMessage)
