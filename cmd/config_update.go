@@ -63,6 +63,14 @@ var configUpdateCmd = &cobra.Command{
 
 		stateBefore := nodeConfig
 
+		network, err := config.SelectNetwork()
+		if err != nil {
+			logger.Log(logger.CreateDetails(location, err))
+			log.Fatal(confUpdateFatalMessage)
+		}
+
+		nodeConfig.Network = network
+
 		fmt.Println("Please enter disk space for usage in GB (should be positive number), or just press enter button to skip")
 
 		err = config.SetStorageLimit(pathToConfigDir, config.UpdateStatus, &nodeConfig)

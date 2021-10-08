@@ -55,51 +55,19 @@ func Create(address, password string) (NodeConfig, error) {
 		AgreeSendLogs: true,
 	}
 
-	fmt.Println("Choose a network")
-
-	networks := [2]string{"kovan", "polygon"}
-
-	for i, network := range networks {
-		fmt.Println(i+1, network)
+	network, err := SelectNetwork()
+	if err != nil {
+		return nodeConfig, logger.CreateDetails(location, err)
 	}
 
-	for {
-
-		number, err := termEmul.ReadInput()
-		if err != nil {
-			return nodeConfig, logger.CreateDetails(location, err)
-		}
-
-		netNum, err := strconv.Atoi(number)
-		if err != nil {
-			fmt.Println("Incorrect value, try again")
-			continue
-		}
-
-		if netNum < 1 || netNum > len(networks) {
-			fmt.Println("Incorrect value, try again")
-			continue
-		}
-
-		netwrok := networks[netNum-1]
-
-		_, netExists := blckChain.Networks[netwrok]
-
-		if !netExists {
-			fmt.Println("Network is not supported")
-			continue
-		}
-
-		nodeConfig.Network = netwrok
-		blckChain.Network = netwrok
-		break
-	}
+	nodeConfig.Network = network
+	blckChain.Network = network
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
 
 	fmt.Println("Please enter disk space for usage in GB (should be positive number)")
 
-	err := SetStorageLimit(pathToConfig, CreateStatus, &nodeConfig)
+	err = SetStorageLimit(pathToConfig, CreateStatus, &nodeConfig)
 	if err != nil {
 		return nodeConfig, logger.CreateDetails(location, err)
 	}
@@ -163,6 +131,53 @@ func Create(address, password string) (NodeConfig, error) {
 	confFile.Sync()
 
 	return nodeConfig, nil
+}
+
+// ====================================================================================
+
+// returns selected network
+func SelectNetwork() (string, error) {
+
+	const location = "config.SelectNetwork"
+
+	fmt.Println("Choose a network")
+
+	networks := [2]string{"kovan", "polygon"}
+
+	for i, network := range networks {
+		fmt.Println(i+1, network)
+	}
+
+	for {
+
+		number, err := termEmul.ReadInput()
+		if err != nil {
+			return "", logger.CreateDetails(location, err)
+		}
+
+		netNum, err := strconv.Atoi(number)
+		if err != nil {
+			fmt.Println("Incorrect value, try again")
+			continue
+		}
+
+		if netNum < 1 || netNum > len(networks) {
+			fmt.Println("Incorrect value, try again")
+			continue
+		}
+
+		netwrok := networks[netNum-1]
+
+		_, netExists := blckChain.Networks[netwrok]
+
+		if !netExists {
+			fmt.Println("Network is not supported")
+			continue
+		}
+
+		return netwrok, nil
+	}
+
 }
 
 // ====================================================================================
