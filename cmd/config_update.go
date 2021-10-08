@@ -104,6 +104,7 @@ var configUpdateCmd = &cobra.Command{
 		}
 
 		if stateBefore.IpAddress == nodeConfig.IpAddress &&
+			stateBefore.Network == nodeConfig.Network &&
 			stateBefore.HTTPPort == nodeConfig.HTTPPort &&
 			stateBefore.StorageLimit == nodeConfig.StorageLimit &&
 			stateBefore.AgreeSendLogs == nodeConfig.AgreeSendLogs {
