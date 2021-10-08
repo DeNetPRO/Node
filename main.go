@@ -17,22 +17,16 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/cmd"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
 )
 
 var testMode = "test"
 
 func main() {
-	mode := os.Getenv("MODE")
-	if mode == testMode {
-		shared.TestMode = true
-	}
 
 	err := paths.Init()
 	if err != nil {

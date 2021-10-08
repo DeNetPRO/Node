@@ -187,9 +187,9 @@ func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig st
 		rqFile.Close()
 
 		count++
-		if !shared.TestMode {
-			logger.Log("Saved file " + reqFilePart.Filename + " (" + strconv.Itoa(count) + "/" + strconv.Itoa(len(oneMBHashes)) + ")" + " from " + spData.Address) //TODO remove
-		}
+
+		logger.Log("Saved file " + reqFilePart.Filename + " (" + strconv.Itoa(count) + "/" + strconv.Itoa(len(oneMBHashes)) + ")" + " from " + spData.Address) //TODO remove
+
 	}
 
 	return nil

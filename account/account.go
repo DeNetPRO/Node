@@ -81,15 +81,13 @@ func Import() (string, config.NodeConfig, error) {
 	var privKey string
 	var err error
 
-	if !shared.TestMode {
-		fmt.Println("Please enter private key of the account you want to import:")
+	// testMode := os.Getenv("DENET_TEST")
 
-		privKey, err = termEmul.ReadInput()
-		if err != nil {
-			return "", nodeConfig, logger.CreateDetails(location, err)
-		}
-	} else {
-		privKey = shared.TestPrivateKey
+	fmt.Println("Please enter private key of the account you want to import:")
+
+	privKey, err = termEmul.ReadInput()
+	if err != nil {
+		return "", nodeConfig, logger.CreateDetails(location, err)
 	}
 
 	ecdsaPrivKey, err := crypto.HexToECDSA(privKey)
@@ -98,31 +96,28 @@ func Import() (string, config.NodeConfig, error) {
 	}
 
 	var password string
-	if !shared.TestMode {
-		fmt.Println("Please enter your password:")
 
-		var originalPassword string
+	fmt.Println("Please enter your password:")
 
-		for {
-			bytePassword, err := gopass.GetPasswdMasked()
-			if err != nil {
-				return "", nodeConfig, logger.CreateDetails(location, err)
-			}
+	var originalPassword string
 
-			originalPassword = string(bytePassword)
-			if strings.Trim(originalPassword, " ") == "" {
-				fmt.Println("Empty string can't be used as a password. Please try again")
-				continue
-			}
-
-			break
+	for {
+		bytePassword, err := gopass.GetPasswdMasked()
+		if err != nil {
+			return "", nodeConfig, logger.CreateDetails(location, err)
 		}
 
-		password = hash.Password(originalPassword)
-		originalPassword = ""
-	} else {
-		password = shared.TestPassword
+		originalPassword = string(bytePassword)
+		if strings.Trim(originalPassword, " ") == "" {
+			fmt.Println("Empty string can't be used as a password. Please try again")
+			continue
+		}
+
+		break
 	}
+
+	password = hash.Password(originalPassword)
+	originalPassword = ""
 
 	err = paths.CreateAccDirs()
 	if err != nil {

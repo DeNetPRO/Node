@@ -50,9 +50,16 @@ var partiallyReservedIPs = map[string]int{
 //Create is used for creating a config file.
 func Create(address, password string) (NodeConfig, error) {
 	const location = "config.Create->"
+
 	nodeConfig := NodeConfig{
 		Address:       address,
 		AgreeSendLogs: true,
+	}
+
+	testMode := os.Getenv("DENET_TEST")
+
+	if testMode == "1" {
+		nodeConfig.HTTPPort = "55050"
 	}
 
 	network, err := SelectNetwork()
@@ -96,18 +103,16 @@ func Create(address, password string) (NodeConfig, error) {
 		return nodeConfig, logger.CreateDetails(location, err)
 	}
 
-	if !shared.TestMode {
-		fmt.Println("Due to testing stage bug reports from your device are going to be received by developers")
-		fmt.Println("You can stop sending reports by updating config")
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-		defer cancel()
+	fmt.Println("Due to testing stage bug reports from your device are going to be received by developers")
+	fmt.Println("You can stop sending reports by updating config")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
 
-		fmt.Println("Registering node...")
+	fmt.Println("Registering node...")
 
-		err = blckChain.RegisterNode(ctx, address, password, splitIPAddr, nodeConfig.HTTPPort)
-		if err != nil {
-			return nodeConfig, logger.CreateDetails(location, err)
-		}
+	err = blckChain.RegisterNode(ctx, address, password, splitIPAddr, nodeConfig.HTTPPort)
+	if err != nil {
+		return nodeConfig, logger.CreateDetails(location, err)
 	}
 
 	confFile, err := os.Create(filepath.Join(pathToConfig, paths.ConfFileName))
@@ -187,11 +192,6 @@ func SetStorageLimit(pathToConfig, state string, nodeConfig *NodeConfig) error {
 	const location = "config.SetStorageLimit->"
 	regNum := regexp.MustCompile(("[0-9]+"))
 
-	if shared.TestMode {
-		nodeConfig.StorageLimit = shared.TestLimit
-		return nil
-	}
-
 	for {
 		availableSpace := shared.GetAvailableSpace(pathToConfig)
 		fmt.Println("Available space:", availableSpace, "GB")
@@ -236,13 +236,6 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) ([]string, error) {
 	const location = "config.SetIpAddr->"
 
 	var splitIPAddr []string
-
-	if shared.TestMode {
-		ipAddr := shared.TestAddress
-		splitIPAddr := strings.Split(ipAddr, ".")
-		nodeConfig.IpAddress = ipAddr
-		return splitIPAddr, nil
-	}
 
 	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
 
@@ -296,11 +289,6 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) ([]string, error) {
 //Set port in config file
 func SetPort(nodeConfig *NodeConfig, state string) error {
 	const location = "config.SetPort->"
-
-	if shared.TestMode {
-		nodeConfig.HTTPPort = shared.TestPort
-		return nil
-	}
 
 	regPort := regexp.MustCompile("[0-9]+|")
 

@@ -10,7 +10,6 @@ import (
 	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/server"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
 	"github.com/howeyc/gopass"
 	"github.com/spf13/cobra"
 )
@@ -29,37 +28,33 @@ var accountCreateCmd = &cobra.Command{
 		fmt.Println("Password is required for account creation. It can't be restored, please save it in a safe place.")
 		fmt.Println("Please enter your new password: ")
 
-		if !shared.TestMode {
-			for {
-				bytePassword, err := gopass.GetPasswdMasked()
-				if err != nil {
-					logger.Log(logger.CreateDetails(location, err))
-					log.Fatal(accCreateFatalMessage)
-				}
-				password1 = string(bytePassword)
-
-				if strings.Trim(password1, " ") == "" {
-					fmt.Println("Empty string can't be used as a password. Please enter passwords again.")
-					continue
-				}
-
-				fmt.Println("Enter password again: ")
-				bytePassword, err = gopass.GetPasswdMasked()
-				if err != nil {
-					logger.Log(logger.CreateDetails(location, err))
-					log.Println(accCreateFatalMessage)
-				}
-
-				password2 = string(bytePassword)
-
-				if password1 == password2 {
-					break
-				}
-
-				fmt.Println("Passwords do not match. Please enter passwords again.")
+		for {
+			bytePassword, err := gopass.GetPasswdMasked()
+			if err != nil {
+				logger.Log(logger.CreateDetails(location, err))
+				log.Fatal(accCreateFatalMessage)
 			}
-		} else {
-			password1 = shared.TestPassword
+			password1 = string(bytePassword)
+
+			if strings.Trim(password1, " ") == "" {
+				fmt.Println("Empty string can't be used as a password. Please enter passwords again.")
+				continue
+			}
+
+			fmt.Println("Enter password again: ")
+			bytePassword, err = gopass.GetPasswdMasked()
+			if err != nil {
+				logger.Log(logger.CreateDetails(location, err))
+				log.Println(accCreateFatalMessage)
+			}
+
+			password2 = string(bytePassword)
+
+			if password1 == password2 {
+				break
+			}
+
+			fmt.Println("Passwords do not match. Please enter passwords again.")
 		}
 
 		password := hash.Password(password1)
