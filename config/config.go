@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
+	blckChain "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
@@ -23,10 +23,9 @@ import (
 
 type NodeConfig struct {
 	Address          string `json:"nodeAddress"`
-	ChnClntAddr      string `json:"chainAddress"`
 	IpAddress        string `json:"ipAddress"`
 	HTTPPort         string `json:"portHTTP"`
-	NFT              string `json:"nft"`
+	Network          string `json:"network"`
 	StorageLimit     int    `json:"storageLimit"`
 	UsedStorageSpace int64  `json:"usedStorageSpace"`
 	AgreeSendLogs    bool   `json:"agreeSendLogs"`
@@ -51,23 +50,37 @@ var partiallyReservedIPs = map[string]int{
 //Create is used for creating a config file.
 func Create(address, password string) (NodeConfig, error) {
 	const location = "config.Create->"
+
 	nodeConfig := NodeConfig{
 		Address:       address,
 		AgreeSendLogs: true,
-		ChnClntAddr:   "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f",
-		NFT:           "0xBfAfdaE6B77a02A4684D39D1528c873961528342",
 	}
 
-	blockchainprovider.NFT = nodeConfig.NFT
-	blockchainprovider.ChainClientAddr = nodeConfig.ChnClntAddr
+	testMode := os.Getenv("DENET_TEST")
 
-	fmt.Println("Now, a config file creation is needed.")
+	if testMode == "1" {
+		nodeConfig.IpAddress = "127.0.01"
+		nodeConfig.HTTPPort = "55050"
+		nodeConfig.Network = "kovan"
+		nodeConfig.StorageLimit = 1
+		nodeConfig.UsedStorageSpace = 0
+
+		return nodeConfig, nil
+	}
+
+	network, err := SelectNetwork()
+	if err != nil {
+		return nodeConfig, logger.CreateDetails(location, err)
+	}
+
+	nodeConfig.Network = network
+	blckChain.Network = network
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
 
 	fmt.Println("Please enter disk space for usage in GB (should be positive number)")
 
-	err := SetStorageLimit(pathToConfig, CreateStatus, &nodeConfig)
+	err = SetStorageLimit(pathToConfig, CreateStatus, &nodeConfig)
 	if err != nil {
 		return nodeConfig, logger.CreateDetails(location, err)
 	}
@@ -96,18 +109,16 @@ func Create(address, password string) (NodeConfig, error) {
 		return nodeConfig, logger.CreateDetails(location, err)
 	}
 
-	if !shared.TestMode {
-		fmt.Println("Due to testing stage bug reports from your device are going to be received by developers")
-		fmt.Println("You can stop sending reports by updating config")
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-		defer cancel()
+	fmt.Println("Due to testing stage bug reports from your device are going to be received by developers")
+	fmt.Println("You can stop sending reports by updating config")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
 
-		fmt.Println("Registering node...")
+	fmt.Println("Registering node...")
 
-		err = blockchainprovider.RegisterNode(ctx, address, password, splitIPAddr, nodeConfig.HTTPPort)
-		if err != nil {
-			return nodeConfig, logger.CreateDetails(location, err)
-		}
+	err = blckChain.RegisterNode(ctx, address, password, splitIPAddr, nodeConfig.HTTPPort)
+	if err != nil {
+		return nodeConfig, logger.CreateDetails(location, err)
 	}
 
 	confFile, err := os.Create(filepath.Join(pathToConfig, paths.ConfFileName))
@@ -135,15 +146,57 @@ func Create(address, password string) (NodeConfig, error) {
 
 // ====================================================================================
 
+// returns selected network
+func SelectNetwork() (string, error) {
+
+	const location = "config.SelectNetwork"
+
+	fmt.Println("Choose a network")
+
+	networks := [2]string{"kovan", "polygon"}
+
+	for i, network := range networks {
+		fmt.Println(i+1, network)
+	}
+
+	for {
+
+		number, err := termEmul.ReadInput()
+		if err != nil {
+			return "", logger.CreateDetails(location, err)
+		}
+
+		netNum, err := strconv.Atoi(number)
+		if err != nil {
+			fmt.Println("Incorrect value, try again")
+			continue
+		}
+
+		if netNum < 1 || netNum > len(networks) {
+			fmt.Println("Incorrect value, try again")
+			continue
+		}
+
+		netwrok := networks[netNum-1]
+
+		_, netExists := blckChain.Networks[netwrok]
+
+		if !netExists {
+			fmt.Println("Network is not supported")
+			continue
+		}
+
+		return netwrok, nil
+	}
+
+}
+
+// ====================================================================================
+
 //Set storage limit in config file
 func SetStorageLimit(pathToConfig, state string, nodeConfig *NodeConfig) error {
 	const location = "config.SetStorageLimit->"
 	regNum := regexp.MustCompile(("[0-9]+"))
-
-	if shared.TestMode {
-		nodeConfig.StorageLimit = shared.TestLimit
-		return nil
-	}
 
 	for {
 		availableSpace := shared.GetAvailableSpace(pathToConfig)
@@ -189,13 +242,6 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) ([]string, error) {
 	const location = "config.SetIpAddr->"
 
 	var splitIPAddr []string
-
-	if shared.TestMode {
-		ipAddr := shared.TestAddress
-		splitIPAddr := strings.Split(ipAddr, ".")
-		nodeConfig.IpAddress = ipAddr
-		return splitIPAddr, nil
-	}
 
 	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
 
@@ -249,11 +295,6 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) ([]string, error) {
 //Set port in config file
 func SetPort(nodeConfig *NodeConfig, state string) error {
 	const location = "config.SetPort->"
-
-	if shared.TestMode {
-		nodeConfig.HTTPPort = shared.TestPort
-		return nil
-	}
 
 	regPort := regexp.MustCompile("[0-9]+|")
 

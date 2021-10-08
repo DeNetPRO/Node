@@ -1,40 +1,15 @@
 package test
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"math/rand"
-	"mime/multipart"
-	"net"
-	"net/http"
-	"net/http/httptest"
+	"log"
 	"os"
-	"path/filepath"
-	"sort"
-	"strconv"
-	"strings"
 	"testing"
-	"time"
 
 	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
-	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
-	meminfo "git.denetwork.xyz/dfile/dfile-secondary-node/mem_info"
-	nodefile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/server"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/sign"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
-	"github.com/valyala/fasthttp/fasthttputil"
 )
 
 type FileSendInfo struct {
@@ -52,11 +27,37 @@ var (
 	testFileName              = "file"
 	fileSize                  int64
 	testFilePath              string
+	NodeTestPrivateKey        = "16f98d96422dd7f21965755bd64c9dcd9cfc5d36e029002d9cc579f42511c7ed"
 	storageProviderPrivateKey = "0a9fb845e346f74227d2ddf0b85dedb4ccddee33e9b8d0f6f4828a7a2dcf9509"
 	storageProviderAddress    = "0x3429cC113ABf4DEc8ECA64A713761F90A000dDfB"
 )
 
+func TestMain(m *testing.M) {
+	err := os.Setenv("DENET_TEST", "1")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer os.Unsetenv("DENET_TEST")
+
+	paths.WorkDirName = "denet-test"
+
+	err = paths.Init()
+	if err != nil {
+		log.Fatal("Fatal Error: couldn't locate home directory")
+	}
+	exitVal := m.Run()
+
+	err = os.RemoveAll(paths.WorkDirPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	os.Exit(exitVal)
+}
+
 func TestEmptyAccountListBeforeCreating(t *testing.T) {
+
 	accs := account.List()
 	want := 0
 	get := len(accs)
@@ -64,450 +65,384 @@ func TestEmptyAccountListBeforeCreating(t *testing.T) {
 	require.Equal(t, want, get)
 }
 
-func TestSetIpAddrWhenCreateConfig(t *testing.T) {
-	get := config.NodeConfig{}
-	ip, err := config.SetIpAddr(&get, config.CreateStatus)
+func TestAccCreate(t *testing.T) {
+	_, _, err := account.Create(accountPassword)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if len(ip) != 4 {
-		t.Errorf("len of ip must be 4 instead of %v", len(ip))
-	}
-
-	want := config.NodeConfig{
-		IpAddress: shared.TestAddress,
-	}
-
-	require.Equal(t, want, get)
-}
-
-func TestSetPortWhenCreateConfig(t *testing.T) {
-	get := config.NodeConfig{}
-	err := config.SetPort(&get, config.CreateStatus)
+	stat, err := os.Stat(paths.AccsDirPath)
 	if err != nil {
 		t.Error(err)
 	}
-
-	want := config.NodeConfig{
-		HTTPPort: shared.TestPort,
-	}
-
-	require.Equal(t, want, get)
-}
-
-func TestSetStorageLimitWhenCreateConfig(t *testing.T) {
-	get := config.NodeConfig{}
-	err := config.SetStorageLimit("", config.CreateStatus, &get)
-	if err != nil {
-		t.Error(err)
-	}
-
-	want := config.NodeConfig{
-		StorageLimit: shared.TestLimit,
-	}
-
-	require.Equal(t, want, get)
-}
-
-func TestCreateAccount(t *testing.T) {
-	address, config, err := account.Create(accountPassword)
-	if err != nil {
-		t.Error(err)
-	}
-
-	if address == "" {
-		t.Error("Address is empty")
-	}
-
-	accountAddress = address
 
 	accs := account.List()
-	want := 1
-	get := len(accs)
-
-	require.Equal(t, want, get)
-
-	storagePath = filepath.Join(paths.AccsDirPath, accountAddress, paths.StorageDirName)
-	configPath = filepath.Join(paths.AccsDirPath, accountAddress, paths.ConfDirName, paths.ConfFileName)
-
-	if _, err := os.Stat(storagePath); err != nil {
-		t.Error(err)
+	if len(accs) != 1 {
+		t.Error("Wrong accs count, must be one", accs)
 	}
 
-	if _, err := os.Stat(configPath); err != nil {
-		t.Error(err)
-	}
-
-	if config.Address != address || !config.AgreeSendLogs || config.HTTPPort != shared.TestPort || config.IpAddress != shared.TestAddress || config.StorageLimit != shared.TestLimit {
-		t.Error("config is invalid")
-	}
-
-	nodeAddress = shared.NodeAddr.Bytes()
+	fmt.Println(stat)
 }
 
-func TestLoginAccountWithCorrectAddressAndPassword(t *testing.T) {
-	account, err := account.Login(accountAddress, accountPassword)
-	if err != nil {
-		t.Error(err)
-	}
-	require.Equal(t, accountAddress, account.Address.String())
-}
-
-func TestLoginAccountWithInvalidPassword(t *testing.T) {
-	_, err := account.Login(accountAddress, "invalid")
-	want := ErrorInvalidPassword
-
-	splitErr := strings.Split(err.Error(), "->")
-
-	require.EqualError(t, want, splitErr[len(splitErr)-1])
-}
-
-func TestLoginAccountWithUnknownAddress(t *testing.T) {
-	unknownAddress := "accountAddress"
-	_, err := account.Login(unknownAddress, accountPassword)
-	want := errors.New(" accountAddress address is not found")
-	splitErr := strings.Split(err.Error(), "->")
-
-	require.EqualError(t, want, splitErr[len(splitErr)-1])
-}
-
-func TestCheckRightPassword(t *testing.T) {
-	err := account.CheckPassword(accountPassword, accountAddress)
-	if err != nil {
-		t.Error(err)
-	}
-}
-
-func TestImportAccount(t *testing.T) {
-	accountAddress, c, err := account.Import()
-	if err != nil {
-		t.Error(err)
-	}
-
-	if accountAddress == "" {
-		t.Errorf("import account address must not to be empty")
-	}
-
-	wantConfig := config.NodeConfig{
-		Address:       accountAddress,
-		ChnClntAddr:   blockchainprovider.ChainClientAddr,
-		NFT:           blockchainprovider.NFT,
-		HTTPPort:      shared.TestPort,
-		StorageLimit:  shared.TestLimit,
-		IpAddress:     shared.TestAddress,
-		AgreeSendLogs: true,
-	}
-
-	require.Equal(t, wantConfig, c)
-}
-
-func TestCheckSignature(t *testing.T) {
-	macAddress, err := encryption.GetDeviceMacAddr()
-	if err != nil {
-		t.Error(err)
-	}
-
-	encrForKey := sha256.Sum256([]byte(macAddress))
-	privateKeyBytes, err := encryption.DecryptAES(encrForKey[:], encryption.PrivateKey)
-	if err != nil {
-		t.Error(err)
-	}
-
-	privateKey, err := crypto.ToECDSA(privateKeyBytes)
-	if err != nil {
-		t.Error(err)
-	}
-
-	data := make([]byte, 100)
-	rand.Seed(time.Now().Unix())
-	rand.Read(data)
-
-	hashData := sha256.Sum256(data)
-
-	signedData, err := crypto.Sign(hashData[:], privateKey)
-	if err != nil {
-		t.Error(err)
-	}
-
-	err = sign.Check(accountAddress, signedData, hashData)
-	if err != nil {
-		t.Error(encrForKey)
-	}
-}
-
-func TestRestoreNodeMemory(t *testing.T) {
-	fileSize := 1024 * 1024
-
-	confFile, nodeConfig, err := getConfig()
-	if err != nil {
-		t.Error(err)
-	}
-
-	want := nodeConfig.UsedStorageSpace
-
-	nodeConfig.UsedStorageSpace += int64(fileSize)
+// func TestLoginAccountWithCorrectAddressAndPassword(t *testing.T) {
+// 	account, err := account.Login(accountAddress, accountPassword)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// 	require.Equal(t, accountAddress, account.Address.String())
+// }
+
+// func TestLoginAccountWithInvalidPassword(t *testing.T) {
+// 	_, err := account.Login(accountAddress, "invalid")
+// 	want := ErrorInvalidPassword
+
+// 	splitErr := strings.Split(err.Error(), "->")
+
+// 	require.EqualError(t, want, splitErr[len(splitErr)-1])
+// }
+
+// func TestLoginAccountWithUnknownAddress(t *testing.T) {
+// 	unknownAddress := "accountAddress"
+// 	_, err := account.Login(unknownAddress, accountPassword)
+// 	want := errors.New(" accountAddress address is not found")
+// 	splitErr := strings.Split(err.Error(), "->")
+
+// 	require.EqualError(t, want, splitErr[len(splitErr)-1])
+// }
+
+// func TestCheckRightPassword(t *testing.T) {
+// 	err := account.CheckPassword(accountPassword, accountAddress)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// }
 
-	err = config.Save(confFile, *nodeConfig)
-	if err != nil {
-		confFile.Close()
-		t.Error(err)
-	}
+// func TestImportAccount(t *testing.T) {
+// 	accountAddress, c, err := account.Import()
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+
+// 	if accountAddress == "" {
+// 		t.Errorf("import account address must not to b	e empty")
+// 	}
+
+// 	wantConfig := config.NodeConfig{
+// 		Address: accountAddress,
+// 		Network: blckChain.Network,
+
+// 		AgreeSendLogs: true,
+// 	}
+
+// 	require.Equal(t, wantConfig, c)
+// }
+
+// func TestCheckSignature(t *testing.T) {
+// 	macAddress, err := encryption.GetDeviceMacAddr()
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+
+// 	encrForKey := sha256.Sum256([]byte(macAddress))
+// 	privateKeyBytes, err := encryption.DecryptAES(encrForKey[:], encryption.PrivateKey)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+
+// 	privateKey, err := crypto.ToECDSA(privateKeyBytes)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+
+// 	data := make([]byte, 100)
+// 	rand.Seed(time.Now().Unix())
+// 	rand.Read(data)
+
+// 	hashData := sha256.Sum256(data)
 
-	confFile.Close()
+// 	signedData, err := crypto.Sign(hashData[:], privateKey)
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
 
-	meminfo.Restore(configPath, fileSize)
+// 	err = sign.Check(accountAddress, signedData, hashData)
+// 	if err != nil {
+// 		t.Error(encrForKey)
+// 	}
+// }
+
+// func TestRestoreNodeMemory(t *testing.T) {
+// 	fileSize := 1024 * 1024
+
+// 	confFile, nodeConfig, err := getConfig()
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+
+// 	want := nodeConfig.UsedStorageSpace
 
-	confFile, nodeConfig, err = getConfig()
-	if err != nil {
-		t.Error(err)
-	}
+// 	nodeConfig.UsedStorageSpace += int64(fileSize)
+
+// 	err = config.Save(confFile, *nodeConfig)
+// 	if err != nil {
+// 		confFile.Close()
+// 		t.Error(err)
+// 	}
 
-	confFile.Close()
+// 	confFile.Close()
 
-	require.Equal(t, want, nodeConfig.UsedStorageSpace)
-}
+// 	meminfo.Restore(configPath, fileSize)
 
-func TestUpload(t *testing.T) {
-	createFilesForTest()
+// 	confFile, nodeConfig, err = getConfig()
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
 
-	file, err := os.Open(testFilePath)
-	if err != nil {
-		return
-	}
+// 	confFile.Close()
 
-	defer file.Close()
+// 	require.Equal(t, want, nodeConfig.UsedStorageSpace)
+// }
 
-	const oneMB = 1048548 // actually less than 1MB because we need additional 12 bytes for nonce and 16 bytes is max overhead for encoding
-	const eightKB = 8192
+// func TestUpload(t *testing.T) {
+// 	createFilesForTest()
 
-	fileChunk := make([]byte, oneMB-7) // reserve 7 bytes for added zeros info
-	lenFileChunk := len(fileChunk)
-	count := 0
-	oneMBHashes := make([]string, 0, fileSize/oneMB+1)
-	eightKBHashes := make([]string, 0, 128)
-	partToEncode := make([]byte, 0, oneMB)
-	addedZeros := make([]byte, 7)
+// 	file, err := os.Open(testFilePath)
+// 	if err != nil {
+// 		return
+// 	}
 
-	fileSendInfo := make(map[string]*FileSendInfo)
+// 	defer file.Close()
 
-	for {
-		bytes, err := file.Read(fileChunk)
-		if err != nil {
-			if err != io.EOF {
-				return
-			}
+// 	const oneMB = 1048548 // actually less than 1MB because we need additional 12 bytes for nonce and 16 bytes is max overhead for encoding
+// 	const eightKB = 8192
 
-			break
-		}
+// 	fileChunk := make([]byte, oneMB-7) // reserve 7 bytes for added zeros info
+// 	lenFileChunk := len(fileChunk)
+// 	count := 0
+// 	oneMBHashes := make([]string, 0, fileSize/oneMB+1)
+// 	eightKBHashes := make([]string, 0, 128)
+// 	partToEncode := make([]byte, 0, oneMB)
+// 	addedZeros := make([]byte, 7)
 
-		if bytes < lenFileChunk {
-			missPart := make([]byte, lenFileChunk-bytes)
-			fileChunk = append(fileChunk[:bytes], missPart...)
+// 	fileSendInfo := make(map[string]*FileSendInfo)
 
-			misspartLenInBytes := []byte(fmt.Sprint(len(missPart)))
+// 	for {
+// 		bytes, err := file.Read(fileChunk)
+// 		if err != nil {
+// 			if err != io.EOF {
+// 				return
+// 			}
 
-			for i := 0; i < len(misspartLenInBytes); i++ {
-				addedZeros[i] = misspartLenInBytes[i]
-			}
-		}
+// 			break
+// 		}
 
-		partToEncode = append(partToEncode, addedZeros...)
-		partToEncode = append(partToEncode, fileChunk...)
+// 		if bytes < lenFileChunk {
+// 			missPart := make([]byte, lenFileChunk-bytes)
+// 			fileChunk = append(fileChunk[:bytes], missPart...)
 
-		key := CreatePartEncrKey("dir", fmt.Sprint("part_", count))
+// 			misspartLenInBytes := []byte(fmt.Sprint(len(missPart)))
 
-		encryptedPart, err := encryption.EncryptAES(key, partToEncode)
-		if err != nil {
-			return
-		}
+// 			for i := 0; i < len(misspartLenInBytes); i++ {
+// 				addedZeros[i] = misspartLenInBytes[i]
+// 			}
+// 		}
 
-		partToEncode = partToEncode[:0]
+// 		partToEncode = append(partToEncode, addedZeros...)
+// 		partToEncode = append(partToEncode, fileChunk...)
 
-		for i := 0; i < len(encryptedPart); i += eightKB {
-			hSum := sha256.Sum256(encryptedPart[i : i+eightKB])
-			eightKBHashes = append(eightKBHashes, hex.EncodeToString(hSum[:]))
-		}
+// 		key := CreatePartEncrKey("dir", fmt.Sprint("part_", count))
 
-		oneMBHash, _, err := hash.CalcRoot(eightKBHashes)
-		if err != nil {
-			return
-		}
+// 		encryptedPart, err := encryption.EncryptAES(key, partToEncode)
+// 		if err != nil {
+// 			return
+// 		}
 
-		eightKBHashes = eightKBHashes[:0]
-		oneMBHashes = append(oneMBHashes, oneMBHash)
+// 		partToEncode = partToEncode[:0]
 
-		fileSendInfo[oneMBHash] = &FileSendInfo{
-			Hash: oneMBHash,
-			Body: encryptedPart,
-		}
+// 		for i := 0; i < len(encryptedPart); i += eightKB {
+// 			hSum := sha256.Sum256(encryptedPart[i : i+eightKB])
+// 			eightKBHashes = append(eightKBHashes, hex.EncodeToString(hSum[:]))
+// 		}
 
-		count++
-	}
+// 		oneMBHash, _, err := hash.CalcRoot(eightKBHashes)
+// 		if err != nil {
+// 			return
+// 		}
 
-	pipeConns := fasthttputil.NewPipeConns()
-	pr := pipeConns.Conn1()
-	pw := pipeConns.Conn2()
+// 		eightKBHashes = eightKBHashes[:0]
+// 		oneMBHashes = append(oneMBHashes, oneMBHash)
 
-	writer := multipart.NewWriter(pw)
+// 		fileSendInfo[oneMBHash] = &FileSendInfo{
+// 			Hash: oneMBHash,
+// 			Body: encryptedPart,
+// 		}
 
-	go prepareFileBeforeUpload(writer, pw, oneMBHashes, fileSendInfo)
+// 		count++
+// 	}
 
-	endpoint := "/upload/" + strconv.Itoa(int(fileSize))
+// 	pipeConns := fasthttputil.NewPipeConns()
+// 	pr := pipeConns.Conn1()
+// 	pw := pipeConns.Conn2()
 
-	req, err := http.NewRequest("POST", endpoint, pr)
-	if err != nil {
-		t.Fatal(err)
-	}
+// 	writer := multipart.NewWriter(pw)
 
-	req.Header.Set("Content-Type", writer.FormDataContentType())
+// 	go prepareFileBeforeUpload(writer, pw, oneMBHashes, fileSendInfo)
 
-	rr := httptest.NewRecorder()
+// 	endpoint := "/upload/" + strconv.Itoa(int(fileSize))
 
-	router := mux.NewRouter()
-	router.HandleFunc("/upload/{size}", server.SaveFiles)
-	router.ServeHTTP(rr, req)
+// 	req, err := http.NewRequest("POST", endpoint, pr)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	require.Equal(t, "OK", rr.Body.String())
+// 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	for _, fileName := range oneMBHashes {
-		path := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, storageProviderAddress, fileName)
-		_, err := os.Stat(path)
-		if err != nil {
-			t.Errorf("%v not saved", fileName)
-		}
-	}
-}
+// 	rr := httptest.NewRecorder()
 
-func getConfig() (*os.File, *config.NodeConfig, error) {
-	confFile, fileBytes, err := nodefile.Read(configPath)
-	if err != nil {
-		return nil, nil, err
-	}
+// 	router := mux.NewRouter()
+// 	router.HandleFunc("/upload/{size}", server.SaveFiles)
+// 	router.ServeHTTP(rr, req)
 
-	var nodeConfig *config.NodeConfig
+// 	require.Equal(t, "OK", rr.Body.String())
 
-	err = json.Unmarshal(fileBytes, &nodeConfig)
-	if err != nil {
-		confFile.Close()
-		return nil, nil, err
-	}
+// 	for _, fileName := range oneMBHashes {
+// 		path := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, storageProviderAddress, fileName)
+// 		_, err := os.Stat(path)
+// 		if err != nil {
+// 			t.Errorf("%v not saved", fileName)
+// 		}
+// 	}
+// }
 
-	return confFile, nodeConfig, nil
-}
+// func getConfig() (*os.File, *config.NodeConfig, error) {
+// 	confFile, fileBytes, err := nodefile.Read(configPath)
+// 	if err != nil {
+// 		return nil, nil, err
+// 	}
 
-func createFilesForTest() {
-	rand.Seed(time.Now().Unix())
+// 	var nodeConfig *config.NodeConfig
 
-	fileSize = 1024 * 1024 * 10
+// 	err = json.Unmarshal(fileBytes, &nodeConfig)
+// 	if err != nil {
+// 		confFile.Close()
+// 		return nil, nil, err
+// 	}
 
-	b := make([]byte, fileSize)
+// 	return confFile, nodeConfig, nil
+// }
 
-	testFilePath = filepath.Join(paths.AccsDirPath, testFileName)
+// func createFilesForTest() {
+// 	rand.Seed(time.Now().Unix())
 
-	f, err := os.Create(testFilePath)
-	if err != nil {
-		fmt.Println(err)
-	}
+// 	fileSize = 1024 * 1024 * 10
 
-	rand.Read(b)
+// 	b := make([]byte, fileSize)
 
-	f.Write(b)
-	f.Close()
-}
+// 	testFilePath = filepath.Join(paths.AccsDirPath, testFileName)
 
-func CreatePartEncrKey(dirName, part string) []byte {
-	h := sha256.Sum256([]byte(dirName))
+// 	f, err := os.Create(testFilePath)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
 
-	strKey := hex.EncodeToString(h[:])
+// 	rand.Read(b)
 
-	encrKey := sha256.Sum256([]byte(fmt.Sprint(strKey, part)))
+// 	f.Write(b)
+// 	f.Close()
+// }
 
-	return encrKey[:]
-}
+// func CreatePartEncrKey(dirName, part string) []byte {
+// 	h := sha256.Sum256([]byte(dirName))
 
-func prepareFileBeforeUpload(writer *multipart.Writer, pw net.Conn, oneMBHashes []string, fileSendInfo map[string]*FileSendInfo) {
-	defer pw.Close()
+// 	strKey := hex.EncodeToString(h[:])
 
-	var fileRootHash string
-	var err error
+// 	encrKey := sha256.Sum256([]byte(fmt.Sprint(strKey, part)))
 
-	if len(oneMBHashes) == 1 {
-		fileRootHash = oneMBHashes[0]
-	} else {
-		sort.Strings(oneMBHashes)
-		fileRootHash, _, err = hash.CalcRoot(oneMBHashes)
-		if err != nil {
-			return
-		}
-	}
+// 	return encrKey[:]
+// }
 
-	oneMBHashes = append(oneMBHashes, fileRootHash)
+// func prepareFileBeforeUpload(writer *multipart.Writer, pw net.Conn, oneMBHashes []string, fileSendInfo map[string]*FileSendInfo) {
+// 	defer pw.Close()
 
-	var wholeRootHash string
-	sort.Strings(oneMBHashes)
-	wholeRootHash, _, err = hash.CalcRoot(oneMBHashes)
-	if err != nil {
-		return
-	}
+// 	var fileRootHash string
+// 	var err error
 
-	nonceInt := time.Now().Unix()
+// 	if len(oneMBHashes) == 1 {
+// 		fileRootHash = oneMBHashes[0]
+// 	} else {
+// 		sort.Strings(oneMBHashes)
+// 		fileRootHash, _, err = hash.CalcRoot(oneMBHashes)
+// 		if err != nil {
+// 			return
+// 		}
+// 	}
 
-	err = writer.WriteField("address", storageProviderAddress)
-	if err != nil {
-		return
-	}
+// 	oneMBHashes = append(oneMBHashes, fileRootHash)
 
-	err = writer.WriteField("nonce", fmt.Sprint(nonceInt))
-	if err != nil {
-		return
-	}
+// 	var wholeRootHash string
+// 	sort.Strings(oneMBHashes)
+// 	wholeRootHash, _, err = hash.CalcRoot(oneMBHashes)
+// 	if err != nil {
+// 		return
+// 	}
 
-	nonceHex := strconv.FormatInt(nonceInt, 16)
+// 	nonceInt := time.Now().Unix()
 
-	nonceBytes, err := hex.DecodeString(nonceHex)
-	if err != nil {
-		return
-	}
+// 	err = writer.WriteField("address", storageProviderAddress)
+// 	if err != nil {
+// 		return
+// 	}
 
-	nonce32 := make([]byte, 32-len(nonceBytes))
-	nonce32 = append(nonce32, nonceBytes...)
+// 	err = writer.WriteField("nonce", fmt.Sprint(nonceInt))
+// 	if err != nil {
+// 		return
+// 	}
 
-	fsRootBytes, err := hex.DecodeString(wholeRootHash)
-	if err != nil {
-		return
-	}
-	fsRootNonceBytes := append(fsRootBytes, nonce32...)
+// 	nonceHex := strconv.FormatInt(nonceInt, 16)
 
-	hash := sha256.Sum256(fsRootNonceBytes)
+// 	nonceBytes, err := hex.DecodeString(nonceHex)
+// 	if err != nil {
+// 		return
+// 	}
 
-	pk, _ := crypto.HexToECDSA(storageProviderPrivateKey)
+// 	nonce32 := make([]byte, 32-len(nonceBytes))
+// 	nonce32 = append(nonce32, nonceBytes...)
 
-	signedFSRootHash, err := crypto.Sign(hash[:], pk)
-	if err != nil {
-		return
-	}
+// 	fsRootBytes, err := hex.DecodeString(wholeRootHash)
+// 	if err != nil {
+// 		return
+// 	}
+// 	fsRootNonceBytes := append(fsRootBytes, nonce32...)
 
-	err = writer.WriteField("fsRootHash", hex.EncodeToString(signedFSRootHash))
-	if err != nil {
-		return
-	}
+// 	hash := sha256.Sum256(fsRootNonceBytes)
 
-	for _, hash := range oneMBHashes {
-		err := writer.WriteField("fs", hash)
-		if err != nil {
-			return
-		}
+// 	pk, _ := crypto.HexToECDSA(storageProviderPrivateKey)
 
-		if hash != fileRootHash {
-			filePart, err := writer.CreateFormFile("files", hash)
-			if err != nil {
-				return
-			}
+// 	signedFSRootHash, err := crypto.Sign(hash[:], pk)
+// 	if err != nil {
+// 		return
+// 	}
 
-			filePart.Write(fileSendInfo[hash].Body)
-		}
-	}
+// 	err = writer.WriteField("fsRootHash", hex.EncodeToString(signedFSRootHash))
+// 	if err != nil {
+// 		return
+// 	}
 
-	writer.Close()
-}
+// 	for _, hash := range oneMBHashes {
+// 		err := writer.WriteField("fs", hash)
+// 		if err != nil {
+// 			return
+// 		}
+
+// 		if hash != fileRootHash {
+// 			filePart, err := writer.CreateFormFile("files", hash)
+// 			if err != nil {
+// 				return
+// 			}
+
+// 			filePart.Write(fileSendInfo[hash].Body)
+// 		}
+// 	}
+
+// 	writer.Close()
+// }

@@ -17,7 +17,7 @@ import (
 
 	"github.com/minio/sha256-simd"
 
-	blockchainprovider "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
+	blckChain "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
 	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
 	fsysinfo "git.denetwork.xyz/dfile/dfile-secondary-node/fsys_info"
@@ -52,7 +52,7 @@ func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.
 		return nil, logger.CreateDetails(location, errors.New("empty hashes"))
 	}
 
-	nftNode, err := blockchainprovider.GetNodeNFT()
+	nftNode, err := blckChain.GetNodeNFT()
 	if err != nil {
 		return nil, logger.CreateDetails(location, err)
 	}
@@ -187,9 +187,9 @@ func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig st
 		rqFile.Close()
 
 		count++
-		if !shared.TestMode {
-			logger.Log("Saved file " + reqFilePart.Filename + " (" + strconv.Itoa(count) + "/" + strconv.Itoa(len(oneMBHashes)) + ")" + " from " + spData.Address) //TODO remove
-		}
+
+		logger.Log("Saved file " + reqFilePart.Filename + " (" + strconv.Itoa(count) + "/" + strconv.Itoa(len(oneMBHashes)) + ")" + " from " + spData.Address) //TODO remove
+
 	}
 
 	return nil
