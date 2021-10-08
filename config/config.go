@@ -64,6 +64,8 @@ func Create(address, password string) (NodeConfig, error) {
 		nodeConfig.Network = "kovan"
 		nodeConfig.StorageLimit = 1
 		nodeConfig.UsedStorageSpace = 0
+
+		return nodeConfig, nil
 	}
 
 	network, err := SelectNetwork()
