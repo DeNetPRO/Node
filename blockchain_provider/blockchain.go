@@ -37,14 +37,17 @@ import (
 )
 
 type NtwrkParams struct {
-	Addr string
-	NFT  string
+	RPC string
+	NFT string
 }
 
 var Networks = map[string]NtwrkParams{
 	"kovan": {
-		Addr: "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f",
-		NFT:  "0xBfAfdaE6B77a02A4684D39D1528c873961528342"},
+		RPC: "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f",
+		NFT: "0xBfAfdaE6B77a02A4684D39D1528c873961528342"},
+	"polygon": {
+		RPC: "https://rpc-mumbai.maticvigil.com/",
+		NFT: "0xBfAfdaE6B77a02A4684D39D1528c873961528342"},
 }
 
 const eightKB = 8192
@@ -74,7 +77,7 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 		return logger.CreateDetails(location, err)
 	}
 
-	client, err := ethclient.Dial(Networks[Network].Addr)
+	client, err := ethclient.Dial(Networks[Network].RPC)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -124,7 +127,7 @@ func GetNodeInfoByID() (nodeAbi.SimpleMetaDataDeNetNode, error) {
 	const location = "blckChain.GetNodeInfoByID->"
 	var nodeInfo nodeAbi.SimpleMetaDataDeNetNode
 
-	client, err := ethclient.Dial(Networks[Network].Addr)
+	client, err := ethclient.Dial(Networks[Network].RPC)
 	if err != nil {
 		return nodeInfo, logger.CreateDetails(location, err)
 	}
@@ -190,7 +193,7 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 		return logger.CreateDetails(location, err)
 	}
 
-	client, err := ethclient.Dial(Networks[Network].Addr)
+	client, err := ethclient.Dial(Networks[Network].RPC)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -231,7 +234,7 @@ func StartMakingProofs(password string) {
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
 
-	client, err := ethclient.Dial(Networks[Network].Addr)
+	client, err := ethclient.Dial(Networks[Network].RPC)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 	}

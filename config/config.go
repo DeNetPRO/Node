@@ -53,12 +53,47 @@ func Create(address, password string) (NodeConfig, error) {
 	nodeConfig := NodeConfig{
 		Address:       address,
 		AgreeSendLogs: true,
-		Network:       "kovan",
 	}
 
-	blckChain.Network = nodeConfig.Network
+	fmt.Println("Choose a network")
 
-	fmt.Println("Now, a config file creation is needed.")
+	networks := [2]string{"kovan", "polygon"}
+
+	for i, network := range networks {
+		fmt.Println(i+1, network)
+	}
+
+	for {
+
+		number, err := termEmul.ReadInput()
+		if err != nil {
+			return nodeConfig, logger.CreateDetails(location, err)
+		}
+
+		netNum, err := strconv.Atoi(number)
+		if err != nil {
+			fmt.Println("Incorrect value, try again")
+			continue
+		}
+
+		if netNum < 1 || netNum > len(networks) {
+			fmt.Println("Incorrect value, try again")
+			continue
+		}
+
+		netwrok := networks[netNum-1]
+
+		_, netExists := blckChain.Networks[netwrok]
+
+		if !netExists {
+			fmt.Println("Network is not supported")
+			continue
+		}
+
+		nodeConfig.Network = netwrok
+		blckChain.Network = netwrok
+		break
+	}
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
 

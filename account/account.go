@@ -242,24 +242,24 @@ func ValidateUser() (*accounts.Account, string, error) {
 				return nil, "", logger.CreateDetails(location, err)
 			}
 
-			accountNumber, err := strconv.Atoi(number)
+			accNum, err := strconv.Atoi(number)
 			if err != nil {
-				fmt.Println("Number is incorrect")
+				fmt.Println("Incorrect value, try again")
 				for i, a := range accounts {
 					fmt.Println(i+1, a)
 				}
 				continue
 			}
 
-			if accountNumber < 1 || accountNumber > len(accounts) {
-				fmt.Println("Number is incorrect")
+			if accNum < 1 || accNum > len(accounts) {
+				fmt.Println("Incorrect value, try again")
 				for i, a := range accounts {
 					fmt.Println(i+1, a)
 				}
 				continue
 			}
 
-			accountAddress = accounts[accountNumber-1]
+			accountAddress = accounts[accNum-1]
 		}
 
 		if !accExists(accounts, accountAddress) {
