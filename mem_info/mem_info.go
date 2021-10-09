@@ -10,7 +10,7 @@ import (
 )
 
 //RestoreMemoryInfo sets previous value of used storage space info.
-func Restore(pathToConfig string, intFileSize int) {
+func Restore(pathToConfig string, fileSize int) {
 	location := "files.restoreMemoryInfo->"
 
 	shared.MU.Lock()
@@ -31,7 +31,7 @@ func Restore(pathToConfig string, intFileSize int) {
 		return
 	}
 
-	nodeConfig.UsedStorageSpace -= int64(intFileSize)
+	nodeConfig.UsedStorageSpace -= int64(fileSize)
 
 	err = config.Save(confFile, nodeConfig)
 	if err != nil {
