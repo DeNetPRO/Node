@@ -125,7 +125,7 @@ func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.
 
 // ====================================================================================
 //Save is used for chaecking and saving file parts from the inoming request to the node's storage.
-func Save(req *http.Request, spData *shared.StorageProviderData, pathToConfig string, fileSize int) error {
+func Save(req *http.Request, spData *shared.StorageProviderData) error {
 	const location = "files.Save->"
 
 	pathToSpFiles := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spData.Address)
