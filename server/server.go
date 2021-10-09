@@ -150,10 +150,10 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
 	shared.MU.Lock()
-	defer shared.MU.Unlock()
 
 	intFileSize, _, _, err := checkSpace(req, pathToConfig)
 	if err != nil {
+		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, errs.SpaceCheck.Error(), http.StatusInternalServerError)
 		return
@@ -161,6 +161,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	spData, err := parseRequest(req)
 	if err != nil {
+		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(location, err))
 		memInfo.Restore(pathToConfig, intFileSize)
 		http.Error(w, errs.ParseMultipartForm.Error(), http.StatusBadRequest)
@@ -169,11 +170,14 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	err = spFiles.Save(req, spData, pathToConfig, intFileSize)
 	if err != nil {
+		shared.MU.Unlock()
 		logger.Log(logger.CreateDetails(location, err))
 		memInfo.Restore(pathToConfig, intFileSize)
 		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	shared.MU.Unlock()
 
 	testMode := os.Getenv("DENET_TEST")
 
@@ -330,14 +334,12 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.NodeCon
 
 	confFile, fileBytes, err := nodeFile.Read(pathToConfig)
 	if err != nil {
-		shared.MU.Unlock()
 		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
 	defer confFile.Close()
 
 	err = json.Unmarshal(fileBytes, &nodeConfig)
 	if err != nil {
-		shared.MU.Unlock()
 		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
 
@@ -346,7 +348,6 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.NodeCon
 	nodeConfig.UsedStorageSpace += int64(intFileSize)
 
 	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
-		shared.MU.Unlock()
 		return 0, false, nodeConfig, logger.CreateDetails(location, errors.New("not enough space"))
 	}
 
@@ -359,7 +360,6 @@ func checkSpace(r *http.Request, pathToConfig string) (int, bool, config.NodeCon
 
 	err = config.Save(confFile, nodeConfig)
 	if err != nil {
-		shared.MU.Unlock()
 		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
 
