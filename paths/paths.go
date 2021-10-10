@@ -16,6 +16,7 @@ var (
 	ConfFileName   = "config.json"
 	StorageDirName = "storage"
 	SpFsFilename   = "tree.json"
+	UpdateDirPath  string
 	RatingFilePath string
 	RatingFilename = "rating.json"
 )
@@ -32,6 +33,7 @@ func Init() error {
 
 	WorkDirPath = filepath.Join(homeDir, WorkDirName)
 	AccsDirPath = filepath.Join(WorkDirPath, "accounts")
+	UpdateDirPath = filepath.Join(WorkDirPath, "update")
 
 	return nil
 }
