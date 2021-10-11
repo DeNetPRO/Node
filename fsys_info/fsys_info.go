@@ -12,13 +12,13 @@ import (
 	"strconv"
 	"strings"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/sign"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
 )
 
 type UpdatedFsInfo struct {

@@ -1,4 +1,4 @@
-module git.denetwork.xyz/dfile/dfile-secondary-node
+module git.denetwork.xyz/DeNet/dfile-secondary-node
 
 go 1.17
 

@@ -9,12 +9,12 @@ import (
 	"regexp"
 	"time"
 
-	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
+	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 )
 
 const oneMB = 1048576

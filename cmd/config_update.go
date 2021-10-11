@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
-	blckChain "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
+	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"github.com/spf13/cobra"
 )
 

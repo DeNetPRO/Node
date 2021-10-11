@@ -4,8 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 )
 
 var (

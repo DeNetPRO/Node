@@ -8,7 +8,7 @@ import (
 	"io"
 	"net"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/pbnjay/memory"
 )

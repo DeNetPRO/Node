@@ -13,12 +13,12 @@ import (
 	"strconv"
 	"strings"
 
-	blckChain "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
-	termEmul "git.denetwork.xyz/dfile/dfile-secondary-node/term_emul"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
+	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
+	termEmul "git.denetwork.xyz/DeNet/dfile-secondary-node/term_emul"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
 )
 
 type NodeConfig struct {

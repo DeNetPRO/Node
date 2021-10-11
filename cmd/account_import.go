@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/cleaner"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/server"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/cleaner"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/server"
 	"github.com/spf13/cobra"
 )
 

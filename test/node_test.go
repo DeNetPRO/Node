@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"github.com/stretchr/testify/require"
 )
 

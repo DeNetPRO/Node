@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 )
 
 //Read reads and returns terminal input

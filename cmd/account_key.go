@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/encryption"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/spf13/cobra"
 )

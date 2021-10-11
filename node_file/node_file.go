@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 )
 
 //Read file by certain path
