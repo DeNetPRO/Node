@@ -53,8 +53,8 @@ var Networks = map[string]NtwrkParams{
 const eightKB = 8192
 
 var (
-	proofOpts *bind.TransactOpts
-	Network   string
+	proofOpts      *bind.TransactOpts
+	CurrentNetwork string
 )
 
 //RegisterNode registers a node in the ethereum network.
@@ -77,7 +77,7 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 		return logger.CreateDetails(location, err)
 	}
 
-	client, err := ethclient.Dial(Networks[Network].RPC)
+	client, err := ethclient.Dial(Networks[CurrentNetwork].RPC)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -102,7 +102,7 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 		os.Exit(0)
 	}
 
-	node, err := nodeAbi.NewNodeNft(common.HexToAddress(Networks[Network].NFT), client)
+	node, err := nodeAbi.NewNodeNft(common.HexToAddress(Networks[CurrentNetwork].NFT), client)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -127,14 +127,14 @@ func GetNodeInfoByID() (nodeAbi.SimpleMetaDataDeNetNode, error) {
 	const location = "blckChain.GetNodeInfoByID->"
 	var nodeInfo nodeAbi.SimpleMetaDataDeNetNode
 
-	client, err := ethclient.Dial(Networks[Network].RPC)
+	client, err := ethclient.Dial(Networks[CurrentNetwork].RPC)
 	if err != nil {
 		return nodeInfo, logger.CreateDetails(location, err)
 	}
 
 	defer client.Close()
 
-	node, err := nodeAbi.NewNodeNft(common.HexToAddress(Networks[Network].NFT), client)
+	node, err := nodeAbi.NewNodeNft(common.HexToAddress(Networks[CurrentNetwork].NFT), client)
 	if err != nil {
 		return nodeInfo, logger.CreateDetails(location, err)
 	}
@@ -193,14 +193,14 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 		return logger.CreateDetails(location, err)
 	}
 
-	client, err := ethclient.Dial(Networks[Network].RPC)
+	client, err := ethclient.Dial(Networks[CurrentNetwork].RPC)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
 
 	defer client.Close()
 
-	nodeNft, err := nodeAbi.NewNodeNft(common.HexToAddress(Networks[Network].NFT), client)
+	nodeNft, err := nodeAbi.NewNodeNft(common.HexToAddress(Networks[CurrentNetwork].NFT), client)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -234,7 +234,7 @@ func StartMakingProofs(password string) {
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
 
-	client, err := ethclient.Dial(Networks[Network].RPC)
+	client, err := ethclient.Dial(Networks[CurrentNetwork].RPC)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 	}
@@ -262,7 +262,7 @@ func StartMakingProofs(password string) {
 
 	proofOpts = opts
 
-	fmt.Println(Network, "network selected")
+	fmt.Println(CurrentNetwork, "network selected")
 
 	for {
 		fmt.Println("Sleeping...")

@@ -73,7 +73,7 @@ func Create(address, password string) (NodeConfig, error) {
 		}
 
 		nodeConfig.Network = network
-		blckChain.Network = network
+		blckChain.CurrentNetwork = network
 
 		fmt.Println("Please enter disk space for usage in GB (should be positive number)")
 

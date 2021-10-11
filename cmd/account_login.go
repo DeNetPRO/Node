@@ -79,7 +79,7 @@ var accountLoginCmd = &cobra.Command{
 				log.Fatal(accLoginFatalError + ": unsupported network in config file")
 			}
 
-			blckChain.Network = nodeConfig.Network
+			blckChain.CurrentNetwork = nodeConfig.Network
 
 			if nodeConfig.StorageLimit <= 0 {
 				log.Fatal(accLoginFatalError)
