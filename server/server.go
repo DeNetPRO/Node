@@ -54,8 +54,6 @@ func Start(port string) {
 	r.HandleFunc("/copy/{size}", CopyFile).Methods("POST")
 	r.HandleFunc("/check/space/{size}", SpaceCheck).Methods("GET")
 
-	r.HandleFunc("/save_update", saveUpdate).Methods("POST")
-
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{
@@ -303,55 +301,6 @@ func CopyFile(w http.ResponseWriter, req *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
-}
-
-// ====================================================================================
-
-func saveUpdate(w http.ResponseWriter, req *http.Request) {
-
-	err := req.ParseMultipartForm(1 << 20) // maxMemory 32MB
-	if err != nil {
-		fmt.Println(err)
-		http.Error(w, "Parse multiform problem", http.StatusBadRequest)
-		return
-	}
-
-	reqFiles := req.MultipartForm.File["files"]
-
-	reqFile := reqFiles[0]
-
-	newVersion, err := reqFile.Open()
-	if err != nil {
-		http.Error(w, "couldn't save update", http.StatusInternalServerError)
-		return
-	}
-	defer newVersion.Close()
-
-	err = os.Mkdir(paths.UpdateDirPath, 0700)
-	if err != nil {
-		http.Error(w, "couldn't save update", http.StatusInternalServerError)
-		return
-	}
-
-	updateFilePath := filepath.Join(paths.UpdateDirPath, reqFile.Filename)
-
-	newFile, err := os.Create(updateFilePath)
-	if err != nil {
-		http.Error(w, "couldn't save update", http.StatusInternalServerError)
-		return
-	}
-	defer newFile.Close()
-
-	_, err = io.Copy(newFile, newVersion)
-	if err != nil {
-		http.Error(w, "couldn't save update", http.StatusInternalServerError)
-		return
-	}
-
-	newFile.Sync()
-
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, "OK")
 }
 
 // ====================================================================================
