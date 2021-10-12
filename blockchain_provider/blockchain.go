@@ -190,7 +190,12 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 		return logger.CreateDetails(location, err)
 	}
 
-	_, err = nodeNft.UpdateNode(opts, big.NewInt(2), ipInfo, uint16(intPort)) // !!!!!!!!!!!!!!!
+	nodeId, err := nodeNft.GetNodeIDByAddress(&bind.CallOpts{}, shared.NodeAddr)
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
+	_, err = nodeNft.UpdateNode(opts, nodeId, ipInfo, uint16(intPort))
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -288,19 +293,19 @@ func StartMakingProofs(password string) {
 			continue
 		}
 
-		// nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-1)))
-		// if err != nil {
-		// 	logger.Log(logger.CreateDetails(location, err))
-		// 	continue
-		// }
+		nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-1)))
+		if err != nil {
+			logger.Log(logger.CreateDetails(location, err))
+			continue
+		}
 
-		// nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
+		nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
 
-		// if nodeBalanceIsLow {
-		// 	fmt.Println("Your account has insufficient funds for paying transaction fee. Balance:", nodeBalance, "wei")
-		// 	fmt.Println("Please top up your balance")
-		// 	continue
-		// }
+		if nodeBalanceIsLow {
+			fmt.Println("Your account has insufficient funds for paying transaction fee. Balance:", nodeBalance, "wei")
+			fmt.Println("Please top up your balance")
+			continue
+		}
 
 		for _, spAddress := range storageProviderAddresses {
 			time.Sleep(time.Second * 5)
