@@ -2,24 +2,19 @@ package spfiles
 
 import (
 	"encoding/hex"
-	"errors"
 	"io"
-	"math/big"
-	"math/rand"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
-	"time"
 
 	"github.com/minio/sha256-simd"
 
 	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
+
 	fsysinfo "git.denetwork.xyz/DeNet/dfile-secondary-node/fsys_info"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
@@ -27,8 +22,6 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttputil"
 )
 
@@ -38,89 +31,6 @@ type NodesResponse struct {
 
 type NodeAddressResponse struct {
 	NodeAddress string `json:"node_address"`
-}
-
-//Copy makes a copy of file parts that are stored on the node, or sends them on oher node for replication.
-func Copy(req *http.Request, spData *shared.StorageProviderData, config *config.NodeConfig, pathToConfig string, fileSize int, enoughSpace bool) (*NodeAddressResponse, error) {
-	const location = "files.Copy->"
-
-	pathToSpFiles := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spData.Address)
-
-	hashes := req.MultipartForm.Value["hashes"]
-
-	if len(hashes) == 0 {
-		return nil, logger.CreateDetails(location, errors.New("empty hashes"))
-	}
-
-	nftNode, err := blckChain.GetNodeNFT()
-	if err != nil {
-		return nil, logger.CreateDetails(location, err)
-	}
-
-	totalNodes, err := nftNode.TotalSupply(&bind.CallOpts{})
-	if err != nil {
-		return nil, logger.CreateDetails(location, err)
-	}
-
-	intTotal := totalNodes.Int64()
-	fastReq := fasthttp.AcquireRequest()
-	fastResp := fasthttp.AcquireResponse()
-	defer fasthttp.ReleaseRequest(fastReq)
-	defer fasthttp.ReleaseResponse(fastResp)
-
-	rand.Seed(time.Now().UnixNano())
-
-	for i := int64(0); i < intTotal; i++ {
-		randID := rand.Int63n(intTotal)
-		nodeInfo, err := nftNode.GetNodeById(&bind.CallOpts{}, big.NewInt(randID))
-		if err != nil {
-			continue
-		}
-
-		ipBuilder := strings.Builder{}
-		for i, v := range nodeInfo.IpAddress {
-			stringPart := strconv.Itoa(int(v))
-			ipBuilder.WriteString(stringPart)
-
-			if i < 3 {
-				ipBuilder.WriteString(".")
-			}
-		}
-
-		stringPort := strconv.Itoa(int(nodeInfo.Port))
-		ipBuilder.WriteString(":")
-		ipBuilder.WriteString(stringPort)
-
-		nodeIP := ipBuilder.String()
-
-		if nodeIP == config.IpAddress+":"+config.HTTPPort {
-			continue
-		}
-
-		url := "http://" + nodeIP
-		fastReq.Reset()
-		fastResp.Reset()
-
-		fastReq.Header.SetRequestURI(url)
-		fastReq.Header.SetMethod("GET")
-		fastReq.Header.Set("Connection", "close")
-
-		err = fasthttp.Do(fastReq, fastResp)
-		if err != nil {
-			continue
-		}
-
-		err = copyOnOtherNode(nodeIP, pathToSpFiles, req.MultipartForm, hashes, fileSize)
-		if err != nil {
-			continue
-		}
-
-		return &NodeAddressResponse{
-			NodeAddress: nodeIP,
-		}, nil
-	}
-
-	return nil, logger.CreateDetails(location, errors.New("no available nodes"))
 }
 
 // ====================================================================================
@@ -235,7 +145,7 @@ func Serve(spAddress, fileKey, signatureFromReq string) (string, error) {
 		return "", logger.CreateDetails(location, err)
 	}
 
-	pathToFile := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress, fileKey)
+	pathToFile := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, blckChain.CurrentNetwork, spAddress, fileKey)
 
 	_, err = os.Stat(pathToFile)
 	if err != nil {

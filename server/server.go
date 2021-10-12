@@ -51,7 +51,6 @@ func Start(port string) {
 	r.HandleFunc("/upload/{size}", SaveFiles).Methods("POST")
 	r.HandleFunc("/download/{spAddress}/{fileKey}/{signature}", ServeFiles).Methods("GET")
 	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}", UpdateFsInfo).Methods("POST")
-	r.HandleFunc("/copy/{size}", CopyFile).Methods("POST")
 	r.HandleFunc("/check/space/{size}", SpaceCheck).Methods("GET")
 
 	corsOpts := cors.New(cors.Options{
@@ -261,46 +260,6 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 	}
 
 	fmt.Println("Updated!")
-}
-
-// ====================================================================================
-
-func CopyFile(w http.ResponseWriter, req *http.Request) {
-	location := "server.CopyFile->"
-
-	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
-
-	fileSize, enoughSpace, nodeConfig, err := checkAndReserveSpace(req, pathToConfig)
-	if err != nil {
-		logger.Log(logger.CreateDetails(location, err))
-		http.Error(w, errs.SpaceCheck.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	spData, err := parseRequest(req)
-	if err != nil {
-		logger.Log(logger.CreateDetails(location, err))
-		memInfo.Restore(pathToConfig, fileSize)
-		http.Error(w, errs.ParseMultipartForm.Error(), http.StatusBadRequest)
-		return
-	}
-
-	nodeAddress, err := spFiles.Copy(req, spData, &nodeConfig, pathToConfig, fileSize, enoughSpace)
-	if err != nil {
-		logger.Log(logger.CreateDetails(location, err))
-		memInfo.Restore(pathToConfig, fileSize)
-		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	js, err := json.Marshal(nodeAddress)
-	if err != nil {
-		logger.Log(logger.CreateDetails(location, err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
 }
 
 // ====================================================================================

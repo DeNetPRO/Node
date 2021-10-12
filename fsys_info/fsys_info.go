@@ -12,9 +12,11 @@ import (
 	"strconv"
 	"strings"
 
+	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
@@ -31,7 +33,7 @@ type UpdatedFsInfo struct {
 func Update(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem string) error {
 	const location = "files.UpdateFileSystemInfo->"
 
-	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress)
+	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, blckChain.CurrentNetwork, spAddress)
 
 	_, err := os.Stat(addressPath)
 	if err != nil {

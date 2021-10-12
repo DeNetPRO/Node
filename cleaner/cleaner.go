@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"time"
 
+	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
@@ -29,7 +30,7 @@ func Start() {
 	for {
 		time.Sleep(time.Minute) // add period
 
-		pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName)
+		pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, blckChain.CurrentNetwork)
 
 		storageProviderAddresses := []string{}
 
@@ -80,7 +81,7 @@ func Start() {
 				continue
 			}
 
-			pathToFsTree := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress, paths.SpFsFilename)
+			pathToFsTree := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, blckChain.CurrentNetwork, spAddress, paths.SpFsFilename)
 
 			shared.MU.Lock()
 			fileFsTree, treeBytes, err := nodeFile.Read(pathToFsTree)

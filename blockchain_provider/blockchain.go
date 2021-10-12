@@ -229,7 +229,7 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 func StartMakingProofs(password string) {
 	const location = "blckChain.StartMining->"
 
-	pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName)
+	pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, CurrentNetwork)
 
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
@@ -417,7 +417,7 @@ func StartMakingProofs(password string) {
 func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 	nodeAddr common.Address, spAddress common.Address, blockNum uint64, instance *abiPOS.Store) error {
 	const location = "blckChain.sendProof->"
-	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, spAddress.String(), paths.SpFsFilename)
+	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, CurrentNetwork, spAddress.String(), paths.SpFsFilename)
 
 	shared.MU.Lock()
 

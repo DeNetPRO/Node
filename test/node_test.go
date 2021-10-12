@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
+	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"github.com/stretchr/testify/require"
 )
@@ -85,7 +86,7 @@ func TestAccCreate(t *testing.T) {
 
 	pathToAcc := filepath.Join(paths.AccsDirPath, accountAddress)
 
-	pathToStorage := filepath.Join(pathToAcc, paths.StorageDirName)
+	pathToStorage := filepath.Join(pathToAcc, paths.StorageDirName, blckChain.CurrentNetwork)
 
 	_, err = os.Stat(pathToStorage)
 	if err != nil {
