@@ -21,13 +21,13 @@ import (
 	"strconv"
 	"time"
 
-	abiPOS "git.denetwork.xyz/DeNet/dfile-secondary-node/POS_abi"
+	proofOfStAbi "git.denetwork.xyz/DeNet/dfile-secondary-node/POS_abi"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
-	nodeAbi "git.denetwork.xyz/DeNet/dfile-secondary-node/node_abi"
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
+	nodeNftAbi "git.denetwork.xyz/DeNet/dfile-secondary-node/node_nft_abi"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
@@ -49,7 +49,7 @@ var Networks = map[string]NtwrkParams{
 		NFT: "0xBfAfdaE6B77a02A4684D39D1528c873961528342"},
 	"polygon": {
 		RPC: "https://rpc-mumbai.maticvigil.com/",
-		NFT: "0xBfAfdaE6B77a02A4684D39D1528c873961528342"},
+		NFT: "0xBb86dcf291419d3F5b4B2211122D0E6fCB693777"},
 }
 
 const eightKB = 8192
@@ -104,7 +104,7 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 		os.Exit(0)
 	}
 
-	node, err := nodeAbi.NewNodeNft(common.HexToAddress(Networks[CurrentNetwork].NFT), client)
+	node, err := nodeNftAbi.NewNodeNft(common.HexToAddress(Networks[CurrentNetwork].NFT), client)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -124,49 +124,22 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 
 // ====================================================================================
 
-//GetNodeInfoByID gets the node info by its ID from ethereum network.
-func GetNodeInfoByID() (nodeAbi.SimpleMetaDataDeNetNode, error) {
-	const location = "blckChain.GetNodeInfoByID->"
-	var nodeInfo nodeAbi.SimpleMetaDataDeNetNode
-
-	client, err := ethclient.Dial(Networks[CurrentNetwork].RPC)
-	if err != nil {
-		return nodeInfo, logger.CreateDetails(location, err)
-	}
-
-	defer client.Close()
-
-	node, err := nodeAbi.NewNodeNft(common.HexToAddress(Networks[CurrentNetwork].NFT), client)
-	if err != nil {
-		return nodeInfo, logger.CreateDetails(location, err)
-	}
-
-	nodeInfo, err = node.GetNodeById(&bind.CallOpts{}, big.NewInt(2))
-	if err != nil {
-		return nodeInfo, logger.CreateDetails(location, err)
-	}
-
-	return nodeInfo, nil
-}
-
 // ====================================================================================
 
 //GetNodeNFT returns instance of NodeNft, bound to a specific deployed contract.
-func GetNodeNFT() (*nodeAbi.NodeNft, error) {
+func GetNodeNFT() (*nodeNftAbi.NodeNft, error) {
 	const location = "blckChain.getNodeNFT->"
 
-	nftAddr := common.HexToAddress("0xBfAfdaE6B77a02A4684D39D1528c873961528342")
+	nftAddr := common.HexToAddress(Networks[CurrentNetwork].NFT)
 
-	// https://kovan.infura.io/v3/a4a45777ca65485d983c278291e322f2
-
-	client, err := ethclient.Dial("https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f")
+	client, err := ethclient.Dial(Networks[CurrentNetwork].RPC)
 	if err != nil {
 		return nil, logger.CreateDetails(location, err)
 	}
 
 	defer client.Close()
 
-	node, err := nodeAbi.NewNodeNft(nftAddr, client)
+	node, err := nodeNftAbi.NewNodeNft(nftAddr, client)
 	if err != nil {
 		return nil, logger.CreateDetails(location, err)
 	}
@@ -202,7 +175,7 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 
 	defer client.Close()
 
-	nodeNft, err := nodeAbi.NewNodeNft(common.HexToAddress(Networks[CurrentNetwork].NFT), client)
+	nodeNft, err := nodeNftAbi.NewNodeNft(common.HexToAddress(Networks[CurrentNetwork].NFT), client)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -241,7 +214,7 @@ func StartMakingProofs(password string) {
 	defer client.Close()
 
 	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
-	instance, err := abiPOS.NewStore(tokenAddress, client)
+	instance, err := proofOfStAbi.NewProofOfStorage(tokenAddress, client)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 	}
@@ -434,7 +407,7 @@ func StartMakingProofs(password string) {
 
 //SendProof checks Storage Providers's file system root hash and nounce info and sends proof to smart contract.
 func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
-	nodeAddr common.Address, spAddress common.Address, blockNum uint64, instance *abiPOS.Store) error {
+	nodeAddr common.Address, spAddress common.Address, blockNum uint64, instance *proofOfStAbi.ProofOfStorage) error {
 	const location = "blckChain.sendProof->"
 	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, CurrentNetwork, spAddress.String(), paths.SpFsFilename)
 
