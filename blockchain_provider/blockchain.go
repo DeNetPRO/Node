@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"log"
 	"runtime/debug"
 
 	"github.com/minio/sha256-simd"
@@ -22,6 +23,7 @@ import (
 
 	abiPOS "git.denetwork.xyz/DeNet/dfile-secondary-node/POS_abi"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/encryption"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	nodeAbi "git.denetwork.xyz/DeNet/dfile-secondary-node/node_abi"
@@ -268,6 +270,21 @@ func StartMakingProofs(password string) {
 		fmt.Println("Sleeping...")
 		time.Sleep(time.Minute * 10)
 		storageProviderAddresses := []string{}
+
+		stat, err := os.Stat(pathToAccStorage)
+		if err != nil {
+			err = errs.CheckStatErr(err)
+			if err != nil {
+				logger.Log(logger.CreateDetails(location, err))
+				log.Fatal(err)
+			}
+		}
+
+		if stat == nil {
+			fmt.Println("no files from", CurrentNetwork, "users")
+			continue
+		}
+
 		err = filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
 				if err != nil {
@@ -298,19 +315,19 @@ func StartMakingProofs(password string) {
 			continue
 		}
 
-		nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-1)))
-		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
-			continue
-		}
+		// nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-1)))
+		// if err != nil {
+		// 	logger.Log(logger.CreateDetails(location, err))
+		// 	continue
+		// }
 
-		nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
+		// nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
 
-		if nodeBalanceIsLow {
-			fmt.Println("Your account has insufficient funds for paying transaction fee. Balance:", nodeBalance, "wei")
-			fmt.Println("Please top up your balance")
-			continue
-		}
+		// if nodeBalanceIsLow {
+		// 	fmt.Println("Your account has insufficient funds for paying transaction fee. Balance:", nodeBalance, "wei")
+		// 	fmt.Println("Please top up your balance")
+		// 	continue
+		// }
 
 		for _, spAddress := range storageProviderAddresses {
 			time.Sleep(time.Second * 5)
@@ -325,6 +342,8 @@ func StartMakingProofs(password string) {
 			fileNames := []string{}
 
 			pathToStorProviderFiles := filepath.Join(pathToAccStorage, storageProviderAddr.String())
+
+			fmt.Println(pathToStorProviderFiles)
 
 			err = filepath.WalkDir(pathToStorProviderFiles,
 				func(path string, info fs.DirEntry, err error) error {
