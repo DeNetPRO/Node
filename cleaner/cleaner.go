@@ -3,13 +3,16 @@ package cleaner
 import (
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
 	"time"
 
 	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
@@ -28,13 +31,27 @@ func Start() {
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
 
 	for {
-		time.Sleep(time.Minute) // add period
+		time.Sleep(time.Minute * 20)
 
 		pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, blckChain.CurrentNetwork)
 
+		stat, err := os.Stat(pathToAccStorage)
+		if err != nil {
+			err = errs.CheckStatErr(err)
+			if err != nil {
+				logger.Log(logger.CreateDetails(location, err))
+				log.Fatal(err)
+			}
+		}
+
+		if stat == nil {
+			fmt.Println("no files from", blckChain.CurrentNetwork, "to delete")
+			continue
+		}
+
 		storageProviderAddresses := []string{}
 
-		err := filepath.WalkDir(pathToAccStorage,
+		err = filepath.WalkDir(pathToAccStorage,
 			func(path string, info fs.DirEntry, err error) error {
 				if err != nil {
 					logger.Log(logger.CreateDetails(location, err))
@@ -53,6 +70,10 @@ func Start() {
 		}
 
 		if len(storageProviderAddresses) == 0 {
+			err := os.Remove(pathToAccStorage)
+			if err != nil {
+				logger.Log(logger.CreateDetails(location, err))
+			}
 			continue
 		}
 

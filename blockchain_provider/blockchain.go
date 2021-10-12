@@ -231,8 +231,6 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newP
 func StartMakingProofs(password string) {
 	const location = "blckChain.StartMining->"
 
-	pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, CurrentNetwork)
-
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
 
@@ -266,6 +264,8 @@ func StartMakingProofs(password string) {
 
 	fmt.Println(CurrentNetwork, "network selected")
 
+	pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, CurrentNetwork)
+
 	for {
 		fmt.Println("Sleeping...")
 		time.Sleep(time.Minute * 10)
@@ -281,7 +281,7 @@ func StartMakingProofs(password string) {
 		}
 
 		if stat == nil {
-			fmt.Println("no files from", CurrentNetwork, "users")
+			fmt.Println("no files from", CurrentNetwork, "to proof")
 			continue
 		}
 
