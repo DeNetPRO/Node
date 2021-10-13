@@ -87,14 +87,20 @@ var accountLoginCmd = &cobra.Command{
 			_, registeredInNetwork := nodeConfig.RegisteredInNetworks[nodeConfig.Network]
 
 			if !registeredInNetwork {
+
+				fmt.Println("registering node in", nodeConfig.Network)
+
 				ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 
 				defer cancel()
 
 				err = blckChain.RegisterNode(ctx, nodeAccount.Address.String(), password, nodeConfig.IpAddress, nodeConfig.HTTPPort)
 				if err != nil {
-					log.Fatal(accLoginFatalError + ": couldn't register node in " + blckChain.CurrentNetwork)
+					log.Fatal(accLoginFatalError + ": couldn't register node in " + nodeConfig.Network)
 				}
+
+				nodeConfig.RegisteredInNetworks[nodeConfig.Network] = true
+
 			}
 
 			if upnp.InternetDevice != nil {
