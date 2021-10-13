@@ -11,6 +11,7 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
 	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 	"github.com/stretchr/testify/require"
 )
 
@@ -34,16 +35,11 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	err := os.Setenv("DENET_TEST", "1")
-	if err != nil {
-		log.Fatal(err)
-	}
+	shared.TestModeOn()
 
-	defer os.Unsetenv("DENET_TEST")
+	defer shared.TestModeOff()
 
-	paths.WorkDirName = "denet-test"
-
-	err = paths.Init()
+	err := paths.Init()
 	if err != nil {
 		log.Fatal("Fatal Error: couldn't locate home directory")
 	}

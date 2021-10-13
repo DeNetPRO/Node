@@ -58,9 +58,7 @@ func Create(address, password string) (NodeConfig, error) {
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
 
-	testMode := os.Getenv("DENET_TEST")
-
-	if testMode == "1" {
+	if shared.TestMode {
 		nodeConfig.IpAddress = "127.0.01"
 		nodeConfig.HTTPPort = "55050"
 		nodeConfig.Network = "kovan"

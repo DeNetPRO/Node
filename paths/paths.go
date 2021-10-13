@@ -6,6 +6,7 @@ import (
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 )
 
 var (
@@ -29,6 +30,10 @@ func Init() error {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return logger.CreateDetails(location, err)
+	}
+
+	if shared.TestMode {
+		WorkDirName = "denet-node-test"
 	}
 
 	WorkDirPath = filepath.Join(homeDir, WorkDirName)

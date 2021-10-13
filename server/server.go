@@ -171,9 +171,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	testMode := os.Getenv("DENET_TEST")
-
-	if testMode != "1" {
+	if !shared.TestMode {
 		logger.SendStatistic(spData.Address, req.RemoteAddr, logger.Upload, int64(fileSize))
 	}
 
@@ -212,9 +210,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	testMode := os.Getenv("DENET_TEST")
-
-	if testMode != "1" {
+	if !shared.TestMode {
 		logger.SendStatistic(spAddress, req.RemoteAddr, logger.Download, stat.Size())
 	}
 
