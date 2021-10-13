@@ -11,7 +11,6 @@ import (
 
 	"github.com/minio/sha256-simd"
 
-	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
 
 	fsysinfo "git.denetwork.xyz/DeNet/dfile-secondary-node/fsys_info"
@@ -33,10 +32,10 @@ type NodeAddressResponse struct {
 
 // ====================================================================================
 //Save is used for checking and saving file parts from the inoming request to the node's storage.
-func Save(req *http.Request, spData *shared.StorageProviderData) error {
+func Save(req *http.Request, spData *shared.StorageProviderData, network string) error {
 	const location = "files.Save->"
 
-	pathToSpFiles := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, blckChain.CurrentNetwork, spData.Address)
+	pathToSpFiles := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, network, spData.Address)
 
 	stat, err := os.Stat(pathToSpFiles)
 	if err != nil {
@@ -143,7 +142,7 @@ func savePart(file io.Reader, pathToSpFiles, fileName string) error {
 
 // ====================================================================================
 
-func Serve(spAddress, fileKey, signatureFromReq string) (string, error) {
+func Serve(spAddress, fileKey, signatureFromReq, network string) (string, error) {
 	const location = "files.Serve->"
 
 	signature, err := hex.DecodeString(signatureFromReq)
@@ -158,7 +157,7 @@ func Serve(spAddress, fileKey, signatureFromReq string) (string, error) {
 		return "", logger.CreateDetails(location, err)
 	}
 
-	pathToFile := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, blckChain.CurrentNetwork, spAddress, fileKey)
+	pathToFile := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, network, spAddress, fileKey)
 
 	_, err = os.Stat(pathToFile)
 	if err != nil {

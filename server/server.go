@@ -48,9 +48,16 @@ func Start(port string) {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/ping", Healthcheck).Methods("GET")
+
 	r.HandleFunc("/upload/{size}", SaveFiles).Methods("POST")
+	r.HandleFunc("/upload/{size}/{network}", SaveFiles).Methods("POST")
+
 	r.HandleFunc("/download/{spAddress}/{fileKey}/{signature}", ServeFiles).Methods("GET")
+	r.HandleFunc("/download/{spAddress}/{fileKey}/{signature}/{network}", ServeFiles).Methods("GET")
+
 	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}", UpdateFsInfo).Methods("POST")
+	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}/{network}", UpdateFsInfo).Methods("POST")
+
 	r.HandleFunc("/check/space/{size}", SpaceCheck).Methods("GET")
 
 	corsOpts := cors.New(cors.Options{
@@ -146,6 +153,13 @@ func Healthcheck(w http.ResponseWriter, _ *http.Request) {
 func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	const location = "server.SaveFiles->"
 
+	vars := mux.Vars(req)
+	network := vars["network"]
+
+	if network == "" {
+		network = "kovan"
+	}
+
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
 	fileSize, _, _, err := checkAndReserveSpace(req, pathToConfig)
@@ -163,7 +177,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = spFiles.Save(req, spData)
+	err = spFiles.Save(req, spData, network)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		memInfo.Restore(pathToConfig, fileSize)
@@ -188,6 +202,11 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	spAddress := vars["spAddress"]
 	fileKey := vars["fileKey"]
 	signatureFromReq := vars["signature"]
+	network := vars["network"]
+
+	if network == "" {
+		network = "kovan"
+	}
 
 	if spAddress == "" || fileKey == "" || signatureFromReq == "" {
 		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
@@ -195,7 +214,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pathToFile, err := spFiles.Serve(spAddress, fileKey, signatureFromReq)
+	pathToFile, err := spFiles.Serve(spAddress, fileKey, signatureFromReq, network)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
@@ -225,6 +244,11 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	spAddress := vars["spAddress"]
 	signedFsys := vars["signedFsys"]
+	network := vars["network"]
+
+	if network == "" {
+		network = "kovan"
+	}
 
 	if spAddress == "" || signedFsys == "" {
 		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
@@ -248,7 +272,7 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = fsysInfo.Update(updatedFs, spAddress, signedFsys)
+	err = fsysInfo.Update(updatedFs, spAddress, signedFsys, network)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
