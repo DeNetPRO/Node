@@ -48,7 +48,7 @@ var Networks = map[string]NtwrkParams{
 		RPC: "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f",
 		NFT: "0xBfAfdaE6B77a02A4684D39D1528c873961528342"},
 	"polygon": {
-		RPC: "https://rpc-mumbai.maticvigil.com/",
+		RPC: "https://rpc-mumbai.maticvigil.com",
 		NFT: "0xBb86dcf291419d3F5b4B2211122D0E6fCB693777"},
 }
 
