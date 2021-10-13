@@ -33,7 +33,7 @@ func Init() error {
 	}
 
 	if shared.TestMode {
-		WorkDirName = "denet-node-test"
+		WorkDirName = shared.TestWorkDirName
 	}
 
 	WorkDirPath = filepath.Join(homeDir, WorkDirName)

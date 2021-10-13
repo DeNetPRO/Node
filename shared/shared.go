@@ -18,9 +18,10 @@ type StorageProviderData struct {
 }
 
 var (
-	NodeAddr common.Address
-	MU       sync.Mutex
-	TestMode = false
+	NodeAddr        common.Address
+	MU              sync.Mutex
+	TestMode        = false
+	TestWorkDirName = "denet-node-test"
 )
 
 //Return nodes available space in GB
