@@ -301,8 +301,6 @@ func StartMakingProofs(password string) {
 
 			pathToStorProviderFiles := filepath.Join(pathToAccStorage, storageProviderAddr.String())
 
-			fmt.Println(pathToStorProviderFiles)
-
 			err = filepath.WalkDir(pathToStorProviderFiles,
 				func(path string, info fs.DirEntry, err error) error {
 					if err != nil {
