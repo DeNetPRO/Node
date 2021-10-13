@@ -104,7 +104,7 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 		os.Exit(0)
 	}
 
-	node, err := nodeNftAbi.NewNodeNft(common.HexToAddress(Networks[CurrentNetwork].NFT), client)
+	nodeNft, err := nodeNftAbi.NewNodeNft(common.HexToAddress(Networks[CurrentNetwork].NFT), client)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -114,37 +114,12 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 		return logger.CreateDetails(location, err)
 	}
 
-	_, err = node.CreateNode(opts, ipAddr, uint16(intPort))
+	_, err = nodeNft.CreateNode(opts, ipAddr, uint16(intPort))
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
 
 	return nil
-}
-
-// ====================================================================================
-
-// ====================================================================================
-
-//GetNodeNFT returns instance of NodeNft, bound to a specific deployed contract.
-func GetNodeNFT() (*nodeNftAbi.NodeNft, error) {
-	const location = "blckChain.getNodeNFT->"
-
-	nftAddr := common.HexToAddress(Networks[CurrentNetwork].NFT)
-
-	client, err := ethclient.Dial(Networks[CurrentNetwork].RPC)
-	if err != nil {
-		return nil, logger.CreateDetails(location, err)
-	}
-
-	defer client.Close()
-
-	node, err := nodeNftAbi.NewNodeNft(nftAddr, client)
-	if err != nil {
-		return nil, logger.CreateDetails(location, err)
-	}
-
-	return node, err
 }
 
 // ====================================================================================
@@ -219,7 +194,7 @@ func StartMakingProofs(password string) {
 	defer client.Close()
 
 	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
-	instance, err := proofOfStAbi.NewProofOfStorage(tokenAddress, client)
+	posInstance, err := proofOfStAbi.NewProofOfStorage(tokenAddress, client)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 	}
@@ -311,7 +286,7 @@ func StartMakingProofs(password string) {
 			time.Sleep(time.Second * 5)
 
 			storageProviderAddr := common.HexToAddress(spAddress)
-			_, reward, userDifficulty, err := instance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
+			_, reward, userDifficulty, err := posInstance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				continue
@@ -374,7 +349,7 @@ func StartMakingProofs(password string) {
 			storedFile.Close()
 			shared.MU.Unlock()
 
-			proved, err := instance.VerifyFileProof(&bind.CallOpts{}, shared.NodeAddr, storedFileBytes[:eightKB], uint32(blockNum-6), userDifficulty)
+			proved, err := posInstance.VerifyFileProof(&bind.CallOpts{}, shared.NodeAddr, storedFileBytes[:eightKB], uint32(blockNum-6), userDifficulty)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				continue
@@ -398,7 +373,7 @@ func StartMakingProofs(password string) {
 				continue
 			}
 
-			err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, instance)
+			err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, posInstance)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				continue
@@ -412,7 +387,7 @@ func StartMakingProofs(password string) {
 
 //SendProof checks Storage Providers's file system root hash and nounce info and sends proof to smart contract.
 func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
-	nodeAddr common.Address, spAddress common.Address, blockNum uint64, instance *proofOfStAbi.ProofOfStorage) error {
+	nodeAddr common.Address, spAddress common.Address, blockNum uint64, posInstance *proofOfStAbi.ProofOfStorage) error {
 	const location = "blckChain.sendProof->"
 	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, CurrentNetwork, spAddress.String(), paths.SpFsFilename)
 
@@ -464,7 +439,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 
 	fsRootHashBytes := proof[len(proof)-1]
 
-	contractRootHash, contractNonce, err := instance.GetUserRootHash(&bind.CallOpts{}, spAddress)
+	contractRootHash, contractNonce, err := posInstance.GetUserRootHash(&bind.CallOpts{}, spAddress)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -520,7 +495,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 		signedFSRootHash = signedFSRootHash[:64]
 	}
 
-	signatureIsValid, err := instance.IsValidSign(&bind.CallOpts{}, spAddress, fsRootNonceBytes, signedFSRootHash)
+	signatureIsValid, err := posInstance.IsValidSign(&bind.CallOpts{}, spAddress, fsRootNonceBytes, signedFSRootHash)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -537,7 +512,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 	proofOpts.Nonce = big.NewInt(int64(transactNonce))
 	proofOpts.Context = ctx
 
-	_, err = instance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
+	_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
 		debug.FreeOSMemory()
 		return logger.CreateDetails(location, err)
