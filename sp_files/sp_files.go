@@ -3,7 +3,6 @@ package spfiles
 import (
 	"encoding/hex"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -22,7 +21,6 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
-	"github.com/valyala/fasthttp/fasthttputil"
 )
 
 type NodesResponse struct {
@@ -38,7 +36,7 @@ type NodeAddressResponse struct {
 func Save(req *http.Request, spData *shared.StorageProviderData) error {
 	const location = "files.Save->"
 
-	pathToSpFiles := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spData.Address)
+	pathToSpFiles := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, blckChain.CurrentNetwork, spData.Address)
 
 	err := fsysinfo.Save(pathToSpFiles, spData)
 	if err != nil {
@@ -153,105 +151,6 @@ func Serve(spAddress, fileKey, signatureFromReq string) (string, error) {
 	}
 
 	return pathToFile, nil
-}
-
-// ====================================================================================
-
-//Sends files to other node if they can't be copied locally and returns that nodes address
-func copyOnOtherNode(nodeAddress, pathToSpFiles string, multiForm *multipart.Form, hashes []string, fileSize int) error {
-	const location = "files_helpers.backUp->"
-
-	pipeConns := fasthttputil.NewPipeConns()
-	pr := pipeConns.Conn1()
-	pw := pipeConns.Conn2()
-
-	writer := multipart.NewWriter(pw)
-
-	go func() {
-		defer writer.Close()
-		defer pw.Close()
-
-		address := multiForm.Value["address"]
-		nonce := multiForm.Value["nonce"]
-		fsRootHash := multiForm.Value["fsRootHash"]
-
-		err := writer.WriteField("address", address[0])
-		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
-			return
-		}
-
-		err = writer.WriteField("nonce", nonce[0])
-		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
-			return
-		}
-
-		err = writer.WriteField("fsRootHash", fsRootHash[0])
-		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
-			return
-		}
-
-		wholeFileHashes := multiForm.Value["fs"]
-		for _, wholeHash := range wholeFileHashes {
-			err = writer.WriteField("fs", wholeHash)
-			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
-				return
-			}
-		}
-
-		for _, hash := range hashes {
-			path := filepath.Join(pathToSpFiles, hash)
-			file, err := os.Open(path)
-			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
-				return
-			}
-
-			filePart, err := writer.CreateFormFile("files", hash)
-			if err != nil {
-				file.Close()
-				logger.Log(logger.CreateDetails(location, err))
-				return
-			}
-
-			_, err = io.Copy(filePart, file)
-			if err != nil {
-				file.Close()
-				logger.Log(logger.CreateDetails(location, err))
-				return
-			}
-
-			file.Close()
-		}
-	}()
-
-	req, err := http.NewRequest("POST", "http://"+nodeAddress+"/upload/"+strconv.Itoa(fileSize), pr)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	defer resp.Body.Close()
-
-	if string(body) != "OK" {
-		return logger.CreateDetails(location, errs.FileSaving)
-	}
-
-	return nil
 }
 
 // ====================================================================================
