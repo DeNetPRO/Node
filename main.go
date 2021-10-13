@@ -24,8 +24,6 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
 )
 
-var testMode = "test"
-
 func main() {
 
 	err := paths.Init()
