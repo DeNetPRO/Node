@@ -37,13 +37,13 @@ var configUpdateCmd = &cobra.Command{
 			}
 		}
 
-		etherAccount, password, err := account.ValidateUser()
+		nodeAccount, password, err := account.ValidateUser()
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
-		pathToConfigDir := filepath.Join(paths.AccsDirPath, etherAccount.Address.String(), paths.ConfDirName)
+		pathToConfigDir := filepath.Join(paths.AccsDirPath, nodeAccount.Address.String(), paths.ConfDirName)
 		pathToConfigFile := filepath.Join(pathToConfigDir, paths.ConfFileName)
 
 		var nodeConfig config.NodeConfig
@@ -81,7 +81,7 @@ var configUpdateCmd = &cobra.Command{
 
 		fmt.Println("Please enter new ip address, or just press enter button to skip")
 
-		splitIPAddr, err := config.SetIpAddr(&nodeConfig, config.UpdateStatus)
+		err = config.SetIpAddr(&nodeConfig, config.UpdateStatus)
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(confUpdateFatalMessage)
@@ -115,7 +115,7 @@ var configUpdateCmd = &cobra.Command{
 		if stateBefore.IpAddress != nodeConfig.IpAddress || stateBefore.HTTPPort != nodeConfig.HTTPPort {
 			ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
-			err := blckChain.UpdateNodeInfo(ctx, etherAccount.Address, password, nodeConfig.HTTPPort, splitIPAddr)
+			err := blckChain.UpdateNodeInfo(ctx, nodeAccount.Address, password, nodeConfig.IpAddress, nodeConfig.HTTPPort)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				log.Fatal(confUpdateFatalMessage)

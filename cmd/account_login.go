@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
@@ -34,13 +33,13 @@ var accountLoginCmd = &cobra.Command{
 	Long:  "log in a blockchain accounts",
 	Run: func(cmd *cobra.Command, args []string) {
 		const location = "accountLoginCmd->"
-		etherAccount, password, err := account.ValidateUser()
+		nodeAccount, password, err := account.ValidateUser()
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(accLoginFatalError)
 		}
 
-		pathToConfigDir := filepath.Join(paths.AccsDirPath, etherAccount.Address.String(), paths.ConfDirName)
+		pathToConfigDir := filepath.Join(paths.AccsDirPath, nodeAccount.Address.String(), paths.ConfDirName)
 
 		var nodeConfig config.NodeConfig
 
@@ -54,7 +53,7 @@ var accountLoginCmd = &cobra.Command{
 		}
 
 		if stat == nil {
-			nodeConfig, err = config.Create(etherAccount.Address.String(), password)
+			nodeConfig, err = config.Create(nodeAccount.Address.String(), password)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				log.Fatal("couldn't create config file")
@@ -73,6 +72,10 @@ var accountLoginCmd = &cobra.Command{
 				log.Fatal("couldn't read config file")
 			}
 
+			if nodeConfig.StorageLimit <= 0 {
+				log.Fatal(accLoginFatalError + " storage limit is " + fmt.Sprint(nodeConfig.StorageLimit))
+			}
+
 			_, supportedNet := blckChain.Networks[nodeConfig.Network]
 
 			if !supportedNet {
@@ -81,8 +84,17 @@ var accountLoginCmd = &cobra.Command{
 
 			blckChain.CurrentNetwork = nodeConfig.Network
 
-			if nodeConfig.StorageLimit <= 0 {
-				log.Fatal(accLoginFatalError)
+			_, registeredInNetwork := nodeConfig.RegisteredInNetworks[nodeConfig.Network]
+
+			if !registeredInNetwork {
+				ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+				defer cancel()
+
+				err = blckChain.RegisterNode(ctx, nodeAccount.Address.String(), password, nodeConfig.IpAddress, nodeConfig.HTTPPort)
+				if err != nil {
+					log.Fatal(accLoginFatalError + ": couldn't register node in " + blckChain.CurrentNetwork)
+				}
 			}
 
 			if upnp.InternetDevice != nil {
@@ -91,15 +103,13 @@ var accountLoginCmd = &cobra.Command{
 					logger.Log(logger.CreateDetails(location, err))
 				}
 
-				if nodeConfig.IpAddress != ip {
+				if registeredInNetwork && nodeConfig.IpAddress != ip {
 
 					fmt.Println("Updating public ip info...")
 
-					splitIPAddr := strings.Split(ip, ".")
-
 					ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
-					err = blckChain.UpdateNodeInfo(ctx, etherAccount.Address, password, nodeConfig.HTTPPort, splitIPAddr)
+					err = blckChain.UpdateNodeInfo(ctx, nodeAccount.Address, password, nodeConfig.IpAddress, nodeConfig.HTTPPort)
 					if err != nil {
 						logger.Log(logger.CreateDetails(location, err))
 						log.Fatal(ipUpdateFatalError)

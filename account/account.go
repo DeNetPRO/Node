@@ -35,11 +35,11 @@ func List() []string {
 	scryptN, scryptP := encryption.GetScryptParams()
 
 	ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
-	etherAccounts := ks.Accounts()
+	nodeAccounts := ks.Accounts()
 
 	blockchainAccounts = make([]string, 0)
 
-	for _, a := range etherAccounts {
+	for _, a := range nodeAccounts {
 		blockchainAccounts = append(blockchainAccounts, a.Address.String())
 	}
 
@@ -60,17 +60,17 @@ func Create(password string) (string, config.NodeConfig, error) {
 
 	ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
 
-	etherAccount, err := ks.NewAccount(password)
+	nodeAccount, err := ks.NewAccount(password)
 	if err != nil {
 		return "", nodeConf, logger.CreateDetails(location, err)
 	}
 
-	nodeConf, err = initAccount(ks, &etherAccount, password)
+	nodeConf, err = initAccount(ks, &nodeAccount, password)
 	if err != nil {
 		return "", nodeConf, logger.CreateDetails(location, err)
 	}
 
-	return etherAccount.Address.String(), nodeConf, nil
+	return nodeAccount.Address.String(), nodeConf, nil
 }
 
 //Import is used for importing crypto wallet. Private key is needed.
@@ -128,17 +128,17 @@ func Import() (string, config.NodeConfig, error) {
 		return "", nodeConfig, logger.CreateDetails(location, err)
 	}
 
-	etherAccount, err := ks.ImportECDSA(ecdsaPrivKey, password)
+	nodeAccount, err := ks.ImportECDSA(ecdsaPrivKey, password)
 	if err != nil {
 		return "", nodeConfig, logger.CreateDetails(location, err)
 	}
 
-	nodeConfig, err = initAccount(ks, &etherAccount, password)
+	nodeConfig, err = initAccount(ks, &nodeAccount, password)
 	if err != nil {
 		return "", nodeConfig, logger.CreateDetails(location, err)
 	}
 
-	return etherAccount.Address.String(), nodeConfig, nil
+	return nodeAccount.Address.String(), nodeConfig, nil
 }
 
 //Login checks wallet's address and user's password that was used for crypto wallet creation.
@@ -147,11 +147,11 @@ func Login(accountAddress, password string) (*accounts.Account, error) {
 	scryptN, scryptP := encryption.GetScryptParams()
 
 	ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
-	etherAccounts := ks.Accounts()
+	nodeAccounts := ks.Accounts()
 
 	var account *accounts.Account
 
-	for _, a := range etherAccounts {
+	for _, a := range nodeAccounts {
 		if accountAddress == a.Address.String() {
 			account = &a
 			break
@@ -217,7 +217,7 @@ func CheckPassword(password, address string) error {
 func ValidateUser() (*accounts.Account, string, error) {
 	const location = "account.ValidateUser->"
 	var accountAddress, password string
-	var etherAccount *accounts.Account
+	var nodeAccount *accounts.Account
 
 	accounts := List()
 
@@ -289,7 +289,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 		originalPassword = ""
 		bytePassword = nil
 
-		etherAccount, err = Login(accountAddress, password)
+		nodeAccount, err = Login(accountAddress, password)
 		if err != nil {
 			logger.CreateDetails(location, err)
 			continue
@@ -303,7 +303,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 		return nil, "", logger.CreateDetails(location, errors.New("couldn't log in in 3 attempts"))
 	}
 
-	return etherAccount, password, nil
+	return nodeAccount, password, nil
 }
 
 //InitAccount creates directories and files needed for correct work.

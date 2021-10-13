@@ -24,7 +24,7 @@ var showKeyCmd = &cobra.Command{
 		const location = "showKeyCmd->"
 		fmt.Println("Never disclose this key. Anyone with your private keys can steal any assets held in your account")
 
-		etherAccount, password, err := account.ValidateUser()
+		nodeAccount, password, err := account.ValidateUser()
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(showKeyFatalMessage)
@@ -34,7 +34,7 @@ var showKeyCmd = &cobra.Command{
 
 		ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
 
-		keyJson, err := ks.Export(*etherAccount, password, password)
+		keyJson, err := ks.Export(*nodeAccount, password, password)
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(showKeyFatalMessage)

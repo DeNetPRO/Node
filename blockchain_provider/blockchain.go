@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"runtime/debug"
+	"strings"
 
 	"github.com/minio/sha256-simd"
 
@@ -61,11 +62,13 @@ var (
 
 //RegisterNode registers a node in the ethereum network.
 //Node's balance should have more than 200000000000000 wei to pay transaction comission.
-func RegisterNode(ctx context.Context, address, password string, ip []string, port string) error {
+func RegisterNode(ctx context.Context, address, password, ip, port string) error {
 	const location = "blckChain.RegisterNode->"
 	ipAddr := [4]uint8{}
 
-	for i, v := range ip {
+	splitIPAddr := strings.Split(ip, ".")
+
+	for i, v := range splitIPAddr {
 		intIPPart, err := strconv.Atoi(v)
 		if err != nil {
 			return logger.CreateDetails(location, err)
@@ -125,11 +128,13 @@ func RegisterNode(ctx context.Context, address, password string, ip []string, po
 // ====================================================================================
 
 //UpdateNodeInfo updates node's ip address or port info.
-func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newPort string, newIP []string) error {
+func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newIP, newPort string) error {
 	const location = "blckChain.UpdateNodeInfo->"
 	ipInfo := [4]uint8{}
 
-	for i, v := range newIP {
+	splitIPAddr := strings.Split(newIP, ".")
+
+	for i, v := range splitIPAddr {
 		intPart, err := strconv.Atoi(v)
 		if err != nil {
 			return logger.CreateDetails(location, err)

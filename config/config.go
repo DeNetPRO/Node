@@ -22,13 +22,14 @@ import (
 )
 
 type NodeConfig struct {
-	Address          string `json:"nodeAddress"`
-	IpAddress        string `json:"ipAddress"`
-	HTTPPort         string `json:"portHTTP"`
-	Network          string `json:"network"`
-	StorageLimit     int    `json:"storageLimit"`
-	UsedStorageSpace int64  `json:"usedStorageSpace"`
-	AgreeSendLogs    bool   `json:"agreeSendLogs"`
+	Address              string          `json:"nodeAddress"`
+	IpAddress            string          `json:"ipAddress"`
+	HTTPPort             string          `json:"portHTTP"`
+	Network              string          `json:"network"`
+	StorageLimit         int             `json:"storageLimit"`
+	UsedStorageSpace     int64           `json:"usedStorageSpace"`
+	AgreeSendLogs        bool            `json:"agreeSendLogs"`
+	RegisteredInNetworks map[string]bool `json:"registeredInNetworks"`
 }
 
 const (
@@ -80,20 +81,16 @@ func Create(address, password string) (NodeConfig, error) {
 			return nodeConfig, logger.CreateDetails(location, err)
 		}
 
-		var splitIPAddr []string
-
 		if upnp.InternetDevice != nil {
 			ip, err := upnp.InternetDevice.PublicIP()
 			if err != nil {
 				return nodeConfig, logger.CreateDetails(location, err)
 			}
-
 			nodeConfig.IpAddress = ip
-			splitIPAddr = strings.Split(ip, ".")
 			fmt.Println("Your public IP address", ip, "is added to config")
 		} else {
 			fmt.Println("Please enter your public ip address")
-			splitIPAddr, err = SetIpAddr(&nodeConfig, CreateStatus)
+			err = SetIpAddr(&nodeConfig, CreateStatus)
 			if err != nil {
 				return nodeConfig, logger.CreateDetails(location, err)
 			}
@@ -111,10 +108,12 @@ func Create(address, password string) (NodeConfig, error) {
 
 		fmt.Println("Registering node...")
 
-		err = blckChain.RegisterNode(ctx, address, password, splitIPAddr, nodeConfig.HTTPPort)
+		err = blckChain.RegisterNode(ctx, address, password, nodeConfig.IpAddress, nodeConfig.HTTPPort)
 		if err != nil {
 			return nodeConfig, logger.CreateDetails(location, err)
 		}
+
+		nodeConfig.RegisteredInNetworks[blckChain.CurrentNetwork] = true
 	}
 
 	confFile, err := os.Create(filepath.Join(pathToConfig, paths.ConfFileName))
@@ -234,17 +233,15 @@ func SetStorageLimit(pathToConfig, state string, nodeConfig *NodeConfig) error {
 // ====================================================================================
 
 //Set ip address in config file
-func SetIpAddr(nodeConfig *NodeConfig, state string) ([]string, error) {
+func SetIpAddr(nodeConfig *NodeConfig, state string) error {
 	const location = "config.SetIpAddr->"
-
-	var splitIPAddr []string
 
 	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
 
 	for {
 		ipAddr, err := termEmul.ReadInput()
 		if err != nil {
-			return nil, logger.CreateDetails(location, err)
+			return logger.CreateDetails(location, err)
 		}
 
 		if state == UpdateStatus && ipAddr == "" {
@@ -258,7 +255,7 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) ([]string, error) {
 			continue
 		}
 
-		splitIPAddr = strings.Split(ipAddr, ".")
+		splitIPAddr := strings.Split(ipAddr, ".")
 
 		if fullyReservedIPs[splitIPAddr[0]] {
 			fmt.Println("Address", ipAddr, "can't be used as a public ip address")
@@ -270,7 +267,7 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) ([]string, error) {
 		if partiallyReserved {
 			secondAddrPart, err := strconv.Atoi(splitIPAddr[1])
 			if err != nil {
-				return nil, logger.CreateDetails(location, err)
+				return logger.CreateDetails(location, err)
 			}
 
 			if secondAddrPart <= reservedSecAddrPart {
@@ -283,7 +280,7 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) ([]string, error) {
 		break
 	}
 
-	return splitIPAddr, nil
+	return nil
 }
 
 // ====================================================================================
