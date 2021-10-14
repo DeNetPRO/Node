@@ -272,7 +272,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 	attempts := 3
 	for i := 0; i < attempts; i++ {
 		fmt.Println("Please enter your password:")
-		fmt.Println("Attempts remained:", attempts-i)
+		fmt.Println("Attempts left:", attempts-i)
 
 		bytePassword, err := gopass.GetPasswdMasked()
 		if err != nil {
