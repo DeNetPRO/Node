@@ -220,8 +220,6 @@ func StartMakingProofs(password string) {
 		logger.Log(logger.CreateDetails(location, err))
 	}
 
-	fmt.Printf("%+v\n", opts)
-
 	debug.FreeOSMemory()
 
 	proofOpts = opts
@@ -288,7 +286,7 @@ func StartMakingProofs(password string) {
 		nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
 
 		if nodeBalanceIsLow {
-			fmt.Println("Your account has insufficient funds for paying transaction fee. Balance:", nodeBalance, "wei")
+			fmt.Println("Insufficient funds for paying ", CurrentNetwork, " transaction fee. Balance:", nodeBalance)
 			fmt.Println("Please top up your balance")
 			continue
 		}
