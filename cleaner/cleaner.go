@@ -33,164 +33,167 @@ func Start() {
 	for {
 		time.Sleep(time.Minute * 20)
 
-		pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, blckChain.CurrentNetwork)
+		for network := range blckChain.Networks {
+			pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, network)
 
-		stat, err := os.Stat(pathToAccStorage)
-		if err != nil {
-			err = errs.CheckStatErr(err)
+			stat, err := os.Stat(pathToAccStorage)
 			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
-				log.Fatal(err)
-			}
-		}
-
-		if stat == nil {
-			fmt.Println("no files from", blckChain.CurrentNetwork, "to delete")
-			continue
-		}
-
-		storageProviderAddresses := []string{}
-
-		err = filepath.WalkDir(pathToAccStorage,
-			func(path string, info fs.DirEntry, err error) error {
+				err = errs.CheckStatErr(err)
 				if err != nil {
 					logger.Log(logger.CreateDetails(location, err))
+					log.Fatal(err)
 				}
-
-				if regAddr.MatchString(info.Name()) {
-					storageProviderAddresses = append(storageProviderAddresses, info.Name())
-				}
-
-				return nil
-			})
-
-		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
-			continue
-		}
-
-		if len(storageProviderAddresses) == 0 {
-			err := os.Remove(pathToAccStorage)
-			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
 			}
-			continue
-		}
 
-		removedTotal := 0
+			if stat == nil {
+				fmt.Println("no files from", blckChain.CurrentNetwork, "to delete")
+				continue
+			}
 
-		for _, spAddress := range storageProviderAddresses {
+			storageProviderAddresses := []string{}
 
-			fileNames := []string{}
-
-			pathToStorProviderFiles := filepath.Join(pathToAccStorage, spAddress)
-
-			err = filepath.WalkDir(pathToStorProviderFiles,
+			err = filepath.WalkDir(pathToAccStorage,
 				func(path string, info fs.DirEntry, err error) error {
 					if err != nil {
 						logger.Log(logger.CreateDetails(location, err))
 					}
 
-					if regFileName.MatchString(info.Name()) && len(info.Name()) == 64 {
-						fileNames = append(fileNames, info.Name())
+					if regAddr.MatchString(info.Name()) {
+						storageProviderAddresses = append(storageProviderAddresses, info.Name())
 					}
 
 					return nil
 				})
+
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				continue
 			}
 
-			pathToFsTree := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, blckChain.CurrentNetwork, spAddress, paths.SpFsFilename)
-
-			shared.MU.Lock()
-			fileFsTree, treeBytes, err := nodeFile.Read(pathToFsTree)
-			if err != nil {
-				shared.MU.Unlock()
-				logger.Log(logger.CreateDetails(location, err))
-				continue
-			}
-
-			fileFsTree.Close()
-			shared.MU.Unlock()
-
-			var spFs shared.StorageProviderData
-
-			err = json.Unmarshal(treeBytes, &spFs)
-			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
-			}
-
-			fsFiles := map[string]bool{}
-
-			for _, hashes := range spFs.Tree {
-				for _, hash := range hashes {
-					fsFiles[hex.EncodeToString(hash)] = true
+			if len(storageProviderAddresses) == 0 {
+				err := os.Remove(pathToAccStorage)
+				if err != nil {
+					logger.Log(logger.CreateDetails(location, err))
 				}
+				continue
 			}
 
-			for _, fileName := range fileNames {
+			removedTotal := 0
 
-				if !fsFiles[fileName] {
-					shared.MU.Lock()
-					logger.Log("removing file: " + fileName + " of " + spAddress)
-					stat, err := os.Stat(filepath.Join(pathToStorProviderFiles, fileName))
-					if err != nil {
-						logger.Log(logger.CreateDetails(location, err))
-						continue
-					}
+			for _, spAddress := range storageProviderAddresses {
 
-					err = os.Remove(filepath.Join(pathToStorProviderFiles, fileName))
-					if err != nil {
-						logger.Log(logger.CreateDetails(location, err))
-						continue
-					}
+				fileNames := []string{}
 
-					if !shared.TestMode {
-						logger.SendStatistic(spAddress, "", logger.Delete, stat.Size())
-					}
+				pathToStorProviderFiles := filepath.Join(pathToAccStorage, spAddress)
 
-					removedTotal++
+				err = filepath.WalkDir(pathToStorProviderFiles,
+					func(path string, info fs.DirEntry, err error) error {
+						if err != nil {
+							logger.Log(logger.CreateDetails(location, err))
+						}
 
+						if regFileName.MatchString(info.Name()) && len(info.Name()) == 64 {
+							fileNames = append(fileNames, info.Name())
+						}
+
+						return nil
+					})
+				if err != nil {
+					logger.Log(logger.CreateDetails(location, err))
+					continue
+				}
+
+				pathToFsTree := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, blckChain.CurrentNetwork, spAddress, paths.SpFsFilename)
+
+				shared.MU.Lock()
+				fileFsTree, treeBytes, err := nodeFile.Read(pathToFsTree)
+				if err != nil {
 					shared.MU.Unlock()
+					logger.Log(logger.CreateDetails(location, err))
+					continue
 				}
+
+				fileFsTree.Close()
+				shared.MU.Unlock()
+
+				var spFs shared.StorageProviderData
+
+				err = json.Unmarshal(treeBytes, &spFs)
+				if err != nil {
+					logger.Log(logger.CreateDetails(location, err))
+				}
+
+				fsFiles := map[string]bool{}
+
+				for _, hashes := range spFs.Tree {
+					for _, hash := range hashes {
+						fsFiles[hex.EncodeToString(hash)] = true
+					}
+				}
+
+				for _, fileName := range fileNames {
+
+					if !fsFiles[fileName] {
+						shared.MU.Lock()
+						logger.Log("removing file: " + fileName + " of " + spAddress)
+						stat, err := os.Stat(filepath.Join(pathToStorProviderFiles, fileName))
+						if err != nil {
+							logger.Log(logger.CreateDetails(location, err))
+							continue
+						}
+
+						err = os.Remove(filepath.Join(pathToStorProviderFiles, fileName))
+						if err != nil {
+							logger.Log(logger.CreateDetails(location, err))
+							continue
+						}
+
+						if !shared.TestMode {
+							logger.SendStatistic(spAddress, "", logger.Delete, stat.Size())
+						}
+
+						removedTotal++
+
+						shared.MU.Unlock()
+					}
+				}
+
 			}
 
+			if removedTotal > 0 {
+				pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
+
+				shared.MU.Lock()
+				confFile, fileBytes, err := nodeFile.Read(pathToConfig)
+				if err != nil {
+					shared.MU.Unlock()
+					logger.Log(logger.CreateDetails(location, err))
+					continue
+				}
+
+				var nodeConfig config.NodeConfig
+
+				err = json.Unmarshal(fileBytes, &nodeConfig)
+				if err != nil {
+					shared.MU.Unlock()
+					confFile.Close()
+					logger.Log(logger.CreateDetails(location, err))
+					continue
+				}
+
+				nodeConfig.UsedStorageSpace -= int64(removedTotal * oneMB)
+
+				err = config.Save(confFile, nodeConfig)
+				if err != nil {
+					shared.MU.Unlock()
+					confFile.Close()
+					logger.Log(logger.CreateDetails(location, err))
+					continue
+				}
+				confFile.Close()
+				shared.MU.Unlock()
+			}
 		}
 
-		if removedTotal > 0 {
-			pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
-
-			shared.MU.Lock()
-			confFile, fileBytes, err := nodeFile.Read(pathToConfig)
-			if err != nil {
-				shared.MU.Unlock()
-				logger.Log(logger.CreateDetails(location, err))
-				continue
-			}
-
-			var nodeConfig config.NodeConfig
-
-			err = json.Unmarshal(fileBytes, &nodeConfig)
-			if err != nil {
-				shared.MU.Unlock()
-				confFile.Close()
-				logger.Log(logger.CreateDetails(location, err))
-				continue
-			}
-
-			nodeConfig.UsedStorageSpace -= int64(removedTotal * oneMB)
-
-			err = config.Save(confFile, nodeConfig)
-			if err != nil {
-				shared.MU.Unlock()
-				confFile.Close()
-				logger.Log(logger.CreateDetails(location, err))
-				continue
-			}
-			confFile.Close()
-			shared.MU.Unlock()
-		}
 	}
 }
