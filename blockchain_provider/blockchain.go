@@ -102,7 +102,7 @@ func RegisterNode(ctx context.Context, address, password, ip, port string) error
 	balanceIsInsufficient := balance.Cmp(big.NewInt(200000000000000)) == -1
 
 	if balanceIsInsufficient {
-		fmt.Println("Your account has insufficient funds for registering in net. Balance:", balance, "wei")
+		fmt.Println("Insufficient funds for registering in ", CurrentNetwork, ". Balance:", balance)
 		fmt.Println("Please top up your balance")
 		os.Exit(0)
 	}
@@ -191,6 +191,8 @@ func StartMakingProofs(password string) {
 
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
+
+	fmt.Println(Networks[CurrentNetwork].RPC)
 
 	client, err := ethclient.Dial(Networks[CurrentNetwork].RPC)
 	if err != nil {
