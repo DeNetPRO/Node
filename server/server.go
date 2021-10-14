@@ -405,7 +405,6 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 	senderAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
 	if storageProviderAddress[0] != fmt.Sprint(senderAddress) {
-		fmt.Println(storageProviderAddress[0], fmt.Sprint(senderAddress))
 		return nil, logger.CreateDetails(location, errs.WrongSignature)
 	}
 
