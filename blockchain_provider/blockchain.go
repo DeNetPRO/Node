@@ -42,15 +42,20 @@ import (
 type NtwrkParams struct {
 	RPC string
 	NFT string
+	PoS string
 }
 
 var Networks = map[string]NtwrkParams{
 	"kovan": {
 		RPC: "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f",
-		NFT: "0xBfAfdaE6B77a02A4684D39D1528c873961528342"},
+		NFT: "0xBfAfdaE6B77a02A4684D39D1528c873961528342",
+		PoS: "0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B",
+	},
 	"polygon": {
 		RPC: "https://rpc-mumbai.maticvigil.com",
-		NFT: "0xBb86dcf291419d3F5b4B2211122D0E6fCB693777"},
+		NFT: "0xBb86dcf291419d3F5b4B2211122D0E6fCB693777",
+		PoS: "0xe4d6D3aFFCb6639534f12bf979c0cfd98EdD14E5",
+	},
 }
 
 const eightKB = 8192
@@ -192,16 +197,13 @@ func StartMakingProofs(password string) {
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
 
-	fmt.Println(Networks[CurrentNetwork].RPC)
-
 	client, err := ethclient.Dial(Networks[CurrentNetwork].RPC)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 	}
 	defer client.Close()
 
-	tokenAddress := common.HexToAddress("0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B")
-	posInstance, err := proofOfStAbi.NewProofOfStorage(tokenAddress, client)
+	posInstance, err := proofOfStAbi.NewProofOfStorage(common.HexToAddress(Networks[CurrentNetwork].PoS), client)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 	}
