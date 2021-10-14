@@ -218,6 +218,8 @@ func StartMakingProofs(password string) {
 		logger.Log(logger.CreateDetails(location, err))
 	}
 
+	fmt.Printf("%+v\n", opts)
+
 	debug.FreeOSMemory()
 
 	proofOpts = opts
@@ -275,11 +277,17 @@ func StartMakingProofs(password string) {
 			continue
 		}
 
+		fmt.Println(CurrentNetwork, "blockNum", blockNum)
+
+		fmt.Println("checking ", shared.NodeAddr, "balance")
+
 		nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-1)))
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 			continue
 		}
+
+		fmt.Println(shared.NodeAddr, ": ", nodeBalance)
 
 		nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
 
@@ -377,6 +385,8 @@ func StartMakingProofs(password string) {
 				logger.Log(logger.CreateDetails(location, err))
 				continue
 			}
+
+			fmt.Println(CurrentNetwork, "blockNum", blockNum)
 
 			err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, posInstance)
 			if err != nil {
