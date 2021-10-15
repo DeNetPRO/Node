@@ -8,7 +8,6 @@ import (
 
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -162,10 +161,17 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
-	fileSize, _, _, err := checkAndReserveSpace(req, pathToConfig)
+	fileSize, spacespaceNotEnough, _, err := checkAndReserveSpace(req, pathToConfig)
 	if err != nil {
+
 		logger.Log(logger.CreateDetails(location, err))
-		http.Error(w, err.Error(), http.StatusBadRequest)
+
+		if spacespaceNotEnough {
+			http.Error(w, errs.NoSpace.Error(), http.StatusBadRequest)
+			return
+		}
+
+		http.Error(w, errs.SpaceCheck.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -324,7 +330,7 @@ func checkAndReserveSpace(r *http.Request, pathToConfig string) (int, bool, conf
 	nodeConfig.UsedStorageSpace += int64(intFileSize)
 
 	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
-		return 0, false, nodeConfig, logger.CreateDetails(location, errors.New("not enough space"))
+		return 0, true, nodeConfig, logger.CreateDetails(location, errs.SpaceCheck)
 	}
 
 	avaliableSpaceLeft := sharedSpaceInBytes - nodeConfig.UsedStorageSpace
@@ -339,7 +345,7 @@ func checkAndReserveSpace(r *http.Request, pathToConfig string) (int, bool, conf
 		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
 
-	return intFileSize, true, nodeConfig, nil
+	return intFileSize, false, nodeConfig, nil
 }
 
 // ====================================================================================
