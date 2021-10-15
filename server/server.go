@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"os/signal"
 
 	"github.com/minio/sha256-simd"
@@ -307,7 +308,7 @@ func checkAndReserveSpace(r *http.Request, pathToConfig string) (int, bool, conf
 	}
 
 	if intFileSize == 0 {
-		return 0, false, nodeConfig, logger.CreateDetails(location, err)
+		return 0, false, nodeConfig, logger.CreateDetails(location, errors.New("file size is 0"))
 	}
 
 	shared.MU.Lock()
@@ -330,7 +331,7 @@ func checkAndReserveSpace(r *http.Request, pathToConfig string) (int, bool, conf
 	nodeConfig.UsedStorageSpace += int64(intFileSize)
 
 	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
-		return 0, true, nodeConfig, logger.CreateDetails(location, errs.SpaceCheck)
+		return 0, true, nodeConfig, logger.CreateDetails(location, errs.NoSpace)
 	}
 
 	avaliableSpaceLeft := sharedSpaceInBytes - nodeConfig.UsedStorageSpace
