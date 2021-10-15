@@ -165,7 +165,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	fileSize, _, _, err := checkAndReserveSpace(req, pathToConfig)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
-		http.Error(w, errs.SpaceCheck.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -173,7 +173,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		memInfo.Restore(pathToConfig, fileSize)
-		http.Error(w, errs.ParseMultipartForm.Error(), http.StatusBadRequest)
+		http.Error(w, errs.ParseMultipartForm.Error(), http.StatusInternalServerError)
 		return
 	}
 
