@@ -31,7 +31,7 @@ func Start() {
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
 
 	for {
-		time.Sleep(time.Second * 5)
+		time.Sleep(time.Minute * 20)
 
 		for network := range blckChain.Networks {
 			pathToAccStorage := filepath.Join(paths.StoragePaths[0], network)
