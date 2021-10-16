@@ -80,14 +80,14 @@ func TestAccCreate(t *testing.T) {
 
 	accountAddress = accs[0]
 
-	pathToAcc := filepath.Join(paths.AccsDirPath, accountAddress)
-
-	pathToStorage := filepath.Join(pathToAcc, paths.StorageDirName, blckChain.CurrentNetwork)
+	pathToStorage := filepath.Join(paths.StoragePaths[0], blckChain.CurrentNetwork)
 
 	_, err = os.Stat(pathToStorage)
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	pathToAcc := filepath.Join(paths.AccsDirPath, accountAddress)
 
 	pathToConfigFile := filepath.Join(pathToAcc, paths.ConfDirName, paths.ConfFileName)
 

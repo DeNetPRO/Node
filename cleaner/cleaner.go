@@ -34,7 +34,7 @@ func Start() {
 		time.Sleep(time.Minute * 20)
 
 		for network := range blckChain.Networks {
-			pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, network)
+			pathToAccStorage := filepath.Join(paths.StoragePaths[0], network)
 
 			stat, err := os.Stat(pathToAccStorage)
 			if err != nil {

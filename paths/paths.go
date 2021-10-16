@@ -16,6 +16,7 @@ var (
 	ConfDirName    = "config"
 	ConfFileName   = "config.json"
 	StorageDirName = "storage"
+	StoragePaths   []string
 	SpFsFilename   = "tree.json"
 	UpdateDirPath  string
 	RatingFilePath string

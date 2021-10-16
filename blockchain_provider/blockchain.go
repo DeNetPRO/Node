@@ -226,7 +226,7 @@ func StartMakingProofs(password string) {
 
 	fmt.Println(CurrentNetwork, "network selected")
 
-	pathToAccStorage := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, CurrentNetwork)
+	pathToAccStorage := filepath.Join(paths.StoragePaths[0], CurrentNetwork)
 
 	for {
 		fmt.Println("Sleeping...")

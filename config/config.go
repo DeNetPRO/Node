@@ -27,6 +27,7 @@ type NodeConfig struct {
 	HTTPPort             string          `json:"portHTTP"`
 	Network              string          `json:"network"`
 	StorageLimit         int             `json:"storageLimit"`
+	StoragePaths         []string        `json:"storagePaths"`
 	UsedStorageSpace     int64           `json:"usedStorageSpace"`
 	AgreeSendLogs        bool            `json:"agreeSendLogs"`
 	RegisteredInNetworks map[string]bool `json:"registeredInNetworks"`
@@ -54,6 +55,7 @@ func Create(address, password string) (NodeConfig, error) {
 
 	nodeConfig := NodeConfig{
 		Address:       address,
+		StoragePaths:  []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)},
 		AgreeSendLogs: true,
 	}
 

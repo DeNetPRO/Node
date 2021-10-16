@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
@@ -23,8 +22,6 @@ var accountImportCmd = &cobra.Command{
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal("Fatal error, couldn't import an account")
 		}
-
-		account.IpAddr = fmt.Sprint(nodeConfig.IpAddress, ":", nodeConfig.HTTPPort)
 
 		go cleaner.Start()
 

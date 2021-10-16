@@ -24,10 +24,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-var (
-	IpAddr string
-)
-
 //List returns list of user's created/imported wallet adresses, that are used as user accounts.
 func List() []string {
 	var blockchainAccounts []string

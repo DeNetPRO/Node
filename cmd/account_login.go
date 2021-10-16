@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 
 	"encoding/json"
 	"fmt"
@@ -131,10 +132,16 @@ var accountLoginCmd = &cobra.Command{
 				}
 			}
 
-			logger.SendLogs = nodeConfig.AgreeSendLogs
 		}
 
-		account.IpAddr = fmt.Sprint(nodeConfig.IpAddress, ":", nodeConfig.HTTPPort)
+		if len(nodeConfig.StoragePaths) == 0 {
+			err := errors.New("path to storage is not specified in config")
+			logger.Log(logger.CreateDetails(location, err))
+			log.Fatal(err)
+		}
+
+		paths.StoragePaths = nodeConfig.StoragePaths
+		logger.SendLogs = nodeConfig.AgreeSendLogs
 
 		fmt.Println("Logged in")
 
