@@ -31,10 +31,12 @@ func Start() {
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
 
 	for {
-		time.Sleep(time.Minute * 20)
+		time.Sleep(time.Minute * 1)
 
 		for network := range blckChain.Networks {
 			pathToAccStorage := filepath.Join(paths.StoragePaths[0], network)
+
+			fmt.Println(paths.StoragePaths[0], "!!!!!")
 
 			stat, err := os.Stat(pathToAccStorage)
 			if err != nil {
@@ -46,7 +48,7 @@ func Start() {
 			}
 
 			if stat == nil {
-				fmt.Println("no files from", blckChain.CurrentNetwork, "to delete")
+				fmt.Println("no files from", network, " users to delete")
 				continue
 			}
 
