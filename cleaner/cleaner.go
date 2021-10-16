@@ -36,10 +36,11 @@ func Start() {
 		for network := range blckChain.Networks {
 			pathToAccStorage := filepath.Join(paths.StoragePaths[0], network)
 
-			fmt.Println(paths.StoragePaths[0], "!!!!!")
+			fmt.Println(pathToAccStorage, "!!!!!")
 
 			stat, err := os.Stat(pathToAccStorage)
 			if err != nil {
+				fmt.Println(err)
 				err = errs.CheckStatErr(err)
 				if err != nil {
 					logger.Log(logger.CreateDetails(location, err))
@@ -48,7 +49,7 @@ func Start() {
 			}
 
 			if stat == nil {
-				fmt.Println("no files from", network, " users to delete")
+				fmt.Println("no files from", network, "users to delete")
 				continue
 			}
 
