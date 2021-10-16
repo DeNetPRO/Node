@@ -218,6 +218,7 @@ func StartMakingProofs(password string) {
 	opts, err := initTrxOpts(ctx, client, shared.NodeAddr, password, blockNum)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
+		log.Fatal("couldn't initialize transaction options")
 	}
 
 	debug.FreeOSMemory()

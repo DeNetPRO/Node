@@ -36,8 +36,6 @@ func Start() {
 		for network := range blckChain.Networks {
 			pathToAccStorage := filepath.Join(paths.StoragePaths[0], network)
 
-			fmt.Println(pathToAccStorage, "!!!!!")
-
 			stat, err := os.Stat(pathToAccStorage)
 			if err != nil {
 				fmt.Println(err)
