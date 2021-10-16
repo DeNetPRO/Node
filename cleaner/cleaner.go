@@ -31,7 +31,7 @@ func Start() {
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
 
 	for {
-		time.Sleep(time.Minute * 20)
+		time.Sleep(time.Second * 5)
 
 		for network := range blckChain.Networks {
 			pathToAccStorage := filepath.Join(paths.StoragePaths[0], network)
@@ -103,7 +103,7 @@ func Start() {
 					continue
 				}
 
-				pathToFsTree := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, blckChain.CurrentNetwork, spAddress, paths.SpFsFilename)
+				pathToFsTree := filepath.Join(paths.StoragePaths[0], network, spAddress, paths.SpFsFilename)
 
 				shared.MU.Lock()
 				fileFsTree, treeBytes, err := nodeFile.Read(pathToFsTree)

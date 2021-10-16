@@ -32,7 +32,7 @@ type UpdatedFsInfo struct {
 func Update(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem, network string) error {
 	const location = "files.UpdateFileSystemInfo->"
 
-	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, network, spAddress)
+	addressPath := filepath.Join(paths.StoragePaths[0], network, spAddress)
 
 	_, err := os.Stat(addressPath)
 	if err != nil {

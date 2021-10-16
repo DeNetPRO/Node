@@ -35,7 +35,7 @@ type NodeAddressResponse struct {
 func Save(req *http.Request, spData *shared.StorageProviderData, network string) error {
 	const location = "files.Save->"
 
-	pathToSpFiles := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, network, spData.Address)
+	pathToSpFiles := filepath.Join(paths.StoragePaths[0], network, spData.Address)
 
 	stat, err := os.Stat(pathToSpFiles)
 	if err != nil {
@@ -157,7 +157,7 @@ func Serve(spAddress, fileKey, signatureFromReq, network string) (string, error)
 		return "", logger.CreateDetails(location, err)
 	}
 
-	pathToFile := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, network, spAddress, fileKey)
+	pathToFile := filepath.Join(paths.StoragePaths[0], network, spAddress, fileKey)
 
 	_, err = os.Stat(pathToFile)
 	if err != nil {
