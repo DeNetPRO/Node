@@ -67,6 +67,8 @@ func Create(address, password string) (NodeConfig, error) {
 		nodeConfig.Network = "kovan"
 		nodeConfig.StorageLimit = 1
 		nodeConfig.UsedStorageSpace = 0
+		nodeConfig.StoragePaths = []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)}
+
 	} else {
 		network, err := SelectNetwork()
 		if err != nil {
@@ -117,6 +119,8 @@ func Create(address, password string) (NodeConfig, error) {
 
 		nodeConfig.RegisteredInNetworks[blckChain.CurrentNetwork] = true
 	}
+
+	paths.StoragePaths = nodeConfig.StoragePaths
 
 	confFile, err := os.Create(filepath.Join(pathToConfig, paths.ConfFileName))
 	if err != nil {

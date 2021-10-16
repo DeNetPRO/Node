@@ -309,12 +309,7 @@ func initAccount(ks *keystore.KeyStore, account *accounts.Account, password stri
 
 	addressString := account.Address.String()
 
-	err := os.MkdirAll(filepath.Join(paths.AccsDirPath, addressString, paths.StorageDirName), 0700)
-	if err != nil {
-		return nodeConf, logger.CreateDetails(location, err)
-	}
-
-	err = os.MkdirAll(filepath.Join(paths.AccsDirPath, addressString, paths.ConfDirName), 0700)
+	err := os.MkdirAll(filepath.Join(paths.AccsDirPath, addressString, paths.ConfDirName), 0700)
 	if err != nil {
 		return nodeConf, logger.CreateDetails(location, err)
 	}
@@ -346,6 +341,11 @@ func initAccount(ks *keystore.KeyStore, account *accounts.Account, password stri
 	encryption.PrivateKey = encryptedKey
 
 	nodeConf, err = config.Create(addressString, password)
+	if err != nil {
+		return nodeConf, logger.CreateDetails(location, err)
+	}
+
+	err = os.MkdirAll(filepath.Join(paths.StoragePaths[0]), 0700)
 	if err != nil {
 		return nodeConf, logger.CreateDetails(location, err)
 	}
