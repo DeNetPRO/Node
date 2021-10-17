@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/disk"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
@@ -226,6 +227,12 @@ func SetStorageLimit(pathToConfig, state string, nodeConfig *NodeConfig) error {
 
 		if intSpace < int(nodeConfig.UsedStorageSpace) || intSpace >= availableSpace {
 			fmt.Println("Passed value is out of avaliable space range, please try again")
+			continue
+		}
+
+		err = disk.InitStorageCapacity(intSpace)
+		if err != nil {
+			fmt.Println(err)
 			continue
 		}
 
