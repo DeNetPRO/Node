@@ -228,6 +228,8 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	fmt.Println(pathToFile)
+
 	logger.Log("serving file: " + fileKey)
 	stat, err := os.Stat(pathToFile)
 	if err != nil {
