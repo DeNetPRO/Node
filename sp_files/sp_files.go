@@ -2,7 +2,6 @@ package spfiles
 
 import (
 	"encoding/hex"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -37,8 +36,6 @@ func Save(req *http.Request, spData *shared.StorageProviderData, network string)
 	const location = "files.Save->"
 
 	pathToSpFiles := filepath.Join(paths.StoragePaths[0], network, spData.Address)
-
-	fmt.Println(pathToSpFiles)
 
 	stat, err := os.Stat(pathToSpFiles)
 	if err != nil {
