@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/encryption"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/encryption"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/spf13/cobra"
 )
@@ -24,7 +24,7 @@ var showKeyCmd = &cobra.Command{
 		const location = "showKeyCmd->"
 		fmt.Println("Never disclose this key. Anyone with your private keys can steal any assets held in your account")
 
-		etherAccount, password, err := account.ValidateUser()
+		nodeAccount, password, err := account.ValidateUser()
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(showKeyFatalMessage)
@@ -34,7 +34,7 @@ var showKeyCmd = &cobra.Command{
 
 		ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
 
-		keyJson, err := ks.Export(*etherAccount, password, password)
+		keyJson, err := ks.Export(*nodeAccount, password, password)
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(showKeyFatalMessage)

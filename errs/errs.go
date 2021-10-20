@@ -7,12 +7,13 @@ import (
 
 var (
 	WrongFile          = errors.New("wrong file")
-	FileSaving         = errors.New("file saving problem")
-	UpdateFsInfo       = errors.New("fs info update problem")
+	FileSaving         = errors.New("file saving failed")
+	UpdateFsInfo       = errors.New("fs info update failed")
 	WrongSignature     = errors.New("wrong signature")
-	FileCheck          = errors.New("file check problem")
-	ParseMultipartForm = errors.New("parse multipart form problem")
-	SpaceCheck         = errors.New("space check problem")
+	FileCheck          = errors.New("file check failed")
+	ParseMultipartForm = errors.New("parse multipart form failed")
+	SpaceCheck         = errors.New("space check failed")
+	NoSpace            = errors.New("not enough space")
 	Internal           = errors.New("node internal error")
 	InvalidArgument    = errors.New("invalid argument")
 )

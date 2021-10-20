@@ -2,25 +2,25 @@ package cmd
 
 import (
 	"context"
+	"errors"
 
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
-	blckChain "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/cleaner"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/server"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
+	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/cleaner"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/server"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
 	"github.com/spf13/cobra"
 )
 
@@ -34,13 +34,13 @@ var accountLoginCmd = &cobra.Command{
 	Long:  "log in a blockchain accounts",
 	Run: func(cmd *cobra.Command, args []string) {
 		const location = "accountLoginCmd->"
-		etherAccount, password, err := account.ValidateUser()
+		nodeAccount, password, err := account.ValidateUser()
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(accLoginFatalError)
 		}
 
-		pathToConfigDir := filepath.Join(paths.AccsDirPath, etherAccount.Address.String(), paths.ConfDirName)
+		pathToConfigDir := filepath.Join(paths.AccsDirPath, nodeAccount.Address.String(), paths.ConfDirName)
 
 		var nodeConfig config.NodeConfig
 
@@ -54,7 +54,7 @@ var accountLoginCmd = &cobra.Command{
 		}
 
 		if stat == nil {
-			nodeConfig, err = config.Create(etherAccount.Address.String(), password)
+			nodeConfig, err = config.Create(nodeAccount.Address.String(), password)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				log.Fatal("couldn't create config file")
@@ -73,16 +73,35 @@ var accountLoginCmd = &cobra.Command{
 				log.Fatal("couldn't read config file")
 			}
 
+			if nodeConfig.StorageLimit <= 0 {
+				log.Fatal(accLoginFatalError + " storage limit is " + fmt.Sprint(nodeConfig.StorageLimit))
+			}
+
 			_, supportedNet := blckChain.Networks[nodeConfig.Network]
 
 			if !supportedNet {
 				log.Fatal(accLoginFatalError + ": unsupported network in config file")
 			}
 
-			blckChain.Network = nodeConfig.Network
+			blckChain.CurrentNetwork = nodeConfig.Network
 
-			if nodeConfig.StorageLimit <= 0 {
-				log.Fatal(accLoginFatalError)
+			_, registeredInNetwork := nodeConfig.RegisteredInNetworks[nodeConfig.Network]
+
+			if !registeredInNetwork {
+
+				fmt.Println("registering node in", nodeConfig.Network)
+
+				ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+				defer cancel()
+
+				err = blckChain.RegisterNode(ctx, nodeAccount.Address.String(), password, nodeConfig.IpAddress, nodeConfig.HTTPPort)
+				if err != nil {
+					log.Fatal(accLoginFatalError + ": couldn't register node in " + nodeConfig.Network)
+				}
+
+				nodeConfig.RegisteredInNetworks[nodeConfig.Network] = true
+
 			}
 
 			if upnp.InternetDevice != nil {
@@ -91,15 +110,13 @@ var accountLoginCmd = &cobra.Command{
 					logger.Log(logger.CreateDetails(location, err))
 				}
 
-				if nodeConfig.IpAddress != ip {
+				if registeredInNetwork && nodeConfig.IpAddress != ip {
 
 					fmt.Println("Updating public ip info...")
 
-					splitIPAddr := strings.Split(ip, ".")
-
 					ctx, _ := context.WithTimeout(context.Background(), time.Minute)
 
-					err = blckChain.UpdateNodeInfo(ctx, etherAccount.Address, password, nodeConfig.HTTPPort, splitIPAddr)
+					err = blckChain.UpdateNodeInfo(ctx, nodeAccount.Address, password, nodeConfig.IpAddress, nodeConfig.HTTPPort)
 					if err != nil {
 						logger.Log(logger.CreateDetails(location, err))
 						log.Fatal(ipUpdateFatalError)
@@ -115,10 +132,16 @@ var accountLoginCmd = &cobra.Command{
 				}
 			}
 
-			logger.SendLogs = nodeConfig.AgreeSendLogs
 		}
 
-		account.IpAddr = fmt.Sprint(nodeConfig.IpAddress, ":", nodeConfig.HTTPPort)
+		if len(nodeConfig.StoragePaths) == 0 {
+			err := errors.New("path to storage is not specified in config")
+			logger.Log(logger.CreateDetails(location, err))
+			log.Fatal(err)
+		}
+
+		paths.StoragePaths = nodeConfig.StoragePaths
+		logger.SendLogs = nodeConfig.AgreeSendLogs
 
 		fmt.Println("Logged in")
 

@@ -13,22 +13,24 @@ import (
 	"strconv"
 	"strings"
 
-	blckChain "git.denetwork.xyz/dfile/dfile-secondary-node/blockchain_provider"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
-	termEmul "git.denetwork.xyz/dfile/dfile-secondary-node/term_emul"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
+	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
+	termEmul "git.denetwork.xyz/DeNet/dfile-secondary-node/term_emul"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
 )
 
 type NodeConfig struct {
-	Address          string `json:"nodeAddress"`
-	IpAddress        string `json:"ipAddress"`
-	HTTPPort         string `json:"portHTTP"`
-	Network          string `json:"network"`
-	StorageLimit     int    `json:"storageLimit"`
-	UsedStorageSpace int64  `json:"usedStorageSpace"`
-	AgreeSendLogs    bool   `json:"agreeSendLogs"`
+	Address              string          `json:"nodeAddress"`
+	IpAddress            string          `json:"ipAddress"`
+	HTTPPort             string          `json:"portHTTP"`
+	Network              string          `json:"network"`
+	StorageLimit         int             `json:"storageLimit"`
+	StoragePaths         []string        `json:"storagePaths"`
+	UsedStorageSpace     int64           `json:"usedStorageSpace"`
+	AgreeSendLogs        bool            `json:"agreeSendLogs"`
+	RegisteredInNetworks map[string]bool `json:"registeredInNetworks"`
 }
 
 const (
@@ -53,19 +55,20 @@ func Create(address, password string) (NodeConfig, error) {
 
 	nodeConfig := NodeConfig{
 		Address:       address,
+		StoragePaths:  []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)},
 		AgreeSendLogs: true,
 	}
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
 
-	testMode := os.Getenv("DENET_TEST")
-
-	if testMode == "1" {
+	if shared.TestMode {
 		nodeConfig.IpAddress = "127.0.01"
 		nodeConfig.HTTPPort = "55050"
 		nodeConfig.Network = "kovan"
 		nodeConfig.StorageLimit = 1
 		nodeConfig.UsedStorageSpace = 0
+		nodeConfig.StoragePaths = []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)}
+
 	} else {
 		network, err := SelectNetwork()
 		if err != nil {
@@ -73,7 +76,7 @@ func Create(address, password string) (NodeConfig, error) {
 		}
 
 		nodeConfig.Network = network
-		blckChain.Network = network
+		blckChain.CurrentNetwork = network
 
 		fmt.Println("Please enter disk space for usage in GB (should be positive number)")
 
@@ -82,20 +85,16 @@ func Create(address, password string) (NodeConfig, error) {
 			return nodeConfig, logger.CreateDetails(location, err)
 		}
 
-		var splitIPAddr []string
-
 		if upnp.InternetDevice != nil {
 			ip, err := upnp.InternetDevice.PublicIP()
 			if err != nil {
 				return nodeConfig, logger.CreateDetails(location, err)
 			}
-
 			nodeConfig.IpAddress = ip
-			splitIPAddr = strings.Split(ip, ".")
 			fmt.Println("Your public IP address", ip, "is added to config")
 		} else {
 			fmt.Println("Please enter your public ip address")
-			splitIPAddr, err = SetIpAddr(&nodeConfig, CreateStatus)
+			err = SetIpAddr(&nodeConfig, CreateStatus)
 			if err != nil {
 				return nodeConfig, logger.CreateDetails(location, err)
 			}
@@ -113,11 +112,15 @@ func Create(address, password string) (NodeConfig, error) {
 
 		fmt.Println("Registering node...")
 
-		err = blckChain.RegisterNode(ctx, address, password, splitIPAddr, nodeConfig.HTTPPort)
+		err = blckChain.RegisterNode(ctx, address, password, nodeConfig.IpAddress, nodeConfig.HTTPPort)
 		if err != nil {
 			return nodeConfig, logger.CreateDetails(location, err)
 		}
+
+		nodeConfig.RegisteredInNetworks[blckChain.CurrentNetwork] = true
 	}
+
+	paths.StoragePaths = nodeConfig.StoragePaths
 
 	confFile, err := os.Create(filepath.Join(pathToConfig, paths.ConfFileName))
 	if err != nil {
@@ -236,17 +239,15 @@ func SetStorageLimit(pathToConfig, state string, nodeConfig *NodeConfig) error {
 // ====================================================================================
 
 //Set ip address in config file
-func SetIpAddr(nodeConfig *NodeConfig, state string) ([]string, error) {
+func SetIpAddr(nodeConfig *NodeConfig, state string) error {
 	const location = "config.SetIpAddr->"
-
-	var splitIPAddr []string
 
 	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
 
 	for {
 		ipAddr, err := termEmul.ReadInput()
 		if err != nil {
-			return nil, logger.CreateDetails(location, err)
+			return logger.CreateDetails(location, err)
 		}
 
 		if state == UpdateStatus && ipAddr == "" {
@@ -260,7 +261,7 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) ([]string, error) {
 			continue
 		}
 
-		splitIPAddr = strings.Split(ipAddr, ".")
+		splitIPAddr := strings.Split(ipAddr, ".")
 
 		if fullyReservedIPs[splitIPAddr[0]] {
 			fmt.Println("Address", ipAddr, "can't be used as a public ip address")
@@ -272,7 +273,7 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) ([]string, error) {
 		if partiallyReserved {
 			secondAddrPart, err := strconv.Atoi(splitIPAddr[1])
 			if err != nil {
-				return nil, logger.CreateDetails(location, err)
+				return logger.CreateDetails(location, err)
 			}
 
 			if secondAddrPart <= reservedSecAddrPart {
@@ -285,7 +286,7 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) ([]string, error) {
 		break
 	}
 
-	return splitIPAddr, nil
+	return nil
 }
 
 // ====================================================================================

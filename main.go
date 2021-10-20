@@ -18,13 +18,11 @@ package main
 import (
 	"log"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/cmd"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/cmd"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
 )
-
-var testMode = "test"
 
 func main() {
 
