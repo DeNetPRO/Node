@@ -471,6 +471,7 @@ func StorageSystem(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, path)
 		return
 	case http.MethodPost:
+		fmt.Println(*r.MultipartForm)
 		err := r.ParseMultipartForm(1 << 20) // maxMemory 32MB
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, errs.ParseMultipartForm))
