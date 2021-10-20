@@ -456,7 +456,7 @@ func StorageSystem(w http.ResponseWriter, r *http.Request) {
 
 	stat, _ := os.Stat(paths.SystemsDirPath)
 	if stat == nil {
-		os.Mkdir(paths.SystemsDirPath, 0700)
+		os.Mkdir(paths.SystemsDirPath, 0770)
 	}
 
 	switch r.Method {
