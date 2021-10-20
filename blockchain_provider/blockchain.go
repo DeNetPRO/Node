@@ -208,7 +208,8 @@ func StartMakingProofs(password string) {
 		logger.Log(logger.CreateDetails(location, err))
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
+	defer cancel()
 
 	blockNum, err := client.BlockNumber(ctx)
 	if err != nil {
@@ -270,19 +271,23 @@ func StartMakingProofs(password string) {
 			continue
 		}
 
-		ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 
 		blockNum, err := client.BlockNumber(ctx)
 		if err != nil {
+			cancel()
 			logger.Log(logger.CreateDetails(location, err))
 			continue
 		}
 
 		nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-1)))
 		if err != nil {
+			cancel()
 			logger.Log(logger.CreateDetails(location, err))
 			continue
 		}
+
+		cancel()
 
 		nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
 
@@ -373,19 +378,23 @@ func StartMakingProofs(password string) {
 			fmt.Println("checking file:", fileName)
 			fmt.Println("Trying proof", fileName, "for reward:", reward)
 
-			ctx, _ := context.WithTimeout(context.Background(), time.Minute*1)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 
 			blockNum, err := client.BlockNumber(ctx)
 			if err != nil {
+				cancel()
 				logger.Log(logger.CreateDetails(location, err))
 				continue
 			}
 
 			err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, posInstance)
 			if err != nil {
+				cancel()
 				logger.Log(logger.CreateDetails(location, err))
 				continue
 			}
+
+			cancel()
 
 		}
 	}
