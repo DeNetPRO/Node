@@ -3,6 +3,7 @@ package spfiles
 import (
 	"encoding/hex"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -178,4 +179,46 @@ func deleteParts(addressPath string, fileHashes []string) {
 
 		os.Remove(pathToFile)
 	}
+}
+
+//Return storage provider filesystem path
+func SearchStorageFilesystem(spAddress string) (string, bool) {
+	path := filepath.Join(paths.SystemsDirPath, spAddress)
+	stat, _ := os.Stat(path)
+	if stat == nil {
+		return "", false
+	}
+
+	return path, true
+}
+
+//Return storage provider filesystem path
+func UpdateStorageFilesystem(spAddress string, fileSystemHeader *multipart.FileHeader) error {
+	const location = "spFiles.UpdateStorageFilesystem"
+
+	shared.MU.Lock()
+	defer shared.MU.Unlock()
+
+	fileSystem, err := fileSystemHeader.Open()
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
+	defer fileSystem.Close()
+
+	path := filepath.Join(paths.SystemsDirPath, spAddress)
+
+	file, err := os.Create(path)
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
+	defer file.Close()
+
+	_, err = io.Copy(file, fileSystem)
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
+	return nil
 }

@@ -19,8 +19,8 @@ var (
 	StoragePaths   []string
 	SpFsFilename   = "tree.json"
 	UpdateDirPath  string
-	RatingFilePath string
-	RatingFilename = "rating.json"
+	SystemsDirName = "systems"
+	SystemsDirPath string
 )
 
 // ====================================================================================
@@ -40,6 +40,7 @@ func Init() error {
 	WorkDirPath = filepath.Join(homeDir, WorkDirName)
 	AccsDirPath = filepath.Join(WorkDirPath, "accounts")
 	UpdateDirPath = filepath.Join(WorkDirPath, "update")
+	SystemsDirPath = filepath.Join(WorkDirPath, SystemsDirName)
 
 	return nil
 }
