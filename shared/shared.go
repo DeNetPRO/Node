@@ -18,8 +18,10 @@ type StorageProviderData struct {
 }
 
 var (
-	NodeAddr common.Address
-	MU       sync.Mutex
+	NodeAddr        common.Address
+	MU              sync.Mutex
+	TestMode        = false
+	TestWorkDirName = "denet-node-test"
 )
 
 //Return nodes available space in GB
@@ -39,4 +41,12 @@ func PrintMemUsage() {
 
 func bToMb(b uint64) uint64 {
 	return b / 1024 / 1024
+}
+
+func TestModeOn() {
+	TestMode = true
+}
+
+func TestModeOff() {
+	TestMode = false
 }

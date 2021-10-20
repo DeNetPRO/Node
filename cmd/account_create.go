@@ -5,11 +5,11 @@ import (
 	"log"
 	"strings"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/account"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/cleaner"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/server"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/cleaner"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/server"
 	"github.com/howeyc/gopass"
 	"github.com/spf13/cobra"
 )
@@ -65,8 +65,6 @@ var accountCreateCmd = &cobra.Command{
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(accCreateFatalMessage)
 		}
-
-		account.IpAddr = fmt.Sprint(nodeConfig.IpAddress, ":", nodeConfig.HTTPPort)
 
 		go cleaner.Start()
 

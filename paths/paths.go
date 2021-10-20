@@ -4,8 +4,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 )
 
 var (
@@ -15,7 +16,9 @@ var (
 	ConfDirName    = "config"
 	ConfFileName   = "config.json"
 	StorageDirName = "storage"
+	StoragePaths   []string
 	SpFsFilename   = "tree.json"
+	UpdateDirPath  string
 	RatingFilePath string
 	RatingFilename = "rating.json"
 )
@@ -30,8 +33,13 @@ func Init() error {
 		return logger.CreateDetails(location, err)
 	}
 
+	if shared.TestMode {
+		WorkDirName = shared.TestWorkDirName
+	}
+
 	WorkDirPath = filepath.Join(homeDir, WorkDirName)
 	AccsDirPath = filepath.Join(WorkDirPath, "accounts")
+	UpdateDirPath = filepath.Join(WorkDirPath, "update")
 
 	return nil
 }

@@ -12,13 +12,14 @@ import (
 	"strconv"
 	"strings"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/sign"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+
+	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
 )
 
 type UpdatedFsInfo struct {
@@ -28,10 +29,10 @@ type UpdatedFsInfo struct {
 }
 
 // UpdateFileSystemInfo updates Storage Provider's nounce and file system's root hash info.
-func Update(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem string) error {
+func Update(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem, network string) error {
 	const location = "files.UpdateFileSystemInfo->"
 
-	addressPath := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, spAddress)
+	addressPath := filepath.Join(paths.StoragePaths[0], network, spAddress)
 
 	_, err := os.Stat(addressPath)
 	if err != nil {

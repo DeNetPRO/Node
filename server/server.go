@@ -2,13 +2,13 @@ package server
 
 import (
 	"context"
+	"errors"
 	"os/signal"
 
 	"github.com/minio/sha256-simd"
 
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -18,18 +18,18 @@ import (
 	"sort"
 	"strconv"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/config"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/errs"
-	fsysInfo "git.denetwork.xyz/dfile/dfile-secondary-node/fsys_info"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/hash"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/logger"
-	memInfo "git.denetwork.xyz/dfile/dfile-secondary-node/mem_info"
-	nodeFile "git.denetwork.xyz/dfile/dfile-secondary-node/node_file"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/upnp"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
+	fsysInfo "git.denetwork.xyz/DeNet/dfile-secondary-node/fsys_info"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+	memInfo "git.denetwork.xyz/DeNet/dfile-secondary-node/mem_info"
+	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
 
-	"git.denetwork.xyz/dfile/dfile-secondary-node/paths"
-	"git.denetwork.xyz/dfile/dfile-secondary-node/shared"
-	spFiles "git.denetwork.xyz/dfile/dfile-secondary-node/sp_files"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
+	spFiles "git.denetwork.xyz/DeNet/dfile-secondary-node/sp_files"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -48,10 +48,16 @@ func Start(port string) {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/ping", Healthcheck).Methods("GET")
+
 	r.HandleFunc("/upload/{size}", SaveFiles).Methods("POST")
+	r.HandleFunc("/upload/{size}/{network}", SaveFiles).Methods("POST")
+
 	r.HandleFunc("/download/{spAddress}/{fileKey}/{signature}", ServeFiles).Methods("GET")
+	r.HandleFunc("/download/{spAddress}/{fileKey}/{signature}/{network}", ServeFiles).Methods("GET")
+
 	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}", UpdateFsInfo).Methods("POST")
-	r.HandleFunc("/copy/{size}", CopyFile).Methods("POST")
+	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}/{network}", UpdateFsInfo).Methods("POST")
+
 	r.HandleFunc("/check/space/{size}", SpaceCheck).Methods("GET")
 
 	corsOpts := cors.New(cors.Options{
@@ -147,12 +153,26 @@ func Healthcheck(w http.ResponseWriter, _ *http.Request) {
 func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	const location = "server.SaveFiles->"
 
+	vars := mux.Vars(req)
+	network := vars["network"]
+
+	if network == "" {
+		network = "kovan"
+	}
+
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
-	fileSize, _, _, err := checkAndReserveSpace(req, pathToConfig)
+	fileSize, spacespaceNotEnough, _, err := checkAndReserveSpace(req, pathToConfig)
 	if err != nil {
+
 		logger.Log(logger.CreateDetails(location, err))
-		http.Error(w, errs.SpaceCheck.Error(), http.StatusInternalServerError)
+
+		if spacespaceNotEnough {
+			http.Error(w, errs.NoSpace.Error(), http.StatusBadRequest)
+			return
+		}
+
+		http.Error(w, errs.SpaceCheck.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -160,11 +180,11 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		memInfo.Restore(pathToConfig, fileSize)
-		http.Error(w, errs.ParseMultipartForm.Error(), http.StatusBadRequest)
+		http.Error(w, errs.ParseMultipartForm.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = spFiles.Save(req, spData)
+	err = spFiles.Save(req, spData, network)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		memInfo.Restore(pathToConfig, fileSize)
@@ -172,9 +192,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	testMode := os.Getenv("DENET_TEST")
-
-	if testMode != "1" {
+	if !shared.TestMode {
 		logger.SendStatistic(spData.Address, req.RemoteAddr, logger.Upload, int64(fileSize))
 	}
 
@@ -191,6 +209,11 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	spAddress := vars["spAddress"]
 	fileKey := vars["fileKey"]
 	signatureFromReq := vars["signature"]
+	network := vars["network"]
+
+	if network == "" {
+		network = "kovan"
+	}
 
 	if spAddress == "" || fileKey == "" || signatureFromReq == "" {
 		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
@@ -198,7 +221,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pathToFile, err := spFiles.Serve(spAddress, fileKey, signatureFromReq)
+	pathToFile, err := spFiles.Serve(spAddress, fileKey, signatureFromReq, network)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
@@ -213,9 +236,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	testMode := os.Getenv("DENET_TEST")
-
-	if testMode != "1" {
+	if !shared.TestMode {
 		logger.SendStatistic(spAddress, req.RemoteAddr, logger.Download, stat.Size())
 	}
 
@@ -230,6 +251,11 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	spAddress := vars["spAddress"]
 	signedFsys := vars["signedFsys"]
+	network := vars["network"]
+
+	if network == "" {
+		network = "kovan"
+	}
 
 	if spAddress == "" || signedFsys == "" {
 		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
@@ -253,7 +279,7 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = fsysInfo.Update(updatedFs, spAddress, signedFsys)
+	err = fsysInfo.Update(updatedFs, spAddress, signedFsys, network)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
@@ -261,46 +287,6 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 	}
 
 	fmt.Println("Updated!")
-}
-
-// ====================================================================================
-
-func CopyFile(w http.ResponseWriter, req *http.Request) {
-	location := "server.CopyFile->"
-
-	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
-
-	fileSize, enoughSpace, nodeConfig, err := checkAndReserveSpace(req, pathToConfig)
-	if err != nil {
-		logger.Log(logger.CreateDetails(location, err))
-		http.Error(w, errs.SpaceCheck.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	spData, err := parseRequest(req)
-	if err != nil {
-		logger.Log(logger.CreateDetails(location, err))
-		memInfo.Restore(pathToConfig, fileSize)
-		http.Error(w, errs.ParseMultipartForm.Error(), http.StatusBadRequest)
-		return
-	}
-
-	nodeAddress, err := spFiles.Copy(req, spData, &nodeConfig, pathToConfig, fileSize, enoughSpace)
-	if err != nil {
-		logger.Log(logger.CreateDetails(location, err))
-		memInfo.Restore(pathToConfig, fileSize)
-		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	js, err := json.Marshal(nodeAddress)
-	if err != nil {
-		logger.Log(logger.CreateDetails(location, err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
 }
 
 // ====================================================================================
@@ -322,7 +308,7 @@ func checkAndReserveSpace(r *http.Request, pathToConfig string) (int, bool, conf
 	}
 
 	if intFileSize == 0 {
-		return 0, false, nodeConfig, logger.CreateDetails(location, err)
+		return 0, false, nodeConfig, logger.CreateDetails(location, errors.New("file size is 0"))
 	}
 
 	shared.MU.Lock()
@@ -345,7 +331,7 @@ func checkAndReserveSpace(r *http.Request, pathToConfig string) (int, bool, conf
 	nodeConfig.UsedStorageSpace += int64(intFileSize)
 
 	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
-		return 0, false, nodeConfig, logger.CreateDetails(location, errors.New("not enough space"))
+		return 0, true, nodeConfig, logger.CreateDetails(location, errs.NoSpace)
 	}
 
 	avaliableSpaceLeft := sharedSpaceInBytes - nodeConfig.UsedStorageSpace
@@ -360,7 +346,7 @@ func checkAndReserveSpace(r *http.Request, pathToConfig string) (int, bool, conf
 		return 0, false, nodeConfig, logger.CreateDetails(location, err)
 	}
 
-	return intFileSize, true, nodeConfig, nil
+	return intFileSize, false, nodeConfig, nil
 }
 
 // ====================================================================================
@@ -426,7 +412,6 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 	senderAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
 	if storageProviderAddress[0] != fmt.Sprint(senderAddress) {
-		fmt.Println(storageProviderAddress[0], fmt.Sprint(senderAddress))
 		return nil, logger.CreateDetails(location, errs.WrongSignature)
 	}
 
@@ -438,6 +423,8 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 		Tree:         fsTree,
 	}, nil
 }
+
+// ====================================================================================
 
 func SpaceCheck(w http.ResponseWriter, r *http.Request) {
 	const location = "server.SpaceCheck"
