@@ -431,7 +431,7 @@ func StorageSystem(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	spAddress := vars["spAddress"]
 	signature := vars["signature"]
-
+	fmt.Println(spAddress, signature)
 	if spAddress == "" || signature == "" {
 		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
 		http.Error(w, errs.InvalidArgument.Error(), http.StatusBadRequest)
@@ -468,8 +468,8 @@ func StorageSystem(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		fmt.Println(path)
 		http.ServeFile(w, r, path)
-		return
 	case http.MethodPost:
 		fmt.Println("fs update")
 		err := r.ParseMultipartForm(1 << 20) // maxMemory 32MB
