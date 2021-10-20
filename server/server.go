@@ -454,6 +454,11 @@ func StorageSystem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	stat, _ := os.Stat(paths.SystemsDirPath)
+	if stat == nil {
+		os.Mkdir(paths.SystemsDirPath, 0700)
+	}
+
 	switch r.Method {
 	case http.MethodGet:
 		path, exists := spFiles.SearchStorageFilesystem(hex.EncodeToString(hashAddress[:]))
