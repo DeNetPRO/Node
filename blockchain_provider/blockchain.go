@@ -268,6 +268,10 @@ func StartMakingProofs(password string) {
 		}
 
 		if len(storageProviderAddresses) == 0 {
+			err = os.Remove(pathToAccStorage)
+			if err != nil {
+				logger.Log(logger.CreateDetails(location, err))
+			}
 			continue
 		}
 
@@ -317,7 +321,7 @@ func StartMakingProofs(password string) {
 						logger.Log(logger.CreateDetails(location, err))
 					}
 
-					if regFileName.MatchString(info.Name()) && len(info.Name()) == 64 {
+					if len(info.Name()) == 64 && regFileName.MatchString(info.Name()) {
 						fileNames = append(fileNames, info.Name())
 					}
 
@@ -329,7 +333,7 @@ func StartMakingProofs(password string) {
 			}
 
 			if len(fileNames) == 0 {
-				err = os.RemoveAll(pathToStorProviderFiles)
+				err = os.Remove(pathToStorProviderFiles)
 				if err != nil {
 					logger.Log(logger.CreateDetails(location, err))
 				}
