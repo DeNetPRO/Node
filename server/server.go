@@ -456,7 +456,7 @@ func StorageSystem(w http.ResponseWriter, r *http.Request) {
 
 	stat, _ := os.Stat(paths.SystemsDirPath)
 	if stat == nil {
-		os.Mkdir(paths.SystemsDirPath, 0770)
+		os.Mkdir(paths.SystemsDirPath, 0777)
 	}
 
 	switch r.Method {
@@ -471,7 +471,7 @@ func StorageSystem(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, path)
 		return
 	case http.MethodPost:
-		fmt.Println(*r.MultipartForm)
+		fmt.Println("fs update")
 		err := r.ParseMultipartForm(1 << 20) // maxMemory 32MB
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, errs.ParseMultipartForm))
