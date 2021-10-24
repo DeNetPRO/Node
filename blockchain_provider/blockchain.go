@@ -384,14 +384,7 @@ func StartMakingProofs(password string) {
 
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 
-			blockNum, err := client.BlockNumber(ctx)
-			if err != nil {
-				cancel()
-				logger.Log(logger.CreateDetails(location, err))
-				continue
-			}
-
-			err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, posInstance)
+			err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum, posInstance)
 			if err != nil {
 				cancel()
 				logger.Log(logger.CreateDetails(location, err))

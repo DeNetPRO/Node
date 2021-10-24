@@ -104,15 +104,20 @@ func Start() {
 					continue
 				}
 
+				pathToFsTree := filepath.Join(paths.StoragePaths[0], network, spAddress, paths.SpFsFilename)
+
 				if len(fileNames) == 0 {
-					err := os.Remove(pathToStorProviderFiles)
+					err := os.Remove(pathToFsTree)
+					if err != nil {
+						logger.Log(logger.CreateDetails(location, err))
+					}
+
+					err = os.Remove(pathToStorProviderFiles)
 					if err != nil {
 						logger.Log(logger.CreateDetails(location, err))
 					}
 					continue
 				}
-
-				pathToFsTree := filepath.Join(paths.StoragePaths[0], network, spAddress, paths.SpFsFilename)
 
 				shared.MU.Lock()
 				fileFsTree, treeBytes, err := nodeFile.Read(pathToFsTree)
