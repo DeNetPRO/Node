@@ -25,6 +25,7 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	memInfo "git.denetwork.xyz/DeNet/dfile-secondary-node/mem_info"
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
@@ -58,7 +59,7 @@ func Start(port string) {
 	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}", UpdateFsInfo).Methods("POST")
 	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}/{network}", UpdateFsInfo).Methods("POST")
 
-	r.HandleFunc("/check/space/{size}", SpaceCheck).Methods("GET")
+	r.HandleFunc("/storage/system/{spAddress}/{signature}", StorageSystem).Methods("GET", "POST")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -162,12 +163,12 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
-	fileSize, spacespaceNotEnough, _, err := checkAndReserveSpace(req, pathToConfig)
+	fileSize, spaceNotEnough, _, err := checkAndReserveSpace(req, pathToConfig)
 	if err != nil {
 
 		logger.Log(logger.CreateDetails(location, err))
 
-		if spacespaceNotEnough {
+		if spaceNotEnough {
 			http.Error(w, errs.NoSpace.Error(), http.StatusBadRequest)
 			return
 		}
@@ -424,78 +425,82 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 	}, nil
 }
 
-// ====================================================================================
-
-func SpaceCheck(w http.ResponseWriter, r *http.Request) {
-	const location = "server.SpaceCheck"
-	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
-
-	var nodeConfig config.NodeConfig
+func StorageSystem(w http.ResponseWriter, r *http.Request) {
+	const location = "server.StorageSystem"
 
 	vars := mux.Vars(r)
-	fileSize := vars["size"]
+	spAddress := vars["spAddress"]
+	signature := vars["signature"]
+	fmt.Println(spAddress, signature)
+	if spAddress == "" || signature == "" {
+		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
+		http.Error(w, errs.InvalidArgument.Error(), http.StatusBadRequest)
+		return
+	}
 
-	intFileSize, err := strconv.Atoi(fileSize)
+	signatureBytes, err := hex.DecodeString(signature)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
+		http.Error(w, errs.InvalidArgument.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if intFileSize == 0 {
-		http.Error(w, "empty file", http.StatusBadRequest)
-		return
-	}
+	hashAddress := sha256.Sum256([]byte(spAddress))
 
-	shared.MU.Lock()
-	defer shared.MU.Unlock()
-
-	confFile, fileBytes, err := nodeFile.Read(pathToConfig)
+	err = sign.Check(spAddress, signatureBytes, hashAddress)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	defer confFile.Close()
-
-	err = json.Unmarshal(fileBytes, &nodeConfig)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		logger.Log(logger.CreateDetails(location, errs.WrongSignature))
+		http.Error(w, errs.WrongSignature.Error(), http.StatusForbidden)
 		return
 	}
 
-	sharedSpaceInBytes := int64(nodeConfig.StorageLimit) * gbBytes
-
-	nodeConfig.UsedStorageSpace += int64(intFileSize)
-
-	type checkSpaceResponse struct {
-		Status bool `json:"status"`
+	stat, _ := os.Stat(paths.SystemsDirPath)
+	if stat == nil {
+		os.Mkdir(paths.SystemsDirPath, 0777)
 	}
 
-	if nodeConfig.UsedStorageSpace > sharedSpaceInBytes {
-		resp := checkSpaceResponse{
-			Status: false,
+	switch r.Method {
+	case http.MethodGet:
+		path, exists := spFiles.SearchStorageFilesystem(hex.EncodeToString(hashAddress[:]))
+		if !exists {
+			logger.Log(logger.CreateDetails(location, errs.StorageSystemNotFound))
+			http.Error(w, errs.StorageSystemNotFound.Error(), http.StatusBadRequest)
+			return
 		}
 
-		js, err := json.Marshal(resp)
+		fmt.Println(path)
+		http.ServeFile(w, r, path)
+	case http.MethodPost:
+		fmt.Println("fs update")
+		err := r.ParseMultipartForm(1 << 20) // maxMemory 32MB
 		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			logger.Log(logger.CreateDetails(location, errs.ParseMultipartForm))
+			http.Error(w, errs.ParseMultipartForm.Error(), http.StatusBadRequest)
+			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(js)
+		fileSystemHeader := r.MultipartForm.File["fs"]
+		if len(fileSystemHeader) == 0 {
+			logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
+			http.Error(w, errs.InvalidArgument.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err = spFiles.UpdateStorageFilesystem(hex.EncodeToString(hashAddress[:]), fileSystemHeader[0])
+		if err != nil {
+			logger.Log(logger.CreateDetails(location, errs.Internal))
+			http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		fmt.Println("Storage", spAddress, "FS updated!")
+		w.WriteHeader(http.StatusOK)
+		io.WriteString(w, "OK")
+		return
+	default:
+		err := errors.New("invalid method")
+		logger.Log(logger.CreateDetails(location, err))
+		http.Error(w, err.Error(), http.StatusForbidden)
 		return
 	}
-
-	resp := checkSpaceResponse{
-		Status: true,
-	}
-
-	js, err := json.Marshal(resp)
-	if err != nil {
-		logger.Log(logger.CreateDetails(location, err))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
 }
