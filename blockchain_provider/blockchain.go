@@ -206,6 +206,8 @@ func StartMakingProofs(password string) {
 	}
 	defer client.Close()
 
+	fmt.Println(CurrentNetwork, Networks[CurrentNetwork].PoS)
+
 	posInstance, err := proofOfStAbi.NewProofOfStorage(common.HexToAddress(Networks[CurrentNetwork].PoS), client)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
@@ -325,6 +327,8 @@ func StartMakingProofs(password string) {
 				logger.Log(logger.CreateDetails(location, err))
 				continue
 			}
+
+			fmt.Println(storageProviderAddr, "difficulty", userDifficulty)
 
 			fileNames := []string{}
 
