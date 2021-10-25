@@ -528,12 +528,6 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 		return logger.CreateDetails(location, err)
 	}
 
-	if signedFSRootHash[len(signedFSRootHash)-1] == 1 { //ecdsa version fix
-		signedFSRootHash[len(signedFSRootHash)-1] = 28
-	} else {
-		signedFSRootHash = signedFSRootHash[:64]
-	}
-
 	fsRootNonceHash := sha256.Sum256(fsRootNonceBytes)
 
 	err = sign.Check(spAddress.String(), signedFSRootHash, fsRootNonceHash)
@@ -544,6 +538,12 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
 	if err != nil {
 		return logger.CreateDetails(location, err)
+	}
+
+	if signedFSRootHash[len(signedFSRootHash)-1] == 1 { //ecdsa version fix
+		signedFSRootHash[len(signedFSRootHash)-1] = 28
+	} else {
+		signedFSRootHash = signedFSRootHash[:64]
 	}
 
 	proofOpts.Nonce = big.NewInt(int64(transactNonce))
