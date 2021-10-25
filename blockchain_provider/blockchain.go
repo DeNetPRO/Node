@@ -35,6 +35,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -54,7 +55,7 @@ var Networks = map[string]NtwrkParams{
 	"polygon": {
 		RPC: "https://rpc-mumbai.maticvigil.com",
 		NFT: "0xBb86dcf291419d3F5b4B2211122D0E6fCB693777",
-		PoS: "0xe4d6D3aFFCb6639534f12bf979c0cfd98EdD14E5",
+		PoS: "0x389E8fE67c73551043184F740126C91866c0fB78",
 	},
 }
 
@@ -200,13 +201,23 @@ func StartMakingProofs(password string) {
 	client, err := ethclient.Dial(Networks[CurrentNetwork].RPC)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
+		log.Fatal("couldn't set up a new network client")
 	}
 	defer client.Close()
 
 	posInstance, err := proofOfStAbi.NewProofOfStorage(common.HexToAddress(Networks[CurrentNetwork].PoS), client)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
+		log.Fatal("couldn't set up new proof of storage instance")
 	}
+
+	baseDiff, err := posInstance.BaseDifficulty(&bind.CallOpts{})
+	if err != nil {
+		logger.Log(logger.CreateDetails(location, err))
+		log.Fatal("couldn't get base difficulty")
+	}
+
+	fmt.Println("baseDiff", baseDiff)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 	defer cancel()
@@ -366,6 +377,29 @@ func StartMakingProofs(password string) {
 			storedFile.Close()
 			shared.MU.Unlock()
 
+			blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-1))
+			if err != nil {
+				logger.Log(logger.CreateDetails(location, err))
+			}
+
+			fileBytesAddrBlockHash := append(storedFileBytes, shared.NodeAddr.Bytes()...)
+			fileBytesAddrBlockHash = append(fileBytesAddrBlockHash, blockHash[:]...)
+
+			hashedFileAddrBlock := sha256.Sum256(fileBytesAddrBlockHash)
+
+			stringFileAddrBlock := hex.EncodeToString(hashedFileAddrBlock[:])
+
+			stringFileAddrBlock = strings.TrimLeft(stringFileAddrBlock, "0")
+
+			decodedBigInt, err := hexutil.DecodeBig("0x" + stringFileAddrBlock)
+			if err != nil {
+				logger.Log(logger.CreateDetails(location, err))
+			}
+
+			remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
+
+			compareResultIsLessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
+
 			proved, err := posInstance.VerifyFileProof(&bind.CallOpts{}, shared.NodeAddr, storedFileBytes[:eightKB], uint32(blockNum), userDifficulty)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
@@ -403,7 +437,7 @@ func StartMakingProofs(password string) {
 func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 	nodeAddr common.Address, spAddress common.Address, blockNum uint64, posInstance *proofOfStAbi.ProofOfStorage) error {
 	const location = "blckChain.sendProof->"
-	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, CurrentNetwork, spAddress.String(), paths.SpFsFilename)
+	pathToFsTree := filepath.Join(paths.StoragePaths[0], CurrentNetwork, spAddress.String(), paths.SpFsFilename)
 
 	shared.MU.Lock()
 
