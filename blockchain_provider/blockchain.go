@@ -241,7 +241,7 @@ func StartMakingProofs(password string) {
 
 	for {
 		fmt.Println("Sleeping...")
-		time.Sleep(time.Minute * 10)
+		time.Sleep(time.Minute * 1)
 		storageProviderAddresses := []string{}
 
 		stat, err := os.Stat(pathToAccStorage)
