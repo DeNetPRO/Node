@@ -384,25 +384,24 @@ func StartMakingProofs(password string) {
 			fileBytesAddrBlockHash := append(storedFileBytes, shared.NodeAddr.Bytes()...)
 			fileBytesAddrBlockHash = append(fileBytesAddrBlockHash, blockHash[:]...)
 
-			hashedFileAddrBlock := sha256.Sum256(fileBytesAddrBlockHash)
+			fileProof := sha256.Sum256(fileBytesAddrBlockHash)
 
-			stringFileAddrBlock := hex.EncodeToString(hashedFileAddrBlock[:])
+			stringFileProof := hex.EncodeToString(fileProof[:])
 
-			stringFileAddrBlock = strings.TrimLeft(stringFileAddrBlock, "0")
+			stringFileProof = strings.TrimLeft(stringFileProof, "0")
 
-			decodedBigInt, err := hexutil.DecodeBig("0x" + stringFileAddrBlock)
+			bigIntFromProof, err := hexutil.DecodeBig("0x" + stringFileProof)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 			}
 
-			remainder := decodedBigInt.Rem(decodedBigInt, baseDiff)
+			remainder := bigIntFromProof.Rem(bigIntFromProof, baseDiff)
 
-			lessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
+			difficultyIsEnough := remainder.CmpAbs(userDifficulty) == -1
 
-			fmt.Println("remainder", remainder)
-			fmt.Println("userDifficulty", userDifficulty)
+			fmt.Println(remainder, "<", userDifficulty, difficultyIsEnough)
 
-			if lessUserDifficulty {
+			if !difficultyIsEnough {
 				fmt.Println("remainder is less user difficulty")
 				continue
 			}
