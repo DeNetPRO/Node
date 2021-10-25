@@ -28,8 +28,8 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
 
+	_ "git.denetwork.xyz/DeNet/dfile-secondary-node/docs"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
-	_ "git.denetwork.xyz/DeNet/dfile-secondary-node/server/docs"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 	spFiles "git.denetwork.xyz/DeNet/dfile-secondary-node/sp_files"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -217,15 +217,15 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 // ====================================================================================
 
-// SaveFiles godoc
-// @Summary Save files
-// @Description Save files from Storage Provider
-// @Accept  multipart/form-data
+// ServeFiles godoc
+// @Summary Serve file
+// @Description Serve file by key
+// @Produce octet-stream
 // @Param spAddress path string true "Storage Provider address"
 // @Param fileKey path string true "file key"
 // @Param signature path string true "Storage Provider signature"
 // @Param newtork path string  true "network type"
-// @Success 200 {file} Status "OK"
+// @Success 200 {file} binary
 // @Router /download/{spAddress}/{fileKey}/{signature}/{network} [get]
 func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	const location = "server.ServeFiles->"
@@ -270,6 +270,16 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 
 // ====================================================================================
 
+// UpdateFsInfo godoc
+// @Summary Update Storage Provider's filesystem
+// @Description Update Storage Provider's filesystem, etc. root hash, nonce, file system
+// @Accept  json
+// @Param spAddress path string true "Storage Provider address"
+// @Param signedFsys path string true "Signed Storage Provider root hash"
+// @Param newtork path string  true "network type"
+// @Param updatedFsInfo body fsysInfo.UpdatedFsInfo true "updatedFsInfo"
+// @Success 200 {string} Status "OK"
+// @Router /update_fs/{spAddress}/{signedFsys}/{network} [post]
 func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 	const location = "server.UpdateFsInfo->"
 
