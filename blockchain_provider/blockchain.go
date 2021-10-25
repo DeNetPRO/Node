@@ -217,8 +217,6 @@ func StartMakingProofs(password string) {
 		log.Fatal("couldn't get base difficulty")
 	}
 
-	fmt.Println("baseDiff", baseDiff)
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 	defer cancel()
 
@@ -295,7 +293,12 @@ func StartMakingProofs(password string) {
 			continue
 		}
 
-		nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-1)))
+		blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-6))
+		if err != nil {
+			logger.Log(logger.CreateDetails(location, err))
+		}
+
+		nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-6)))
 		if err != nil {
 			cancel()
 			logger.Log(logger.CreateDetails(location, err))
@@ -377,11 +380,6 @@ func StartMakingProofs(password string) {
 			storedFile.Close()
 			shared.MU.Unlock()
 
-			blockHash, err := instance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-1))
-			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
-			}
-
 			fileBytesAddrBlockHash := append(storedFileBytes, shared.NodeAddr.Bytes()...)
 			fileBytesAddrBlockHash = append(fileBytesAddrBlockHash, blockHash[:]...)
 
@@ -396,29 +394,21 @@ func StartMakingProofs(password string) {
 				logger.Log(logger.CreateDetails(location, err))
 			}
 
-			remainder := decodedBigInt.Rem(decodedBigInt, baseDfficulty)
+			remainder := decodedBigInt.Rem(decodedBigInt, baseDiff)
 
-			compareResultIsLessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
+			lessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
 
-			proved, err := posInstance.VerifyFileProof(&bind.CallOpts{}, shared.NodeAddr, storedFileBytes[:eightKB], uint32(blockNum), userDifficulty)
-			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
+			if lessUserDifficulty {
+				fmt.Println("remainder is less user difficulty")
 				continue
 			}
-
-			if !proved {
-				fmt.Println("Proof is not verified!")
-				continue
-			}
-
-			fmt.Println("Proof is verified")
 
 			fmt.Println("checking file:", fileName)
 			fmt.Println("Trying proof", fileName, "for reward:", reward)
 
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 
-			err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum, posInstance)
+			err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, posInstance)
 			if err != nil {
 				cancel()
 				logger.Log(logger.CreateDetails(location, err))
