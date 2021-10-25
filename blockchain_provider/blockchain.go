@@ -320,7 +320,7 @@ func StartMakingProofs(password string) {
 			time.Sleep(time.Second * 5)
 
 			storageProviderAddr := common.HexToAddress(spAddress)
-			_, reward, userDifficulty, err := posInstance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
+			_, reward, userDifficulty, err := posInstance.GetUserRewardInfo(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum - 6))}, storageProviderAddr) // first value is paymentToken
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				continue
@@ -412,7 +412,7 @@ func StartMakingProofs(password string) {
 			fmt.Println("remainder", remainder, "<", "userDifficulty", userDifficulty, difficultyIsEnough)
 			fmt.Println("node addr", shared.NodeAddr.String())
 			fmt.Println("blockNum", blockNum)
-			fmt.Println("blockHash", blockHash)
+			fmt.Println("blockHash", hex.EncodeToString(blockHash[:]))
 			fmt.Println("fileProof", hex.EncodeToString(fileProof[:]))
 
 			err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, posInstance)
