@@ -468,7 +468,6 @@ func StorageSystem(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fmt.Println(path)
 		http.ServeFile(w, r, path)
 	case http.MethodPost:
 		fmt.Println("fs update")
