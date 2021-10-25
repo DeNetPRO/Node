@@ -409,6 +409,8 @@ func StartMakingProofs(password string) {
 
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 
+			fmt.Println("remainder", remainder, "<", "userDifficulty", userDifficulty, difficultyIsEnough)
+
 			err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, posInstance)
 			if err != nil {
 				cancel()
