@@ -411,7 +411,6 @@ func StartMakingProofs(password string) {
 
 			fmt.Println("remainder", remainder, "<", "userDifficulty", userDifficulty, difficultyIsEnough)
 			fmt.Println("node addr", shared.NodeAddr.String())
-			fmt.Println("storedFileBytes", hex.EncodeToString(storedFileBytes))
 			fmt.Println("blockNum", blockNum)
 			fmt.Println("blockHash", blockHash)
 			fmt.Println("fileProof", hex.EncodeToString(fileProof[:]))
