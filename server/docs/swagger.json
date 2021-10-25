@@ -1,0 +1,126 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/download/{spAddress}/{fileKey}/{signature}/{network}": {
+            "get": {
+                "description": "Save files from Storage Provider",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "summary": "Save files",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Storage Provider address",
+                        "name": "spAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "file key",
+                        "name": "fileKey",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Storage Provider signature",
+                        "name": "signature",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "network type",
+                        "name": "newtork",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/upload/{size}/{network}": {
+            "post": {
+                "description": "Save files from Storage Provider",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "summary": "Save files",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "file size in bytes",
+                        "name": "size",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "network type",
+                        "name": "network",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Storage Provider address",
+                        "name": "address",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "signed file system root hash",
+                        "name": "fsRootHash",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "current nonce",
+                        "name": "nonce",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "array of hashes of all storage provider files",
+                        "name": "fs",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "files parts",
+                        "name": "files",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

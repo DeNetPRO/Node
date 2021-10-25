@@ -29,6 +29,7 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
+	_ "git.denetwork.xyz/DeNet/dfile-secondary-node/server/docs"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 	spFiles "git.denetwork.xyz/DeNet/dfile-secondary-node/sp_files"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -151,6 +152,19 @@ func Healthcheck(w http.ResponseWriter, _ *http.Request) {
 
 // ========================================================================================================
 
+// SaveFiles godoc
+// @Summary Save files
+// @Description Save files from Storage Provider
+// @Accept  multipart/form-data
+// @Param size path int true "file size in bytes"
+// @Param network path string true "network type"
+// @Param address formData string true "Storage Provider address"
+// @Param fsRootHash formData string  true "signed file system root hash"
+// @Param nonce formData int true "current nonce"
+// @Param fs formData []string true "array of hashes of all storage provider files"
+// @Param files formData file  true "files parts"
+// @Success 200 {string} Status "OK"
+// @Router /upload/{size}/{network} [post]
 func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	const location = "server.SaveFiles->"
 
@@ -203,6 +217,16 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 // ====================================================================================
 
+// SaveFiles godoc
+// @Summary Save files
+// @Description Save files from Storage Provider
+// @Accept  multipart/form-data
+// @Param spAddress path string true "Storage Provider address"
+// @Param fileKey path string true "file key"
+// @Param signature path string true "Storage Provider signature"
+// @Param newtork path string  true "network type"
+// @Success 200 {file} Status "OK"
+// @Router /download/{spAddress}/{fileKey}/{signature}/{network} [get]
 func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	const location = "server.ServeFiles->"
 
