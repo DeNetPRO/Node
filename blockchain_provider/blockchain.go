@@ -410,6 +410,11 @@ func StartMakingProofs(password string) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 
 			fmt.Println("remainder", remainder, "<", "userDifficulty", userDifficulty, difficultyIsEnough)
+			fmt.Println("node addr", shared.NodeAddr.String())
+			fmt.Println("storedFileBytes", hex.EncodeToString(storedFileBytes))
+			fmt.Println("blockNum", blockNum)
+			fmt.Println("blockHash", blockHash)
+			fmt.Println("fileProof", hex.EncodeToString(fileProof[:]))
 
 			err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, posInstance)
 			if err != nil {
