@@ -399,10 +399,8 @@ func StartMakingProofs(password string) {
 
 			difficultyIsEnough := remainder.CmpAbs(userDifficulty) == -1
 
-			fmt.Println(remainder, "<", userDifficulty, difficultyIsEnough)
-
 			if !difficultyIsEnough {
-				fmt.Println("remainder is less user difficulty")
+				fmt.Println("difficulty is not enough")
 				continue
 			}
 
@@ -530,15 +528,15 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 		return logger.CreateDetails(location, err)
 	}
 
-	if signedFSRootHash[len(signedFSRootHash)-1] == 1 { //ecdsa version fix
-		signedFSRootHash[len(signedFSRootHash)-1] = 28
-	} else {
-		signedFSRootHash = signedFSRootHash[:64]
-	}
+	// if signedFSRootHash[len(signedFSRootHash)-1] == 1 { //ecdsa version fix
+	// 	signedFSRootHash[len(signedFSRootHash)-1] = 28
+	// } else {
+	// 	signedFSRootHash = signedFSRootHash[:64]
+	// }
 
-	fsRootNonceSha := sha256.Sum256(fsRootNonceBytes)
+	fsRootNonceHash := sha256.Sum256(fsRootNonceBytes)
 
-	err = sign.Check(spAddress.String(), signedFSRootHash, fsRootNonceSha)
+	err = sign.Check(spAddress.String(), signedFSRootHash, fsRootNonceHash)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}

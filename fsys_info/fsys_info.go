@@ -121,9 +121,9 @@ func Update(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem, network strin
 
 	fsRootNonceBytes := append(fsRootBytes, nonce32...)
 
-	hash := sha256.Sum256(fsRootNonceBytes)
+	fsRootNonceHash := sha256.Sum256(fsRootNonceBytes)
 
-	err = sign.Check(spAddress, signedRootHash, hash)
+	err = sign.Check(spAddress, signedRootHash, fsRootNonceHash)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
