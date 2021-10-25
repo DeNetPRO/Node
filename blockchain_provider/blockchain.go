@@ -177,7 +177,7 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newI
 		return logger.CreateDetails(location, err)
 	}
 
-	nodeId, err := nodeNft.GetNodeIDByAddress(&bind.CallOpts{}, shared.NodeAddr)
+	nodeId, err := nodeNft.GetNodeIDByAddress(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum - 6))}, shared.NodeAddr)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -212,12 +212,6 @@ func StartMakingProofs(password string) {
 		log.Fatal("couldn't set up new proof of storage instance")
 	}
 
-	baseDiff, err := posInstance.BaseDifficulty(&bind.CallOpts{})
-	if err != nil {
-		logger.Log(logger.CreateDetails(location, err))
-		log.Fatal("couldn't get base difficulty")
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 	defer cancel()
 
@@ -226,7 +220,13 @@ func StartMakingProofs(password string) {
 		logger.Log(logger.CreateDetails(location, err))
 	}
 
-	opts, err := initTrxOpts(ctx, client, shared.NodeAddr, password, blockNum)
+	baseDiff, err := posInstance.BaseDifficulty(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum - 6))})
+	if err != nil {
+		logger.Log(logger.CreateDetails(location, err))
+		log.Fatal("couldn't get base difficulty")
+	}
+
+	opts, err := initTrxOpts(ctx, client, shared.NodeAddr, password, blockNum-6)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		log.Fatal("couldn't initialize transaction options")
@@ -484,7 +484,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 
 	fsRootHashBytes := proof[len(proof)-1]
 
-	contractRootHash, contractNonce, err := posInstance.GetUserRootHash(&bind.CallOpts{}, spAddress)
+	contractRootHash, contractNonce, err := posInstance.GetUserRootHash(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum - 6))}, spAddress)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
