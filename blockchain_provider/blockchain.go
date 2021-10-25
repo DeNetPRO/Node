@@ -29,6 +29,7 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
 	nodeNftAbi "git.denetwork.xyz/DeNet/dfile-secondary-node/node_nft_abi"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
@@ -398,6 +399,9 @@ func StartMakingProofs(password string) {
 
 			lessUserDifficulty := remainder.CmpAbs(userDifficulty) == -1
 
+			fmt.Println("remainder", remainder)
+			fmt.Println("userDifficulty", userDifficulty)
+
 			if lessUserDifficulty {
 				fmt.Println("remainder is less user difficulty")
 				continue
@@ -533,13 +537,11 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 		signedFSRootHash = signedFSRootHash[:64]
 	}
 
-	signatureIsValid, err := posInstance.IsValidSign(&bind.CallOpts{}, spAddress, fsRootNonceBytes, signedFSRootHash)
+	fsRootNonceSha := sha256.Sum256(fsRootNonceBytes)
+
+	err = sign.Check(spAddress.String(), signedFSRootHash, fsRootNonceSha)
 	if err != nil {
 		return logger.CreateDetails(location, err)
-	}
-
-	if !signatureIsValid {
-		return logger.CreateDetails(location, errors.New(spAddress.String()+" signature is not valid"))
 	}
 
 	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
