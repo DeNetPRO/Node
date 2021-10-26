@@ -385,12 +385,8 @@ func StartMakingProofs(password string) {
 
 			copy(fileEightKB, storedFileBytes[:eightKB])
 
-			fmt.Println("hashBefore", sha256.Sum256(storedFileBytes))
-
 			fileBytesAddrBlockHash := append(fileEightKB, shared.NodeAddr.Bytes()...)
 			fileProof := append(fileBytesAddrBlockHash, blockHash[:]...)
-
-			fmt.Println("hashAfter", sha256.Sum256(storedFileBytes))
 
 			fileProofSha := sha256.Sum256(fileProof)
 
@@ -412,10 +408,7 @@ func StartMakingProofs(password string) {
 				continue
 			}
 
-			fmt.Println("checking file:", fileName)
 			fmt.Println("Trying proof", fileName, "for reward:", reward)
-
-			fmt.Println(hex.EncodeToString(fileProof))
 
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 
