@@ -392,12 +392,7 @@ func StartMakingProofs(password string) {
 
 			// stringFileProof = strings.TrimLeft(stringFileProof, "0") // leading zeroes lead to errors in contract
 
-			// bigIntFromProof, err := hexutil.DecodeBig("0x" + stringFileProof)
-			// if err != nil {
-			// 	logger.Log(logger.CreateDetails(location, err))
-			// }
-
-			bigIntFromProof, err := hexutil.DecodeBig(stringFileProof)
+			bigIntFromProof, err := hexutil.DecodeBig("0x" + stringFileProof)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 			}
