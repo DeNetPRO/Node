@@ -505,11 +505,9 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 		rootHashesEqual := bytes.Equal(fsRootHashBytes[:], contractRootHash[:])
 
 		if contractNonceIsBigger && !rootHashesEqual {
-			msg := fmt.Sprint("Fs root hash info is not valid", "fs nonce:", nonceInt, "contract nonce:", contractNonce, "\nfs root hash bytes", fsRootHashBytes, "contract root hash", contractRootHash)
-			fmt.Println(msg)
-			return logger.CreateDetails(location, errors.New(msg))
+			fmt.Println("fs root hash info is not valid!!!")
+			return logger.CreateDetails(location, errors.New("fs root hash info is not valid"))
 		}
-
 	}
 
 	treeToFsRoot = nil
