@@ -381,18 +381,23 @@ func StartMakingProofs(password string) {
 			storedFile.Close()
 			shared.MU.Unlock()
 
-			stringAddr := hex.EncodeToString(shared.NodeAddr.Bytes()) // adresses in contract don't have 0x at the begginng
+			fmt.Println(shared.NodeAddr.Bytes(), len(shared.NodeAddr.Bytes()))
 
-			fileBytesAddrBlockHash := append(storedFileBytes, []byte(stringAddr)...) // NodeAddr.Bytes() is not used because abi doesn't use this method
+			fileBytesAddrBlockHash := append(storedFileBytes, shared.NodeAddr.Bytes()...)
 			fileBytesAddrBlockHash = append(fileBytesAddrBlockHash, blockHash[:]...)
 
 			fileProof := sha256.Sum256(fileBytesAddrBlockHash)
 
 			stringFileProof := hex.EncodeToString(fileProof[:])
 
-			stringFileProof = strings.TrimLeft(stringFileProof, "0")
+			// stringFileProof = strings.TrimLeft(stringFileProof, "0") // leading zeroes lead to errors in contract
 
-			bigIntFromProof, err := hexutil.DecodeBig("0x" + stringFileProof)
+			// bigIntFromProof, err := hexutil.DecodeBig("0x" + stringFileProof)
+			// if err != nil {
+			// 	logger.Log(logger.CreateDetails(location, err))
+			// }
+
+			bigIntFromProof, err := hexutil.DecodeBig(stringFileProof)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 			}
@@ -480,7 +485,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 
 	fsRootHashBytes := proof[len(proof)-1]
 
-	contractRootHash, contractNonce, err := posInstance.GetUserRootHash(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum - 6))}, spAddress)
+	contractRootHash, contractNonce, err := posInstance.GetUserRootHash(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum))}, spAddress)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
