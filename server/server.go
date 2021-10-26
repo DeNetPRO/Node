@@ -431,7 +431,7 @@ func StorageSystem(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	spAddress := vars["spAddress"]
 	signature := vars["signature"]
-	fmt.Println(spAddress, signature)
+
 	if spAddress == "" || signature == "" {
 		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
 		http.Error(w, errs.InvalidArgument.Error(), http.StatusBadRequest)

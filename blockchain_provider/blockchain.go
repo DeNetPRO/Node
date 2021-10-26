@@ -299,8 +299,6 @@ func StartMakingProofs(password string) {
 			logger.Log(logger.CreateDetails(location, err))
 		}
 
-		fmt.Println("blockHash", hex.EncodeToString(blockHash[:]))
-
 		nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-6)))
 		if err != nil {
 			cancel()
@@ -392,8 +390,6 @@ func StartMakingProofs(password string) {
 
 			stringFileProof = strings.TrimLeft(stringFileProof, "0") // leading zeroes lead to decoding errors
 
-			fmt.Println(stringFileProof)
-
 			bigIntFromProof, err := hexutil.DecodeBig("0x" + stringFileProof)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
@@ -410,6 +406,8 @@ func StartMakingProofs(password string) {
 
 			fmt.Println("checking file:", fileName)
 			fmt.Println("Trying proof", fileName, "for reward:", reward)
+
+			fmt.Println("!!!", hex.EncodeToString(fileProof), "!!!")
 
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 
