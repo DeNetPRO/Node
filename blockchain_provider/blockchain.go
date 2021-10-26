@@ -299,7 +299,7 @@ func StartMakingProofs(password string) {
 			logger.Log(logger.CreateDetails(location, err))
 		}
 
-		fmt.Println("blockHash", blockHash)
+		fmt.Println("blockHash", hex.EncodeToString(blockHash[:]))
 
 		nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-6)))
 		if err != nil {
