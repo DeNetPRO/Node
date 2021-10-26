@@ -185,7 +185,20 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = spFiles.Save(req, spData, network)
+	pathToSpFiles := filepath.Join(paths.StoragePaths[0], network, spData.Address)
+
+	spStrgStat, err := os.Stat(pathToSpFiles)
+	err = errs.CheckStatErr(err)
+	if err != nil {
+		logger.Log(logger.CreateDetails(location, err))
+		memInfo.Restore(pathToConfig, fileSize)
+		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println(spStrgStat.Size())
+
+	err = spFiles.Save(req, spData, pathToSpFiles)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		memInfo.Restore(pathToConfig, fileSize)
