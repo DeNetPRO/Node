@@ -206,8 +206,6 @@ func StartMakingProofs(password string) {
 	}
 	defer client.Close()
 
-	fmt.Println(CurrentNetwork, Networks[CurrentNetwork].PoS)
-
 	posInstance, err := proofOfStAbi.NewProofOfStorage(common.HexToAddress(Networks[CurrentNetwork].PoS), client)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
@@ -383,13 +381,9 @@ func StartMakingProofs(password string) {
 			storedFile.Close()
 			shared.MU.Unlock()
 
-			stringAddr := hex.EncodeToString(shared.NodeAddr.Bytes())
+			stringAddr := hex.EncodeToString(shared.NodeAddr.Bytes()) // adresses in contract don't have 0x at the begginng
 
-			fmt.Println("stringAddr", stringAddr)
-			fmt.Println("stringToBytes", []byte(stringAddr))
-			fmt.Println("shared.NodeAddr.Bytes()", shared.NodeAddr.Bytes())
-
-			fileBytesAddrBlockHash := append(storedFileBytes, []byte(stringAddr)...)
+			fileBytesAddrBlockHash := append(storedFileBytes, []byte(stringAddr)...) // NodeAddr.Bytes() is not used because abi doesn't use this method
 			fileBytesAddrBlockHash = append(fileBytesAddrBlockHash, blockHash[:]...)
 
 			fileProof := sha256.Sum256(fileBytesAddrBlockHash)
@@ -416,12 +410,6 @@ func StartMakingProofs(password string) {
 			fmt.Println("Trying proof", fileName, "for reward:", reward)
 
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
-
-			fmt.Println("remainder", remainder, "<", "userDifficulty", userDifficulty, difficultyIsEnough)
-			fmt.Println("node addr", shared.NodeAddr.String())
-			fmt.Println("blockNum", blockNum)
-			fmt.Println("blockHash", hex.EncodeToString(blockHash[:]))
-			fmt.Println("fileProof", hex.EncodeToString(fileProof[:]))
 
 			err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, posInstance)
 			if err != nil {
