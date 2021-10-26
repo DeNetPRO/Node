@@ -51,7 +51,7 @@ var Networks = map[string]NtwrkParams{
 	"kovan": {
 		RPC: "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f",
 		NFT: "0xBfAfdaE6B77a02A4684D39D1528c873961528342",
-		PoS: "0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B",
+		PoS: "0x60828cfBBFbcB474c913FaDE151AD4AFa9a07919",
 	},
 	"polygon": {
 		RPC: "https://rpc-mumbai.maticvigil.com",
@@ -367,15 +367,11 @@ func StartMakingProofs(password string) {
 			rand.Seed(time.Now().UnixNano())
 			randomFilePos := rand.Intn(len(fileNames))
 
-			fmt.Println(len(fileNames))
-
-			if randomFilePos+2 < len(fileNames) {
-				fileNames = fileNames[randomFilePos : randomFilePos+2]
+			if randomFilePos+3 < len(fileNames) {
+				fileNames = fileNames[randomFilePos : randomFilePos+3]
 			} else {
 				fileNames = fileNames[randomFilePos:]
 			}
-
-			fmt.Println(fileNames, len(fileNames))
 
 			for _, fileName := range fileNames {
 				shared.MU.Lock()
