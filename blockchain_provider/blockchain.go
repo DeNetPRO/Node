@@ -392,6 +392,8 @@ func StartMakingProofs(password string) {
 
 			stringFileProof = strings.TrimLeft(stringFileProof, "0") // leading zeroes lead to decoding errors
 
+			fmt.Println(stringFileProof)
+
 			bigIntFromProof, err := hexutil.DecodeBig("0x" + stringFileProof)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
