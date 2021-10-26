@@ -381,7 +381,9 @@ func StartMakingProofs(password string) {
 			storedFile.Close()
 			shared.MU.Unlock()
 
-			fileBytesAddrBlockHash := append(storedFileBytes, shared.NodeAddr.Bytes()...)
+			fileEightKB := storedFileBytes[:eightKB]
+
+			fileBytesAddrBlockHash := append(fileEightKB, shared.NodeAddr.Bytes()...)
 			fileProof := append(fileBytesAddrBlockHash, blockHash[:]...)
 
 			fileProofSha := sha256.Sum256(fileProof)
