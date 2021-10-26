@@ -242,7 +242,7 @@ func StartMakingProofs(password string) {
 
 	for {
 		fmt.Println("Sleeping...")
-		time.Sleep(time.Minute * 1)
+		time.Sleep(time.Second * 30)
 		storageProviderAddresses := []string{}
 
 		stat, err := os.Stat(pathToAccStorage)
@@ -367,61 +367,74 @@ func StartMakingProofs(password string) {
 			rand.Seed(time.Now().UnixNano())
 			randomFilePos := rand.Intn(len(fileNames))
 
-			fileName := fileNames[randomFilePos]
+			fmt.Println(len(fileNames))
 
-			shared.MU.Lock()
+			if randomFilePos+2 < len(fileNames) {
+				fileNames = fileNames[randomFilePos : randomFilePos+2]
+			} else {
+				fileNames = fileNames[randomFilePos:]
+			}
 
-			storedFile, storedFileBytes, err := nodeFile.Read(filepath.Join(pathToStorProviderFiles, fileName))
-			if err != nil {
+			fmt.Println(fileNames, len(fileNames))
+
+			for _, fileName := range fileNames {
+				shared.MU.Lock()
+
+				storedFile, storedFileBytes, err := nodeFile.Read(filepath.Join(pathToStorProviderFiles, fileName))
+				if err != nil {
+					shared.MU.Unlock()
+					logger.Log(logger.CreateDetails(location, err))
+					continue
+				}
+
+				storedFile.Close()
 				shared.MU.Unlock()
-				logger.Log(logger.CreateDetails(location, err))
-				continue
+
+				fileEightKB := make([]byte, eightKB)
+
+				copy(fileEightKB, storedFileBytes[:eightKB])
+
+				fileBytesAddrBlockHash := append(fileEightKB, shared.NodeAddr.Bytes()...)
+				fileProof := append(fileBytesAddrBlockHash, blockHash[:]...)
+
+				fileProofSha := sha256.Sum256(fileProof)
+
+				stringFileProof := hex.EncodeToString(fileProofSha[:])
+
+				stringFileProof = strings.TrimLeft(stringFileProof, "0") // leading zeroes lead to decoding errors
+
+				bigIntFromProof, err := hexutil.DecodeBig("0x" + stringFileProof)
+				if err != nil {
+					logger.Log(logger.CreateDetails(location, err))
+				}
+
+				remainder := bigIntFromProof.Rem(bigIntFromProof, baseDiff)
+
+				difficultyIsEnough := remainder.CmpAbs(userDifficulty) == -1
+
+				if !difficultyIsEnough {
+					fmt.Println("difficulty is not enough")
+					continue
+				}
+
+				fmt.Println("Trying proof", fileName, "for reward:", reward)
+
+				ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
+
+				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, posInstance)
+				if err != nil {
+					cancel()
+					logger.Log(logger.CreateDetails(location, err))
+					continue
+				} else {
+					cancel()
+
+					break
+				}
+
 			}
-
-			storedFile.Close()
-			shared.MU.Unlock()
-
-			fileEightKB := make([]byte, eightKB)
-
-			copy(fileEightKB, storedFileBytes[:eightKB])
-
-			fileBytesAddrBlockHash := append(fileEightKB, shared.NodeAddr.Bytes()...)
-			fileProof := append(fileBytesAddrBlockHash, blockHash[:]...)
-
-			fileProofSha := sha256.Sum256(fileProof)
-
-			stringFileProof := hex.EncodeToString(fileProofSha[:])
-
-			stringFileProof = strings.TrimLeft(stringFileProof, "0") // leading zeroes lead to decoding errors
-
-			bigIntFromProof, err := hexutil.DecodeBig("0x" + stringFileProof)
-			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
-			}
-
-			remainder := bigIntFromProof.Rem(bigIntFromProof, baseDiff)
-
-			difficultyIsEnough := remainder.CmpAbs(userDifficulty) == -1
-
-			if !difficultyIsEnough {
-				fmt.Println("difficulty is not enough")
-				continue
-			}
-
-			fmt.Println("Trying proof", fileName, "for reward:", reward)
-
-			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
-
-			err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, posInstance)
-			if err != nil {
-				cancel()
-				logger.Log(logger.CreateDetails(location, err))
-				continue
-			}
-
-			cancel()
-
 		}
+
 	}
 }
 
