@@ -383,8 +383,12 @@ func StartMakingProofs(password string) {
 
 			fileEightKB := storedFileBytes[:eightKB]
 
+			fmt.Println("hashBefore", sha256.Sum256(storedFileBytes))
+
 			fileBytesAddrBlockHash := append(fileEightKB, shared.NodeAddr.Bytes()...)
 			fileProof := append(fileBytesAddrBlockHash, blockHash[:]...)
+
+			fmt.Println("hashAfter", sha256.Sum256(storedFileBytes))
 
 			fileProofSha := sha256.Sum256(fileProof)
 
