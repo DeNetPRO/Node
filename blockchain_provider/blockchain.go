@@ -381,14 +381,15 @@ func StartMakingProofs(password string) {
 			storedFile.Close()
 			shared.MU.Unlock()
 
-			fmt.Println(shared.NodeAddr.Bytes(), len(shared.NodeAddr.Bytes()))
-
 			fileBytesAddrBlockHash := append(storedFileBytes, shared.NodeAddr.Bytes()...)
 			fileBytesAddrBlockHash = append(fileBytesAddrBlockHash, blockHash[:]...)
 
 			fileProof := sha256.Sum256(fileBytesAddrBlockHash)
 
+			fmt.Println("proofSha", fileProof)
+
 			stringFileProof := hex.EncodeToString(fileProof[:])
+			fmt.Println("proofSha", stringFileProof)
 
 			// stringFileProof = strings.TrimLeft(stringFileProof, "0") // leading zeroes lead to errors in contract
 
@@ -396,6 +397,8 @@ func StartMakingProofs(password string) {
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 			}
+
+			fmt.Println("bigIntFromProof", bigIntFromProof)
 
 			remainder := bigIntFromProof.Rem(bigIntFromProof, baseDiff)
 
