@@ -381,7 +381,9 @@ func StartMakingProofs(password string) {
 			storedFile.Close()
 			shared.MU.Unlock()
 
-			fileEightKB := storedFileBytes[:eightKB]
+			fileEightKB := make([]byte, eightKB)
+
+			copy(fileEightKB, storedFileBytes[:eightKB])
 
 			fmt.Println("hashBefore", sha256.Sum256(storedFileBytes))
 
@@ -413,7 +415,7 @@ func StartMakingProofs(password string) {
 			fmt.Println("checking file:", fileName)
 			fmt.Println("Trying proof", fileName, "for reward:", reward)
 
-			fmt.Println("!!!", hex.EncodeToString(fileProof), "!!!")
+			fmt.Println(hex.EncodeToString(fileProof))
 
 			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 
