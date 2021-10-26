@@ -550,6 +550,8 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 	proofOpts.Nonce = big.NewInt(int64(transactNonce))
 	proofOpts.Context = ctx
 
+	fmt.Println("transactNonce", transactNonce)
+
 	_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
 		debug.FreeOSMemory()
