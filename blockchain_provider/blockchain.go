@@ -328,8 +328,6 @@ func StartMakingProofs(password string) {
 				continue
 			}
 
-			fmt.Println(storageProviderAddr, "difficulty", userDifficulty)
-
 			fileNames := []string{}
 
 			pathToStorProviderFiles := filepath.Join(pathToAccStorage, storageProviderAddr.String())
@@ -385,7 +383,13 @@ func StartMakingProofs(password string) {
 			storedFile.Close()
 			shared.MU.Unlock()
 
-			fileBytesAddrBlockHash := append(storedFileBytes, shared.NodeAddr.Bytes()...)
+			stringAddr := hex.EncodeToString(shared.NodeAddr.Bytes())
+
+			fmt.Println("stringAddr", stringAddr)
+			fmt.Println("stringToBytes", []byte(stringAddr))
+			fmt.Println("shared.NodeAddr.Bytes()", shared.NodeAddr.Bytes())
+
+			fileBytesAddrBlockHash := append(storedFileBytes, []byte(stringAddr)...)
 			fileBytesAddrBlockHash = append(fileBytesAddrBlockHash, blockHash[:]...)
 
 			fileProof := sha256.Sum256(fileBytesAddrBlockHash)
