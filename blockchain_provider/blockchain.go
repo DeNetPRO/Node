@@ -299,6 +299,8 @@ func StartMakingProofs(password string) {
 			logger.Log(logger.CreateDetails(location, err))
 		}
 
+		fmt.Println("blockHash", blockHash)
+
 		nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-6)))
 		if err != nil {
 			cancel()
@@ -382,23 +384,18 @@ func StartMakingProofs(password string) {
 			shared.MU.Unlock()
 
 			fileBytesAddrBlockHash := append(storedFileBytes, shared.NodeAddr.Bytes()...)
-			fileBytesAddrBlockHash = append(fileBytesAddrBlockHash, blockHash[:]...)
+			fileProof := append(fileBytesAddrBlockHash, blockHash[:]...)
 
-			fileProof := sha256.Sum256(fileBytesAddrBlockHash)
+			fileProofSha := sha256.Sum256(fileProof)
 
-			fmt.Println("proofSha", fileProof)
+			stringFileProof := hex.EncodeToString(fileProofSha[:])
 
-			stringFileProof := hex.EncodeToString(fileProof[:])
-			fmt.Println("proofSha", stringFileProof)
-
-			// stringFileProof = strings.TrimLeft(stringFileProof, "0") // leading zeroes lead to errors in contract
+			stringFileProof = strings.TrimLeft(stringFileProof, "0") // leading zeroes lead to decoding errors
 
 			bigIntFromProof, err := hexutil.DecodeBig("0x" + stringFileProof)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 			}
-
-			fmt.Println("bigIntFromProof", bigIntFromProof)
 
 			remainder := bigIntFromProof.Rem(bigIntFromProof, baseDiff)
 
