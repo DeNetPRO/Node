@@ -85,7 +85,7 @@ var accountLoginCmd = &cobra.Command{
 
 			blckChain.CurrentNetwork = nodeConfig.Network
 
-			_, registeredInNetwork := nodeConfig.RegisteredInNetworks[nodeConfig.Network]
+			registeredInNetwork := nodeConfig.RegisteredInNetworks[nodeConfig.Network]
 
 			if !registeredInNetwork {
 

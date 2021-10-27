@@ -234,6 +234,14 @@ func StartMakingProofs(password string) {
 
 	debug.FreeOSMemory()
 
+	transactNonce, err := client.NonceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
+	if err != nil {
+		logger.Log(logger.CreateDetails(location, err))
+		log.Fatal("couldn't get transact nonce")
+	}
+
+	opts.Nonce = big.NewInt(int64(transactNonce))
+
 	proofOpts = opts
 
 	fmt.Println(CurrentNetwork, "network selected")
@@ -546,21 +554,15 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 		return logger.CreateDetails(location, err)
 	}
 
-	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
 	if signedFSRootHash[len(signedFSRootHash)-1] == 1 { //ecdsa version fix
 		signedFSRootHash[len(signedFSRootHash)-1] = 28
 	} else {
 		signedFSRootHash = signedFSRootHash[:64]
 	}
 
-	proofOpts.Nonce = big.NewInt(int64(transactNonce))
 	proofOpts.Context = ctx
 
-	fmt.Println("transactNonce", transactNonce)
+	fmt.Println("transactNonce", proofOpts.Nonce)
 
 	_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
@@ -569,6 +571,8 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 	}
 
 	debug.FreeOSMemory()
+
+	proofOpts.Nonce = proofOpts.Nonce.Add(proofOpts.Nonce, big.NewInt(1))
 
 	proof = nil
 
