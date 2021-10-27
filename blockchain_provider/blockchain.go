@@ -101,14 +101,10 @@ func RegisterNode(ctx context.Context, address, password, ip, port string) error
 		return logger.CreateDetails(location, err)
 	}
 
-	balanceIsLow, err := checkBalance(client, blockNum)
+	err = checkBalance(client, blockNum)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		log.Fatal("couldn't check balance")
-	}
-
-	if balanceIsLow {
-		os.Exit(0)
 	}
 
 	nodeNft, err := nodeNftAbi.NewNodeNft(common.HexToAddress(Networks[CurrentNetwork].NFT), client)
@@ -210,31 +206,30 @@ func StartMakingProofs(password string) {
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
-	defer cancel()
 
 	blockNum, err := client.BlockNumber(ctx)
 	if err != nil {
+		cancel()
 		logger.Log(logger.CreateDetails(location, err))
 	}
 
-	balanceIsLow, err := checkBalance(client, blockNum)
+	err = checkBalance(client, blockNum)
 	if err != nil {
+		cancel()
 		logger.Log(logger.CreateDetails(location, err))
 		log.Fatal("couldn't check balance")
 	}
 
-	if balanceIsLow {
-		os.Exit(0)
-	}
-
 	baseDiff, err := posInstance.BaseDifficulty(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum - 6))})
 	if err != nil {
+		cancel()
 		logger.Log(logger.CreateDetails(location, err))
 		log.Fatal("couldn't get base difficulty")
 	}
 
 	opts, err := initTrxOpts(ctx, client, shared.NodeAddr, password, blockNum-6)
 	if err != nil {
+		cancel()
 		logger.Log(logger.CreateDetails(location, err))
 		log.Fatal("couldn't initialize transaction options")
 	}
@@ -243,9 +238,12 @@ func StartMakingProofs(password string) {
 
 	transactNonce, err := client.NonceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
 	if err != nil {
+		cancel()
 		logger.Log(logger.CreateDetails(location, err))
 		log.Fatal("couldn't get transact nonce")
 	}
+
+	cancel()
 
 	opts.Nonce = big.NewInt(int64(transactNonce))
 
@@ -426,14 +424,10 @@ func StartMakingProofs(password string) {
 				} else {
 					cancel()
 
-					balanceIsLow, err := checkBalance(client, blockNum)
+					err = checkBalance(client, blockNum)
 					if err != nil {
 						logger.Log(logger.CreateDetails(location, err))
 						log.Fatal("couldn't check balance")
-					}
-
-					if balanceIsLow {
-						os.Exit(0)
 					}
 
 					break
@@ -447,17 +441,17 @@ func StartMakingProofs(password string) {
 
 // ====================================================================================
 
-func checkBalance(client *ethclient.Client, blockNum uint64) (bool, error) {
+func checkBalance(client *ethclient.Client, blockNum uint64) error {
 
 	const location = "blckChain.checkBalance->"
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 
 	defer cancel()
 
 	nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-6)))
 	if err != nil {
-		return false, logger.CreateDetails(location, err)
+		return logger.CreateDetails(location, err)
 	}
 
 	nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
@@ -466,10 +460,10 @@ func checkBalance(client *ethclient.Client, blockNum uint64) (bool, error) {
 		fmt.Println("Insufficient funds for paying ", CurrentNetwork, " transaction fees. Balance:", nodeBalance)
 		fmt.Println("Please top up your balance")
 
-		return true, nil
+		os.Exit(0)
 	}
 
-	return false, nil
+	return nil
 }
 
 // ====================================================================================
@@ -590,13 +584,13 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 	}
 
 	proofOpts.Context = ctx
+	proofOpts.Nonce = proofOpts.Nonce.Add(proofOpts.Nonce, big.NewInt(1))
 
 	fmt.Println("transactNonce", proofOpts.Nonce)
 
 	_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
 		debug.FreeOSMemory()
-		proofOpts.Nonce = proofOpts.Nonce.Add(proofOpts.Nonce, big.NewInt(1))
 		return logger.CreateDetails(location, err)
 	}
 
