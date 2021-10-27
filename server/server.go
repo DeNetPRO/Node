@@ -187,7 +187,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	pathToSpFiles := filepath.Join(paths.StoragePaths[0], network, spData.Address)
 
-	spStrgStat, err := os.Stat(pathToSpFiles)
+	dirStat, err := os.Stat(pathToSpFiles)
 	err = errs.CheckStatErr(err)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
@@ -196,7 +196,9 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fmt.Println(spStrgStat.Size())
+	KB := int64(1024)
+
+	fmt.Println("storage GB", dirStat.Size()/(KB*KB*KB))
 
 	err = spFiles.Save(req, spData, pathToSpFiles)
 	if err != nil {
