@@ -567,7 +567,6 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 
 	if currentNonceIsLower {
 		proofOpts.Nonce = big.NewInt(int64(transactNonce))
-
 	}
 
 	fmt.Println("transactNonce", transactNonce)
