@@ -213,8 +213,6 @@ func StartMakingProofs(password string) {
 		logger.Log(logger.CreateDetails(location, err))
 	}
 
-	blockNum = blockNum - 6
-
 	err = checkBalance(client, blockNum)
 	if err != nil {
 		cancel()
@@ -302,7 +300,7 @@ func StartMakingProofs(password string) {
 
 		cancel()
 
-		blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-5)) // checking older blocknum to guarantee valid result
+		blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-10)) // checking older blocknum to guarantee valid result
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 		}
@@ -412,7 +410,7 @@ func StartMakingProofs(password string) {
 
 				ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 
-				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-5, posInstance) // sending blocknum that we used for verifying proof
+				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-10, posInstance) // sending blocknum that we used for verifying proof
 				if err != nil {
 					cancel()
 					logger.Log(logger.CreateDetails(location, err))
@@ -555,7 +553,6 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 
 	transactNonce, err := client.NonceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
 	if err != nil {
-		logger.Log(logger.CreateDetails(location, err))
 		return logger.CreateDetails(location, err)
 	}
 
@@ -573,7 +570,6 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 
 	_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
-		logger.Log(logger.CreateDetails(location, err))
 
 		debug.FreeOSMemory()
 
