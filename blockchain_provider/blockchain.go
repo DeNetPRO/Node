@@ -302,7 +302,7 @@ func StartMakingProofs(password string) {
 
 		cancel()
 
-		blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum))
+		blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-5))
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 		}
@@ -407,13 +407,12 @@ func StartMakingProofs(password string) {
 
 				fmt.Println("blockNum", blockNum)
 				fmt.Println("blockHash", blockHash)
-				fmt.Println("fileProof", hex.EncodeToString(fileProof))
 
 				fmt.Println("Trying proof", fileName, "for reward:", reward)
 
 				ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 
-				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum, posInstance)
+				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-5, posInstance)
 				if err != nil {
 					cancel()
 					logger.Log(logger.CreateDetails(location, err))
