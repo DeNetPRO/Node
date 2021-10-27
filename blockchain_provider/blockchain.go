@@ -436,33 +436,6 @@ func StartMakingProofs(password string) {
 
 // ====================================================================================
 
-func checkBalance(client *ethclient.Client, blockNum uint64) error {
-
-	const location = "blckChain.checkBalance->"
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-
-	defer cancel()
-
-	nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
-
-	if nodeBalanceIsLow {
-		fmt.Println("Insufficient funds for paying ", CurrentNetwork, " transaction fees. Balance:", nodeBalance)
-		fmt.Println("Please top up your balance")
-
-		os.Exit(0)
-	}
-
-	return nil
-}
-
-// ====================================================================================
-
 //SendProof checks Storage Providers's file system root hash and nounce info and sends proof to smart contract.
 func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 	nodeAddr common.Address, spAddress common.Address, blockNum uint64, posInstance *proofOfStAbi.ProofOfStorage) error {
@@ -591,6 +564,10 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 
 	_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
+
+		fmt.Println(err.Error())
+		fmt.Println(err.Error() == "Transaction nonce is too low. Try incrementing the nonce.")
+
 		debug.FreeOSMemory()
 		return logger.CreateDetails(location, err)
 	}
@@ -598,6 +575,33 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 	debug.FreeOSMemory()
 
 	proof = nil
+
+	return nil
+}
+
+// ====================================================================================
+
+func checkBalance(client *ethclient.Client, blockNum uint64) error {
+
+	const location = "blckChain.checkBalance->"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+
+	defer cancel()
+
+	nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
+	nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
+
+	if nodeBalanceIsLow {
+		fmt.Println("Insufficient funds for paying ", CurrentNetwork, " transaction fees. Balance:", nodeBalance)
+		fmt.Println("Please top up your balance")
+
+		os.Exit(0)
+	}
 
 	return nil
 }
