@@ -33,10 +33,8 @@ type NodeAddressResponse struct {
 
 // ====================================================================================
 //Save is used for checking and saving file parts from the inoming request to the node's storage.
-func Save(req *http.Request, spData *shared.StorageProviderData, network string) error {
+func Save(req *http.Request, spData *shared.StorageProviderData, pathToSpFiles string) error {
 	const location = "files.Save->"
-
-	pathToSpFiles := filepath.Join(paths.StoragePaths[0], network, spData.Address)
 
 	stat, err := os.Stat(pathToSpFiles)
 	if err != nil {

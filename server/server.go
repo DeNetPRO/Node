@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"errors"
+	"io/fs"
 	"os/signal"
 
 	"github.com/minio/sha256-simd"
@@ -185,7 +186,46 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = spFiles.Save(req, spData, network)
+	pathToSpFiles := filepath.Join(paths.StoragePaths[0], network, spData.Address)
+
+	dirStat, err := os.Stat(pathToSpFiles)
+	err = errs.CheckStatErr(err)
+	if err != nil {
+		logger.Log(logger.CreateDetails(location, err))
+		memInfo.Restore(pathToConfig, fileSize)
+		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var dirFilesCount = 0
+
+	if dirStat != nil {
+		err = filepath.WalkDir(pathToSpFiles,
+			func(path string, info fs.DirEntry, err error) error {
+				if err != nil {
+					logger.Log(logger.CreateDetails(location, err))
+				}
+
+				if !info.IsDir() {
+					dirFilesCount++
+				}
+
+				return nil
+			})
+
+		if err != nil {
+			logger.Log(logger.CreateDetails(location, err))
+		}
+	}
+
+	if dirFilesCount > 3300 { // max Mb storage per user
+		http.Error(w, errs.NoSpace.Error(), http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println("dir contains", dirFilesCount, "files")
+
+	err = spFiles.Save(req, spData, pathToSpFiles)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		memInfo.Restore(pathToConfig, fileSize)
@@ -431,7 +471,7 @@ func StorageSystem(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	spAddress := vars["spAddress"]
 	signature := vars["signature"]
-	fmt.Println(spAddress, signature)
+
 	if spAddress == "" || signature == "" {
 		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
 		http.Error(w, errs.InvalidArgument.Error(), http.StatusBadRequest)
@@ -468,7 +508,6 @@ func StorageSystem(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		fmt.Println(path)
 		http.ServeFile(w, r, path)
 	case http.MethodPost:
 		fmt.Println("fs update")

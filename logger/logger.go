@@ -37,7 +37,7 @@ func Log(msg interface{}) {
 
 	currentTime := time.Now().Local()
 
-	logMsg := fmt.Sprint(currentTime.String(), msg)
+	logMsg := fmt.Sprintf("%s: %v\n", currentTime.String(), msg)
 
 	fmt.Println(logMsg)
 

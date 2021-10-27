@@ -29,12 +29,14 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
 	nodeNftAbi "git.denetwork.xyz/DeNet/dfile-secondary-node/node_nft_abi"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -48,13 +50,13 @@ type NtwrkParams struct {
 var Networks = map[string]NtwrkParams{
 	"kovan": {
 		RPC: "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f",
-		NFT: "0xBfAfdaE6B77a02A4684D39D1528c873961528342",
-		PoS: "0x2E8630780A231E8bCf12Ba1172bEB9055deEBF8B",
+		NFT: "0x8De6417e4738a41619d0D13ef0661563f1A918ec",
+		PoS: "0x60828cfBBFbcB474c913FaDE151AD4AFa9a07919",
 	},
 	"polygon": {
 		RPC: "https://rpc-mumbai.maticvigil.com",
 		NFT: "0xBb86dcf291419d3F5b4B2211122D0E6fCB693777",
-		PoS: "0xe4d6D3aFFCb6639534f12bf979c0cfd98EdD14E5",
+		PoS: "0x389E8fE67c73551043184F740126C91866c0fB78",
 	},
 }
 
@@ -99,17 +101,10 @@ func RegisterNode(ctx context.Context, address, password, ip, port string) error
 		return logger.CreateDetails(location, err)
 	}
 
-	balance, err := client.BalanceAt(ctx, common.HexToAddress(address), big.NewInt(int64(blockNum-1)))
+	err = checkBalance(client, blockNum)
 	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	balanceIsInsufficient := balance.Cmp(big.NewInt(200000000000000)) == -1
-
-	if balanceIsInsufficient {
-		fmt.Println("Insufficient funds for registering in ", CurrentNetwork, ". Balance:", balance)
-		fmt.Println("Please top up your balance")
-		os.Exit(0)
+		logger.Log(logger.CreateDetails(location, err))
+		log.Fatal("couldn't check balance")
 	}
 
 	nodeNft, err := nodeNftAbi.NewNodeNft(common.HexToAddress(Networks[CurrentNetwork].NFT), client)
@@ -175,7 +170,7 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newI
 		return logger.CreateDetails(location, err)
 	}
 
-	nodeId, err := nodeNft.GetNodeIDByAddress(&bind.CallOpts{}, shared.NodeAddr)
+	nodeId, err := nodeNft.GetNodeIDByAddress(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum))}, shared.NodeAddr)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -192,7 +187,7 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newI
 
 //StartMakingProofs checks reward value for stored file part and sends proof to smart contract if reward is enough.
 func StartMakingProofs(password string) {
-	const location = "blckChain.StartMining->"
+	const location = "blckChain.StartMakingProofs->"
 
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
@@ -200,29 +195,48 @@ func StartMakingProofs(password string) {
 	client, err := ethclient.Dial(Networks[CurrentNetwork].RPC)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
+		log.Fatal("couldn't set up a new network client")
 	}
 	defer client.Close()
 
 	posInstance, err := proofOfStAbi.NewProofOfStorage(common.HexToAddress(Networks[CurrentNetwork].PoS), client)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
+		log.Fatal("couldn't set up new proof of storage instance")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
-	defer cancel()
 
 	blockNum, err := client.BlockNumber(ctx)
 	if err != nil {
+		cancel()
 		logger.Log(logger.CreateDetails(location, err))
+	}
+
+	err = checkBalance(client, blockNum)
+	if err != nil {
+		cancel()
+		logger.Log(logger.CreateDetails(location, err))
+		log.Fatal("couldn't check balance")
+	}
+
+	baseDiff, err := posInstance.BaseDifficulty(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum))})
+	if err != nil {
+		cancel()
+		logger.Log(logger.CreateDetails(location, err))
+		log.Fatal("couldn't get base difficulty")
 	}
 
 	opts, err := initTrxOpts(ctx, client, shared.NodeAddr, password, blockNum)
 	if err != nil {
+		cancel()
 		logger.Log(logger.CreateDetails(location, err))
 		log.Fatal("couldn't initialize transaction options")
 	}
 
 	debug.FreeOSMemory()
+
+	cancel()
 
 	proofOpts = opts
 
@@ -232,7 +246,7 @@ func StartMakingProofs(password string) {
 
 	for {
 		fmt.Println("Sleeping...")
-		time.Sleep(time.Minute * 10)
+		time.Sleep(time.Second * 30)
 		storageProviderAddresses := []string{}
 
 		stat, err := os.Stat(pathToAccStorage)
@@ -275,36 +289,11 @@ func StartMakingProofs(password string) {
 			continue
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
-
-		blockNum, err := client.BlockNumber(ctx)
-		if err != nil {
-			cancel()
-			logger.Log(logger.CreateDetails(location, err))
-			continue
-		}
-
-		nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-1)))
-		if err != nil {
-			cancel()
-			logger.Log(logger.CreateDetails(location, err))
-			continue
-		}
-
-		cancel()
-
-		nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
-
-		if nodeBalanceIsLow {
-			fmt.Println("Insufficient funds for paying ", CurrentNetwork, " transaction fee. Balance:", nodeBalance)
-			fmt.Println("Please top up your balance")
-			continue
-		}
-
 		for _, spAddress := range storageProviderAddresses {
 			time.Sleep(time.Second * 5)
 
 			storageProviderAddr := common.HexToAddress(spAddress)
+
 			_, reward, userDifficulty, err := posInstance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
@@ -352,39 +341,15 @@ func StartMakingProofs(password string) {
 			rand.Seed(time.Now().UnixNano())
 			randomFilePos := rand.Intn(len(fileNames))
 
-			fileName := fileNames[randomFilePos]
-
-			shared.MU.Lock()
-
-			storedFile, storedFileBytes, err := nodeFile.Read(filepath.Join(pathToStorProviderFiles, fileName))
-			if err != nil {
-				shared.MU.Unlock()
-				logger.Log(logger.CreateDetails(location, err))
-				continue
+			if randomFilePos+3 < len(fileNames) {
+				fileNames = fileNames[randomFilePos : randomFilePos+3]
+			} else {
+				fileNames = fileNames[randomFilePos:]
 			}
 
-			storedFile.Close()
-			shared.MU.Unlock()
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 
-			proved, err := posInstance.VerifyFileProof(&bind.CallOpts{}, shared.NodeAddr, storedFileBytes[:eightKB], uint32(blockNum-6), userDifficulty)
-			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
-				continue
-			}
-
-			if !proved {
-				fmt.Println("Proof is not verified!")
-				continue
-			}
-
-			fmt.Println("Proof is verified")
-
-			fmt.Println("checking file:", fileName)
-			fmt.Println("Trying proof", fileName, "for reward:", reward)
-
-			ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
-
-			err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum, posInstance)
+			blockNum, err = client.BlockNumber(ctx)
 			if err != nil {
 				cancel()
 				logger.Log(logger.CreateDetails(location, err))
@@ -393,7 +358,76 @@ func StartMakingProofs(password string) {
 
 			cancel()
 
+			for _, fileName := range fileNames {
+				shared.MU.Lock()
+
+				storedFile, storedFileBytes, err := nodeFile.Read(filepath.Join(pathToStorProviderFiles, fileName))
+				if err != nil {
+					shared.MU.Unlock()
+					logger.Log(logger.CreateDetails(location, err))
+					continue
+				}
+
+				storedFile.Close()
+				shared.MU.Unlock()
+
+				blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-10)) // checking older blocknum to guarantee valid result
+				if err != nil {
+					logger.Log(logger.CreateDetails(location, err))
+				}
+
+				fileEightKB := make([]byte, eightKB)
+
+				copy(fileEightKB, storedFileBytes[:eightKB])
+
+				fileBytesAddrBlockHash := append(fileEightKB, shared.NodeAddr.Bytes()...)
+				fileProof := append(fileBytesAddrBlockHash, blockHash[:]...)
+
+				fileProofSha := sha256.Sum256(fileProof)
+
+				stringFileProof := hex.EncodeToString(fileProofSha[:])
+
+				stringFileProof = strings.TrimLeft(stringFileProof, "0") // leading zeroes lead to decoding errors
+
+				bigIntFromProof, err := hexutil.DecodeBig("0x" + stringFileProof)
+				if err != nil {
+					logger.Log(logger.CreateDetails(location, err))
+				}
+
+				remainder := bigIntFromProof.Rem(bigIntFromProof, baseDiff)
+
+				difficultyIsEnough := remainder.CmpAbs(userDifficulty) == -1
+
+				if !difficultyIsEnough {
+					fmt.Println("difficulty is not enough")
+					continue
+				}
+
+				fmt.Println("Trying proof", fileName, "for reward:", reward)
+
+				ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+
+				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-10, posInstance) // sending blocknum that we used for verifying proof
+				if err != nil {
+					cancel()
+					logger.Log(logger.CreateDetails(location, err))
+					continue
+				} else {
+					cancel()
+
+					fmt.Println("proof is sent")
+
+					err = checkBalance(client, blockNum)
+					if err != nil {
+						logger.Log(logger.CreateDetails(location, err))
+					}
+
+					break
+				}
+
+			}
 		}
+
 	}
 }
 
@@ -403,7 +437,7 @@ func StartMakingProofs(password string) {
 func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 	nodeAddr common.Address, spAddress common.Address, blockNum uint64, posInstance *proofOfStAbi.ProofOfStorage) error {
 	const location = "blckChain.sendProof->"
-	pathToFsTree := filepath.Join(paths.AccsDirPath, nodeAddr.String(), paths.StorageDirName, CurrentNetwork, spAddress.String(), paths.SpFsFilename)
+	pathToFsTree := filepath.Join(paths.StoragePaths[0], CurrentNetwork, spAddress.String(), paths.SpFsFilename)
 
 	shared.MU.Lock()
 
@@ -477,11 +511,9 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 		rootHashesEqual := bytes.Equal(fsRootHashBytes[:], contractRootHash[:])
 
 		if contractNonceIsBigger && !rootHashesEqual {
-			msg := fmt.Sprint("Fs root hash info is not valid", "fs nonce:", nonceInt, "contract nonce:", contractNonce, "\nfs root hash bytes", fsRootHashBytes, "contract root hash", contractRootHash)
-			fmt.Println(msg)
-			return logger.CreateDetails(location, errors.New(msg))
+			fmt.Println("fs root hash info is not valid!!!")
+			return logger.CreateDetails(location, errors.New("fs root hash info is not valid"))
 		}
-
 	}
 
 	treeToFsRoot = nil
@@ -503,38 +535,88 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 		return logger.CreateDetails(location, err)
 	}
 
+	fsRootNonceHash := sha256.Sum256(fsRootNonceBytes)
+
+	err = sign.Check(spAddress.String(), signedFSRootHash, fsRootNonceHash)
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
 	if signedFSRootHash[len(signedFSRootHash)-1] == 1 { //ecdsa version fix
 		signedFSRootHash[len(signedFSRootHash)-1] = 28
 	} else {
 		signedFSRootHash = signedFSRootHash[:64]
 	}
 
-	signatureIsValid, err := posInstance.IsValidSign(&bind.CallOpts{}, spAddress, fsRootNonceBytes, signedFSRootHash)
+	transactNonce, err := client.NonceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
 
-	if !signatureIsValid {
-		return logger.CreateDetails(location, errors.New(spAddress.String()+" signature is not valid"))
-	}
-
-	transactNonce, err := client.NonceAt(ctx, nodeAddr, big.NewInt(int64(blockNum)))
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	proofOpts.Nonce = big.NewInt(int64(transactNonce))
 	proofOpts.Context = ctx
+
+	bigIntNonce := big.NewInt(int64(transactNonce))
+
+	currentNonceIsLower := proofOpts.Nonce.Cmp(bigIntNonce) == -1
+
+	if currentNonceIsLower {
+		proofOpts.Nonce = big.NewInt(int64(transactNonce))
+	}
+
+	fmt.Println("transactNonce", transactNonce)
 
 	_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
+
 		debug.FreeOSMemory()
-		return logger.CreateDetails(location, err)
+
+		if err.Error() == "Transaction nonce is too low. Try incrementing the nonce." {
+			proofOpts.Nonce = proofOpts.Nonce.Add(proofOpts.Nonce, big.NewInt(int64(1)))
+
+			fmt.Println("Trying to prove with incremented nonce")
+
+			_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
+			if err != nil {
+				debug.FreeOSMemory()
+				return logger.CreateDetails(location, err)
+			}
+
+		} else {
+			debug.FreeOSMemory()
+			return logger.CreateDetails(location, err)
+		}
 	}
 
 	debug.FreeOSMemory()
 
 	proof = nil
+
+	return nil
+}
+
+// ====================================================================================
+
+func checkBalance(client *ethclient.Client, blockNum uint64) error {
+
+	const location = "blckChain.checkBalance->"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+
+	defer cancel()
+
+	nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
+	nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
+
+	if nodeBalanceIsLow {
+		fmt.Println("Insufficient funds for paying ", CurrentNetwork, " transaction fees. Balance:", nodeBalance)
+		fmt.Println("Please top up your balance")
+
+		os.Exit(0)
+	}
 
 	return nil
 }
@@ -564,7 +646,7 @@ func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.
 			acs := ks.Accounts()
 			for _, ac := range acs {
 				if ac.Address == a {
-					err := ks.TimedUnlock(ac, password, 1)
+					err := ks.TimedUnlock(ac, password, 3)
 					if err != nil {
 						return t, err
 					}

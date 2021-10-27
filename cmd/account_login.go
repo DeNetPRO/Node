@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"errors"
+	"runtime/debug"
 
 	"encoding/json"
 	"fmt"
@@ -39,6 +40,8 @@ var accountLoginCmd = &cobra.Command{
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(accLoginFatalError)
 		}
+
+		debug.FreeOSMemory()
 
 		pathToConfigDir := filepath.Join(paths.AccsDirPath, nodeAccount.Address.String(), paths.ConfDirName)
 
@@ -85,7 +88,7 @@ var accountLoginCmd = &cobra.Command{
 
 			blckChain.CurrentNetwork = nodeConfig.Network
 
-			_, registeredInNetwork := nodeConfig.RegisteredInNetworks[nodeConfig.Network]
+			registeredInNetwork := nodeConfig.RegisteredInNetworks[nodeConfig.Network]
 
 			if !registeredInNetwork {
 
@@ -101,6 +104,12 @@ var accountLoginCmd = &cobra.Command{
 				}
 
 				nodeConfig.RegisteredInNetworks[nodeConfig.Network] = true
+
+				err = config.Save(confFile, nodeConfig)
+				if err != nil {
+					logger.Log(logger.CreateDetails(location, err))
+					log.Fatal(ipUpdateFatalError)
+				}
 
 			}
 
