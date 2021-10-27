@@ -347,6 +347,17 @@ func StartMakingProofs(password string) {
 				fileNames = fileNames[randomFilePos:]
 			}
 
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+
+			blockNum, err = client.BlockNumber(ctx)
+			if err != nil {
+				cancel()
+				logger.Log(logger.CreateDetails(location, err))
+				continue
+			}
+
+			cancel()
+
 			for _, fileName := range fileNames {
 				shared.MU.Lock()
 
@@ -360,18 +371,8 @@ func StartMakingProofs(password string) {
 				storedFile.Close()
 				shared.MU.Unlock()
 
-				ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
-
-				blockNum, err = client.BlockNumber(ctx)
-				if err != nil {
-					cancel()
-					logger.Log(logger.CreateDetails(location, err))
-					continue
-				}
-
 				blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-10)) // checking older blocknum to guarantee valid result
 				if err != nil {
-					cancel()
 					logger.Log(logger.CreateDetails(location, err))
 				}
 
@@ -390,7 +391,6 @@ func StartMakingProofs(password string) {
 
 				bigIntFromProof, err := hexutil.DecodeBig("0x" + stringFileProof)
 				if err != nil {
-					cancel()
 					logger.Log(logger.CreateDetails(location, err))
 				}
 
@@ -399,12 +399,13 @@ func StartMakingProofs(password string) {
 				difficultyIsEnough := remainder.CmpAbs(userDifficulty) == -1
 
 				if !difficultyIsEnough {
-					cancel()
 					fmt.Println("difficulty is not enough")
 					continue
 				}
 
 				fmt.Println("Trying proof", fileName, "for reward:", reward)
+
+				ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 
 				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-10, posInstance) // sending blocknum that we used for verifying proof
 				if err != nil {
