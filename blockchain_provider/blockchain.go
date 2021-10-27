@@ -170,7 +170,7 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newI
 		return logger.CreateDetails(location, err)
 	}
 
-	nodeId, err := nodeNft.GetNodeIDByAddress(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum - 6))}, shared.NodeAddr)
+	nodeId, err := nodeNft.GetNodeIDByAddress(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum))}, shared.NodeAddr)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -213,6 +213,8 @@ func StartMakingProofs(password string) {
 		logger.Log(logger.CreateDetails(location, err))
 	}
 
+	blockNum = blockNum - 6
+
 	err = checkBalance(client, blockNum)
 	if err != nil {
 		cancel()
@@ -220,14 +222,14 @@ func StartMakingProofs(password string) {
 		log.Fatal("couldn't check balance")
 	}
 
-	baseDiff, err := posInstance.BaseDifficulty(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum - 6))})
+	baseDiff, err := posInstance.BaseDifficulty(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum))})
 	if err != nil {
 		cancel()
 		logger.Log(logger.CreateDetails(location, err))
 		log.Fatal("couldn't get base difficulty")
 	}
 
-	opts, err := initTrxOpts(ctx, client, shared.NodeAddr, password, blockNum-6)
+	opts, err := initTrxOpts(ctx, client, shared.NodeAddr, password, blockNum)
 	if err != nil {
 		cancel()
 		logger.Log(logger.CreateDetails(location, err))
@@ -300,7 +302,7 @@ func StartMakingProofs(password string) {
 
 		cancel()
 
-		blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-6))
+		blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum))
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 		}
@@ -407,7 +409,7 @@ func StartMakingProofs(password string) {
 
 				ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 
-				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-6, posInstance)
+				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum, posInstance)
 				if err != nil {
 					cancel()
 					logger.Log(logger.CreateDetails(location, err))
@@ -442,7 +444,7 @@ func checkBalance(client *ethclient.Client, blockNum uint64) error {
 
 	defer cancel()
 
-	nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-6)))
+	nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
