@@ -101,16 +101,13 @@ func RegisterNode(ctx context.Context, address, password, ip, port string) error
 		return logger.CreateDetails(location, err)
 	}
 
-	balance, err := client.BalanceAt(ctx, common.HexToAddress(address), big.NewInt(int64(blockNum-1)))
+	balanceIsLow, err := checkBalance(client, blockNum)
 	if err != nil {
-		return logger.CreateDetails(location, err)
+		logger.Log(logger.CreateDetails(location, err))
+		log.Fatal("couldn't check balance")
 	}
 
-	balanceIsInsufficient := balance.Cmp(big.NewInt(200000000000000)) == -1
-
-	if balanceIsInsufficient {
-		fmt.Println("Insufficient funds for registering in ", CurrentNetwork, ". Balance:", balance)
-		fmt.Println("Please top up your balance")
+	if balanceIsLow {
 		os.Exit(0)
 	}
 
@@ -220,6 +217,16 @@ func StartMakingProofs(password string) {
 		logger.Log(logger.CreateDetails(location, err))
 	}
 
+	balanceIsLow, err := checkBalance(client, blockNum)
+	if err != nil {
+		logger.Log(logger.CreateDetails(location, err))
+		log.Fatal("couldn't check balance")
+	}
+
+	if balanceIsLow {
+		os.Exit(0)
+	}
+
 	baseDiff, err := posInstance.BaseDifficulty(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum - 6))})
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
@@ -302,26 +309,11 @@ func StartMakingProofs(password string) {
 			continue
 		}
 
+		cancel()
+
 		blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-6))
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
-		}
-
-		nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-6)))
-		if err != nil {
-			cancel()
-			logger.Log(logger.CreateDetails(location, err))
-			continue
-		}
-
-		cancel()
-
-		nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
-
-		if nodeBalanceIsLow {
-			fmt.Println("Insufficient funds for paying ", CurrentNetwork, " transaction fee. Balance:", nodeBalance)
-			fmt.Println("Please top up your balance")
-			continue
 		}
 
 		for _, spAddress := range storageProviderAddresses {
@@ -434,6 +426,16 @@ func StartMakingProofs(password string) {
 				} else {
 					cancel()
 
+					balanceIsLow, err := checkBalance(client, blockNum)
+					if err != nil {
+						logger.Log(logger.CreateDetails(location, err))
+						log.Fatal("couldn't check balance")
+					}
+
+					if balanceIsLow {
+						os.Exit(0)
+					}
+
 					break
 				}
 
@@ -441,6 +443,33 @@ func StartMakingProofs(password string) {
 		}
 
 	}
+}
+
+// ====================================================================================
+
+func checkBalance(client *ethclient.Client, blockNum uint64) (bool, error) {
+
+	const location = "blckChain.checkBalance->"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+
+	defer cancel()
+
+	nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum-6)))
+	if err != nil {
+		return false, logger.CreateDetails(location, err)
+	}
+
+	nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
+
+	if nodeBalanceIsLow {
+		fmt.Println("Insufficient funds for paying ", CurrentNetwork, " transaction fees. Balance:", nodeBalance)
+		fmt.Println("Please top up your balance")
+
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // ====================================================================================
@@ -567,12 +596,11 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 	_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
 		debug.FreeOSMemory()
+		proofOpts.Nonce = proofOpts.Nonce.Add(proofOpts.Nonce, big.NewInt(1))
 		return logger.CreateDetails(location, err)
 	}
 
 	debug.FreeOSMemory()
-
-	proofOpts.Nonce = proofOpts.Nonce.Add(proofOpts.Nonce, big.NewInt(1))
 
 	proof = nil
 
