@@ -194,7 +194,7 @@ func UpdateNodeInfo(ctx context.Context, nodeAddr common.Address, password, newI
 
 //StartMakingProofs checks reward value for stored file part and sends proof to smart contract if reward is enough.
 func StartMakingProofs(password string) {
-	const location = "blckChain.StartMining->"
+	const location = "blckChain.StartMakingProofs->"
 
 	regAddr := regexp.MustCompile("^0x[0-9a-fA-F]{40}$")
 	regFileName := regexp.MustCompile("[0-9A-Za-z_]")
@@ -320,6 +320,8 @@ func StartMakingProofs(password string) {
 			time.Sleep(time.Second * 5)
 
 			storageProviderAddr := common.HexToAddress(spAddress)
+			fmt.Println(spAddress, storageProviderAddr)
+
 			_, reward, userDifficulty, err := posInstance.GetUserRewardInfo(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum - 6))}, storageProviderAddr) // first value is paymentToken
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
