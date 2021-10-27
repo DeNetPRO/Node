@@ -196,9 +196,11 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	KB := int64(1024)
+	fmt.Printf("%+v\n", dirStat)
 
-	fmt.Println("storage GB", dirStat.Size()/(KB*KB*KB))
+	// KB := int64(1024)
+
+	// fmt.Println("storage GB", dirStat.Size()/(KB*KB*KB))
 
 	err = spFiles.Save(req, spData, pathToSpFiles)
 	if err != nil {
