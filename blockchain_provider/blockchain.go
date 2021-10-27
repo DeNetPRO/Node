@@ -389,6 +389,9 @@ func StartMakingProofs(password string) {
 
 				stringFileProof := hex.EncodeToString(fileProofSha[:])
 
+				fmt.Println("stringFileProof", stringFileProof)
+				fmt.Println("blockHash", blockHash)
+
 				stringFileProof = strings.TrimLeft(stringFileProof, "0") // leading zeroes lead to decoding errors
 
 				bigIntFromProof, err := hexutil.DecodeBig("0x" + stringFileProof)
