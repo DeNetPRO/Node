@@ -564,24 +564,23 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 
 	_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
+		logger.Log(logger.CreateDetails(location, err))
+	}
 
-		if err.Error() == "Transaction nonce is too low. Try incrementing the nonce." {
-			proofOpts.Nonce = proofOpts.Nonce.Add(proofOpts.Nonce, big.NewInt(int64(1)))
+	debug.FreeOSMemory()
 
-			_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
-			if err != nil {
-				debug.FreeOSMemory()
-				return logger.CreateDetails(location, err)
-			}
+	if err.Error() == "Transaction nonce is too low. Try incrementing the nonce." {
+		proofOpts.Nonce = proofOpts.Nonce.Add(proofOpts.Nonce, big.NewInt(int64(1)))
 
-		} else {
+		_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
+		if err != nil {
 			debug.FreeOSMemory()
 			return logger.CreateDetails(location, err)
 		}
 
+	} else {
+		return logger.CreateDetails(location, err)
 	}
-
-	debug.FreeOSMemory()
 
 	proof = nil
 
