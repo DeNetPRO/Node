@@ -583,6 +583,8 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 		}
 	}
 
+	debug.FreeOSMemory()
+
 	proof = nil
 
 	return nil
