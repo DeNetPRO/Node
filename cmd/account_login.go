@@ -105,6 +105,12 @@ var accountLoginCmd = &cobra.Command{
 
 				nodeConfig.RegisteredInNetworks[nodeConfig.Network] = true
 
+				err = config.Save(confFile, nodeConfig)
+				if err != nil {
+					logger.Log(logger.CreateDetails(location, err))
+					log.Fatal(ipUpdateFatalError)
+				}
+
 			}
 
 			if upnp.InternetDevice != nil {
