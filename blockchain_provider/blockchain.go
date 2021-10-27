@@ -589,6 +589,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 			}
 
 		} else {
+			debug.FreeOSMemory()
 			return logger.CreateDetails(location, err)
 		}
 	}
