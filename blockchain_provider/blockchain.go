@@ -341,8 +341,10 @@ func StartMakingProofs(password string) {
 			rand.Seed(time.Now().UnixNano())
 			randomFilePos := rand.Intn(len(fileNames))
 
-			if randomFilePos+3 < len(fileNames) {
-				fileNames = fileNames[randomFilePos : randomFilePos+3]
+			quater := len(fileNames) / 4
+
+			if randomFilePos+quater < len(fileNames) {
+				fileNames = fileNames[randomFilePos : randomFilePos+quater]
 			} else {
 				fileNames = fileNames[randomFilePos:]
 			}
