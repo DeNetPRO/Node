@@ -319,7 +319,7 @@ func StartMakingProofs(password string) {
 
 			storageProviderAddr := common.HexToAddress(spAddress)
 
-			_, reward, userDifficulty, err := posInstance.GetUserRewardInfo(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum - 6))}, storageProviderAddr) // first value is paymentToken
+			_, reward, userDifficulty, err := posInstance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				continue
@@ -423,6 +423,8 @@ func StartMakingProofs(password string) {
 					continue
 				} else {
 					cancel()
+
+					fmt.Println("successfully proved")
 
 					err = checkBalance(client, blockNum)
 					if err != nil {
