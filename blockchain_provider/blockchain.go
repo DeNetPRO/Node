@@ -289,22 +289,6 @@ func StartMakingProofs(password string) {
 			continue
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
-
-		blockNum, err := client.BlockNumber(ctx)
-		if err != nil {
-			cancel()
-			logger.Log(logger.CreateDetails(location, err))
-			continue
-		}
-
-		cancel()
-
-		blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-10)) // checking older blocknum to guarantee valid result
-		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
-		}
-
 		for _, spAddress := range storageProviderAddresses {
 			time.Sleep(time.Second * 5)
 
@@ -376,6 +360,21 @@ func StartMakingProofs(password string) {
 				storedFile.Close()
 				shared.MU.Unlock()
 
+				ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
+
+				blockNum, err = client.BlockNumber(ctx)
+				if err != nil {
+					cancel()
+					logger.Log(logger.CreateDetails(location, err))
+					continue
+				}
+
+				blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-10)) // checking older blocknum to guarantee valid result
+				if err != nil {
+					cancel()
+					logger.Log(logger.CreateDetails(location, err))
+				}
+
 				fileEightKB := make([]byte, eightKB)
 
 				copy(fileEightKB, storedFileBytes[:eightKB])
@@ -391,6 +390,7 @@ func StartMakingProofs(password string) {
 
 				bigIntFromProof, err := hexutil.DecodeBig("0x" + stringFileProof)
 				if err != nil {
+					cancel()
 					logger.Log(logger.CreateDetails(location, err))
 				}
 
@@ -399,16 +399,12 @@ func StartMakingProofs(password string) {
 				difficultyIsEnough := remainder.CmpAbs(userDifficulty) == -1
 
 				if !difficultyIsEnough {
+					cancel()
 					fmt.Println("difficulty is not enough")
 					continue
 				}
 
-				fmt.Println("blockNum", blockNum)
-				fmt.Println("blockHash", blockHash)
-
 				fmt.Println("Trying proof", fileName, "for reward:", reward)
-
-				ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 
 				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-10, posInstance) // sending blocknum that we used for verifying proof
 				if err != nil {
