@@ -417,12 +417,11 @@ func StartMakingProofs(password string) {
 				} else {
 					cancel()
 
-					fmt.Println("successfully proved")
+					fmt.Println("proof is sent")
 
 					err = checkBalance(client, blockNum)
 					if err != nil {
 						logger.Log(logger.CreateDetails(location, err))
-						log.Fatal("couldn't check balance")
 					}
 
 					break
@@ -570,6 +569,8 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 
 		if err.Error() == "Transaction nonce is too low. Try incrementing the nonce." {
 			proofOpts.Nonce = proofOpts.Nonce.Add(proofOpts.Nonce, big.NewInt(int64(1)))
+
+			fmt.Println("Trying to prove with incremented nonce")
 
 			_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 			if err != nil {
