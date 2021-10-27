@@ -405,8 +405,9 @@ func StartMakingProofs(password string) {
 					continue
 				}
 
-				fmt.Println("stringFileProof", stringFileProof)
+				fmt.Println("blockNum", blockNum)
 				fmt.Println("blockHash", blockHash)
+				fmt.Println("fileProof", hex.EncodeToString(fileProof))
 
 				fmt.Println("Trying proof", fileName, "for reward:", reward)
 
