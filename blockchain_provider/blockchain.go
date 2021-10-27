@@ -320,7 +320,6 @@ func StartMakingProofs(password string) {
 			time.Sleep(time.Second * 5)
 
 			storageProviderAddr := common.HexToAddress(spAddress)
-			fmt.Println(spAddress, storageProviderAddr)
 
 			_, reward, userDifficulty, err := posInstance.GetUserRewardInfo(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum - 6))}, storageProviderAddr) // first value is paymentToken
 			if err != nil {
