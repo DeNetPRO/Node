@@ -236,16 +236,7 @@ func StartMakingProofs(password string) {
 
 	debug.FreeOSMemory()
 
-	transactNonce, err := client.NonceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
-	if err != nil {
-		cancel()
-		logger.Log(logger.CreateDetails(location, err))
-		log.Fatal("couldn't get transact nonce")
-	}
-
 	cancel()
-
-	opts.Nonce = big.NewInt(int64(transactNonce))
 
 	proofOpts = opts
 
@@ -585,10 +576,16 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 		signedFSRootHash = signedFSRootHash[:64]
 	}
 
-	proofOpts.Context = ctx
-	proofOpts.Nonce = proofOpts.Nonce.Add(proofOpts.Nonce, big.NewInt(1))
+	transactNonce, err := client.NonceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
+	if err != nil {
+		logger.Log(logger.CreateDetails(location, err))
+		return logger.CreateDetails(location, err)
+	}
 
-	fmt.Println("transactNonce", proofOpts.Nonce)
+	proofOpts.Context = ctx
+	proofOpts.Nonce = big.NewInt(int64(transactNonce))
+
+	fmt.Println("transactNonce", transactNonce)
 
 	_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
