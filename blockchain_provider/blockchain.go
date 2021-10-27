@@ -302,7 +302,7 @@ func StartMakingProofs(password string) {
 
 		cancel()
 
-		blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-5))
+		blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-5)) // checking older blocknum to guarantee valid result
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 		}
@@ -412,7 +412,7 @@ func StartMakingProofs(password string) {
 
 				ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
 
-				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-5, posInstance)
+				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-5, posInstance) // sending blocknum that we used for verifying proof
 				if err != nil {
 					cancel()
 					logger.Log(logger.CreateDetails(location, err))
@@ -645,7 +645,7 @@ func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.
 			acs := ks.Accounts()
 			for _, ac := range acs {
 				if ac.Address == a {
-					err := ks.TimedUnlock(ac, password, 1)
+					err := ks.TimedUnlock(ac, password, 3)
 					if err != nil {
 						return t, err
 					}
