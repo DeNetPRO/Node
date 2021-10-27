@@ -492,7 +492,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 
 	fsRootHashBytes := proof[len(proof)-1]
 
-	contractRootHash, contractNonce, err := posInstance.GetUserRootHash(&bind.CallOpts{BlockNumber: big.NewInt(int64(blockNum))}, spAddress)
+	contractRootHash, contractNonce, err := posInstance.GetUserRootHash(&bind.CallOpts{}, spAddress)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
