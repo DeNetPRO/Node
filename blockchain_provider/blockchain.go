@@ -606,8 +606,9 @@ func checkBalance(client *ethclient.Client, blockNum uint64) error {
 	nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
 
 	if nodeBalanceIsLow {
-		fmt.Println("Insufficient funds for paying ", CurrentNetwork, " transaction fees. Balance:", nodeBalance)
+		fmt.Println("Insufficient funds for paying", CurrentNetwork, "transaction fees. Balance:", nodeBalance)
 		fmt.Println("Please top up your balance")
+		fmt.Println("Exited")
 
 		os.Exit(0)
 	}

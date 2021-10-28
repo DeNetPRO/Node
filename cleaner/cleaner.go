@@ -38,7 +38,6 @@ func Start() {
 
 			stat, err := os.Stat(pathToAccStorage)
 			if err != nil {
-				fmt.Println(err)
 				err = errs.CheckStatErr(err)
 				if err != nil {
 					logger.Log(logger.CreateDetails(location, err))
