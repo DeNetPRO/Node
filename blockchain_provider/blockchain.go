@@ -101,7 +101,7 @@ func RegisterNode(ctx context.Context, address, password, ip, port string) error
 		return logger.CreateDetails(location, err)
 	}
 
-	err = checkBalance(client, blockNum)
+	_, err = checkBalance(client, blockNum, true)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		log.Fatal("couldn't check balance")
@@ -213,7 +213,7 @@ func StartMakingProofs(password string) {
 		logger.Log(logger.CreateDetails(location, err))
 	}
 
-	err = checkBalance(client, blockNum)
+	_, err = checkBalance(client, blockNum, true)
 	if err != nil {
 		cancel()
 		logger.Log(logger.CreateDetails(location, err))
@@ -421,11 +421,6 @@ func StartMakingProofs(password string) {
 
 					fmt.Println("proof is sent")
 
-					err = checkBalance(client, blockNum)
-					if err != nil {
-						logger.Log(logger.CreateDetails(location, err))
-					}
-
 					break
 				}
 
@@ -442,6 +437,16 @@ func sendProof(client *ethclient.Client, fileBytes []byte, nodeAddr common.Addre
 	blockNum uint64, posInstance *proofOfStAbi.ProofOfStorage) error {
 
 	const location = "blckChain.sendProof->"
+
+	balanceIsLow, err := checkBalance(client, blockNum, false)
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
+	if balanceIsLow {
+		return logger.CreateDetails(location, errors.New("not sufficient funds for transactions"))
+	}
+
 	pathToFsTree := filepath.Join(paths.StoragePaths[0], CurrentNetwork, spAddress.String(), paths.SpFsFilename)
 
 	shared.MU.Lock()
@@ -591,17 +596,17 @@ func sendProof(client *ethclient.Client, fileBytes []byte, nodeAddr common.Addre
 
 // ====================================================================================
 
-func checkBalance(client *ethclient.Client, blockNum uint64) error {
+func checkBalance(client *ethclient.Client, blockNum uint64, exitOnLow bool) (bool, error) {
 
 	const location = "blckChain.checkBalance->"
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
 
 	defer cancel()
 
 	nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
 	if err != nil {
-		return logger.CreateDetails(location, err)
+		return false, logger.CreateDetails(location, err)
 	}
 
 	nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
@@ -609,12 +614,17 @@ func checkBalance(client *ethclient.Client, blockNum uint64) error {
 	if nodeBalanceIsLow {
 		fmt.Println("Insufficient funds for paying", CurrentNetwork, "transaction fees. Balance:", nodeBalance)
 		fmt.Println("Please top up your balance")
-		fmt.Println("Exited")
 
-		os.Exit(0)
+		if exitOnLow {
+			fmt.Println("Exited")
+			os.Exit(0)
+		} else {
+			return true, nil
+		}
+
 	}
 
-	return nil
+	return false, nil
 }
 
 // ====================================================================================
