@@ -360,6 +360,12 @@ func StartMakingProofs(password string) {
 
 			cancel()
 
+			blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-10)) // checking older blocknum to guarantee valid result
+			if err != nil {
+				logger.Log(logger.CreateDetails(location, err))
+				continue
+			}
+
 			for _, fileName := range fileNames {
 				shared.MU.Lock()
 
@@ -372,11 +378,6 @@ func StartMakingProofs(password string) {
 
 				storedFile.Close()
 				shared.MU.Unlock()
-
-				blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-10)) // checking older blocknum to guarantee valid result
-				if err != nil {
-					logger.Log(logger.CreateDetails(location, err))
-				}
 
 				fileEightKB := make([]byte, eightKB)
 
