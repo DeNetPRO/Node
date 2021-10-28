@@ -53,7 +53,7 @@ var Networks = map[string]NtwrkParams{
 		NFT: "0x8De6417e4738a41619d0D13ef0661563f1A918ec",
 		PoS: "0x60828cfBBFbcB474c913FaDE151AD4AFa9a07919",
 	},
-	"polygon": {
+	"mumbai": {
 		RPC: "https://rpc-mumbai.maticvigil.com",
 		NFT: "0xBb86dcf291419d3F5b4B2211122D0E6fCB693777",
 		PoS: "0x389E8fE67c73551043184F740126C91866c0fB78",

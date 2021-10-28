@@ -154,7 +154,7 @@ func SelectNetwork() (string, error) {
 
 	fmt.Println("Choose a network")
 
-	networks := [2]string{"kovan", "polygon"}
+	networks := [2]string{"kovan", "mumbai"}
 
 	for i, network := range networks {
 		fmt.Println(i+1, network)
