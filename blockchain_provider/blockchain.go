@@ -552,19 +552,6 @@ func sendProof(client *ethclient.Client, fileBytes []byte, nodeAddr common.Addre
 		signedFSRootHash = signedFSRootHash[:64]
 	}
 
-	// transactNonce, err := client.NonceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
-	// if err != nil {
-	// 	return logger.CreateDetails(location, err)
-	// }
-
-	// bigIntNonce := big.NewInt(int64(transactNonce))
-
-	// currentNonceIsLower := proofOpts.Nonce.Cmp(bigIntNonce) == -1
-
-	// if currentNonceIsLower {
-	// 	proofOpts.Nonce = big.NewInt(int64(transactNonce))
-	// }
-
 	fmt.Println("transactNonce", proofOpts.Nonce)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
