@@ -265,6 +265,7 @@ func StartMakingProofs(password string) {
 
 		if stat == nil {
 			fmt.Println("no files from", CurrentNetwork, "to proof")
+			time.Sleep(time.Minute * 1)
 			continue
 		}
 
