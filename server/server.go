@@ -19,12 +19,14 @@ import (
 	"sort"
 	"strconv"
 
+	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
 	fsysInfo "git.denetwork.xyz/DeNet/dfile-secondary-node/fsys_info"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	memInfo "git.denetwork.xyz/DeNet/dfile-secondary-node/mem_info"
+
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
@@ -160,6 +162,13 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	if network == "" {
 		network = "kovan"
+	}
+
+	_, netExists := blckChain.Networks[network]
+
+	if !netExists {
+		fmt.Println("Network is not supported")
+		http.Error(w, errs.NetworkCheck.Error(), http.StatusBadRequest)
 	}
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)

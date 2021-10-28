@@ -25,7 +25,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const accLoginFatalError = "Error while account log in"
+const accLoginFatalError = "Error while account log in "
 const ipUpdateFatalError = "Couldn't update public ip info"
 
 // AccountLoginCmd is executed when "login" flag is passed after "account" flag and is used for logging in to an account.
@@ -83,7 +83,7 @@ var accountLoginCmd = &cobra.Command{
 			_, supportedNet := blckChain.Networks[nodeConfig.Network]
 
 			if !supportedNet {
-				log.Fatal(accLoginFatalError + ": unsupported network in config file")
+				log.Fatal(accLoginFatalError + errs.NetworkCheck.Error())
 			}
 
 			blckChain.CurrentNetwork = nodeConfig.Network

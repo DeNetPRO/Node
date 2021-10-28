@@ -7,6 +7,7 @@ import (
 
 var (
 	WrongFile             = errors.New("wrong file")
+	NetworkCheck          = errors.New("unsupported network")
 	FileSaving            = errors.New("file saving failed")
 	UpdateFsInfo          = errors.New("fs info update failed")
 	WrongSignature        = errors.New("wrong signature")
