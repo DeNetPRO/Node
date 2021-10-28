@@ -167,7 +167,6 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	_, netExists := blckChain.Networks[network]
 
 	if !netExists {
-		fmt.Println("Network is not supported")
 		http.Error(w, errs.NetworkCheck.Error(), http.StatusBadRequest)
 	}
 
@@ -265,6 +264,12 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		network = "kovan"
 	}
 
+	_, netExists := blckChain.Networks[network]
+
+	if !netExists {
+		http.Error(w, errs.NetworkCheck.Error(), http.StatusBadRequest)
+	}
+
 	if spAddress == "" || fileKey == "" || signatureFromReq == "" {
 		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
 		http.Error(w, errs.InvalidArgument.Error(), http.StatusBadRequest)
@@ -305,6 +310,13 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	if network == "" {
 		network = "kovan"
+	}
+
+	_, netExists := blckChain.Networks[network]
+
+	if !netExists {
+		fmt.Println("Network is not supported")
+		http.Error(w, errs.NetworkCheck.Error(), http.StatusBadRequest)
 	}
 
 	if spAddress == "" || signedFsys == "" {
