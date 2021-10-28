@@ -205,7 +205,7 @@ func StartMakingProofs(password string) {
 		log.Fatal("couldn't set up new proof of storage instance")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
 
 	blockNum, err := client.BlockNumber(ctx)
 	if err != nil {
@@ -227,7 +227,7 @@ func StartMakingProofs(password string) {
 		log.Fatal("couldn't get base difficulty")
 	}
 
-	opts, err := initTrxOpts(ctx, client, shared.NodeAddr, password, blockNum)
+	proofOpts, err = initTrxOpts(ctx, client, shared.NodeAddr, password, blockNum)
 	if err != nil {
 		cancel()
 		logger.Log(logger.CreateDetails(location, err))
@@ -236,9 +236,16 @@ func StartMakingProofs(password string) {
 
 	debug.FreeOSMemory()
 
+	transactNonce, err := client.NonceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
+	if err != nil {
+		cancel()
+		logger.Log(logger.CreateDetails(location, err))
+		log.Fatal("couldn't get transaction nonce")
+	}
+
 	cancel()
 
-	proofOpts = opts
+	proofOpts.Nonce = big.NewInt(int64(transactNonce))
 
 	fmt.Println(CurrentNetwork, "network selected")
 
@@ -405,15 +412,11 @@ func StartMakingProofs(password string) {
 
 				fmt.Println("Trying proof", fileName, "for reward:", reward)
 
-				ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
-
-				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, common.HexToAddress(spAddress), blockNum-10, posInstance) // sending blocknum that we used for verifying proof
+				err = sendProof(client, storedFileBytes, shared.NodeAddr, common.HexToAddress(spAddress), blockNum-10, posInstance) // sending blocknum that we used for verifying proof
 				if err != nil {
-					cancel()
 					logger.Log(logger.CreateDetails(location, err))
 					continue
 				} else {
-					cancel()
 
 					fmt.Println("proof is sent")
 
@@ -434,8 +437,9 @@ func StartMakingProofs(password string) {
 // ====================================================================================
 
 //SendProof checks Storage Providers's file system root hash and nounce info and sends proof to smart contract.
-func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
-	nodeAddr common.Address, spAddress common.Address, blockNum uint64, posInstance *proofOfStAbi.ProofOfStorage) error {
+func sendProof(client *ethclient.Client, fileBytes []byte, nodeAddr common.Address, spAddress common.Address,
+	blockNum uint64, posInstance *proofOfStAbi.ProofOfStorage) error {
+
 	const location = "blckChain.sendProof->"
 	pathToFsTree := filepath.Join(paths.StoragePaths[0], CurrentNetwork, spAddress.String(), paths.SpFsFilename)
 
@@ -548,22 +552,25 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 		signedFSRootHash = signedFSRootHash[:64]
 	}
 
-	transactNonce, err := client.NonceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
+	// transactNonce, err := client.NonceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
+	// if err != nil {
+	// 	return logger.CreateDetails(location, err)
+	// }
+
+	// bigIntNonce := big.NewInt(int64(transactNonce))
+
+	// currentNonceIsLower := proofOpts.Nonce.Cmp(bigIntNonce) == -1
+
+	// if currentNonceIsLower {
+	// 	proofOpts.Nonce = big.NewInt(int64(transactNonce))
+	// }
+
+	fmt.Println("transactNonce", proofOpts.Nonce)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
 
 	proofOpts.Context = ctx
-
-	bigIntNonce := big.NewInt(int64(transactNonce))
-
-	currentNonceIsLower := proofOpts.Nonce.Cmp(bigIntNonce) == -1
-
-	if currentNonceIsLower {
-		proofOpts.Nonce = big.NewInt(int64(transactNonce))
-	}
-
-	fmt.Println("transactNonce", transactNonce)
 
 	_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
@@ -588,8 +595,7 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 	}
 
 	debug.FreeOSMemory()
-
-	proof = nil
+	proofOpts.Nonce = proofOpts.Nonce.Add(proofOpts.Nonce, big.NewInt(int64(1)))
 
 	return nil
 }
