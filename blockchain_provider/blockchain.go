@@ -245,8 +245,6 @@ func StartMakingProofs(password string) {
 	pathToAccStorage := filepath.Join(paths.StoragePaths[0], CurrentNetwork)
 
 	for {
-		fmt.Println("Sleeping...")
-		time.Sleep(time.Second * 30)
 		storageProviderAddresses := []string{}
 
 		stat, err := os.Stat(pathToAccStorage)
@@ -290,11 +288,8 @@ func StartMakingProofs(password string) {
 		}
 
 		for _, spAddress := range storageProviderAddresses {
-			time.Sleep(time.Second * 5)
 
-			storageProviderAddr := common.HexToAddress(spAddress)
-
-			_, reward, userDifficulty, err := posInstance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
+			_, reward, userDifficulty, err := posInstance.GetUserRewardInfo(&bind.CallOpts{}, common.HexToAddress(spAddress)) // first value is paymentToken
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				continue
@@ -302,7 +297,7 @@ func StartMakingProofs(password string) {
 
 			fileNames := []string{}
 
-			pathToStorProviderFiles := filepath.Join(pathToAccStorage, storageProviderAddr.String())
+			pathToStorProviderFiles := filepath.Join(pathToAccStorage, spAddress)
 
 			err = filepath.WalkDir(pathToStorProviderFiles,
 				func(path string, info fs.DirEntry, err error) error {
@@ -410,7 +405,7 @@ func StartMakingProofs(password string) {
 
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 
-				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-10, posInstance) // sending blocknum that we used for verifying proof
+				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, common.HexToAddress(spAddress), blockNum-10, posInstance) // sending blocknum that we used for verifying proof
 				if err != nil {
 					cancel()
 					logger.Log(logger.CreateDetails(location, err))
