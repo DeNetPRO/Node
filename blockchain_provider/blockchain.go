@@ -590,6 +590,7 @@ func sendProof(client *ethclient.Client, fileBytes []byte, nodeAddr common.Addre
 
 		} else {
 			debug.FreeOSMemory()
+			proofOpts.Nonce = proofOpts.Nonce.Add(proofOpts.Nonce, big.NewInt(int64(1)))
 			return logger.CreateDetails(location, err)
 		}
 	}
