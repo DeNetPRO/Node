@@ -289,6 +289,8 @@ func StartMakingProofs(password string) {
 
 		for _, spAddress := range storageProviderAddresses {
 
+			time.Sleep(time.Second * 10)
+
 			_, reward, userDifficulty, err := posInstance.GetUserRewardInfo(&bind.CallOpts{}, common.HexToAddress(spAddress)) // first value is paymentToken
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
