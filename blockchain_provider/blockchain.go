@@ -48,6 +48,11 @@ type NtwrkParams struct {
 }
 
 var Networks = map[string]NtwrkParams{
+	"polygon": {
+		RPC: "https://polygon-rpc.com",
+		NFT: "0xfe1f5CB22cF4972584c6a0938FEAF90c597b567b",
+		PoS: "0x70c478be3d87ab921e0168137f5abe53b5812fc8",
+	},
 	"kovan": {
 		RPC: "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f",
 		NFT: "0x8De6417e4738a41619d0D13ef0661563f1A918ec",
