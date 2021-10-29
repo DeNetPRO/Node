@@ -313,6 +313,7 @@ func StartMakingProofs(password string) {
 				func(path string, info fs.DirEntry, err error) error {
 					if err != nil {
 						logger.Log(logger.CreateDetails(location, err))
+						return err
 					}
 
 					if len(info.Name()) == 64 && regFileName.MatchString(info.Name()) {
