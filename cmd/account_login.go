@@ -123,7 +123,9 @@ var accountLoginCmd = &cobra.Command{
 
 					fmt.Println("Updating public ip info...")
 
-					ctx, _ := context.WithTimeout(context.Background(), time.Minute)
+					ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+					defer cancel()
 
 					err = blckChain.UpdateNodeInfo(ctx, nodeAccount.Address, password, nodeConfig.IpAddress, nodeConfig.HTTPPort)
 					if err != nil {

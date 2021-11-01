@@ -168,6 +168,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 
 	if !netExists {
 		http.Error(w, errs.NetworkCheck.Error(), http.StatusBadRequest)
+		return
 	}
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
@@ -268,6 +269,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 
 	if !netExists {
 		http.Error(w, errs.NetworkCheck.Error(), http.StatusBadRequest)
+		return
 	}
 
 	if spAddress == "" || fileKey == "" || signatureFromReq == "" {
@@ -315,8 +317,8 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 	_, netExists := blckChain.Networks[network]
 
 	if !netExists {
-		fmt.Println("Network is not supported")
 		http.Error(w, errs.NetworkCheck.Error(), http.StatusBadRequest)
+		return
 	}
 
 	if spAddress == "" || signedFsys == "" {
