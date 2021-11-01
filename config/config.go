@@ -54,9 +54,10 @@ func Create(address, password string) (NodeConfig, error) {
 	const location = "config.Create->"
 
 	nodeConfig := NodeConfig{
-		Address:       address,
-		StoragePaths:  []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)},
-		AgreeSendLogs: true,
+		Address:              address,
+		StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)},
+		AgreeSendLogs:        true,
+		RegisteredInNetworks: map[string]bool{},
 	}
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
