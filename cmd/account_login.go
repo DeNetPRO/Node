@@ -100,6 +100,7 @@ var accountLoginCmd = &cobra.Command{
 
 				err = blckChain.RegisterNode(ctx, nodeAccount.Address.String(), password, nodeConfig.IpAddress, nodeConfig.HTTPPort)
 				if err != nil {
+					logger.Log(logger.CreateDetails(location, err))
 					log.Fatal(accLoginFatalError + ": couldn't register node in " + nodeConfig.Network)
 				}
 
