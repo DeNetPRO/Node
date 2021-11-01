@@ -310,6 +310,15 @@ func StartMakingProofs(password string) {
 				continue
 			}
 
+			fmt.Println("reward for", spAddress, "files is", reward) //TODO remove
+			fmt.Println("Min reward value:", 200000000000000)
+
+			rewardisEnough := reward.Cmp(big.NewInt(200000000000000)) == 1
+
+			if !rewardisEnough {
+				continue
+			}
+
 			fileNames := []string{}
 
 			pathToStorProviderFiles := filepath.Join(pathToAccStorage, spAddress)
@@ -340,22 +349,13 @@ func StartMakingProofs(password string) {
 				continue
 			}
 
-			fmt.Println("reward for", spAddress, "files is", reward) //TODO remove
-			fmt.Println("Min reward value:", 200000000000000)
-
-			rewardisEnough := reward.Cmp(big.NewInt(200000000000000)) == 1
-
-			if !rewardisEnough {
-				continue
-			}
-
 			rand.Seed(time.Now().UnixNano())
 			randomFilePos := rand.Intn(len(fileNames))
 
-			quater := len(fileNames) / 4
+			quarter := len(fileNames) / 4
 
-			if randomFilePos+quater < len(fileNames) {
-				fileNames = fileNames[randomFilePos : randomFilePos+quater]
+			if quarter > 0 && randomFilePos+quarter < len(fileNames) {
+				fileNames = fileNames[randomFilePos : randomFilePos+quarter]
 			} else {
 				fileNames = fileNames[randomFilePos:]
 			}
