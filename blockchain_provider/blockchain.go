@@ -13,7 +13,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"math/big"
 	"math/rand"
 	"os"
@@ -257,8 +256,6 @@ func StartMakingProofs(password string) {
 	pathToAccStorage := filepath.Join(paths.StoragePaths[0], CurrentNetwork)
 
 	for {
-		storageProviderAddresses := []string{}
-
 		stat, err := os.Stat(pathToAccStorage)
 		if err != nil {
 			err = errs.CheckStatErr(err)
@@ -274,22 +271,18 @@ func StartMakingProofs(password string) {
 			continue
 		}
 
-		err = filepath.WalkDir(pathToAccStorage,
-			func(path string, info fs.DirEntry, err error) error {
-				if err != nil {
-					logger.Log(logger.CreateDetails(location, err))
-				}
-
-				if regAddr.MatchString(info.Name()) {
-					storageProviderAddresses = append(storageProviderAddresses, info.Name())
-				}
-
-				return nil
-			})
-
+		dirFiles, err := nodeFile.ReadDirFiles(pathToAccStorage)
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 			continue
+		}
+
+		storageProviderAddresses := []string{}
+
+		for _, f := range dirFiles {
+			if regAddr.MatchString(f.Name()) {
+				storageProviderAddresses = append(storageProviderAddresses, f.Name())
+			}
 		}
 
 		if len(storageProviderAddresses) == 0 {
@@ -319,26 +312,20 @@ func StartMakingProofs(password string) {
 				continue
 			}
 
-			fileNames := []string{}
-
 			pathToStorProviderFiles := filepath.Join(pathToAccStorage, spAddress)
 
-			err = filepath.WalkDir(pathToStorProviderFiles,
-				func(path string, info fs.DirEntry, err error) error {
-					if err != nil {
-						logger.Log(logger.CreateDetails(location, err))
-						return err
-					}
-
-					if len(info.Name()) == 64 && regFileName.MatchString(info.Name()) {
-						fileNames = append(fileNames, info.Name())
-					}
-
-					return nil
-				})
+			dirFiles, err := nodeFile.ReadDirFiles(pathToStorProviderFiles)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				continue
+			}
+
+			fileNames := []string{}
+
+			for _, f := range dirFiles {
+				if len(f.Name()) == 64 && regFileName.MatchString(f.Name()) {
+					fileNames = append(fileNames, f.Name())
+				}
 			}
 
 			if len(fileNames) == 0 {

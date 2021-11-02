@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"errors"
-	"io/fs"
 	"os/signal"
 
 	"github.com/minio/sha256-simd"
@@ -209,22 +208,12 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	var dirFilesCount = 0
 
 	if dirStat != nil {
-		err = filepath.WalkDir(pathToSpFiles,
-			func(path string, info fs.DirEntry, err error) error {
-				if err != nil {
-					logger.Log(logger.CreateDetails(location, err))
-				}
-
-				if !info.IsDir() {
-					dirFilesCount++
-				}
-
-				return nil
-			})
-
+		dirFiles, err := nodeFile.ReadDirFiles(pathToSpFiles)
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 		}
+
+		dirFilesCount = len(dirFiles)
 	}
 
 	if dirFilesCount > 3300 { // max Mb storage per user

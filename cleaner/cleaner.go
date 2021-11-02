@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -50,24 +49,18 @@ func Start() {
 				continue
 			}
 
-			storageProviderAddresses := []string{}
-
-			err = filepath.WalkDir(pathToAccStorage,
-				func(path string, info fs.DirEntry, err error) error {
-					if err != nil {
-						logger.Log(logger.CreateDetails(location, err))
-					}
-
-					if regAddr.MatchString(info.Name()) {
-						storageProviderAddresses = append(storageProviderAddresses, info.Name())
-					}
-
-					return nil
-				})
-
+			dirFiles, err := nodeFile.ReadDirFiles(pathToAccStorage)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				continue
+			}
+
+			storageProviderAddresses := []string{}
+
+			for _, f := range dirFiles {
+				if regAddr.MatchString(f.Name()) {
+					storageProviderAddresses = append(storageProviderAddresses, f.Name())
+				}
 			}
 
 			if len(storageProviderAddresses) == 0 {
@@ -82,25 +75,20 @@ func Start() {
 
 			for _, spAddress := range storageProviderAddresses {
 
-				fileNames := []string{}
-
 				pathToStorProviderFiles := filepath.Join(pathToAccStorage, spAddress)
 
-				err = filepath.WalkDir(pathToStorProviderFiles,
-					func(path string, info fs.DirEntry, err error) error {
-						if err != nil {
-							logger.Log(logger.CreateDetails(location, err))
-						}
-
-						if regFileName.MatchString(info.Name()) && len(info.Name()) == 64 {
-							fileNames = append(fileNames, info.Name())
-						}
-
-						return nil
-					})
+				dirFiles, err := nodeFile.ReadDirFiles(pathToStorProviderFiles)
 				if err != nil {
 					logger.Log(logger.CreateDetails(location, err))
 					continue
+				}
+
+				fileNames := []string{}
+
+				for _, f := range dirFiles {
+					if len(f.Name()) == 64 && regFileName.MatchString(f.Name()) {
+						fileNames = append(fileNames, f.Name())
+					}
 				}
 
 				pathToFsTree := filepath.Join(paths.StoragePaths[0], network, spAddress, paths.SpFsFilename)
