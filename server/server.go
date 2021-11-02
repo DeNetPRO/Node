@@ -18,12 +18,14 @@ import (
 	"sort"
 	"strconv"
 
+	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
 	fsysInfo "git.denetwork.xyz/DeNet/dfile-secondary-node/fsys_info"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	memInfo "git.denetwork.xyz/DeNet/dfile-secondary-node/mem_info"
+
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
@@ -175,6 +177,13 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		network = "kovan"
 	}
 
+	_, netExists := blckChain.Networks[network]
+
+	if !netExists {
+		http.Error(w, errs.NetworkCheck.Error(), http.StatusBadRequest)
+		return
+	}
+
 	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
 
 	fileSize, spaceNotEnough, _, err := checkAndReserveSpace(req, pathToConfig)
@@ -199,7 +208,35 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = spFiles.Save(req, spData, network)
+	pathToSpFiles := filepath.Join(paths.StoragePaths[0], network, spData.Address)
+
+	dirStat, err := os.Stat(pathToSpFiles)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		logger.Log(logger.CreateDetails(location, err))
+		memInfo.Restore(pathToConfig, fileSize)
+		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var dirFilesCount = 0
+
+	if dirStat != nil {
+		dirFiles, err := nodeFile.ReadDirFiles(pathToSpFiles)
+		if err != nil {
+			logger.Log(logger.CreateDetails(location, err))
+		}
+
+		dirFilesCount = len(dirFiles)
+	}
+
+	if dirFilesCount > 3300 { // max Mb storage per user
+		http.Error(w, errs.NoSpace.Error(), http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println("dir contains", dirFilesCount, "files")
+
+	err = spFiles.Save(req, spData, pathToSpFiles)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		memInfo.Restore(pathToConfig, fileSize)
@@ -238,6 +275,13 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 
 	if network == "" {
 		network = "kovan"
+	}
+
+	_, netExists := blckChain.Networks[network]
+
+	if !netExists {
+		http.Error(w, errs.NetworkCheck.Error(), http.StatusBadRequest)
+		return
 	}
 
 	if spAddress == "" || fileKey == "" || signatureFromReq == "" {
@@ -290,6 +334,13 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 
 	if network == "" {
 		network = "kovan"
+	}
+
+	_, netExists := blckChain.Networks[network]
+
+	if !netExists {
+		http.Error(w, errs.NetworkCheck.Error(), http.StatusBadRequest)
+		return
 	}
 
 	if spAddress == "" || signedFsys == "" {
