@@ -13,7 +13,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"math/big"
 	"math/rand"
 	"os"
@@ -24,7 +23,6 @@ import (
 
 	proofOfStAbi "git.denetwork.xyz/DeNet/dfile-secondary-node/POS_abi"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/encryption"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
@@ -48,12 +46,17 @@ type NtwrkParams struct {
 }
 
 var Networks = map[string]NtwrkParams{
+	"polygon": {
+		RPC: "https://polygon-rpc.com",
+		NFT: "0xfe1f5CB22cF4972584c6a0938FEAF90c597b567b",
+		PoS: "0x70c478be3d87ab921e0168137f5abe53b5812fc8",
+	},
 	"kovan": {
 		RPC: "https://kovan.infura.io/v3/6433ee0efa38494a85541b00cd377c5f",
 		NFT: "0x8De6417e4738a41619d0D13ef0661563f1A918ec",
 		PoS: "0x60828cfBBFbcB474c913FaDE151AD4AFa9a07919",
 	},
-	"polygon": {
+	"mumbai": {
 		RPC: "https://rpc-mumbai.maticvigil.com",
 		NFT: "0xBb86dcf291419d3F5b4B2211122D0E6fCB693777",
 		PoS: "0x389E8fE67c73551043184F740126C91866c0fB78",
@@ -101,7 +104,7 @@ func RegisterNode(ctx context.Context, address, password, ip, port string) error
 		return logger.CreateDetails(location, err)
 	}
 
-	err = checkBalance(client, blockNum)
+	_, err = checkBalance(client, blockNum, true)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		log.Fatal("couldn't check balance")
@@ -205,7 +208,7 @@ func StartMakingProofs(password string) {
 		log.Fatal("couldn't set up new proof of storage instance")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*1)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*2)
 
 	blockNum, err := client.BlockNumber(ctx)
 	if err != nil {
@@ -213,7 +216,7 @@ func StartMakingProofs(password string) {
 		logger.Log(logger.CreateDetails(location, err))
 	}
 
-	err = checkBalance(client, blockNum)
+	_, err = checkBalance(client, blockNum, true)
 	if err != nil {
 		cancel()
 		logger.Log(logger.CreateDetails(location, err))
@@ -227,7 +230,7 @@ func StartMakingProofs(password string) {
 		log.Fatal("couldn't get base difficulty")
 	}
 
-	opts, err := initTrxOpts(ctx, client, shared.NodeAddr, password, blockNum)
+	proofOpts, err = initTrxOpts(ctx, client, shared.NodeAddr, password, blockNum)
 	if err != nil {
 		cancel()
 		logger.Log(logger.CreateDetails(location, err))
@@ -236,49 +239,46 @@ func StartMakingProofs(password string) {
 
 	debug.FreeOSMemory()
 
+	transactNonce, err := client.NonceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
+	if err != nil {
+		cancel()
+		logger.Log(logger.CreateDetails(location, err))
+		log.Fatal("couldn't get transaction nonce")
+	}
+
 	cancel()
 
-	proofOpts = opts
+	proofOpts.Nonce = big.NewInt(int64(transactNonce))
 
 	fmt.Println(CurrentNetwork, "network selected")
 
 	pathToAccStorage := filepath.Join(paths.StoragePaths[0], CurrentNetwork)
 
 	for {
-		fmt.Println("Sleeping...")
-		time.Sleep(time.Second * 30)
-		storageProviderAddresses := []string{}
-
 		stat, err := os.Stat(pathToAccStorage)
-		if err != nil {
-			err = errs.CheckStatErr(err)
-			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
-				log.Fatal(err)
-			}
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			logger.Log(logger.CreateDetails(location, err))
+			log.Fatal(err)
 		}
 
 		if stat == nil {
 			fmt.Println("no files from", CurrentNetwork, "to proof")
+			time.Sleep(time.Minute * 1)
 			continue
 		}
 
-		err = filepath.WalkDir(pathToAccStorage,
-			func(path string, info fs.DirEntry, err error) error {
-				if err != nil {
-					logger.Log(logger.CreateDetails(location, err))
-				}
-
-				if regAddr.MatchString(info.Name()) {
-					storageProviderAddresses = append(storageProviderAddresses, info.Name())
-				}
-
-				return nil
-			})
-
+		dirFiles, err := nodeFile.ReadDirFiles(pathToAccStorage)
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 			continue
+		}
+
+		storageProviderAddresses := []string{}
+
+		for _, f := range dirFiles {
+			if regAddr.MatchString(f.Name()) {
+				storageProviderAddresses = append(storageProviderAddresses, f.Name())
+			}
 		}
 
 		if len(storageProviderAddresses) == 0 {
@@ -290,11 +290,27 @@ func StartMakingProofs(password string) {
 		}
 
 		for _, spAddress := range storageProviderAddresses {
-			time.Sleep(time.Second * 5)
 
-			storageProviderAddr := common.HexToAddress(spAddress)
+			time.Sleep(time.Second * 10)
 
-			_, reward, userDifficulty, err := posInstance.GetUserRewardInfo(&bind.CallOpts{}, storageProviderAddr) // first value is paymentToken
+			_, reward, userDifficulty, err := posInstance.GetUserRewardInfo(&bind.CallOpts{}, common.HexToAddress(spAddress)) // first value is paymentToken
+			if err != nil {
+				logger.Log(logger.CreateDetails(location, err))
+				continue
+			}
+
+			fmt.Println("reward for", spAddress, "files is", reward) //TODO remove
+			fmt.Println("Min reward value:", 200000000000000)
+
+			rewardIsEnough := reward.Cmp(big.NewInt(200000000000000)) == 1
+
+			if !rewardIsEnough {
+				continue
+			}
+
+			pathToStorProviderFiles := filepath.Join(pathToAccStorage, spAddress)
+
+			dirFiles, err := nodeFile.ReadDirFiles(pathToStorProviderFiles)
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				continue
@@ -302,23 +318,10 @@ func StartMakingProofs(password string) {
 
 			fileNames := []string{}
 
-			pathToStorProviderFiles := filepath.Join(pathToAccStorage, storageProviderAddr.String())
-
-			err = filepath.WalkDir(pathToStorProviderFiles,
-				func(path string, info fs.DirEntry, err error) error {
-					if err != nil {
-						logger.Log(logger.CreateDetails(location, err))
-					}
-
-					if len(info.Name()) == 64 && regFileName.MatchString(info.Name()) {
-						fileNames = append(fileNames, info.Name())
-					}
-
-					return nil
-				})
-			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
-				continue
+			for _, f := range dirFiles {
+				if len(f.Name()) == 64 && regFileName.MatchString(f.Name()) {
+					fileNames = append(fileNames, f.Name())
+				}
 			}
 
 			if len(fileNames) == 0 {
@@ -329,20 +332,13 @@ func StartMakingProofs(password string) {
 				continue
 			}
 
-			fmt.Println("reward for", spAddress, "files is", reward) //TODO remove
-			fmt.Println("Min reward value:", 200000000000000)
-
-			rewardisEnough := reward.Cmp(big.NewInt(200000000000000)) == 1
-
-			if !rewardisEnough {
-				continue
-			}
-
 			rand.Seed(time.Now().UnixNano())
 			randomFilePos := rand.Intn(len(fileNames))
 
-			if randomFilePos+3 < len(fileNames) {
-				fileNames = fileNames[randomFilePos : randomFilePos+3]
+			quarter := len(fileNames) / 4
+
+			if quarter > 0 && randomFilePos+quarter < len(fileNames) {
+				fileNames = fileNames[randomFilePos : randomFilePos+quarter]
 			} else {
 				fileNames = fileNames[randomFilePos:]
 			}
@@ -358,6 +354,12 @@ func StartMakingProofs(password string) {
 
 			cancel()
 
+			blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-10)) // checking older blocknum to guarantee valid result
+			if err != nil {
+				logger.Log(logger.CreateDetails(location, err))
+				continue
+			}
+
 			for _, fileName := range fileNames {
 				shared.MU.Lock()
 
@@ -370,11 +372,6 @@ func StartMakingProofs(password string) {
 
 				storedFile.Close()
 				shared.MU.Unlock()
-
-				blockHash, err := posInstance.GetBlockHash(&bind.CallOpts{}, uint32(blockNum-10)) // checking older blocknum to guarantee valid result
-				if err != nil {
-					logger.Log(logger.CreateDetails(location, err))
-				}
 
 				fileEightKB := make([]byte, eightKB)
 
@@ -405,22 +402,13 @@ func StartMakingProofs(password string) {
 
 				fmt.Println("Trying proof", fileName, "for reward:", reward)
 
-				ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
-
-				err = sendProof(ctx, client, storedFileBytes, shared.NodeAddr, storageProviderAddr, blockNum-10, posInstance) // sending blocknum that we used for verifying proof
+				err = sendProof(client, storedFileBytes, shared.NodeAddr, common.HexToAddress(spAddress), blockNum-10, posInstance) // sending blocknum that we used for verifying proof
 				if err != nil {
-					cancel()
 					logger.Log(logger.CreateDetails(location, err))
 					continue
 				} else {
-					cancel()
 
 					fmt.Println("proof is sent")
-
-					err = checkBalance(client, blockNum)
-					if err != nil {
-						logger.Log(logger.CreateDetails(location, err))
-					}
 
 					break
 				}
@@ -434,9 +422,20 @@ func StartMakingProofs(password string) {
 // ====================================================================================
 
 //SendProof checks Storage Providers's file system root hash and nounce info and sends proof to smart contract.
-func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
-	nodeAddr common.Address, spAddress common.Address, blockNum uint64, posInstance *proofOfStAbi.ProofOfStorage) error {
+func sendProof(client *ethclient.Client, fileBytes []byte, nodeAddr common.Address, spAddress common.Address,
+	blockNum uint64, posInstance *proofOfStAbi.ProofOfStorage) error {
+
 	const location = "blckChain.sendProof->"
+
+	balanceIsLow, err := checkBalance(client, blockNum, false)
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
+	if balanceIsLow {
+		return logger.CreateDetails(location, errors.New("not sufficient funds for transactions"))
+	}
+
 	pathToFsTree := filepath.Join(paths.StoragePaths[0], CurrentNetwork, spAddress.String(), paths.SpFsFilename)
 
 	shared.MU.Lock()
@@ -548,22 +547,12 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 		signedFSRootHash = signedFSRootHash[:64]
 	}
 
-	transactNonce, err := client.NonceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
+	fmt.Println("transactNonce", proofOpts.Nonce)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
 
 	proofOpts.Context = ctx
-
-	bigIntNonce := big.NewInt(int64(transactNonce))
-
-	currentNonceIsLower := proofOpts.Nonce.Cmp(bigIntNonce) == -1
-
-	if currentNonceIsLower {
-		proofOpts.Nonce = big.NewInt(int64(transactNonce))
-	}
-
-	fmt.Println("transactNonce", transactNonce)
 
 	_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
 	if err != nil {
@@ -583,42 +572,48 @@ func sendProof(ctx context.Context, client *ethclient.Client, fileBytes []byte,
 
 		} else {
 			debug.FreeOSMemory()
+			proofOpts.Nonce = proofOpts.Nonce.Add(proofOpts.Nonce, big.NewInt(int64(1)))
 			return logger.CreateDetails(location, err)
 		}
 	}
 
 	debug.FreeOSMemory()
-
-	proof = nil
+	proofOpts.Nonce = proofOpts.Nonce.Add(proofOpts.Nonce, big.NewInt(int64(1)))
 
 	return nil
 }
 
 // ====================================================================================
 
-func checkBalance(client *ethclient.Client, blockNum uint64) error {
+func checkBalance(client *ethclient.Client, blockNum uint64, exitOnLow bool) (bool, error) {
 
 	const location = "blckChain.checkBalance->"
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
 
 	defer cancel()
 
 	nodeBalance, err := client.BalanceAt(ctx, shared.NodeAddr, big.NewInt(int64(blockNum)))
 	if err != nil {
-		return logger.CreateDetails(location, err)
+		return false, logger.CreateDetails(location, err)
 	}
 
 	nodeBalanceIsLow := nodeBalance.Cmp(big.NewInt(1500000000000000)) == -1
 
 	if nodeBalanceIsLow {
-		fmt.Println("Insufficient funds for paying ", CurrentNetwork, " transaction fees. Balance:", nodeBalance)
+		fmt.Println("Insufficient funds for paying", CurrentNetwork, "transaction fees. Balance:", nodeBalance)
 		fmt.Println("Please top up your balance")
 
-		os.Exit(0)
+		if exitOnLow {
+			fmt.Println("Exited")
+			os.Exit(0)
+		} else {
+			return true, nil
+		}
+
 	}
 
-	return nil
+	return false, nil
 }
 
 // ====================================================================================
@@ -656,7 +651,7 @@ func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.
 			return t, nil
 		},
 		Value:    big.NewInt(0),
-		GasPrice: big.NewInt(1000000000),
+		GasPrice: big.NewInt(20000000000), // 20 Gwei
 		GasLimit: 1000000,
 		Context:  ctx,
 		NoSend:   false,

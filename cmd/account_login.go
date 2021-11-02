@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"errors"
-	"runtime/debug"
 
 	"encoding/json"
 	"fmt"
@@ -25,7 +24,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const accLoginFatalError = "Error while account log in"
+const accLoginFatalError = "Error while account log in "
 const ipUpdateFatalError = "Couldn't update public ip info"
 
 // AccountLoginCmd is executed when "login" flag is passed after "account" flag and is used for logging in to an account.
@@ -41,8 +40,6 @@ var accountLoginCmd = &cobra.Command{
 			log.Fatal(accLoginFatalError)
 		}
 
-		debug.FreeOSMemory()
-
 		pathToConfigDir := filepath.Join(paths.AccsDirPath, nodeAccount.Address.String(), paths.ConfDirName)
 
 		var nodeConfig config.NodeConfig
@@ -50,8 +47,7 @@ var accountLoginCmd = &cobra.Command{
 		pathToConfigFile := filepath.Join(pathToConfigDir, paths.ConfFileName)
 
 		stat, err := os.Stat(pathToConfigFile)
-		err = errs.CheckStatErr(err)
-		if err != nil {
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(accLoginFatalError)
 		}
@@ -83,7 +79,7 @@ var accountLoginCmd = &cobra.Command{
 			_, supportedNet := blckChain.Networks[nodeConfig.Network]
 
 			if !supportedNet {
-				log.Fatal(accLoginFatalError + ": unsupported network in config file")
+				log.Fatal(accLoginFatalError + errs.NetworkCheck.Error())
 			}
 
 			blckChain.CurrentNetwork = nodeConfig.Network
@@ -100,6 +96,7 @@ var accountLoginCmd = &cobra.Command{
 
 				err = blckChain.RegisterNode(ctx, nodeAccount.Address.String(), password, nodeConfig.IpAddress, nodeConfig.HTTPPort)
 				if err != nil {
+					logger.Log(logger.CreateDetails(location, err))
 					log.Fatal(accLoginFatalError + ": couldn't register node in " + nodeConfig.Network)
 				}
 
@@ -123,7 +120,9 @@ var accountLoginCmd = &cobra.Command{
 
 					fmt.Println("Updating public ip info...")
 
-					ctx, _ := context.WithTimeout(context.Background(), time.Minute)
+					ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+					defer cancel()
 
 					err = blckChain.UpdateNodeInfo(ctx, nodeAccount.Address, password, nodeConfig.IpAddress, nodeConfig.HTTPPort)
 					if err != nil {

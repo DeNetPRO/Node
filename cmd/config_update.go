@@ -113,7 +113,9 @@ var configUpdateCmd = &cobra.Command{
 		}
 
 		if stateBefore.IpAddress != nodeConfig.IpAddress || stateBefore.HTTPPort != nodeConfig.HTTPPort {
-			ctx, _ := context.WithTimeout(context.Background(), time.Minute)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+
+			defer cancel()
 
 			err := blckChain.UpdateNodeInfo(ctx, nodeAccount.Address, password, nodeConfig.IpAddress, nodeConfig.HTTPPort)
 			if err != nil {

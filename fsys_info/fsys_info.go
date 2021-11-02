@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 
@@ -163,8 +162,7 @@ func Save(addressPath string, spData *shared.StorageProviderData) error {
 	const location = "files.saveSpFsInfo->"
 
 	stat, err := os.Stat(addressPath)
-	err = errs.CheckStatErr(err)
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return logger.CreateDetails(location, err)
 	}
 

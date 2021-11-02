@@ -1,0 +1,131 @@
+definitions:
+  fsysinfo.UpdatedFsInfo:
+    properties:
+      newFs:
+        items:
+          type: string
+        type: array
+      nonce:
+        type: string
+      signedFsRootHash:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /download/{spAddress}/{fileKey}/{signature}/{network}:
+    get:
+      description: Serve file by key
+      parameters:
+      - description: Storage Provider address
+        in: path
+        name: spAddress
+        required: true
+        type: string
+      - description: file key
+        in: path
+        name: fileKey
+        required: true
+        type: string
+      - description: Storage Provider signature
+        in: path
+        name: signature
+        required: true
+        type: string
+      - description: network type
+        in: path
+        name: newtork
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Serve file
+  /update_fs/{spAddress}/{signedFsys}/{network}:
+    post:
+      consumes:
+      - application/json
+      description: Update Storage Provider's filesystem, etc. root hash, nonce, file
+        system
+      parameters:
+      - description: Storage Provider address
+        in: path
+        name: spAddress
+        required: true
+        type: string
+      - description: Signed Storage Provider root hash
+        in: path
+        name: signedFsys
+        required: true
+        type: string
+      - description: network type
+        in: path
+        name: newtork
+        required: true
+        type: string
+      - description: updatedFsInfo
+        in: body
+        name: updatedFsInfo
+        required: true
+        schema:
+          $ref: '#/definitions/fsysinfo.UpdatedFsInfo'
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Update Storage Provider's filesystem
+  /upload/{size}/{network}:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Save files from Storage Provider
+      parameters:
+      - description: file size in bytes
+        in: path
+        name: size
+        required: true
+        type: integer
+      - description: network type
+        in: path
+        name: network
+        required: true
+        type: string
+      - description: Storage Provider address
+        in: formData
+        name: address
+        required: true
+        type: string
+      - description: signed file system root hash
+        in: formData
+        name: fsRootHash
+        required: true
+        type: string
+      - description: current nonce
+        in: formData
+        name: nonce
+        required: true
+        type: integer
+      - description: array of hashes of all storage provider files
+        in: formData
+        items:
+          type: string
+        name: fs
+        required: true
+        type: array
+      - description: files parts
+        in: formData
+        name: files
+        required: true
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Save files
+swagger: "2.0"
