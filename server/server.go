@@ -197,8 +197,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	pathToSpFiles := filepath.Join(paths.StoragePaths[0], network, spData.Address)
 
 	dirStat, err := os.Stat(pathToSpFiles)
-	err = errs.CheckStatErr(err)
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		logger.Log(logger.CreateDetails(location, err))
 		memInfo.Restore(pathToConfig, fileSize)
 		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)

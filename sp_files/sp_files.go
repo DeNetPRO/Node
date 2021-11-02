@@ -2,6 +2,7 @@ package spfiles
 
 import (
 	"encoding/hex"
+	"errors"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -37,11 +38,8 @@ func Save(req *http.Request, spData *shared.StorageProviderData, pathToSpFiles s
 	const location = "files.Save->"
 
 	stat, err := os.Stat(pathToSpFiles)
-	if err != nil {
-		err = errs.CheckStatErr(err)
-		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
-		}
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return logger.CreateDetails(location, err)
 	}
 
 	if stat == nil {

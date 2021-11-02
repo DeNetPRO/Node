@@ -1,10 +1,10 @@
 package paths
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 )
@@ -51,8 +51,7 @@ func Init() error {
 func CreateAccDirs() error {
 	const location = "shared.CreateIfNotExistAccDirs->"
 	statWDP, err := os.Stat(WorkDirPath)
-	err = errs.CheckStatErr(err)
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return logger.CreateDetails(location, err)
 	}
 
@@ -64,8 +63,7 @@ func CreateAccDirs() error {
 	}
 
 	statADP, err := os.Stat(AccsDirPath)
-	err = errs.CheckStatErr(err)
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return logger.CreateDetails(location, err)
 	}
 

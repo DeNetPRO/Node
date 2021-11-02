@@ -47,8 +47,7 @@ var accountLoginCmd = &cobra.Command{
 		pathToConfigFile := filepath.Join(pathToConfigDir, paths.ConfFileName)
 
 		stat, err := os.Stat(pathToConfigFile)
-		err = errs.CheckStatErr(err)
-		if err != nil {
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(accLoginFatalError)
 		}

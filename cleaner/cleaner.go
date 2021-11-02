@@ -3,6 +3,7 @@ package cleaner
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
@@ -36,12 +36,9 @@ func Start() {
 			pathToAccStorage := filepath.Join(paths.StoragePaths[0], network)
 
 			stat, err := os.Stat(pathToAccStorage)
-			if err != nil {
-				err = errs.CheckStatErr(err)
-				if err != nil {
-					logger.Log(logger.CreateDetails(location, err))
-					log.Fatal(err)
-				}
+			if err != nil && !errors.Is(err, os.ErrNotExist) {
+				logger.Log(logger.CreateDetails(location, err))
+				log.Fatal(err)
 			}
 
 			if stat == nil {

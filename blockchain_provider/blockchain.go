@@ -23,7 +23,6 @@ import (
 
 	proofOfStAbi "git.denetwork.xyz/DeNet/dfile-secondary-node/POS_abi"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/encryption"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
@@ -257,12 +256,9 @@ func StartMakingProofs(password string) {
 
 	for {
 		stat, err := os.Stat(pathToAccStorage)
-		if err != nil {
-			err = errs.CheckStatErr(err)
-			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
-				log.Fatal(err)
-			}
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			logger.Log(logger.CreateDetails(location, err))
+			log.Fatal(err)
 		}
 
 		if stat == nil {
