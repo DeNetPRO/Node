@@ -245,7 +245,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if !shared.TestMode {
-		logger.SendStatistic(spData.Address, req.RemoteAddr, logger.Upload, int64(fileSize))
+		logger.SendStatistic(spData.Address, network, req.RemoteAddr, logger.Upload, int64(fileSize))
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -306,7 +306,7 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if !shared.TestMode {
-		logger.SendStatistic(spAddress, req.RemoteAddr, logger.Download, stat.Size())
+		logger.SendStatistic(spAddress, network, req.RemoteAddr, logger.Download, stat.Size())
 	}
 
 	http.ServeFile(w, req, pathToFile)
