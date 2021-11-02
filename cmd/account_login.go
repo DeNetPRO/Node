@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"errors"
-	"runtime/debug"
 
 	"encoding/json"
 	"fmt"
@@ -40,8 +39,6 @@ var accountLoginCmd = &cobra.Command{
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(accLoginFatalError)
 		}
-
-		debug.FreeOSMemory()
 
 		pathToConfigDir := filepath.Join(paths.AccsDirPath, nodeAccount.Address.String(), paths.ConfDirName)
 
