@@ -303,6 +303,8 @@ func StartMakingProofs(password string) {
 				continue
 			}
 
+			fmt.Println("userDifficulty", userDifficulty)
+
 			fmt.Println("reward for", spAddress, "files is", reward) //TODO remove
 			fmt.Println("Min reward value:", 200000000000000)
 
