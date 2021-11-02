@@ -655,7 +655,7 @@ func initTrxOpts(ctx context.Context, client *ethclient.Client, nodeAddr common.
 			return t, nil
 		},
 		Value:    big.NewInt(0),
-		GasPrice: big.NewInt(1000000000),
+		GasPrice: big.NewInt(20000000000), // 20 Gwei
 		GasLimit: 1000000,
 		Context:  ctx,
 		NoSend:   false,
