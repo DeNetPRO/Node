@@ -13,11 +13,27 @@ Open terminal/console where you did download DeNet-Node and run the command belo
 ./DeNet-Node --help
 ``` 
 
+## Get Started
+
+```bash
+./DeNet-Node
+```
+
+## Commands
+
+```bash
+./DeNet-Node [command]
+```
+
 | Available Commands | Description |
 |---|---|
 | account | Account is a command that lets you to manage accounts in the different blockchain network |
 | config | Config is a command that lets you change your account configuration |
 | help | Help about any command |
+
+```bash
+./DeNet-Node account [command]
+```
 
 | Account Command | Description |
 |---|---|
@@ -27,14 +43,16 @@ Open terminal/console where you did download DeNet-Node and run the command belo
 | list | display addresses of all blockchain accounts |
 | login | log in a blockchain accounts |
 
+```bash
+./DeNet-Node config [command]
+```
+
 | Config Command | Description |
 |---|---|
 | update | updates your account configuration |
 
-## Get Started
 
-```bash
-./DeNet-Node
-```
 ## API Documentation
 [Documentation](https://app.gitbook.com/o/-MhCmHmTRDb0MF2vIQKk/s/-MhI3_4Kt2DnLxDFkDH8)
+## License
+[MIT](https://choosealicense.com/licenses/mit/)
