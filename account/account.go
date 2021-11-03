@@ -85,10 +85,12 @@ func Import() (string, config.NodeConfig, error) {
 	} else {
 		fmt.Println("Please enter private key of the account you want to import:")
 
-		privKey, err = termEmul.ReadInput()
+		bytesPrivKey, err := gopass.GetPasswdMasked()
 		if err != nil {
 			return "", nodeConfig, logger.CreateDetails(location, err)
 		}
+
+		privKey = string(bytesPrivKey)
 
 		fmt.Println("Please enter your password:")
 

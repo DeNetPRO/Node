@@ -147,6 +147,12 @@ func checkSignature(h http.Handler) http.Handler {
 
 // ====================================================================================
 
+// Healthcheck godoc
+// @Summary Check node status
+// @Description Checking node performance
+// @Success 200 {string} string "ok"
+// @Header 200 {string} Status "OK"
+// @Router /ping [get]
 func Healthcheck(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("ok"))
@@ -510,6 +516,15 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 	}, nil
 }
 
+// StorageSystem godoc
+// @Summary Returns Storage Provider filesystem on "GET" request and refreshes filesystem on "POST"
+// @Accept multipart/form-data
+// @Param spAddress path string true "Storage Provider address"
+// @Param signature path string true "Signed Storage Provider address"
+// @Router /storage/system/{spAddress}/{signature} [post]
+// @Success 200 {string} Status "OK"
+// @Router /storage/system/{spAddress}/{signature} [get]
+// @Success 200 {file} binary
 func StorageSystem(w http.ResponseWriter, r *http.Request) {
 	const location = "server.StorageSystem"
 
