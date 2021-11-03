@@ -38,5 +38,3 @@ Open terminal/console where you did download DeNet-Node and run the command belo
 ```
 ## API Documentation
 [Documentation](https://app.gitbook.com/o/-MhCmHmTRDb0MF2vIQKk/s/-MhI3_4Kt2DnLxDFkDH8)
-## License
-[MIT](https://choosealicense.com/licenses/mit/)
