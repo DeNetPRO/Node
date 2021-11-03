@@ -19,8 +19,8 @@ const accCreateFatalMessage = "Fatal error while creating an account"
 // AccountCreateCmd is executed when "create" flag is passed after "account" flag and is used for crypto wallet creation.
 var accountCreateCmd = &cobra.Command{
 	Use:   "create",
-	Short: "create a new blockchain account",
-	Long:  `create a new blockchain account`,
+	Short: "create a new wallet",
+	Long:  `create a new wallet`,
 	Run: func(cmd *cobra.Command, args []string) {
 		const location = "accountCreateCmd->"
 		var password1, password2 string

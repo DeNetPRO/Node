@@ -10,8 +10,8 @@ import (
 // AccountListCmd is executed when "list" flag is passed after "account" flag and is used for listing created/imported accounts.
 var accountListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "display addresses of all blockchain accounts",
-	Long:  "display addresses of all blockchain accounts",
+	Short: "displays addresses of created/imported wallets",
+	Long:  "displays addresses of created/imported wallets",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Accounts:")
 		accounts := account.List()
