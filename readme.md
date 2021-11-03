@@ -5,14 +5,6 @@ DeNet Node is a CLI application that allows a user (miner) to connect to the DeN
 ## Download
 To download, go to [releases](https://github.com/DeNetPRO/StorageProvider/releases), select the latest and choose your OS.
 
-## Before starting
-
-Open terminal/console where you did download DeNet-Node and run the command below. You will see a list of available commands that you can use:
-
-```bash
-./DeNet-Node --help
-``` 
-
 ## Get Started
 
 ```bash
@@ -20,6 +12,11 @@ Open terminal/console where you did download DeNet-Node and run the command belo
 ```
 
 ## Commands
+Open terminal/console where you did download DeNet-Node and run the command below. You will see a list of available commands that you can use:
+
+```bash
+./DeNet-Node --help
+``` 
 
 ```bash
 ./DeNet-Node [command]
