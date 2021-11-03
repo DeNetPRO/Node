@@ -10,8 +10,8 @@ import (
 //If there's no extra flag, lists flags that can be passed along with "account" flag.
 var accountCmd = &cobra.Command{
 	Use:   "account",
-	Short: "account is a command that lets you to manage accounts in the DFile blockchain network",
-	Long:  "account is a command that lets you to manage accounts in the DFile blockchain network",
+	Short: "account is a command for managing wallets",
+	Long:  "account is a command for managing wallets",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println(`account:
 		account list: lists all accounts that were created

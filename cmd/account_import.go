@@ -13,8 +13,8 @@ import (
 // AccountListCmd is executed when "import" flag is passed after "account" flag and is used for importing crypto wallet.
 var accountImportCmd = &cobra.Command{
 	Use:   "import",
-	Short: "imports your account by private key",
-	Long:  "imports your account by private key",
+	Short: "imports your wallet by private key",
+	Long:  "imports your wallet by private key",
 	Run: func(cmd *cobra.Command, args []string) {
 		const location = "accountImportCmd->"
 		_, nodeConfig, err := account.Import()
