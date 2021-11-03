@@ -40,8 +40,6 @@ func Log(msg interface{}) {
 
 	logMsg := fmt.Sprintf("%s: %v\n", currentTime.String(), msg)
 
-	fmt.Println(logMsg)
-
 	errType := fmt.Sprintf("%T", msg)
 
 	if errType == "*errors.errorString" || errType == "*fmt.wrapError" {
