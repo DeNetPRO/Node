@@ -31,7 +31,7 @@ Open terminal/console where you did download DeNet-Node and run the command belo
 |---|---|
 | update | updates your account configuration |
 
-## Usage
+## Get Started
 
 ```bash
 ./DeNet-Node
