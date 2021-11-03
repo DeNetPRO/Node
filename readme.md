@@ -12,12 +12,13 @@ To download, go to [releases](https://github.com/DeNetPRO/StorageProvider/releas
 ```
 
 ## Commands
-Open terminal/console where you did download DeNet-Node and run the command below. You will see a list of available commands that you can use:
+Open a terminal / console in the folder where you downloaded DeNet-Node and run the command below. You will see a list of available commands that you can use:
 
 ```bash
 ./DeNet-Node --help
 ``` 
 
+There is an example how to use the commands
 ```bash
 ./DeNet-Node [command]
 ```
