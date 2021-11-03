@@ -70,6 +70,88 @@ var doc = `{
                 }
             }
         },
+        "/ping": {
+            "get": {
+                "description": "Checking node performance",
+                "summary": "Check node status",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "headers": {
+                            "Status": {
+                                "type": "string",
+                                "description": "OK"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/storage/system/{spAddress}/{signature}": {
+            "get": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "summary": "Returns Storage Provider filesystem on \"GET\" request and refreshes filesystem on \"POST\"",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Storage Provider address",
+                        "name": "spAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Signed Storage Provider address",
+                        "name": "signature",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "summary": "Returns Storage Provider filesystem on \"GET\" request and refreshes filesystem on \"POST\"",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Storage Provider address",
+                        "name": "spAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Signed Storage Provider address",
+                        "name": "signature",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
         "/update_fs/{spAddress}/{signedFsys}/{network}": {
             "post": {
                 "description": "Update Storage Provider's filesystem, etc. root hash, nonce, file system",
