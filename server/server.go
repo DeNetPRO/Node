@@ -51,7 +51,7 @@ func Start(port string) {
 	const location = "server.Start->"
 	r := mux.NewRouter()
 
-	r.HandleFunc("/ping", healthcheck).Methods("GET")
+	r.HandleFunc("/ping", healthCheck).Methods("GET")
 
 	r.HandleFunc("/upload/{size}", SaveFiles).Methods("POST")
 	r.HandleFunc("/upload/{size}/{network}", SaveFiles).Methods("POST")
@@ -147,7 +147,7 @@ func checkSignature(h http.Handler) http.Handler {
 
 // ====================================================================================
 
-func healthcheck(w http.ResponseWriter, _ *http.Request) {
+func healthCheck(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, "OK")
 }
