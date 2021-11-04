@@ -522,6 +522,7 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 // @Param spAddress path string true "Storage Provider address"
 // @Param signature path string true "Signed Storage Provider address"
 // @Router /storage/system/{spAddress}/{signature} [post]
+// @Param fs formData file  true "encoded Storage Provider filesystem"
 // @Success 200 {string} Status "OK"
 // @Router /storage/system/{spAddress}/{signature} [get]
 // @Success 200 {file} binary
