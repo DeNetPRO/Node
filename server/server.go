@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os/signal"
+	"strings"
 
 	"github.com/minio/sha256-simd"
 
@@ -53,8 +54,7 @@ func Start(port string) {
 
 	r.HandleFunc("/ping", healthCheck).Methods("GET")
 
-	r.HandleFunc("/upload/{size}", SaveFiles).Methods("POST")
-	r.HandleFunc("/upload/{size}/{network}", SaveFiles).Methods("POST")
+	r.HandleFunc("/upload/{verificationData}/{size}/{network}", SaveFiles).Methods("POST")
 
 	r.HandleFunc("/download/{spAddress}/{fileKey}/{signature}", ServeFiles).Methods("GET")
 	r.HandleFunc("/download/{spAddress}/{fileKey}/{signature}/{network}", ServeFiles).Methods("GET")
@@ -98,7 +98,7 @@ func Start(port string) {
 
 	server := http.Server{
 		Addr:    ":" + port,
-		Handler: corsOpts.Handler(checkSignature(r)),
+		Handler: corsOpts.Handler(verifyRequest(r)),
 	}
 
 	go func() {
@@ -123,26 +123,54 @@ func Start(port string) {
 
 // ====================================================================================
 
-func checkSignature(h http.Handler) http.Handler {
+func verifyRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// splittedPath := strings.Split(r.URL.Path, "/")
-		// signature := splittedPath[len(splittedPath)-1]
-		// splittedPath = splittedPath[:len(splittedPath)-1]
-		// reqURL := strings.Join(splittedPath, "/")
+		address := r.URL.Path
+		splitPath := strings.Split(address, "/")
+		fmt.Println(splitPath[1])
 
-		// verified, err := verifySignature(sessionKeyBytes, reqURL, signature)
-		// if err != nil {
-		// 	http.Error(w, "session key verification error", http.StatusInternalServerError)
-		// 	return
-		// }
+		if splitPath[1] == "upload" {
+			verificationData := strings.Split(splitPath[2], "$")
 
-		// if !verified {
-		// 	http.Error(w, "wrong session key", http.StatusForbidden)
-		// }
+			requesterAddr := verificationData[0]
+			signedData := verificationData[1]
+			unsignedData := verificationData[2]
 
-		h.ServeHTTP(w, r)
+			err := verifySignature(requesterAddr, signedData, unsignedData)
+			if err != nil {
+				http.Error(w, errors.New("forbidden").Error(), http.StatusForbidden)
+				return
+			}
+
+		}
+
+		next.ServeHTTP(w, r)
 	})
+}
+
+// ====================================================================================
+
+func verifySignature(requesterAddr, signedData, unsignedData string) error {
+	signature, err := hex.DecodeString(signedData)
+	if err != nil {
+		return err
+	}
+
+	hash := sha256.Sum256([]byte(unsignedData))
+
+	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
+	if err != nil {
+		return err
+	}
+
+	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
+
+	if signatureAddress.String() != requesterAddr {
+		return errors.New("wrong signature")
+	}
+
+	return nil
 }
 
 // ====================================================================================
