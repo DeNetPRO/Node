@@ -2,7 +2,9 @@ package spfiles
 
 import (
 	"encoding/hex"
+	"errors"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -32,17 +34,12 @@ type NodeAddressResponse struct {
 
 // ====================================================================================
 //Save is used for checking and saving file parts from the inoming request to the node's storage.
-func Save(req *http.Request, spData *shared.StorageProviderData, network string) error {
+func Save(req *http.Request, spData *shared.StorageProviderData, pathToSpFiles string) error {
 	const location = "files.Save->"
 
-	pathToSpFiles := filepath.Join(paths.StoragePaths[0], network, spData.Address)
-
 	stat, err := os.Stat(pathToSpFiles)
-	if err != nil {
-		err = errs.CheckStatErr(err)
-		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
-		}
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return logger.CreateDetails(location, err)
 	}
 
 	if stat == nil {
@@ -178,4 +175,46 @@ func deleteParts(addressPath string, fileHashes []string) {
 
 		os.Remove(pathToFile)
 	}
+}
+
+//Return storage provider filesystem path
+func SearchStorageFilesystem(spAddress string) (string, bool) {
+	path := filepath.Join(paths.SystemsDirPath, spAddress)
+	stat, _ := os.Stat(path)
+	if stat == nil {
+		return "", false
+	}
+
+	return path, true
+}
+
+//Return storage provider filesystem path
+func UpdateStorageFilesystem(spAddress string, fileSystemHeader *multipart.FileHeader) error {
+	const location = "spFiles.UpdateStorageFilesystem"
+
+	shared.MU.Lock()
+	defer shared.MU.Unlock()
+
+	fileSystem, err := fileSystemHeader.Open()
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
+	defer fileSystem.Close()
+
+	path := filepath.Join(paths.SystemsDirPath, spAddress)
+
+	file, err := os.Create(path)
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
+	defer file.Close()
+
+	_, err = io.Copy(file, fileSystem)
+	if err != nil {
+		return logger.CreateDetails(location, err)
+	}
+
+	return nil
 }

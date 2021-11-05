@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strconv"
 	"strings"
 
@@ -84,10 +85,12 @@ func Import() (string, config.NodeConfig, error) {
 	} else {
 		fmt.Println("Please enter private key of the account you want to import:")
 
-		privKey, err = termEmul.ReadInput()
+		bytesPrivKey, err := gopass.GetPasswdMasked()
 		if err != nil {
 			return "", nodeConfig, logger.CreateDetails(location, err)
 		}
+
+		privKey = string(bytesPrivKey)
 
 		fmt.Println("Please enter your password:")
 
@@ -140,6 +143,9 @@ func Import() (string, config.NodeConfig, error) {
 //Login checks wallet's address and user's password that was used for crypto wallet creation.
 func Login(accountAddress, password string) (*accounts.Account, error) {
 	const location = "account.Login->"
+
+	defer debug.FreeOSMemory()
+
 	scryptN, scryptP := encryption.GetScryptParams()
 
 	ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
@@ -306,6 +312,8 @@ func ValidateUser() (*accounts.Account, string, error) {
 func initAccount(ks *keystore.KeyStore, account *accounts.Account, password string) (config.NodeConfig, error) {
 	const location = "account.initAccount->"
 	var nodeConf config.NodeConfig
+
+	defer debug.FreeOSMemory()
 
 	addressString := account.Address.String()
 

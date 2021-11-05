@@ -1,0 +1,290 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/download/{spAddress}/{fileKey}/{signature}/{network}": {
+            "get": {
+                "description": "Serve file by key",
+                "produces": [
+                    "application/octet-stream"
+                ],
+                "summary": "Serve file",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Storage Provider address",
+                        "name": "spAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "file key",
+                        "name": "fileKey",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Storage Provider signature",
+                        "name": "signature",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "network type",
+                        "name": "newtork",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/ping": {
+            "get": {
+                "description": "Checking node performance",
+                "summary": "Check node status",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "headers": {
+                            "Status": {
+                                "type": "string",
+                                "description": "OK"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/storage/system/{spAddress}/{signature}": {
+            "get": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "summary": "Returns Storage Provider filesystem on \"GET\" request and refreshes filesystem on \"POST\"",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Storage Provider address",
+                        "name": "spAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Signed Storage Provider address",
+                        "name": "signature",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "encoded Storage Provider filesystem",
+                        "name": "fs",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "summary": "Returns Storage Provider filesystem on \"GET\" request and refreshes filesystem on \"POST\"",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Storage Provider address",
+                        "name": "spAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Signed Storage Provider address",
+                        "name": "signature",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "encoded Storage Provider filesystem",
+                        "name": "fs",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/update_fs/{spAddress}/{signedFsys}/{network}": {
+            "post": {
+                "description": "Update Storage Provider's filesystem, etc. root hash, nonce, file system",
+                "consumes": [
+                    "application/json"
+                ],
+                "summary": "Update Storage Provider's filesystem",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Storage Provider address",
+                        "name": "spAddress",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Signed Storage Provider root hash",
+                        "name": "signedFsys",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "network type",
+                        "name": "newtork",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "updatedFsInfo",
+                        "name": "updatedFsInfo",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fsysinfo.UpdatedFsInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/upload/{size}/{network}": {
+            "post": {
+                "description": "Save files from Storage Provider",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "summary": "Save files",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "file size in bytes",
+                        "name": "size",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "network type",
+                        "name": "network",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Storage Provider address",
+                        "name": "address",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "signed file system root hash",
+                        "name": "fsRootHash",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "current nonce",
+                        "name": "nonce",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "array of hashes of all storage provider files",
+                        "name": "fs",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "files parts",
+                        "name": "files",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "fsysinfo.UpdatedFsInfo": {
+            "type": "object",
+            "properties": {
+                "newFs": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "nonce": {
+                    "type": "string"
+                },
+                "signedFsRootHash": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

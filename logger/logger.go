@@ -13,6 +13,7 @@ type StatsInfoData struct {
 	Type       string
 	FileSize   int64
 	RemoteAddr string
+	Network    string
 }
 
 type StatType int
@@ -39,8 +40,6 @@ func Log(msg interface{}) {
 
 	logMsg := fmt.Sprintf("%s: %v\n", currentTime.String(), msg)
 
-	fmt.Println(logMsg)
-
 	errType := fmt.Sprintf("%T", msg)
 
 	if errType == "*errors.errorString" || errType == "*fmt.wrapError" {
@@ -62,13 +61,14 @@ func CreateDetails(location string, errMsg error) error {
 	return fmt.Errorf("%s line %d -> %w", location, line, errMsg)
 }
 
-func SendStatistic(spAddress, remoteAddr string, statType StatType, fileSize int64) {
+func SendStatistic(spAddress, network, remoteAddr string, statType StatType, fileSize int64) {
 	const location = "logger.SendStatistic->"
 	url := loggerAddress + "/stats/" + spAddress
 	body := StatsInfoData{
 		Type:       statType.String(),
 		FileSize:   fileSize,
 		RemoteAddr: remoteAddr,
+		Network:    network,
 	}
 
 	js, err := json.Marshal(body)

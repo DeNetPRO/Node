@@ -1,10 +1,10 @@
 package paths
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 )
@@ -19,8 +19,8 @@ var (
 	StoragePaths   []string
 	SpFsFilename   = "tree.json"
 	UpdateDirPath  string
-	RatingFilePath string
-	RatingFilename = "rating.json"
+	SystemsDirName = "systems"
+	SystemsDirPath string
 )
 
 // ====================================================================================
@@ -40,6 +40,7 @@ func Init() error {
 	WorkDirPath = filepath.Join(homeDir, WorkDirName)
 	AccsDirPath = filepath.Join(WorkDirPath, "accounts")
 	UpdateDirPath = filepath.Join(WorkDirPath, "update")
+	SystemsDirPath = filepath.Join(WorkDirPath, SystemsDirName)
 
 	return nil
 }
@@ -50,8 +51,7 @@ func Init() error {
 func CreateAccDirs() error {
 	const location = "shared.CreateIfNotExistAccDirs->"
 	statWDP, err := os.Stat(WorkDirPath)
-	err = errs.CheckStatErr(err)
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return logger.CreateDetails(location, err)
 	}
 
@@ -63,8 +63,7 @@ func CreateAccDirs() error {
 	}
 
 	statADP, err := os.Stat(AccsDirPath)
-	err = errs.CheckStatErr(err)
-	if err != nil {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		return logger.CreateDetails(location, err)
 	}
 

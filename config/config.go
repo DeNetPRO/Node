@@ -55,9 +55,10 @@ func Create(address, password string) (NodeConfig, error) {
 	const location = "config.Create->"
 
 	nodeConfig := NodeConfig{
-		Address:       address,
-		StoragePaths:  []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)},
-		AgreeSendLogs: true,
+		Address:              address,
+		StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)},
+		AgreeSendLogs:        true,
+		RegisteredInNetworks: map[string]bool{},
 	}
 
 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
@@ -155,10 +156,14 @@ func SelectNetwork() (string, error) {
 
 	fmt.Println("Choose a network")
 
-	networks := [2]string{"kovan", "polygon"}
+	currentNets := make(map[int]string)
 
-	for i, network := range networks {
-		fmt.Println(i+1, network)
+	indx := 1
+
+	for network := range blckChain.Networks {
+		fmt.Println(indx, network)
+		currentNets[indx] = network
+		indx++
 	}
 
 	for {
@@ -168,25 +173,18 @@ func SelectNetwork() (string, error) {
 			return "", logger.CreateDetails(location, err)
 		}
 
-		netNum, err := strconv.Atoi(number)
+		netIndx, err := strconv.Atoi(number)
 		if err != nil {
 			fmt.Println("Incorrect value, try again")
 			continue
 		}
 
-		if netNum < 1 || netNum > len(networks) {
+		if netIndx < 1 || netIndx > indx-1 {
 			fmt.Println("Incorrect value, try again")
 			continue
 		}
 
-		netwrok := networks[netNum-1]
-
-		_, netExists := blckChain.Networks[netwrok]
-
-		if !netExists {
-			fmt.Println("Network is not supported")
-			continue
-		}
+		netwrok := currentNets[netIndx]
 
 		return netwrok, nil
 	}
