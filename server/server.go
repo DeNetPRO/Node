@@ -43,6 +43,7 @@ import (
 type ReqData struct {
 	RequesterAddr string
 	FileName      string
+	FsTreeHash    string
 }
 
 type NodeAddressResponse struct {
@@ -63,8 +64,7 @@ func Start(port string) {
 
 	r.HandleFunc("/download/{verificationData}/{access}/{network}", ServeFiles).Methods("GET")
 
-	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}", UpdateFsInfo).Methods("POST")
-	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}/{network}", UpdateFsInfo).Methods("POST")
+	r.HandleFunc("/update_fs/{verificationData}/{network}", UpdateFsInfo).Methods("POST")
 
 	r.HandleFunc("/storage/system/{spAddress}/{signature}", StorageSystem).Methods("GET", "POST")
 
@@ -134,7 +134,7 @@ func verifyRequest(next http.Handler) http.Handler {
 		splitPath := strings.Split(address, "/")
 		fmt.Println(splitPath[1])
 
-		if splitPath[1] == "upload" || splitPath[1] == "download" {
+		if splitPath[1] == "upload" || splitPath[1] == "download" || splitPath[1] == "update_fs" {
 			verificationData := strings.Split(splitPath[2], "$")
 
 			requesterAddr := verificationData[0]
@@ -152,6 +152,19 @@ func verifyRequest(next http.Handler) http.Handler {
 				var requestData = ReqData{
 					RequesterAddr: requesterAddr,
 					FileName:      unsignedData,
+				}
+
+				ctx := context.WithValue(r.Context(), "requestData", requestData)
+
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+
+			if splitPath[1] == "update_fs" {
+
+				var requestData = ReqData{
+					RequesterAddr: requesterAddr,
+					FsTreeHash:    unsignedData,
 				}
 
 				ctx := context.WithValue(r.Context(), "requestData", requestData)
@@ -379,17 +392,11 @@ func ServeFiles(w http.ResponseWriter, r *http.Request) {
 // @Param updatedFsInfo body fsysInfo.UpdatedFsInfo true "updatedFsInfo"
 // @Success 200 {string} Status "OK"
 // @Router /update_fs/{spAddress}/{signedFsys}/{network} [post]
-func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
+func UpdateFsInfo(w http.ResponseWriter, r *http.Request) {
 	const location = "server.UpdateFsInfo->"
 
-	vars := mux.Vars(req)
-	spAddress := vars["spAddress"]
-	signedFsys := vars["signedFsys"]
+	vars := mux.Vars(r)
 	network := vars["network"]
-
-	if network == "" {
-		network = "kovan"
-	}
 
 	_, netExists := blckChain.Networks[network]
 
@@ -398,19 +405,13 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if spAddress == "" || signedFsys == "" {
-		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
-		http.Error(w, errs.InvalidArgument.Error(), http.StatusBadRequest)
-		return
-	}
-
-	body, err := io.ReadAll(req.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, errs.InvalidArgument.Error(), http.StatusBadRequest)
 		return
 	}
-	defer req.Body.Close()
+	defer r.Body.Close()
 
 	updatedFs := &fsysInfo.UpdatedFsInfo{}
 	err = json.Unmarshal(body, &updatedFs)
@@ -420,7 +421,9 @@ func UpdateFsInfo(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	err = fsysInfo.Update(updatedFs, spAddress, signedFsys, network)
+	rqtData := r.Context().Value("requestData").(ReqData)
+
+	err = fsysInfo.Update(updatedFs, rqtData.RequesterAddr, rqtData.FsTreeHash, network)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
 		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)

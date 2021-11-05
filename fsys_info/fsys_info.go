@@ -28,7 +28,7 @@ type UpdatedFsInfo struct {
 }
 
 // UpdateFileSystemInfo updates Storage Provider's nounce and file system's root hash info.
-func Update(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem, network string) error {
+func Update(updatedFs *UpdatedFsInfo, spAddress, fileSystemHash, network string) error {
 	const location = "files.UpdateFileSystemInfo->"
 
 	addressPath := filepath.Join(paths.StoragePaths[0], network, spAddress)
@@ -92,14 +92,9 @@ func Update(updatedFs *UpdatedFsInfo, spAddress, signedFileSystem, network strin
 
 	fsTreeNonceBytes := append([]byte(concatFsHashesBuilder.String()), nonce32...)
 	fsTreeNonceHash := sha256.Sum256(fsTreeNonceBytes)
+	stringfsTreeNonceBytesHash := hex.EncodeToString(fsTreeNonceHash[:])
 
-	signedFsys, err := hex.DecodeString(signedFileSystem)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
-	err = sign.Check(spAddress, signedFsys, fsTreeNonceHash)
-	if err != nil {
+	if fileSystemHash != stringfsTreeNonceBytesHash {
 		return logger.CreateDetails(location, err)
 	}
 
