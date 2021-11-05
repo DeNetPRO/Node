@@ -18,10 +18,16 @@ type StorageProviderData struct {
 }
 
 var (
-	NodeAddr        common.Address
-	MU              sync.Mutex
-	TestMode        = false
-	TestWorkDirName = "denet-node-test"
+	NodeAddr         common.Address
+	MU               sync.Mutex
+	TestMode         = false
+	TestWorkDirName  = "denet-node-test"
+	TestIP           = "127.0.0.1"
+	TestPort         = "55050"
+	TestStorageLimit = 1
+	TestNetwork      = "kovan"
+	TestPrivateKey   = "16f98d96422dd7f21965755bd64c9dcd9cfc5d36e029002d9cc579f42511c7ed"
+	TestPassword     = "123"
 )
 
 //Return nodes available space in GB

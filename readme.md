@@ -52,5 +52,3 @@ There is an example how to use the commands
 
 ## API Documentation
 [Documentation](https://app.gitbook.com/o/-MhCmHmTRDb0MF2vIQKk/s/-MhI3_4Kt2DnLxDFkDH8)
-## License
-[MIT](https://choosealicense.com/licenses/mit/)

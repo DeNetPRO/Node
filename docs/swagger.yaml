@@ -73,6 +73,11 @@ paths:
         name: signature
         required: true
         type: string
+      - description: encoded Storage Provider filesystem
+        in: formData
+        name: fs
+        required: true
+        type: file
       responses:
         "200":
           description: OK
@@ -94,6 +99,11 @@ paths:
         name: signature
         required: true
         type: string
+      - description: encoded Storage Provider filesystem
+        in: formData
+        name: fs
+        required: true
+        type: file
       responses:
         "200":
           description: OK

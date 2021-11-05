@@ -110,6 +110,13 @@ var doc = `{
                         "name": "signature",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "encoded Storage Provider filesystem",
+                        "name": "fs",
+                        "in": "formData",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -139,6 +146,13 @@ var doc = `{
                         "description": "Signed Storage Provider address",
                         "name": "signature",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "encoded Storage Provider filesystem",
+                        "name": "fs",
+                        "in": "formData",
                         "required": true
                     }
                 ],

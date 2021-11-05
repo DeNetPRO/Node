@@ -1,7 +1,6 @@
 package spfiles
 
 import (
-	"encoding/hex"
 	"errors"
 	"io"
 	"mime/multipart"
@@ -11,13 +10,10 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/minio/sha256-simd"
-
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/errs"
 
 	fsysinfo "git.denetwork.xyz/DeNet/dfile-secondary-node/fsys_info"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
@@ -135,33 +131,6 @@ func savePart(file io.Reader, pathToSpFiles, fileName string) error {
 	newFile.Close()
 
 	return nil
-}
-
-// ====================================================================================
-
-func Serve(spAddress, fileKey, signatureFromReq, network string) (string, error) {
-	const location = "files.Serve->"
-
-	signature, err := hex.DecodeString(signatureFromReq)
-	if err != nil {
-		return "", logger.CreateDetails(location, err)
-	}
-
-	hash := sha256.Sum256([]byte(fileKey + spAddress))
-
-	err = sign.Check(spAddress, signature, hash)
-	if err != nil {
-		return "", logger.CreateDetails(location, err)
-	}
-
-	pathToFile := filepath.Join(paths.StoragePaths[0], network, spAddress, fileKey)
-
-	_, err = os.Stat(pathToFile)
-	if err != nil {
-		return "", logger.CreateDetails(location, err)
-	}
-
-	return pathToFile, nil
 }
 
 // ====================================================================================
