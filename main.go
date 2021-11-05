@@ -25,7 +25,6 @@ import (
 )
 
 func main() {
-
 	err := paths.Init()
 	if err != nil {
 		logger.Log(logger.CreateDetails("main->", err))

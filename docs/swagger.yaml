@@ -45,6 +45,72 @@ paths:
           schema:
             type: file
       summary: Serve file
+  /ping:
+    get:
+      description: Checking node performance
+      responses:
+        "200":
+          description: ok
+          headers:
+            Status:
+              description: OK
+              type: string
+          schema:
+            type: string
+      summary: Check node status
+  /storage/system/{spAddress}/{signature}:
+    get:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Storage Provider address
+        in: path
+        name: spAddress
+        required: true
+        type: string
+      - description: Signed Storage Provider address
+        in: path
+        name: signature
+        required: true
+        type: string
+      - description: encoded Storage Provider filesystem
+        in: formData
+        name: fs
+        required: true
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Returns Storage Provider filesystem on "GET" request and refreshes
+        filesystem on "POST"
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: Storage Provider address
+        in: path
+        name: spAddress
+        required: true
+        type: string
+      - description: Signed Storage Provider address
+        in: path
+        name: signature
+        required: true
+        type: string
+      - description: encoded Storage Provider filesystem
+        in: formData
+        name: fs
+        required: true
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Returns Storage Provider filesystem on "GET" request and refreshes
+        filesystem on "POST"
   /update_fs/{spAddress}/{signedFsys}/{network}:
     post:
       consumes:

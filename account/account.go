@@ -80,15 +80,17 @@ func Import() (string, config.NodeConfig, error) {
 	var err error
 
 	if shared.TestMode {
-		privKey = "16f98d96422dd7f21965755bd64c9dcd9cfc5d36e029002d9cc579f42511c7ed"
-		originalPassword = "123"
+		privKey = shared.TestPrivateKey
+		originalPassword = shared.TestPassword
 	} else {
 		fmt.Println("Please enter private key of the account you want to import:")
 
-		privKey, err = termEmul.ReadInput()
+		bytesPrivKey, err := gopass.GetPasswdMasked()
 		if err != nil {
 			return "", nodeConfig, logger.CreateDetails(location, err)
 		}
+
+		privKey = string(bytesPrivKey)
 
 		fmt.Println("Please enter your password:")
 
