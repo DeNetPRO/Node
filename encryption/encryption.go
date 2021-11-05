@@ -9,6 +9,7 @@ import (
 	"net"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/pbnjay/memory"
 )
@@ -88,7 +89,11 @@ func GetDeviceMacAddr() (string, error) {
 
 // ====================================================================================
 
+//Return N and P scrypt params
 func GetScryptParams() (int, int) {
+	if shared.TestMode {
+		return keystore.LightScryptN, keystore.LightScryptP
+	}
 
 	if memory.TotalMemory()/1024/1024 < 1000 {
 		return keystore.LightScryptN * 16, keystore.StandardScryptP

@@ -64,13 +64,12 @@ func Create(address, password string) (NodeConfig, error) {
 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
 
 	if shared.TestMode {
-		nodeConfig.IpAddress = "127.0.01"
-		nodeConfig.HTTPPort = "55050"
-		nodeConfig.Network = "kovan"
-		nodeConfig.StorageLimit = 1
+		nodeConfig.IpAddress = shared.TestIP
+		nodeConfig.HTTPPort = shared.TestPort
+		nodeConfig.Network = shared.TestNetwork
+		nodeConfig.StorageLimit = shared.TestStorageLimit
 		nodeConfig.UsedStorageSpace = 0
 		nodeConfig.StoragePaths = []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)}
-
 	} else {
 		network, err := SelectNetwork()
 		if err != nil {
