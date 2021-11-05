@@ -40,6 +40,11 @@ import (
 	"github.com/rs/cors"
 )
 
+type ReqData struct {
+	RequesterAddr string
+	FileName      string
+}
+
 type NodeAddressResponse struct {
 	NodeAddress string `json:"node_address"`
 }
@@ -56,8 +61,7 @@ func Start(port string) {
 
 	r.HandleFunc("/upload/{verificationData}/{size}/{network}", SaveFiles).Methods("POST")
 
-	r.HandleFunc("/download/{spAddress}/{fileKey}/{signature}", ServeFiles).Methods("GET")
-	r.HandleFunc("/download/{spAddress}/{fileKey}/{signature}/{network}", ServeFiles).Methods("GET")
+	r.HandleFunc("/download/{verificationData}/{access}/{network}", ServeFiles).Methods("GET")
 
 	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}", UpdateFsInfo).Methods("POST")
 	r.HandleFunc("/update_fs/{spAddress}/{signedFsys}/{network}", UpdateFsInfo).Methods("POST")
@@ -130,7 +134,7 @@ func verifyRequest(next http.Handler) http.Handler {
 		splitPath := strings.Split(address, "/")
 		fmt.Println(splitPath[1])
 
-		if splitPath[1] == "upload" {
+		if splitPath[1] == "upload" || splitPath[1] == "download" {
 			verificationData := strings.Split(splitPath[2], "$")
 
 			requesterAddr := verificationData[0]
@@ -143,9 +147,23 @@ func verifyRequest(next http.Handler) http.Handler {
 				return
 			}
 
+			if splitPath[1] == "download" {
+
+				var requestData = ReqData{
+					RequesterAddr: requesterAddr,
+					FileName:      unsignedData,
+				}
+
+				ctx := context.WithValue(r.Context(), "requestData", requestData)
+
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+
 		}
 
 		next.ServeHTTP(w, r)
+
 	})
 }
 
@@ -292,18 +310,11 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 // @Param newtork path string  true "network type"
 // @Success 200 {file} binary
 // @Router /download/{spAddress}/{fileKey}/{signature}/{network} [get]
-func ServeFiles(w http.ResponseWriter, req *http.Request) {
+func ServeFiles(w http.ResponseWriter, r *http.Request) {
 	const location = "server.ServeFiles->"
 
-	vars := mux.Vars(req)
-	spAddress := vars["spAddress"]
-	fileKey := vars["fileKey"]
-	signatureFromReq := vars["signature"]
+	vars := mux.Vars(r)
 	network := vars["network"]
-
-	if network == "" {
-		network = "kovan"
-	}
 
 	_, netExists := blckChain.Networks[network]
 
@@ -312,20 +323,34 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if spAddress == "" || fileKey == "" || signatureFromReq == "" {
-		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
+	access := vars["access"]
+
+	accessParams := strings.Split(access, "$")
+
+	if len(accessParams) != 3 {
 		http.Error(w, errs.InvalidArgument.Error(), http.StatusBadRequest)
 		return
 	}
 
-	pathToFile, err := spFiles.Serve(spAddress, fileKey, signatureFromReq, network)
+	ownerAddr := accessParams[0]
+	signedGrant := accessParams[1]
+	permittedTo := accessParams[2]
+
+	err := verifySignature(ownerAddr, signedGrant, permittedTo)
 	if err != nil {
-		logger.Log(logger.CreateDetails(location, err))
-		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
+		http.Error(w, errors.New("forbidden").Error(), http.StatusForbidden)
 		return
 	}
 
-	logger.Log("serving file: " + fileKey)
+	rqtData := r.Context().Value("requestData").(ReqData)
+
+	if rqtData.RequesterAddr != permittedTo {
+		http.Error(w, errors.New("forbidden").Error(), http.StatusForbidden)
+		return
+	}
+
+	pathToFile := filepath.Join(paths.StoragePaths[0], network, ownerAddr, rqtData.FileName)
+
 	stat, err := os.Stat(pathToFile)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
@@ -333,11 +358,13 @@ func ServeFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	logger.Log("serving file: " + rqtData.FileName)
+
 	if !shared.TestMode {
-		logger.SendStatistic(spAddress, network, req.RemoteAddr, logger.Download, stat.Size())
+		logger.SendStatistic(rqtData.RequesterAddr, network, r.RemoteAddr, logger.Download, stat.Size())
 	}
 
-	http.ServeFile(w, req, pathToFile)
+	http.ServeFile(w, r, pathToFile)
 }
 
 // ====================================================================================
