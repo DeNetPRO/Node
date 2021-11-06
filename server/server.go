@@ -28,7 +28,6 @@ import (
 	memInfo "git.denetwork.xyz/DeNet/dfile-secondary-node/mem_info"
 
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
 
 	_ "git.denetwork.xyz/DeNet/dfile-secondary-node/docs"
@@ -127,14 +126,19 @@ func Start(port string) {
 
 // ====================================================================================
 
+var pathExceptions = map[string]bool{
+	"ping": true,
+}
+
 func verifyRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		address := r.URL.Path
 		splitPath := strings.Split(address, "/")
-		fmt.Println(splitPath[1])
 
-		if splitPath[1] == "upload" || splitPath[1] == "download" || splitPath[1] == "update_fs" {
+		exceptedPath := pathExceptions[splitPath[1]]
+
+		if !exceptedPath {
 			verificationData := strings.Split(splitPath[2], "$")
 
 			requesterAddr := verificationData[0]
@@ -147,14 +151,17 @@ func verifyRequest(next http.Handler) http.Handler {
 				return
 			}
 
+			var requestData = ReqData{
+				RequesterAddr: requesterAddr,
+			}
+
+			ctx := context.WithValue(r.Context(), "requestData", requestData)
+
 			if splitPath[1] == "download" {
 
-				var requestData = ReqData{
-					RequesterAddr: requesterAddr,
-					FileName:      unsignedData,
-				}
+				requestData.FileName = unsignedData
 
-				ctx := context.WithValue(r.Context(), "requestData", requestData)
+				ctx = context.WithValue(r.Context(), "requestData", requestData)
 
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
@@ -162,12 +169,9 @@ func verifyRequest(next http.Handler) http.Handler {
 
 			if splitPath[1] == "update_fs" {
 
-				var requestData = ReqData{
-					RequesterAddr: requesterAddr,
-					FsTreeHash:    unsignedData,
-				}
+				requestData.FsTreeHash = unsignedData
 
-				ctx := context.WithValue(r.Context(), "requestData", requestData)
+				ctx = context.WithValue(r.Context(), "requestData", requestData)
 
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
@@ -585,33 +589,9 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 // @Router /storage/system/{spAddress}/{signature} [get]
 // @Success 200 {file} binary
 func backUpSpSf(w http.ResponseWriter, r *http.Request) {
-	const location = "server.StorageSystem"
+	const location = "server.backUpSpSf"
 
-	vars := mux.Vars(r)
-	spAddress := vars["spAddress"]
-	signature := vars["signature"]
-
-	if spAddress == "" || signature == "" {
-		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
-		http.Error(w, errs.InvalidArgument.Error(), http.StatusBadRequest)
-		return
-	}
-
-	signatureBytes, err := hex.DecodeString(signature)
-	if err != nil {
-		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
-		http.Error(w, errs.InvalidArgument.Error(), http.StatusBadRequest)
-		return
-	}
-
-	hashAddress := sha256.Sum256([]byte(spAddress))
-
-	err = sign.Check(spAddress, signatureBytes, hashAddress)
-	if err != nil {
-		logger.Log(logger.CreateDetails(location, errs.WrongSignature))
-		http.Error(w, errs.WrongSignature.Error(), http.StatusForbidden)
-		return
-	}
+	rqtData := r.Context().Value("requestData").(ReqData)
 
 	stat, _ := os.Stat(paths.SystemsDirPath)
 	if stat == nil {
@@ -620,7 +600,7 @@ func backUpSpSf(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		path, exists := spFiles.SearchStorageFilesystem(hex.EncodeToString(hashAddress[:]))
+		path, exists := spFiles.SearchStorageFilesystem(rqtData.RequesterAddr)
 		if !exists {
 			logger.Log(logger.CreateDetails(location, errs.StorageSystemNotFound))
 			http.Error(w, errs.StorageSystemNotFound.Error(), http.StatusBadRequest)
@@ -643,14 +623,14 @@ func backUpSpSf(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = spFiles.UpdateStorageFilesystem(hex.EncodeToString(hashAddress[:]), fileSystemHeader[0])
+		err = spFiles.UpdateStorageFilesystem(rqtData.RequesterAddr, fileSystemHeader[0])
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, errs.Internal))
 			http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		fmt.Println("Storage", spAddress, "FS updated!")
+		fmt.Println("Storage", rqtData.RequesterAddr, "FS backed up!")
 		w.WriteHeader(http.StatusOK)
 		io.WriteString(w, "OK")
 		return
