@@ -66,7 +66,7 @@ func Start(port string) {
 
 	r.HandleFunc("/update_fs/{verificationData}/{network}", UpdateFsInfo).Methods("POST")
 
-	r.HandleFunc("/storage/system/{spAddress}/{signature}", StorageSystem).Methods("GET", "POST")
+	r.HandleFunc("/backup_fs/{verificationData}", backUpSpSf).Methods("GET", "POST")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -584,7 +584,7 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 // @Success 200 {string} Status "OK"
 // @Router /storage/system/{spAddress}/{signature} [get]
 // @Success 200 {file} binary
-func StorageSystem(w http.ResponseWriter, r *http.Request) {
+func backUpSpSf(w http.ResponseWriter, r *http.Request) {
 	const location = "server.StorageSystem"
 
 	vars := mux.Vars(r)
