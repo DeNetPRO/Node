@@ -529,14 +529,12 @@ func sendProof(client *ethclient.Client, fileBytes []byte, nodeAddr common.Addre
 
 	fsRootNonceBytes := append(fsRootHashBytes[:], nonce32...)
 
-	fsRootNonceHash := sha256.Sum256(fsRootNonceBytes)
-
-	err = sign.Check(spAddress.String(), spFs.SignedFsRoot, fsRootNonceHash)
+	err = sign.Check(spAddress.String(), spFs.SignedFsRootNonceHash, sha256.Sum256(fsRootNonceBytes))
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
 
-	signedFSRootNonceHash, err := hex.DecodeString(spFs.SignedFsRoot)
+	signedFSRootNonceHash, err := hex.DecodeString(spFs.SignedFsRootNonceHash)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}

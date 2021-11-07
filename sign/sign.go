@@ -8,7 +8,7 @@ import (
 )
 
 // CheckDataSign checks if signature belongs to the sender.
-func Check(spAddress, signedData string, unsignedDataHash [32]byte) error {
+func Check(signerAddress, signedData string, unsignedDataHash [32]byte) error {
 	signature, err := hex.DecodeString(signedData)
 	if err != nil {
 		return err
@@ -21,7 +21,7 @@ func Check(spAddress, signedData string, unsignedDataHash [32]byte) error {
 
 	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
-	if spAddress != signatureAddress.String() {
+	if signerAddress != signatureAddress.String() {
 		return errs.WrongSignature
 	}
 

@@ -10,11 +10,11 @@ import (
 )
 
 type StorageProviderData struct {
-	Address      string     `json:"address"`
-	Nonce        string     `json:"nonce"`
-	SignedFsRoot string     `json:"signedFsRoot"`
-	Tree         [][][]byte `json:"tree"`
-	Fs           []string
+	Address               string     `json:"address"`
+	Nonce                 string     `json:"nonce"`
+	SignedFsRootNonceHash string     `json:"signedFsRoot"`
+	Tree                  [][][]byte `json:"tree"`
+	Fs                    []string
 }
 
 var (

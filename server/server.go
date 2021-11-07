@@ -503,9 +503,9 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 		return nil, logger.CreateDetails(location, err)
 	}
 
-	signedFsRootHash := r.MultipartForm.Value["fsRootHash"]
+	SignedFsRootNonceHash := r.MultipartForm.Value["fsRootHash"]
 
-	signature, err := hex.DecodeString(signedFsRootHash[0])
+	signature, err := hex.DecodeString(SignedFsRootNonceHash[0])
 	if err != nil {
 		return nil, logger.CreateDetails(location, err)
 	}
@@ -550,11 +550,11 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 	}
 
 	return &shared.StorageProviderData{
-		Address:      storageProviderAddress[0],
-		Fs:           fs,
-		Nonce:        nonce[0],
-		SignedFsRoot: signedFsRootHash[0],
-		Tree:         fsTree,
+		Address:               storageProviderAddress[0],
+		Fs:                    fs,
+		Nonce:                 nonce[0],
+		SignedFsRootNonceHash: SignedFsRootNonceHash[0],
+		Tree:                  fsTree,
 	}, nil
 }
 
