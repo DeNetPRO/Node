@@ -126,9 +126,9 @@ func Update(updatedFs *UpdatedFsInfo, spAddress, fileSystemHash, network string)
 	defer spFsFile.Close()
 
 	spFs = shared.StorageProviderData{
-		Nonce:        updatedFs.Nonce,
-		SignedFsRoot: updatedFs.SignedFsRootHash,
-		Tree:         fsTree,
+		Nonce:                 updatedFs.Nonce,
+		SignedFsRootNonceHash: updatedFs.SignedFsRootHash,
+		Tree:                  fsTree,
 	}
 
 	err = nodeFile.Write(spFsFile, spFs)
