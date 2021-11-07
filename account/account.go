@@ -1,6 +1,7 @@
 package account
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"os"
@@ -178,18 +179,18 @@ func Login(accountAddress, password string) (*accounts.Account, error) {
 
 	shared.NodeAddr = account.Address
 
-	macAddr, err := encryption.GetDeviceMacAddr()
+	secrKey := make([]byte, 32)
+	rand.Read(secrKey)
+
+	encryption.SecretKey = secrKey
+
+	secretKeyHash := sha256.Sum256(secrKey)
+	encryptedKey, err := encryption.EncryptAES(secretKeyHash[:], key.PrivateKey.D.Bytes())
 	if err != nil {
 		return nil, logger.CreateDetails(location, err)
 	}
 
-	encrForKey := sha256.Sum256([]byte(macAddr))
-	encryptedKey, err := encryption.EncryptAES(encrForKey[:], key.PrivateKey.D.Bytes())
-	if err != nil {
-		return nil, logger.CreateDetails(location, err)
-	}
-
-	encryption.PrivateKey = encryptedKey
+	encryption.EncryptedPK = encryptedKey
 
 	return account, nil
 }
@@ -335,18 +336,18 @@ func initAccount(ks *keystore.KeyStore, account *accounts.Account, password stri
 
 	shared.NodeAddr = account.Address
 
-	macAddr, err := encryption.GetDeviceMacAddr()
+	secrKey := make([]byte, 32)
+	rand.Read(secrKey)
+
+	encryption.SecretKey = secrKey
+
+	secretKeyHash := sha256.Sum256(secrKey)
+	encryptedKey, err := encryption.EncryptAES(secretKeyHash[:], key.PrivateKey.D.Bytes())
 	if err != nil {
 		return nodeConf, logger.CreateDetails(location, err)
 	}
 
-	encrForKey := sha256.Sum256([]byte(macAddr))
-	encryptedKey, err := encryption.EncryptAES(encrForKey[:], key.PrivateKey.D.Bytes())
-	if err != nil {
-		return nodeConf, logger.CreateDetails(location, err)
-	}
-
-	encryption.PrivateKey = encryptedKey
+	encryption.EncryptedPK = encryptedKey
 
 	nodeConf, err = config.Create(addressString, password)
 	if err != nil {

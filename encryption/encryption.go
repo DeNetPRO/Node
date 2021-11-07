@@ -1,12 +1,10 @@
 package encryption
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"io"
-	"net"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
@@ -15,14 +13,15 @@ import (
 )
 
 var (
-	PrivateKey []byte //encrypted private key
+	EncryptedPK []byte
+	SecretKey   []byte
 )
 
 // ====================================================================================
 
 //EncryptAES encrypts data using a provided key.
 func EncryptAES(key, data []byte) ([]byte, error) {
-	const location = "shared.encryptAES->"
+	const location = "encryption.encryptAES->"
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, logger.CreateDetails(location, err)
@@ -48,7 +47,7 @@ func EncryptAES(key, data []byte) ([]byte, error) {
 
 //DecryptAES decrypts data using a provided key.
 func DecryptAES(key, data []byte) ([]byte, error) {
-	const location = "shared.decryptAES->"
+	const location = "encryption.decryptAES->"
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, logger.CreateDetails(location, err)
@@ -64,27 +63,6 @@ func DecryptAES(key, data []byte) ([]byte, error) {
 	}
 
 	return decrData, nil
-}
-
-// ====================================================================================
-
-//GetDeviceMacAddr returns device's MAC address.
-func GetDeviceMacAddr() (string, error) {
-	const location = "shared.GetDeviceMacAddr->"
-	var addr string
-	interfaces, err := net.Interfaces()
-	if err != nil {
-		return "", logger.CreateDetails(location, err)
-	}
-
-	for _, i := range interfaces {
-		if !bytes.Equal(i.HardwareAddr, nil) {
-			addr = i.HardwareAddr.String()
-			break
-		}
-	}
-
-	return addr, nil
 }
 
 // ====================================================================================

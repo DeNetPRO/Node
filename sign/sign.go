@@ -7,6 +7,7 @@ import (
 
 // CheckDataSign checks if signature belongs to the sender.
 func Check(spAddress string, signature []byte, hash [32]byte) error {
+
 	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
 	if err != nil {
 		return err
