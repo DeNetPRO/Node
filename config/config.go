@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/disk"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
@@ -150,23 +149,21 @@ func Create(address, password string) (NodeConfig, error) {
 
 // returns selected network
 func SelectNetwork() (string, error) {
-
 	const location = "config.SelectNetwork"
 
 	fmt.Println("Choose a network")
 
-	currentNets := make(map[int]string)
+	currentNets := make([]string, 0, len(blckChain.Networks))
 
 	indx := 1
 
 	for network := range blckChain.Networks {
 		fmt.Println(indx, network)
-		currentNets[indx] = network
+		currentNets = append(currentNets, network)
 		indx++
 	}
 
 	for {
-
 		number, err := termEmul.ReadInput()
 		if err != nil {
 			return "", logger.CreateDetails(location, err)
@@ -178,12 +175,12 @@ func SelectNetwork() (string, error) {
 			continue
 		}
 
-		if netIndx < 1 || netIndx > indx-1 {
+		if netIndx < 1 || netIndx > len(currentNets) {
 			fmt.Println("Incorrect value, try again")
 			continue
 		}
 
-		netwrok := currentNets[netIndx]
+		netwrok := currentNets[netIndx-1]
 
 		return netwrok, nil
 	}
@@ -227,12 +224,6 @@ func SetStorageLimit(pathToConfig, state string, nodeConfig *NodeConfig) error {
 			continue
 		}
 
-		err = disk.InitStorageCapacity(intSpace)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-
 		nodeConfig.StorageLimit = intSpace
 		break
 	}
@@ -246,7 +237,7 @@ func SetStorageLimit(pathToConfig, state string, nodeConfig *NodeConfig) error {
 func SetIpAddr(nodeConfig *NodeConfig, state string) error {
 	const location = "config.SetIpAddr->"
 
-	regIp := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})`)
+	regIp := regexp.MustCompile(`^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$`) // check regex
 
 	for {
 		ipAddr, err := termEmul.ReadInput()
@@ -382,6 +373,7 @@ func ChangeAgreeSendLogs(nodeConfig *NodeConfig, state string) error {
 // ====================================================================================
 
 //Saving config file
+//TODO add os.WriteFile
 func Save(confFile *os.File, nodeConfig NodeConfig) error {
 	confJSON, err := json.Marshal(nodeConfig)
 	if err != nil {
