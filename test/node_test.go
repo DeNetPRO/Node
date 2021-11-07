@@ -3,6 +3,7 @@ package test
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"log"
 	"os"
@@ -128,7 +129,7 @@ func TestCheckSignature(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = sign.Check(accountAddress, signedData, hashData)
+	err = sign.Check(accountAddress, hex.EncodeToString(signedData), hashData)
 	if err != nil {
 		t.Fatal(err)
 	}

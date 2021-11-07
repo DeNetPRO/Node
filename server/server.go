@@ -26,6 +26,7 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	memInfo "git.denetwork.xyz/DeNet/dfile-secondary-node/mem_info"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
 
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
@@ -145,7 +146,7 @@ func verifyRequest(next http.Handler) http.Handler {
 			signedData := verificationData[1]
 			unsignedData := verificationData[2]
 
-			err := verifySignature(requesterAddr, signedData, unsignedData)
+			err := sign.Check(requesterAddr, signedData, sha256.Sum256([]byte(unsignedData)))
 			if err != nil {
 				http.Error(w, errors.New("forbidden").Error(), http.StatusForbidden)
 				return
@@ -185,30 +186,6 @@ func verifyRequest(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 
 	})
-}
-
-// ====================================================================================
-
-func verifySignature(requesterAddr, signedData, unsignedData string) error {
-	signature, err := hex.DecodeString(signedData)
-	if err != nil {
-		return err
-	}
-
-	hash := sha256.Sum256([]byte(unsignedData))
-
-	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
-	if err != nil {
-		return err
-	}
-
-	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
-
-	if signatureAddress.String() != requesterAddr {
-		return errors.New("wrong signature")
-	}
-
-	return nil
 }
 
 // ====================================================================================
@@ -362,7 +339,7 @@ func ServeFiles(w http.ResponseWriter, r *http.Request) {
 	signedGrant := accessParams[1]
 	permittedTo := accessParams[2]
 
-	err := verifySignature(ownerAddr, signedGrant, permittedTo)
+	err := sign.Check(ownerAddr, signedGrant, sha256.Sum256([]byte(permittedTo)))
 	if err != nil {
 		http.Error(w, errors.New("forbidden").Error(), http.StatusForbidden)
 		return
