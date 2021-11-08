@@ -337,10 +337,9 @@ func StartMakingProofs(password string) {
 
 			quarter := len(fileNames) / 4
 
+			fileNames = fileNames[randomFilePos:]
 			if quarter > 0 && randomFilePos+quarter < len(fileNames) {
 				fileNames = fileNames[randomFilePos : randomFilePos+quarter]
-			} else {
-				fileNames = fileNames[randomFilePos:]
 			}
 
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
