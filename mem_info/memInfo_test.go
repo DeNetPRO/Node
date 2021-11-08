@@ -1,65 +1,50 @@
 package meminfo_test
 
-import (
-	"encoding/json"
-	"log"
-	"os"
-	"path/filepath"
-	"testing"
+// func TestMain(m *testing.M) {
+// 	shared.TestModeOn()
 
-	memInfo "git.denetwork.xyz/DeNet/dfile-secondary-node/mem_info"
-	"github.com/stretchr/testify/require"
+// 	defer shared.TestModeOff()
 
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
-)
+// 	err := paths.Init()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-func TestMain(m *testing.M) {
-	shared.TestModeOn()
+// 	_, err = config.Create(shared.TestAccAddr)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	defer shared.TestModeOff()
+// 	exitVal := m.Run()
 
-	err := paths.Init()
-	if err != nil {
-		log.Fatal(err)
-	}
+// 	err = os.RemoveAll(paths.WorkDirPath)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	_, err = config.Create(shared.TestAccAddr)
-	if err != nil {
-		log.Fatal(err)
-	}
+// 	os.Exit(exitVal)
+// }
 
-	exitVal := m.Run()
+// func TestRestoreNodeMemory(t *testing.T) {
 
-	err = os.RemoveAll(paths.WorkDirPath)
-	if err != nil {
-		log.Fatal(err)
-	}
+// 	const fileSize = 1024
 
-	os.Exit(exitVal)
-}
+// 	confFilePath := filepath.Join(paths.ConfigDirPath, paths.ConfFileName)
 
-func TestRestoreNodeMemory(t *testing.T) {
+// 	memInfo.Restore(confFilePath, fileSize)
 
-	const fileSize = 1024
+// 	configFileBytes, err := os.ReadFile(confFilePath)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	confFilePath := filepath.Join(paths.ConfigDirPath, paths.ConfFileName)
+// 	var config config.NodeConfig
 
-	memInfo.Restore(confFilePath, fileSize)
+// 	err = json.Unmarshal(configFileBytes, &config)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	configFileBytes, err := os.ReadFile(confFilePath)
-	if err != nil {
-		t.Fatal(err)
-	}
+// 	require.Equal(t, int64(8976), config.UsedStorageSpace)
 
-	var config config.NodeConfig
-
-	err = json.Unmarshal(configFileBytes, &config)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	require.Equal(t, int64(8976), config.UsedStorageSpace)
-
-}
+// }
