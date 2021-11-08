@@ -30,8 +30,8 @@ const ipUpdateFatalError = "Couldn't update public ip info"
 // AccountLoginCmd is executed when "login" flag is passed after "account" flag and is used for logging in to an account.
 var accountLoginCmd = &cobra.Command{
 	Use:   "login",
-	Short: "log in a blockchain accounts",
-	Long:  "log in a blockchain accounts",
+	Short: "logs in to your account",
+	Long:  "logs in to your account",
 	Run: func(cmd *cobra.Command, args []string) {
 		const location = "accountLoginCmd->"
 		nodeAccount, password, err := account.ValidateUser()
