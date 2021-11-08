@@ -53,7 +53,7 @@ var accountLoginCmd = &cobra.Command{
 		}
 
 		if stat == nil {
-			nodeConfig, err = config.Create(nodeAccount.Address.String(), password)
+			nodeConfig, err = config.Create(nodeAccount.Address.String())
 			if err != nil {
 				logger.Log(logger.CreateDetails(location, err))
 				log.Fatal("couldn't create config file")
@@ -84,9 +84,9 @@ var accountLoginCmd = &cobra.Command{
 
 			blckChain.CurrentNetwork = nodeConfig.Network
 
-			registeredInNetwork := nodeConfig.RegisteredInNetworks[nodeConfig.Network]
+			registeredInNetwork, registrationExists := nodeConfig.RegisteredInNetworks[nodeConfig.Network]
 
-			if !registeredInNetwork {
+			if !registeredInNetwork || !registrationExists {
 
 				fmt.Println("registering node in", nodeConfig.Network)
 

@@ -1,10 +1,6 @@
 package config
 
 import (
-	"context"
-
-	"time"
-
 	"encoding/json"
 	"fmt"
 	"os"
@@ -14,7 +10,6 @@ import (
 	"strings"
 
 	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/disk"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
@@ -51,7 +46,7 @@ var partiallyReservedIPs = map[string]int{
 }
 
 //Create is used for creating a config file.
-func Create(address, password string) (NodeConfig, error) {
+func Create(address string) (NodeConfig, error) {
 	const location = "config.Create->"
 
 	nodeConfig := NodeConfig{
@@ -108,17 +103,7 @@ func Create(address, password string) (NodeConfig, error) {
 
 		fmt.Println("Due to testing stage bug reports from your device are going to be received by developers")
 		fmt.Println("You can stop sending reports by updating config")
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-		defer cancel()
 
-		fmt.Println("Registering node...")
-
-		err = blckChain.RegisterNode(ctx, address, password, nodeConfig.IpAddress, nodeConfig.HTTPPort)
-		if err != nil {
-			return nodeConfig, logger.CreateDetails(location, err)
-		}
-
-		nodeConfig.RegisteredInNetworks[blckChain.CurrentNetwork] = true
 	}
 
 	paths.StoragePaths = nodeConfig.StoragePaths
@@ -227,11 +212,11 @@ func SetStorageLimit(pathToConfig, state string, nodeConfig *NodeConfig) error {
 			continue
 		}
 
-		err = disk.InitStorageCapacity(intSpace)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
+		// err = disk.InitStorageCapacity(intSpace)
+		// if err != nil {
+		// 	fmt.Println(err)
+		// 	continue
+		// }
 
 		nodeConfig.StorageLimit = intSpace
 		break

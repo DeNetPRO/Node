@@ -1,6 +1,7 @@
 package account
 
 import (
+	"context"
 	"crypto/rand"
 	"errors"
 	"fmt"
@@ -9,6 +10,10 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"time"
+
+	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
+	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
 
 	termEmul "git.denetwork.xyz/DeNet/dfile-secondary-node/term_emul"
 	"github.com/howeyc/gopass"
@@ -349,9 +354,36 @@ func initAccount(ks *keystore.KeyStore, account *accounts.Account, password stri
 
 	encryption.EncryptedPK = encryptedKey
 
-	nodeConf, err = config.Create(addressString, password)
+	nodeConf, err = config.Create(addressString)
 	if err != nil {
 		return nodeConf, logger.CreateDetails(location, err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	if !shared.TestMode {
+		fmt.Println("Registering node...")
+
+		err = blckChain.RegisterNode(ctx, addressString, password, nodeConf.IpAddress, nodeConf.HTTPPort)
+		if err != nil {
+			return nodeConf, logger.CreateDetails(location, err)
+		}
+
+		nodeConf.RegisteredInNetworks[blckChain.CurrentNetwork] = true
+
+		pathToConfigFile := filepath.Join(paths.AccsDirPath, addressString, paths.ConfDirName, paths.ConfFileName)
+
+		confFile, _, err := nodeFile.Read(pathToConfigFile)
+		if err != nil {
+			return nodeConf, logger.CreateDetails(location, err)
+		}
+		defer confFile.Close()
+
+		err = config.Save(confFile, nodeConf)
+		if err != nil {
+			return nodeConf, logger.CreateDetails(location, err)
+		}
 	}
 
 	err = os.MkdirAll(filepath.Join(paths.StoragePaths[0]), 0700)
