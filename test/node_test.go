@@ -1,6 +1,9 @@
 package test
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"log"
 	"os"
@@ -10,8 +13,12 @@ import (
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
 	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 )
 
@@ -98,6 +105,36 @@ func TestAccCreate(t *testing.T) {
 
 }
 
+func TestCheckSignature(t *testing.T) {
+
+	secrKeyHash := sha256.Sum256(encryption.SecretKey)
+
+	privateKeyBytes, err := encryption.DecryptAES(secrKeyHash[:], encryption.EncryptedPK)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	privateKey, err := crypto.ToECDSA(privateKeyBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	data := make([]byte, 100)
+	rand.Read(data)
+
+	hashData := sha256.Sum256(data)
+
+	signedData, err := crypto.Sign(hashData[:], privateKey)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = sign.Check(accountAddress, hex.EncodeToString(signedData), hashData)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestLogin(t *testing.T) {
 	account, err := account.Login(accountAddress, accountPassword)
 	if err != nil {
@@ -131,60 +168,30 @@ func TestCheckRightPassword(t *testing.T) {
 	}
 }
 
-// func TestImportAccount(t *testing.T) {
-// 	accountAddress, c, err := account.Import()
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-// }
+func TestImportAccount(t *testing.T) {
+	accountAddress, accConfig, err := account.Import()
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	if accountAddress == "" {
-// 		t.Errorf("import account address must not to b	e empty")
-// 	}
+	if accountAddress == "" {
+		t.Errorf("import account address must not to be empty")
+	}
 
-// 	wantConfig := config.NodeConfig{
-// 		Address: accountAddress,
-// 		Network: blckChain.Network,
+	wantConfig := config.NodeConfig{
+		Address:              accountAddress,
+		IpAddress:            "127.0.0.1",
+		HTTPPort:             "55050",
+		Network:              "kovan",
+		StorageLimit:         1,
+		StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, accountAddress)},
+		UsedStorageSpace:     0,
+		RegisteredInNetworks: map[string]bool{},
+		AgreeSendLogs:        true,
+	}
 
-// 		AgreeSendLogs: true,
-// 	}
-
-// 	require.Equal(t, wantConfig, c)
-// }
-
-// func TestCheckSignature(t *testing.T) {
-// 	macAddress, err := encryption.GetDeviceMacAddr()
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	encrForKey := sha256.Sum256([]byte(macAddress))
-// 	privateKeyBytes, err := encryption.DecryptAES(encrForKey[:], encryption.PrivateKey)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	privateKey, err := crypto.ToECDSA(privateKeyBytes)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	data := make([]byte, 100)
-// 	rand.Seed(time.Now().Unix())
-// 	rand.Read(data)
-
-// 	hashData := sha256.Sum256(data)
-
-// 	signedData, err := crypto.Sign(hashData[:], privateKey)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	err = sign.Check(accountAddress, signedData, hashData)
-// 	if err != nil {
-// 		t.Error(encrForKey)
-// 	}
-// }
+	require.Equal(t, wantConfig, accConfig)
+}
 
 // func TestRestoreNodeMemory(t *testing.T) {
 // 	fileSize := 1024 * 1024

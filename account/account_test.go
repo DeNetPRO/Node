@@ -86,7 +86,7 @@ func TestAccountCreate(t *testing.T) {
 	require.Equal(t, shared.TestNetwork, config.Network, "network is incorrect, want: ", shared.TestNetwork, " got: ", config.Network)
 	require.Equal(t, shared.TestStorageLimit, config.StorageLimit, "storage limit is incorrect, want: ", shared.TestStorageLimit, " got: ", config.StorageLimit)
 	require.Empty(t, config.UsedStorageSpace, "used storage space must be 0 instead ", config.UsedStorageSpace)
-	require.NotEmpty(t, encryption.PrivateKey, "account private key is empty")
+	require.NotEmpty(t, encryption.EncryptedPK, "account private key is empty")
 	require.Equal(t, shared.NodeAddr.String(), address, "node address don't equal")
 
 	list := List()
@@ -166,7 +166,7 @@ func TestAccountImport(t *testing.T) {
 	require.Equal(t, shared.TestNetwork, config.Network, "network is incorrect, want: ", shared.TestNetwork, " got: ", config.Network)
 	require.Equal(t, shared.TestStorageLimit, config.StorageLimit, "storage limit is incorrect, want: ", shared.TestStorageLimit, " got: ", config.StorageLimit)
 	require.Empty(t, config.UsedStorageSpace, "used storage space must be 0 instead ", config.UsedStorageSpace)
-	require.NotEmpty(t, encryption.PrivateKey, "account private key is empty")
+	require.NotEmpty(t, encryption.EncryptedPK, "account private key is empty")
 	require.Equal(t, shared.NodeAddr.String(), address, "node address don't equal")
 
 	list := List()

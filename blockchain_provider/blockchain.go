@@ -337,10 +337,9 @@ func StartMakingProofs(password string) {
 
 			quarter := len(fileNames) / 4
 
+			fileNames = fileNames[randomFilePos:]
 			if quarter > 0 && randomFilePos+quarter < len(fileNames) {
 				fileNames = fileNames[randomFilePos : randomFilePos+quarter]
-			} else {
-				fileNames = fileNames[randomFilePos:]
 			}
 
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
@@ -529,22 +528,20 @@ func sendProof(client *ethclient.Client, fileBytes []byte, nodeAddr common.Addre
 
 	fsRootNonceBytes := append(fsRootHashBytes[:], nonce32...)
 
-	signedFSRootHash, err := hex.DecodeString(spFs.SignedFsRoot)
+	err = sign.Check(spAddress.String(), spFs.SignedFsRootNonceHash, sha256.Sum256(fsRootNonceBytes))
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
 
-	fsRootNonceHash := sha256.Sum256(fsRootNonceBytes)
-
-	err = sign.Check(spAddress.String(), signedFSRootHash, fsRootNonceHash)
+	signedFSRootNonceHash, err := hex.DecodeString(spFs.SignedFsRootNonceHash)
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
 
-	if signedFSRootHash[len(signedFSRootHash)-1] == 1 { //ecdsa version fix
-		signedFSRootHash[len(signedFSRootHash)-1] = 28
+	if signedFSRootNonceHash[len(signedFSRootNonceHash)-1] == 1 { //ecdsa version fix
+		signedFSRootNonceHash[len(signedFSRootNonceHash)-1] = 28
 	} else {
-		signedFSRootHash = signedFSRootHash[:64]
+		signedFSRootNonceHash = signedFSRootNonceHash[:64]
 	}
 
 	fmt.Println("transactNonce", proofOpts.Nonce)
@@ -554,7 +551,7 @@ func sendProof(client *ethclient.Client, fileBytes []byte, nodeAddr common.Addre
 
 	proofOpts.Context = ctx
 
-	_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
+	_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootNonceHash, fileBytes[:eightKB], proof)
 	if err != nil {
 
 		debug.FreeOSMemory()
@@ -564,7 +561,7 @@ func sendProof(client *ethclient.Client, fileBytes []byte, nodeAddr common.Addre
 
 			fmt.Println("Trying to prove with incremented nonce")
 
-			_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootHash, fileBytes[:eightKB], proof)
+			_, err = posInstance.SendProof(proofOpts, common.HexToAddress(spAddress.String()), uint32(blockNum), fsRootHashBytes, uint64(nonceInt), signedFSRootNonceHash, fileBytes[:eightKB], proof)
 			if err != nil {
 				debug.FreeOSMemory()
 				return logger.CreateDetails(location, err)

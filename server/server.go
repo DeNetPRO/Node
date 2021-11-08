@@ -26,9 +26,9 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	memInfo "git.denetwork.xyz/DeNet/dfile-secondary-node/mem_info"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
 
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
 
 	_ "git.denetwork.xyz/DeNet/dfile-secondary-node/docs"
@@ -66,7 +66,7 @@ func Start(port string) {
 
 	r.HandleFunc("/update_fs/{verificationData}/{network}", UpdateFsInfo).Methods("POST")
 
-	r.HandleFunc("/storage/system/{spAddress}/{signature}", StorageSystem).Methods("GET", "POST")
+	r.HandleFunc("/backup_fs/{verificationData}", BackUpStorageFileSystem).Methods("GET", "POST")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -127,81 +127,54 @@ func Start(port string) {
 
 // ====================================================================================
 
+var pathExceptions = map[string]bool{
+	"ping": true,
+}
+
 func verifyRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		address := r.URL.Path
 		splitPath := strings.Split(address, "/")
-		fmt.Println(splitPath[1])
 
-		if splitPath[1] == "upload" || splitPath[1] == "download" || splitPath[1] == "update_fs" {
+		exceptedPath := pathExceptions[splitPath[1]]
+
+		if !exceptedPath {
 			verificationData := strings.Split(splitPath[2], "$")
 
 			requesterAddr := verificationData[0]
 			signedData := verificationData[1]
 			unsignedData := verificationData[2]
 
-			err := verifySignature(requesterAddr, signedData, unsignedData)
+			err := sign.Check(requesterAddr, signedData, sha256.Sum256([]byte(unsignedData)))
 			if err != nil {
 				http.Error(w, errors.New("forbidden").Error(), http.StatusForbidden)
 				return
 			}
 
-			if splitPath[1] == "download" {
-
-				var requestData = ReqData{
-					RequesterAddr: requesterAddr,
-					FileName:      unsignedData,
-				}
-
-				ctx := context.WithValue(r.Context(), "requestData", requestData)
-
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return
+			var requestData = ReqData{
+				RequesterAddr: requesterAddr,
 			}
 
-			if splitPath[1] == "update_fs" {
+			ctx := context.WithValue(r.Context(), "requestData", requestData)
 
-				var requestData = ReqData{
-					RequesterAddr: requesterAddr,
-					FsTreeHash:    unsignedData,
-				}
-
-				ctx := context.WithValue(r.Context(), "requestData", requestData)
-
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return
+			switch splitPath[1] {
+			case "download":
+				requestData.FileName = unsignedData
+				ctx = context.WithValue(r.Context(), "requestData", requestData)
+			case "update_fs":
+				requestData.FsTreeHash = unsignedData
+				ctx = context.WithValue(r.Context(), "requestData", requestData)
 			}
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
 
 		}
 
 		next.ServeHTTP(w, r)
 
 	})
-}
-
-// ====================================================================================
-
-func verifySignature(requesterAddr, signedData, unsignedData string) error {
-	signature, err := hex.DecodeString(signedData)
-	if err != nil {
-		return err
-	}
-
-	hash := sha256.Sum256([]byte(unsignedData))
-
-	sigPublicKey, err := crypto.SigToPub(hash[:], signature)
-	if err != nil {
-		return err
-	}
-
-	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
-
-	if signatureAddress.String() != requesterAddr {
-		return errors.New("wrong signature")
-	}
-
-	return nil
 }
 
 // ====================================================================================
@@ -222,7 +195,8 @@ func healthCheck(w http.ResponseWriter, _ *http.Request) {
 // SaveFiles godoc
 // @Summary Save files
 // @Description Save files from Storage Provider
-// @Accept  multipart/form-data
+// @Accept multipart/form-data
+// @Param verificationData path string true "verification data is the {storage address}${signed data}${unsigned data}"
 // @Param size path int true "file size in bytes"
 // @Param network path string true "network type"
 // @Param address formData string true "Storage Provider address"
@@ -231,7 +205,7 @@ func healthCheck(w http.ResponseWriter, _ *http.Request) {
 // @Param fs formData []string true "array of hashes of all storage provider files"
 // @Param files formData file  true "files parts"
 // @Success 200 {string} Status "OK"
-// @Router /upload/{size}/{network} [post]
+// @Router /upload/{verificationData}/{size}/{network} [post]
 func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	const location = "server.SaveFiles->"
 
@@ -323,12 +297,11 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 // @Summary Serve file
 // @Description Serve file by key
 // @Produce octet-stream
-// @Param spAddress path string true "Storage Provider address"
-// @Param fileKey path string true "file key"
-// @Param signature path string true "Storage Provider signature"
+// @Param verificationData path string true "verification data is the {storage address}${signed file name}${file name} string"
+// @Param access path string true "Access is the string type of {owner address}${signed grant}${permitted to address}"
 // @Param newtork path string  true "network type"
 // @Success 200 {file} binary
-// @Router /download/{spAddress}/{fileKey}/{signature}/{network} [get]
+// @Router /download/{verificationData}/{access}/{network} [get]
 func ServeFiles(w http.ResponseWriter, r *http.Request) {
 	const location = "server.ServeFiles->"
 
@@ -355,7 +328,7 @@ func ServeFiles(w http.ResponseWriter, r *http.Request) {
 	signedGrant := accessParams[1]
 	permittedTo := accessParams[2]
 
-	err := verifySignature(ownerAddr, signedGrant, permittedTo)
+	err := sign.Check(ownerAddr, signedGrant, sha256.Sum256([]byte(permittedTo)))
 	if err != nil {
 		http.Error(w, errors.New("forbidden").Error(), http.StatusForbidden)
 		return
@@ -392,12 +365,11 @@ func ServeFiles(w http.ResponseWriter, r *http.Request) {
 // @Summary Update Storage Provider's filesystem
 // @Description Update Storage Provider's filesystem, etc. root hash, nonce, file system
 // @Accept  json
-// @Param spAddress path string true "Storage Provider address"
-// @Param signedFsys path string true "Signed Storage Provider root hash"
+// @Param verificationData path string true "verification data is the string type of {storage address}${signed fs root hash}${fs root hash}"
 // @Param newtork path string  true "network type"
 // @Param updatedFsInfo body fsysInfo.UpdatedFsInfo true "updatedFsInfo"
 // @Success 200 {string} Status "OK"
-// @Router /update_fs/{spAddress}/{signedFsys}/{network} [post]
+// @Router /update_fs/{verificationData}/{network} [post]
 func UpdateFsInfo(w http.ResponseWriter, r *http.Request) {
 	const location = "server.UpdateFsInfo->"
 
@@ -519,9 +491,9 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 		return nil, logger.CreateDetails(location, err)
 	}
 
-	signedFsRootHash := r.MultipartForm.Value["fsRootHash"]
+	SignedFsRootNonceHash := r.MultipartForm.Value["fsRootHash"]
 
-	signature, err := hex.DecodeString(signedFsRootHash[0])
+	signature, err := hex.DecodeString(SignedFsRootNonceHash[0])
 	if err != nil {
 		return nil, logger.CreateDetails(location, err)
 	}
@@ -566,52 +538,27 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 	}
 
 	return &shared.StorageProviderData{
-		Address:      storageProviderAddress[0],
-		Fs:           fs,
-		Nonce:        nonce[0],
-		SignedFsRoot: signedFsRootHash[0],
-		Tree:         fsTree,
+		Address:               storageProviderAddress[0],
+		Fs:                    fs,
+		Nonce:                 nonce[0],
+		SignedFsRootNonceHash: SignedFsRootNonceHash[0],
+		Tree:                  fsTree,
 	}, nil
 }
 
-// StorageSystem godoc
+// BackUpStorageFileSystem godoc
 // @Summary Returns Storage Provider filesystem on "GET" request and refreshes filesystem on "POST"
 // @Accept multipart/form-data
-// @Param spAddress path string true "Storage Provider address"
-// @Param signature path string true "Signed Storage Provider address"
-// @Router /storage/system/{spAddress}/{signature} [post]
+// @Param verificationData path string true "{storage address}${signed data}${unsigned data}"
+// @Router /backup_fs/{verificationData} [post]
 // @Param fs formData file  true "encoded Storage Provider filesystem"
 // @Success 200 {string} Status "OK"
-// @Router /storage/system/{spAddress}/{signature} [get]
+// @Router /backup_fs/{verificationData} [get]
 // @Success 200 {file} binary
-func StorageSystem(w http.ResponseWriter, r *http.Request) {
-	const location = "server.StorageSystem"
+func BackUpStorageFileSystem(w http.ResponseWriter, r *http.Request) {
+	const location = "server.BackUpStorageFileSystem"
 
-	vars := mux.Vars(r)
-	spAddress := vars["spAddress"]
-	signature := vars["signature"]
-
-	if spAddress == "" || signature == "" {
-		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
-		http.Error(w, errs.InvalidArgument.Error(), http.StatusBadRequest)
-		return
-	}
-
-	signatureBytes, err := hex.DecodeString(signature)
-	if err != nil {
-		logger.Log(logger.CreateDetails(location, errs.InvalidArgument))
-		http.Error(w, errs.InvalidArgument.Error(), http.StatusBadRequest)
-		return
-	}
-
-	hashAddress := sha256.Sum256([]byte(spAddress))
-
-	err = sign.Check(spAddress, signatureBytes, hashAddress)
-	if err != nil {
-		logger.Log(logger.CreateDetails(location, errs.WrongSignature))
-		http.Error(w, errs.WrongSignature.Error(), http.StatusForbidden)
-		return
-	}
+	rqtData := r.Context().Value("requestData").(ReqData)
 
 	stat, _ := os.Stat(paths.SystemsDirPath)
 	if stat == nil {
@@ -620,7 +567,7 @@ func StorageSystem(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		path, exists := spFiles.SearchStorageFilesystem(hex.EncodeToString(hashAddress[:]))
+		path, exists := spFiles.SearchStorageFilesystem(rqtData.RequesterAddr)
 		if !exists {
 			logger.Log(logger.CreateDetails(location, errs.StorageSystemNotFound))
 			http.Error(w, errs.StorageSystemNotFound.Error(), http.StatusBadRequest)
@@ -643,14 +590,14 @@ func StorageSystem(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = spFiles.UpdateStorageFilesystem(hex.EncodeToString(hashAddress[:]), fileSystemHeader[0])
+		err = spFiles.UpdateStorageFilesystem(rqtData.RequesterAddr, fileSystemHeader[0])
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, errs.Internal))
 			http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		fmt.Println("Storage", spAddress, "FS updated!")
+		fmt.Println("Storage", rqtData.RequesterAddr, "FS backed up!")
 		w.WriteHeader(http.StatusOK)
 		io.WriteString(w, "OK")
 		return

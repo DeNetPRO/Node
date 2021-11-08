@@ -103,11 +103,6 @@ func Update(updatedFs *UpdatedFsInfo, spAddress, fileSystemHash, network string)
 		return logger.CreateDetails(location, err)
 	}
 
-	signedRootHash, err := hex.DecodeString(updatedFs.SignedFsRootHash)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-
 	fsRootBytes, err := hex.DecodeString(fsRootHash)
 	if err != nil {
 		return logger.CreateDetails(location, err)
@@ -115,9 +110,7 @@ func Update(updatedFs *UpdatedFsInfo, spAddress, fileSystemHash, network string)
 
 	fsRootNonceBytes := append(fsRootBytes, nonce32...)
 
-	fsRootNonceHash := sha256.Sum256(fsRootNonceBytes)
-
-	err = sign.Check(spAddress, signedRootHash, fsRootNonceHash)
+	err = sign.Check(spAddress, updatedFs.SignedFsRootHash, sha256.Sum256(fsRootNonceBytes))
 	if err != nil {
 		return logger.CreateDetails(location, err)
 	}
@@ -133,9 +126,9 @@ func Update(updatedFs *UpdatedFsInfo, spAddress, fileSystemHash, network string)
 	defer spFsFile.Close()
 
 	spFs = shared.StorageProviderData{
-		Nonce:        updatedFs.Nonce,
-		SignedFsRoot: updatedFs.SignedFsRootHash,
-		Tree:         fsTree,
+		Nonce:                 updatedFs.Nonce,
+		SignedFsRootNonceHash: updatedFs.SignedFsRootHash,
+		Tree:                  fsTree,
 	}
 
 	err = nodeFile.Write(spFsFile, spFs)
