@@ -102,8 +102,10 @@ func TestAccCreate(t *testing.T) {
 
 }
 
-func TestListAccsAfterCreation(t *testing.T) {
-	require.Equal(t, 1, len(account.List()))
+func TestListAccExists(t *testing.T) {
+	if !account.AccExists(account.List(), testAccAddr) {
+		t.Fatal("account does not exist")
+	}
 }
 
 func TestAccountLogin(t *testing.T) {
