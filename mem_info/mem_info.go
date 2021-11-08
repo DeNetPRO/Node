@@ -2,6 +2,7 @@ package meminfo
 
 import (
 	"encoding/json"
+	"errors"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
@@ -32,6 +33,11 @@ func Restore(pathToConfig string, fileSize int) {
 	}
 
 	nodeConfig.UsedStorageSpace -= int64(fileSize)
+
+	if nodeConfig.UsedStorageSpace < 0 {
+		logger.Log(logger.CreateDetails(location, errors.New("used storage space is less than 0")))
+		return
+	}
 
 	err = config.Save(confFile, nodeConfig)
 	if err != nil {
