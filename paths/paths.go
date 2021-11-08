@@ -14,6 +14,7 @@ var (
 	AccsDirPath    string
 	WorkDirName    = "denet-node"
 	ConfDirName    = "config"
+	ConfigDirPath  string
 	ConfFileName   = "config.json"
 	StorageDirName = "storage"
 	StoragePaths   []string

@@ -42,7 +42,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestListAccsBeforeCreation(t *testing.T) {
-	require.Equal(t, len(account.List()), 0)
+	require.Equal(t, 0, len(account.List()))
 }
 
 func TestAccCreate(t *testing.T) {
@@ -103,7 +103,7 @@ func TestAccCreate(t *testing.T) {
 }
 
 func TestListAccsAfterCreation(t *testing.T) {
-	require.Equal(t, len(account.List()), 1)
+	require.Equal(t, 1, len(account.List()))
 }
 
 func TestAccountLogin(t *testing.T) {
@@ -154,4 +154,5 @@ func TestImportAccount(t *testing.T) {
 	}
 
 	require.Equal(t, wantConfig, accConfig)
+
 }

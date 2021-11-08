@@ -233,9 +233,9 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
+	pathToConfigFile := filepath.Join(paths.ConfigDirPath, paths.ConfFileName)
 
-	fileSize, spaceNotEnough, _, err := checkAndReserveSpace(req, pathToConfig)
+	fileSize, spaceNotEnough, _, err := checkAndReserveSpace(req, pathToConfigFile)
 	if err != nil {
 
 		logger.Log(logger.CreateDetails(location, err))
@@ -252,7 +252,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	spData, err := parseRequest(req)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
-		memInfo.Restore(pathToConfig, fileSize)
+		memInfo.Restore(pathToConfigFile, fileSize)
 		http.Error(w, errs.ParseMultipartForm.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -262,7 +262,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	dirStat, err := os.Stat(pathToSpFiles)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		logger.Log(logger.CreateDetails(location, err))
-		memInfo.Restore(pathToConfig, fileSize)
+		memInfo.Restore(pathToConfigFile, fileSize)
 		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -288,7 +288,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	err = spFiles.Save(req, spData, pathToSpFiles)
 	if err != nil {
 		logger.Log(logger.CreateDetails(location, err))
-		memInfo.Restore(pathToConfig, fileSize)
+		memInfo.Restore(pathToConfigFile, fileSize)
 		http.Error(w, errs.Internal.Error(), http.StatusInternalServerError)
 		return
 	}

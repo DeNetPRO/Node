@@ -56,7 +56,7 @@ func Create(address string) (NodeConfig, error) {
 		RegisteredInNetworks: map[string]bool{},
 	}
 
-	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
+	paths.ConfigDirPath = filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
 
 	if shared.TestMode {
 		nodeConfig.IpAddress = shared.TestIP
@@ -76,7 +76,7 @@ func Create(address string) (NodeConfig, error) {
 
 		fmt.Println("Please enter disk space for usage in GB (should be positive number)")
 
-		err = SetStorageLimit(pathToConfig, CreateStatus, &nodeConfig)
+		err = SetStorageLimit(paths.ConfigDirPath, CreateStatus, &nodeConfig)
 		if err != nil {
 			return nodeConfig, logger.CreateDetails(location, err)
 		}
@@ -108,7 +108,7 @@ func Create(address string) (NodeConfig, error) {
 
 	paths.StoragePaths = nodeConfig.StoragePaths
 
-	confFile, err := os.Create(filepath.Join(pathToConfig, paths.ConfFileName))
+	confFile, err := os.Create(filepath.Join(paths.ConfigDirPath, paths.ConfFileName))
 	if err != nil {
 		return nodeConfig, logger.CreateDetails(location, err)
 	}

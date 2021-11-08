@@ -40,11 +40,11 @@ var accountLoginCmd = &cobra.Command{
 			log.Fatal(accLoginFatalError)
 		}
 
-		pathToConfigDir := filepath.Join(paths.AccsDirPath, nodeAccount.Address.String(), paths.ConfDirName)
+		paths.ConfigDirPath = filepath.Join(paths.AccsDirPath, nodeAccount.Address.String(), paths.ConfDirName)
 
 		var nodeConfig config.NodeConfig
 
-		pathToConfigFile := filepath.Join(pathToConfigDir, paths.ConfFileName)
+		pathToConfigFile := filepath.Join(paths.ConfigDirPath, paths.ConfFileName)
 
 		stat, err := os.Stat(pathToConfigFile)
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
