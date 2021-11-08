@@ -159,10 +159,10 @@ func Start() {
 			}
 
 			if removedTotal > 0 {
-				pathToConfig := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.ConfDirName, paths.ConfFileName)
+				pathToConfigFile := filepath.Join(paths.ConfigDirPath, paths.ConfFileName)
 
 				shared.MU.Lock()
-				confFile, fileBytes, err := nodeFile.Read(pathToConfig)
+				confFile, fileBytes, err := nodeFile.Read(pathToConfigFile)
 				if err != nil {
 					shared.MU.Unlock()
 					logger.Log(logger.CreateDetails(location, err))

@@ -1,25 +1,13 @@
 package test
 
 import (
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"log"
 	"os"
-	"path/filepath"
-	"strings"
 	"testing"
 
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
-	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/encryption"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/stretchr/testify/require"
 )
 
 type FileSendInfo struct {
@@ -28,17 +16,7 @@ type FileSendInfo struct {
 }
 
 var (
-	accountPassword           = "123"
-	accountAddress            string
-	nodeAddress               []byte
-	ErrorInvalidPassword      = errors.New(" could not decrypt key with given password")
-	storagePath               string
-	testFileName              = "file"
-	fileSize                  int64
-	testFilePath              string
-	NodeTestPrivateKey        = "16f98d96422dd7f21965755bd64c9dcd9cfc5d36e029002d9cc579f42511c7ed"
-	storageProviderPrivateKey = "0a9fb845e346f74227d2ddf0b85dedb4ccddee33e9b8d0f6f4828a7a2dcf9509"
-	storageProviderAddress    = "0x3429cC113ABf4DEc8ECA64A713761F90A000dDfB"
+	ErrorInvalidPassword = errors.New(" could not decrypt key with given password")
 )
 
 func TestMain(m *testing.M) {
@@ -59,171 +37,6 @@ func TestMain(m *testing.M) {
 
 	os.Exit(exitVal)
 }
-
-func TestEmptyAccountListBeforeCreating(t *testing.T) {
-
-	accs := account.List()
-	want := 0
-	get := len(accs)
-
-	require.Equal(t, want, get)
-}
-
-func TestAccCreate(t *testing.T) {
-	_, _, err := account.Create(accountPassword)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	_, err = os.Stat(paths.AccsDirPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	accs := account.List()
-	if len(accs) != 1 {
-		t.Fatal("Wrong accs count, must be one", accs)
-	}
-
-	accountAddress = accs[0]
-
-	pathToStorage := filepath.Join(paths.StoragePaths[0], blckChain.CurrentNetwork)
-
-	_, err = os.Stat(pathToStorage)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	pathToAcc := filepath.Join(paths.AccsDirPath, accountAddress)
-
-	pathToConfigFile := filepath.Join(pathToAcc, paths.ConfDirName, paths.ConfFileName)
-
-	_, err = os.Stat(pathToConfigFile)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-}
-
-func TestCheckSignature(t *testing.T) {
-
-	secrKeyHash := sha256.Sum256(encryption.SecretKey)
-
-	privateKeyBytes, err := encryption.DecryptAES(secrKeyHash[:], encryption.EncryptedPK)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	privateKey, err := crypto.ToECDSA(privateKeyBytes)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	data := make([]byte, 100)
-	rand.Read(data)
-
-	hashData := sha256.Sum256(data)
-
-	signedData, err := crypto.Sign(hashData[:], privateKey)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = sign.Check(accountAddress, hex.EncodeToString(signedData), hashData)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestLogin(t *testing.T) {
-	account, err := account.Login(accountAddress, accountPassword)
-	if err != nil {
-		t.Fatal(err)
-	}
-	require.Equal(t, accountAddress, account.Address.String())
-}
-
-func TestLoginInvalidPass(t *testing.T) {
-	_, err := account.Login(accountAddress, "invalid")
-	want := ErrorInvalidPassword
-
-	splitErr := strings.Split(err.Error(), "->")
-
-	require.EqualError(t, want, splitErr[len(splitErr)-1])
-}
-
-func TestLoginUnknownAddress(t *testing.T) {
-	unknownAddress := "accountAddress"
-	_, err := account.Login(unknownAddress, accountPassword)
-	want := errors.New(" accountAddress address is not found")
-	splitErr := strings.Split(err.Error(), "->")
-
-	require.EqualError(t, want, splitErr[len(splitErr)-1])
-}
-
-func TestCheckRightPassword(t *testing.T) {
-	err := account.CheckPassword(accountPassword, accountAddress)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
-func TestImportAccount(t *testing.T) {
-	accountAddress, accConfig, err := account.Import()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if accountAddress == "" {
-		t.Errorf("import account address must not to be empty")
-	}
-
-	wantConfig := config.NodeConfig{
-		Address:              accountAddress,
-		IpAddress:            "127.0.0.1",
-		HTTPPort:             "55050",
-		Network:              "kovan",
-		StorageLimit:         1,
-		StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, accountAddress)},
-		UsedStorageSpace:     0,
-		RegisteredInNetworks: map[string]bool{},
-		AgreeSendLogs:        true,
-	}
-
-	require.Equal(t, wantConfig, accConfig)
-}
-
-// func TestRestoreNodeMemory(t *testing.T) {
-// 	fileSize := 1024 * 1024
-
-// 	confFile, nodeConfig, err := getConfig()
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	want := nodeConfig.UsedStorageSpace
-
-// 	nodeConfig.UsedStorageSpace += int64(fileSize)
-
-// 	err = config.Save(confFile, *nodeConfig)
-// 	if err != nil {
-// 		confFile.Close()
-// 		t.Fatal(err)
-// 	}
-
-// 	confFile.Close()
-
-// 	meminfo.Restore(configPath, fileSize)
-
-// 	confFile, nodeConfig, err = getConfig()
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	confFile.Close()
-
-// 	require.Equal(t, want, nodeConfig.UsedStorageSpace)
-// }
 
 // func TestUpload(t *testing.T) {
 // 	createFilesForTest()

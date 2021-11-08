@@ -1,6 +1,7 @@
 package account
 
 import (
+	"context"
 	"crypto/rand"
 	"errors"
 	"fmt"
@@ -9,6 +10,10 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"time"
+
+	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
+	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
 
 	termEmul "git.denetwork.xyz/DeNet/dfile-secondary-node/term_emul"
 	"github.com/howeyc/gopass"
@@ -22,7 +27,6 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -195,27 +199,6 @@ func Login(accountAddress, password string) (*accounts.Account, error) {
 	return account, nil
 }
 
-//CheckPassword checks crypto wallet's password.
-func CheckPassword(password, address string) error {
-	const location = "account.CheckPassword->"
-	scryptN, scryptP := encryption.GetScryptParams()
-
-	ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
-	acc, err := utils.MakeAddress(ks, address)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-	key, err := ks.Export(acc, password, password)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-	_, err = keystore.DecryptKey(key, password)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-	return nil
-}
-
 //ValidateUser asks user for password and checks it.
 func ValidateUser() (*accounts.Account, string, error) {
 	const location = "account.ValidateUser->"
@@ -260,7 +243,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 			accountAddress = accounts[accNum-1]
 		}
 
-		if !accExists(accounts, accountAddress) {
+		if !AccExists(accounts, accountAddress) {
 			fmt.Println("There is no such account address:")
 			for i, a := range accounts {
 				fmt.Println(i+1, a)
@@ -318,11 +301,6 @@ func initAccount(ks *keystore.KeyStore, account *accounts.Account, password stri
 
 	addressString := account.Address.String()
 
-	err := os.MkdirAll(filepath.Join(paths.AccsDirPath, addressString, paths.ConfDirName), 0700)
-	if err != nil {
-		return nodeConf, logger.CreateDetails(location, err)
-	}
-
 	keyJson, err := ks.Export(*account, password, password)
 	if err != nil {
 		fmt.Println("Wrong password")
@@ -349,9 +327,36 @@ func initAccount(ks *keystore.KeyStore, account *accounts.Account, password stri
 
 	encryption.EncryptedPK = encryptedKey
 
-	nodeConf, err = config.Create(addressString, password)
+	nodeConf, err = config.Create(addressString)
 	if err != nil {
 		return nodeConf, logger.CreateDetails(location, err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	if !shared.TestMode {
+		fmt.Println("Registering node...")
+
+		err = blckChain.RegisterNode(ctx, addressString, password, nodeConf.IpAddress, nodeConf.HTTPPort)
+		if err != nil {
+			return nodeConf, logger.CreateDetails(location, err)
+		}
+
+		nodeConf.RegisteredInNetworks[blckChain.CurrentNetwork] = true
+
+		pathToConfigFile := filepath.Join(paths.AccsDirPath, addressString, paths.ConfDirName, paths.ConfFileName)
+
+		confFile, _, err := nodeFile.Read(pathToConfigFile)
+		if err != nil {
+			return nodeConf, logger.CreateDetails(location, err)
+		}
+		defer confFile.Close()
+
+		err = config.Save(confFile, nodeConf)
+		if err != nil {
+			return nodeConf, logger.CreateDetails(location, err)
+		}
 	}
 
 	err = os.MkdirAll(filepath.Join(paths.StoragePaths[0]), 0700)
@@ -364,7 +369,7 @@ func initAccount(ks *keystore.KeyStore, account *accounts.Account, password stri
 
 // ====================================================================================
 
-func accExists(accounts []string, address string) bool {
+func AccExists(accounts []string, address string) bool {
 	for _, a := range accounts {
 		if a == address {
 			return true
