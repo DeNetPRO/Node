@@ -13,23 +13,63 @@ definitions:
 info:
   contact: {}
 paths:
-  /download/{spAddress}/{fileKey}/{signature}/{network}:
+  /backup_fs/{verificationData}:
+    get:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: '{storage address}${signed data}${unsigned data}'
+        in: path
+        name: verificationData
+        required: true
+        type: string
+      - description: encoded Storage Provider filesystem
+        in: formData
+        name: fs
+        required: true
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Returns Storage Provider filesystem on "GET" request and refreshes
+        filesystem on "POST"
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: '{storage address}${signed data}${unsigned data}'
+        in: path
+        name: verificationData
+        required: true
+        type: string
+      - description: encoded Storage Provider filesystem
+        in: formData
+        name: fs
+        required: true
+        type: file
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Returns Storage Provider filesystem on "GET" request and refreshes
+        filesystem on "POST"
+  /download/{verificationData}/{access}/{network}:
     get:
       description: Serve file by key
       parameters:
-      - description: Storage Provider address
+      - description: verification data is the {storage address}${signed file name}${file
+          name} string
         in: path
-        name: spAddress
+        name: verificationData
         required: true
         type: string
-      - description: file key
+      - description: Access is the string type of {owner address}${signed grant}${permitted
+          to address}
         in: path
-        name: fileKey
-        required: true
-        type: string
-      - description: Storage Provider signature
-        in: path
-        name: signature
+        name: access
         required: true
         type: string
       - description: network type
@@ -58,74 +98,17 @@ paths:
           schema:
             type: string
       summary: Check node status
-  /storage/system/{spAddress}/{signature}:
-    get:
-      consumes:
-      - multipart/form-data
-      parameters:
-      - description: Storage Provider address
-        in: path
-        name: spAddress
-        required: true
-        type: string
-      - description: Signed Storage Provider address
-        in: path
-        name: signature
-        required: true
-        type: string
-      - description: encoded Storage Provider filesystem
-        in: formData
-        name: fs
-        required: true
-        type: file
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: file
-      summary: Returns Storage Provider filesystem on "GET" request and refreshes
-        filesystem on "POST"
-    post:
-      consumes:
-      - multipart/form-data
-      parameters:
-      - description: Storage Provider address
-        in: path
-        name: spAddress
-        required: true
-        type: string
-      - description: Signed Storage Provider address
-        in: path
-        name: signature
-        required: true
-        type: string
-      - description: encoded Storage Provider filesystem
-        in: formData
-        name: fs
-        required: true
-        type: file
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: file
-      summary: Returns Storage Provider filesystem on "GET" request and refreshes
-        filesystem on "POST"
-  /update_fs/{spAddress}/{signedFsys}/{network}:
+  /update_fs/{verificationData}/{network}:
     post:
       consumes:
       - application/json
       description: Update Storage Provider's filesystem, etc. root hash, nonce, file
         system
       parameters:
-      - description: Storage Provider address
+      - description: verification data is the string type of {storage address}${signed
+          fs root hash}${fs root hash}
         in: path
-        name: spAddress
-        required: true
-        type: string
-      - description: Signed Storage Provider root hash
-        in: path
-        name: signedFsys
+        name: verificationData
         required: true
         type: string
       - description: network type
@@ -145,12 +128,18 @@ paths:
           schema:
             type: string
       summary: Update Storage Provider's filesystem
-  /upload/{size}/{network}:
+  /upload/{verificationData}/{size}/{network}:
     post:
       consumes:
       - multipart/form-data
       description: Save files from Storage Provider
       parameters:
+      - description: verification data is the {storage address}${signed data}${unsigned
+          data}
+        in: path
+        name: verificationData
+        required: true
+        type: string
       - description: file size in bytes
         in: path
         name: size

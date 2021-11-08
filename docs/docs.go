@@ -23,7 +23,69 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/download/{spAddress}/{fileKey}/{signature}/{network}": {
+        "/backup_fs/{verificationData}": {
+            "get": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "summary": "Returns Storage Provider filesystem on \"GET\" request and refreshes filesystem on \"POST\"",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "{storage address}${signed data}${unsigned data}",
+                        "name": "verificationData",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "encoded Storage Provider filesystem",
+                        "name": "fs",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "summary": "Returns Storage Provider filesystem on \"GET\" request and refreshes filesystem on \"POST\"",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "{storage address}${signed data}${unsigned data}",
+                        "name": "verificationData",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "encoded Storage Provider filesystem",
+                        "name": "fs",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    }
+                }
+            }
+        },
+        "/download/{verificationData}/{access}/{network}": {
             "get": {
                 "description": "Serve file by key",
                 "produces": [
@@ -33,22 +95,15 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Storage Provider address",
-                        "name": "spAddress",
+                        "description": "verification data is the {storage address}${signed file name}${file name} string",
+                        "name": "verificationData",
                         "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "file key",
-                        "name": "fileKey",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Storage Provider signature",
-                        "name": "signature",
+                        "description": "Access is the string type of {owner address}${signed grant}${permitted to address}",
+                        "name": "access",
                         "in": "path",
                         "required": true
                     },
@@ -90,83 +145,7 @@ var doc = `{
                 }
             }
         },
-        "/storage/system/{spAddress}/{signature}": {
-            "get": {
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "summary": "Returns Storage Provider filesystem on \"GET\" request and refreshes filesystem on \"POST\"",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Storage Provider address",
-                        "name": "spAddress",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Signed Storage Provider address",
-                        "name": "signature",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "encoded Storage Provider filesystem",
-                        "name": "fs",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "file"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "summary": "Returns Storage Provider filesystem on \"GET\" request and refreshes filesystem on \"POST\"",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Storage Provider address",
-                        "name": "spAddress",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Signed Storage Provider address",
-                        "name": "signature",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "file",
-                        "description": "encoded Storage Provider filesystem",
-                        "name": "fs",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "file"
-                        }
-                    }
-                }
-            }
-        },
-        "/update_fs/{spAddress}/{signedFsys}/{network}": {
+        "/update_fs/{verificationData}/{network}": {
             "post": {
                 "description": "Update Storage Provider's filesystem, etc. root hash, nonce, file system",
                 "consumes": [
@@ -176,15 +155,8 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Storage Provider address",
-                        "name": "spAddress",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Signed Storage Provider root hash",
-                        "name": "signedFsys",
+                        "description": "verification data is the string type of {storage address}${signed fs root hash}${fs root hash}",
+                        "name": "verificationData",
                         "in": "path",
                         "required": true
                     },
@@ -215,7 +187,7 @@ var doc = `{
                 }
             }
         },
-        "/upload/{size}/{network}": {
+        "/upload/{verificationData}/{size}/{network}": {
             "post": {
                 "description": "Save files from Storage Provider",
                 "consumes": [
@@ -223,6 +195,13 @@ var doc = `{
                 ],
                 "summary": "Save files",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "verification data is the {storage address}${signed data}${unsigned data}",
+                        "name": "verificationData",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "description": "file size in bytes",
@@ -359,5 +338,5 @@ func (s *s) ReadDoc() string {
 }
 
 func init() {
-	swag.Register(swag.Name, &s{})
+	swag.Register("swagger", &s{})
 }

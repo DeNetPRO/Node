@@ -66,7 +66,7 @@ func Start(port string) {
 
 	r.HandleFunc("/update_fs/{verificationData}/{network}", UpdateFsInfo).Methods("POST")
 
-	r.HandleFunc("/backup_fs/{verificationData}", backUpSpSf).Methods("GET", "POST")
+	r.HandleFunc("/backup_fs/{verificationData}", BackUpStorageFileSystem).Methods("GET", "POST")
 
 	corsOpts := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},
@@ -158,24 +158,13 @@ func verifyRequest(next http.Handler) http.Handler {
 
 			ctx := context.WithValue(r.Context(), "requestData", requestData)
 
-			if splitPath[1] == "download" {
-
+			switch splitPath[1] {
+			case "download":
 				requestData.FileName = unsignedData
-
 				ctx = context.WithValue(r.Context(), "requestData", requestData)
-
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return
-			}
-
-			if splitPath[1] == "update_fs" {
-
+			case "update_fs":
 				requestData.FsTreeHash = unsignedData
-
 				ctx = context.WithValue(r.Context(), "requestData", requestData)
-
-				next.ServeHTTP(w, r.WithContext(ctx))
-				return
 			}
 
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -206,7 +195,8 @@ func healthCheck(w http.ResponseWriter, _ *http.Request) {
 // SaveFiles godoc
 // @Summary Save files
 // @Description Save files from Storage Provider
-// @Accept  multipart/form-data
+// @Accept multipart/form-data
+// @Param verificationData path string true "verification data is the {storage address}${signed data}${unsigned data}"
 // @Param size path int true "file size in bytes"
 // @Param network path string true "network type"
 // @Param address formData string true "Storage Provider address"
@@ -215,7 +205,7 @@ func healthCheck(w http.ResponseWriter, _ *http.Request) {
 // @Param fs formData []string true "array of hashes of all storage provider files"
 // @Param files formData file  true "files parts"
 // @Success 200 {string} Status "OK"
-// @Router /upload/{size}/{network} [post]
+// @Router /upload/{verificationData}/{size}/{network} [post]
 func SaveFiles(w http.ResponseWriter, req *http.Request) {
 	const location = "server.SaveFiles->"
 
@@ -307,12 +297,11 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 // @Summary Serve file
 // @Description Serve file by key
 // @Produce octet-stream
-// @Param spAddress path string true "Storage Provider address"
-// @Param fileKey path string true "file key"
-// @Param signature path string true "Storage Provider signature"
+// @Param verificationData path string true "verification data is the {storage address}${signed file name}${file name} string"
+// @Param access path string true "Access is the string type of {owner address}${signed grant}${permitted to address}"
 // @Param newtork path string  true "network type"
 // @Success 200 {file} binary
-// @Router /download/{spAddress}/{fileKey}/{signature}/{network} [get]
+// @Router /download/{verificationData}/{access}/{network} [get]
 func ServeFiles(w http.ResponseWriter, r *http.Request) {
 	const location = "server.ServeFiles->"
 
@@ -376,12 +365,11 @@ func ServeFiles(w http.ResponseWriter, r *http.Request) {
 // @Summary Update Storage Provider's filesystem
 // @Description Update Storage Provider's filesystem, etc. root hash, nonce, file system
 // @Accept  json
-// @Param spAddress path string true "Storage Provider address"
-// @Param signedFsys path string true "Signed Storage Provider root hash"
+// @Param verificationData path string true "verification data is the string type of {storage address}${signed fs root hash}${fs root hash}"
 // @Param newtork path string  true "network type"
 // @Param updatedFsInfo body fsysInfo.UpdatedFsInfo true "updatedFsInfo"
 // @Success 200 {string} Status "OK"
-// @Router /update_fs/{spAddress}/{signedFsys}/{network} [post]
+// @Router /update_fs/{verificationData}/{network} [post]
 func UpdateFsInfo(w http.ResponseWriter, r *http.Request) {
 	const location = "server.UpdateFsInfo->"
 
@@ -558,18 +546,17 @@ func parseRequest(r *http.Request) (*shared.StorageProviderData, error) {
 	}, nil
 }
 
-// StorageSystem godoc
+// BackUpStorageFileSystem godoc
 // @Summary Returns Storage Provider filesystem on "GET" request and refreshes filesystem on "POST"
 // @Accept multipart/form-data
-// @Param spAddress path string true "Storage Provider address"
-// @Param signature path string true "Signed Storage Provider address"
-// @Router /storage/system/{spAddress}/{signature} [post]
+// @Param verificationData path string true "{storage address}${signed data}${unsigned data}"
+// @Router /backup_fs/{verificationData} [post]
 // @Param fs formData file  true "encoded Storage Provider filesystem"
 // @Success 200 {string} Status "OK"
-// @Router /storage/system/{spAddress}/{signature} [get]
+// @Router /backup_fs/{verificationData} [get]
 // @Success 200 {file} binary
-func backUpSpSf(w http.ResponseWriter, r *http.Request) {
-	const location = "server.backUpSpSf"
+func BackUpStorageFileSystem(w http.ResponseWriter, r *http.Request) {
+	const location = "server.BackUpStorageFileSystem"
 
 	rqtData := r.Context().Value("requestData").(ReqData)
 
