@@ -106,30 +106,30 @@ func TestListAccExists(t *testing.T) {
 	}
 }
 
-func TestAccountLogin(t *testing.T) {
+// func TestAccountLogin(t *testing.T) {
 
-	t.Run("correct password", func(t *testing.T) {
-		_, err := account.Login(testAccAddr, testPasswd)
-		if err != nil {
-			t.Error(err)
-		}
-	})
+// 	t.Run("correct password", func(t *testing.T) {
+// 		_, err := account.Login(testAccAddr, testPasswd)
+// 		if err != nil {
+// 			t.Error(err)
+// 		}
+// 	})
 
-	t.Run("incorrect password", func(t *testing.T) {
-		account, err := account.Login(testAccAddr, "wrongPassword")
+// 	t.Run("incorrect password", func(t *testing.T) {
+// 		account, err := account.Login(testAccAddr, "wrongPassword")
 
-		require.Empty(t, account, "account value must be empty when password is wrong")
-		require.NotEmpty(t, err, "error value must not be empty when password is wrong", err)
-	})
+// 		require.Empty(t, account, "account value must be empty when password is wrong")
+// 		require.NotEmpty(t, err, "error value must not be empty when password is wrong", err)
+// 	})
 
-	t.Run("account value is empty", func(t *testing.T) {
-		account, err := account.Login("", testPasswd)
+// 	t.Run("account value is empty", func(t *testing.T) {
+// 		account, err := account.Login("", testPasswd)
 
-		require.Empty(t, account, "account value must be empty")
-		require.NotEmpty(t, err, "error value must not be empty when account value is empty", err)
-	})
+// 		require.Empty(t, account, "account value must be empty")
+// 		require.NotEmpty(t, err, "error value must not be empty when account value is empty", err)
+// 	})
 
-}
+// }
 
 func TestImportAccount(t *testing.T) {
 	accountAddress, accConfig, err := account.Import()
