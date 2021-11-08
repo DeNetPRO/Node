@@ -301,11 +301,6 @@ func initAccount(ks *keystore.KeyStore, account *accounts.Account, password stri
 
 	addressString := account.Address.String()
 
-	err := os.MkdirAll(filepath.Join(paths.AccsDirPath, addressString, paths.ConfDirName), 0700)
-	if err != nil {
-		return nodeConf, logger.CreateDetails(location, err)
-	}
-
 	keyJson, err := ks.Export(*account, password, password)
 	if err != nil {
 		fmt.Println("Wrong password")

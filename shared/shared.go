@@ -27,7 +27,6 @@ var (
 	TestStorageLimit     = 1
 	TestNetwork          = "kovan"
 	TestPassword         = "123"
-	TestNodeConfDir      = "./"
 	TestAccAddr          = "0x3D4dFC62B4F0BDD7730fCB68FaC150E71D76bc24"
 	TestPrivateKey       = "16f98d96422dd7f21965755bd64c9dcd9cfc5d36e029002d9cc579f42511c7ed"
 	TestSecretKey        = []byte{66, 180, 56, 47, 96, 21, 163, 67, 241, 114, 1, 225, 108, 61, 241, 226, 250, 28, 194, 158, 234, 62, 230, 223, 251, 50, 73, 76, 245, 218, 143, 115}

@@ -108,8 +108,10 @@ func Create(address string) (NodeConfig, error) {
 
 	paths.StoragePaths = nodeConfig.StoragePaths
 
-	if shared.TestMode {
-		paths.ConfigDirPath = shared.TestNodeConfDir
+	err := os.MkdirAll(paths.ConfigDirPath, 0700)
+	if err != nil {
+		fmt.Println(err)
+		return nodeConfig, logger.CreateDetails(location, err)
 	}
 
 	confFile, err := os.Create(filepath.Join(paths.ConfigDirPath, paths.ConfFileName))

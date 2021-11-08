@@ -65,9 +65,7 @@ func TestAccCreate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	pathToAcc := filepath.Join(paths.AccsDirPath, accountAddress)
-
-	pathToConfigFile := filepath.Join(pathToAcc, paths.ConfDirName, paths.ConfFileName)
+	pathToConfigFile := filepath.Join(paths.ConfigDirPath, paths.ConfFileName)
 
 	_, err = os.Stat(pathToConfigFile)
 	if err != nil {
