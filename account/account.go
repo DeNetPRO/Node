@@ -27,7 +27,6 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -200,27 +199,6 @@ func Login(accountAddress, password string) (*accounts.Account, error) {
 	return account, nil
 }
 
-//CheckPassword checks crypto wallet's password.
-func CheckPassword(password, address string) error {
-	const location = "account.CheckPassword->"
-	scryptN, scryptP := encryption.GetScryptParams()
-
-	ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
-	acc, err := utils.MakeAddress(ks, address)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-	key, err := ks.Export(acc, password, password)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-	_, err = keystore.DecryptKey(key, password)
-	if err != nil {
-		return logger.CreateDetails(location, err)
-	}
-	return nil
-}
-
 //ValidateUser asks user for password and checks it.
 func ValidateUser() (*accounts.Account, string, error) {
 	const location = "account.ValidateUser->"
@@ -265,7 +243,7 @@ func ValidateUser() (*accounts.Account, string, error) {
 			accountAddress = accounts[accNum-1]
 		}
 
-		if !accExists(accounts, accountAddress) {
+		if !AccExists(accounts, accountAddress) {
 			fmt.Println("There is no such account address:")
 			for i, a := range accounts {
 				fmt.Println(i+1, a)
@@ -396,7 +374,7 @@ func initAccount(ks *keystore.KeyStore, account *accounts.Account, password stri
 
 // ====================================================================================
 
-func accExists(accounts []string, address string) bool {
+func AccExists(accounts []string, address string) bool {
 	for _, a := range accounts {
 		if a == address {
 			return true
