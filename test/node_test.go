@@ -16,14 +16,7 @@ type FileSendInfo struct {
 }
 
 var (
-	accountPassword      = "123"
-	accountAddress       string
-	nodeAddress          []byte
 	ErrorInvalidPassword = errors.New(" could not decrypt key with given password")
-	storagePath          string
-	testFileName         = "file"
-	fileSize             int64
-	testFilePath         string
 )
 
 func TestMain(m *testing.M) {
@@ -44,38 +37,6 @@ func TestMain(m *testing.M) {
 
 	os.Exit(exitVal)
 }
-
-// func TestRestoreNodeMemory(t *testing.T) {
-// 	fileSize := 1024 * 1024
-
-// 	confFile, nodeConfig, err := getConfig()
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	want := nodeConfig.UsedStorageSpace
-
-// 	nodeConfig.UsedStorageSpace += int64(fileSize)
-
-// 	err = config.Save(confFile, *nodeConfig)
-// 	if err != nil {
-// 		confFile.Close()
-// 		t.Fatal(err)
-// 	}
-
-// 	confFile.Close()
-
-// 	meminfo.Restore(configPath, fileSize)
-
-// 	confFile, nodeConfig, err = getConfig()
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	confFile.Close()
-
-// 	require.Equal(t, want, nodeConfig.UsedStorageSpace)
-// }
 
 // func TestUpload(t *testing.T) {
 // 	createFilesForTest()

@@ -93,7 +93,7 @@ func TestAccCreate(t *testing.T) {
 		Network:              "kovan",
 		StorageLimit:         1,
 		StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, accountAddress)},
-		UsedStorageSpace:     0,
+		UsedStorageSpace:     10000,
 		RegisteredInNetworks: map[string]bool{},
 		AgreeSendLogs:        true,
 	}
@@ -140,7 +140,7 @@ func TestImportAccount(t *testing.T) {
 	}
 
 	if accountAddress == "" {
-		t.Errorf("import account address must not to be empty")
+		t.Errorf("import account address must not be empty")
 	}
 
 	wantConfig := config.NodeConfig{
@@ -150,7 +150,7 @@ func TestImportAccount(t *testing.T) {
 		Network:              "kovan",
 		StorageLimit:         1,
 		StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, accountAddress)},
-		UsedStorageSpace:     0,
+		UsedStorageSpace:     10000,
 		RegisteredInNetworks: map[string]bool{},
 		AgreeSendLogs:        true,
 	}

@@ -63,7 +63,7 @@ func Create(address string) (NodeConfig, error) {
 		nodeConfig.HTTPPort = shared.TestPort
 		nodeConfig.Network = shared.TestNetwork
 		nodeConfig.StorageLimit = shared.TestStorageLimit
-		nodeConfig.UsedStorageSpace = 0
+		nodeConfig.UsedStorageSpace = int64(shared.TestUsedStorageSpace)
 		nodeConfig.StoragePaths = []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)}
 	} else {
 		network, err := SelectNetwork()
@@ -107,6 +107,10 @@ func Create(address string) (NodeConfig, error) {
 	}
 
 	paths.StoragePaths = nodeConfig.StoragePaths
+
+	if shared.TestMode {
+		paths.ConfigDirPath = shared.TestNodeConfDir
+	}
 
 	confFile, err := os.Create(filepath.Join(paths.ConfigDirPath, paths.ConfFileName))
 	if err != nil {
