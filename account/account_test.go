@@ -1,158 +1,158 @@
 package account_test
 
-import (
-	"encoding/json"
-	"log"
-	"os"
-	"path/filepath"
-	"testing"
+// import (
+// 	"encoding/json"
+// 	"log"
+// 	"os"
+// 	"path/filepath"
+// 	"testing"
 
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
-	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
+// 	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
+// 	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
+// 	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
 
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
+// 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
-	"github.com/stretchr/testify/require"
-)
+// 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
+// 	"github.com/stretchr/testify/require"
+// )
 
-var (
-	testPasswd  = "testPasswd"
-	testAccAddr string
-)
+// var (
+// 	testPasswd  = "testPasswd"
+// 	testAccAddr string
+// )
 
-func TestMain(m *testing.M) {
-	shared.TestModeOn()
-	defer shared.TestModeOff()
+// func TestMain(m *testing.M) {
+// 	shared.TestModeOn()
+// 	defer shared.TestModeOff()
 
-	err := paths.Init()
-	if err != nil {
-		log.Fatal(err)
-	}
+// 	err := paths.Init()
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	exitVal := m.Run()
+// 	exitVal := m.Run()
 
-	err = os.RemoveAll(paths.WorkDirPath)
-	if err != nil {
-		log.Fatal(err)
-	}
+// 	err = os.RemoveAll(paths.WorkDirPath)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	os.Exit(exitVal)
-}
+// 	os.Exit(exitVal)
+// }
 
-func TestListAccsBeforeCreation(t *testing.T) {
-	require.Equal(t, 0, len(account.List()))
-}
+// func TestListAccsBeforeCreation(t *testing.T) {
+// 	require.Equal(t, 0, len(account.List()))
+// }
 
-func TestAccCreate(t *testing.T) {
-	accountAddress, _, err := account.Create(testPasswd)
-	if err != nil {
-		t.Fatal(err)
-	}
+// func TestAccCreate(t *testing.T) {
+// 	accountAddress, _, err := account.Create(testPasswd)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	testAccAddr = accountAddress
+// 	testAccAddr = accountAddress
 
-	_, err = os.Stat(paths.AccsDirPath)
-	if err != nil {
-		t.Fatal(err)
-	}
+// 	_, err = os.Stat(paths.AccsDirPath)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	pathToStorage := filepath.Join(paths.StoragePaths[0], blckChain.CurrentNetwork)
+// 	pathToStorage := filepath.Join(paths.StoragePaths[0], blckChain.CurrentNetwork)
 
-	_, err = os.Stat(pathToStorage)
-	if err != nil {
-		t.Fatal(err)
-	}
+// 	_, err = os.Stat(pathToStorage)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	pathToConfigFile := filepath.Join(paths.ConfigDirPath, paths.ConfFileName)
+// 	pathToConfigFile := filepath.Join(paths.ConfigDirPath, paths.ConfFileName)
 
-	_, err = os.Stat(pathToConfigFile)
-	if err != nil {
-		t.Fatal(err)
-	}
+// 	_, err = os.Stat(pathToConfigFile)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	confFileBytes, err := os.ReadFile(pathToConfigFile)
-	if err != nil {
-		t.Fatal(err)
-	}
+// 	confFileBytes, err := os.ReadFile(pathToConfigFile)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	var accConfig config.NodeConfig
+// 	var accConfig config.NodeConfig
 
-	err = json.Unmarshal(confFileBytes, &accConfig)
-	if err != nil {
-		t.Fatal(err)
-	}
+// 	err = json.Unmarshal(confFileBytes, &accConfig)
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	wantConfig := config.NodeConfig{
-		Address:              accountAddress,
-		IpAddress:            "127.0.0.1",
-		HTTPPort:             "55050",
-		Network:              "kovan",
-		StorageLimit:         1,
-		StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, accountAddress)},
-		UsedStorageSpace:     10000,
-		RegisteredInNetworks: map[string]bool{},
-		AgreeSendLogs:        true,
-	}
+// 	wantConfig := config.NodeConfig{
+// 		Address:              accountAddress,
+// 		IpAddress:            "127.0.0.1",
+// 		HTTPPort:             "55050",
+// 		Network:              "kovan",
+// 		StorageLimit:         1,
+// 		StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, accountAddress)},
+// 		UsedStorageSpace:     10000,
+// 		RegisteredInNetworks: map[string]bool{},
+// 		AgreeSendLogs:        true,
+// 	}
 
-	require.Equal(t, wantConfig, accConfig)
+// 	require.Equal(t, wantConfig, accConfig)
 
-}
+// }
 
-func TestListAccExists(t *testing.T) {
-	if !account.AccExists(account.List(), testAccAddr) {
-		t.Fatal("account does not exist")
-	}
-}
+// func TestListAccExists(t *testing.T) {
+// 	if !account.AccExists(account.List(), testAccAddr) {
+// 		t.Fatal("account does not exist")
+// 	}
+// }
 
-func TestAccountLogin(t *testing.T) {
+// func TestAccountLogin(t *testing.T) {
 
-	t.Run("correct password", func(t *testing.T) {
-		_, err := account.Login(testAccAddr, testPasswd)
-		if err != nil {
-			t.Error(err)
-		}
-	})
+// 	t.Run("correct password", func(t *testing.T) {
+// 		_, err := account.Login(testAccAddr, testPasswd)
+// 		if err != nil {
+// 			t.Error(err)
+// 		}
+// 	})
 
-	t.Run("incorrect password", func(t *testing.T) {
-		account, err := account.Login(testAccAddr, "wrongPassword")
+// 	t.Run("incorrect password", func(t *testing.T) {
+// 		account, err := account.Login(testAccAddr, "wrongPassword")
 
-		require.Empty(t, account, "account value must be empty when password is wrong")
-		require.NotEmpty(t, err, "error value must not be empty when password is wrong", err)
-	})
+// 		require.Empty(t, account, "account value must be empty when password is wrong")
+// 		require.NotEmpty(t, err, "error value must not be empty when password is wrong", err)
+// 	})
 
-	t.Run("account value is empty", func(t *testing.T) {
-		account, err := account.Login("", testPasswd)
+// 	t.Run("account value is empty", func(t *testing.T) {
+// 		account, err := account.Login("", testPasswd)
 
-		require.Empty(t, account, "account value must be empty")
-		require.NotEmpty(t, err, "error value must not be empty when account value is empty", err)
-	})
+// 		require.Empty(t, account, "account value must be empty")
+// 		require.NotEmpty(t, err, "error value must not be empty when account value is empty", err)
+// 	})
 
-}
+// }
 
-func TestImportAccount(t *testing.T) {
-	accountAddress, accConfig, err := account.Import()
-	if err != nil {
-		t.Fatal(err)
-	}
+// func TestImportAccount(t *testing.T) {
+// 	accountAddress, accConfig, err := account.Import()
+// 	if err != nil {
+// 		t.Fatal(err)
+// 	}
 
-	if accountAddress == "" {
-		t.Errorf("import account address must not be empty")
-	}
+// 	if accountAddress == "" {
+// 		t.Errorf("import account address must not be empty")
+// 	}
 
-	wantConfig := config.NodeConfig{
-		Address:              accountAddress,
-		IpAddress:            "127.0.0.1",
-		HTTPPort:             "55050",
-		Network:              "kovan",
-		StorageLimit:         1,
-		StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, accountAddress)},
-		UsedStorageSpace:     10000,
-		RegisteredInNetworks: map[string]bool{},
-		AgreeSendLogs:        true,
-	}
+// 	wantConfig := config.NodeConfig{
+// 		Address:              accountAddress,
+// 		IpAddress:            "127.0.0.1",
+// 		HTTPPort:             "55050",
+// 		Network:              "kovan",
+// 		StorageLimit:         1,
+// 		StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, accountAddress)},
+// 		UsedStorageSpace:     10000,
+// 		RegisteredInNetworks: map[string]bool{},
+// 		AgreeSendLogs:        true,
+// 	}
 
-	require.Equal(t, wantConfig, accConfig)
+// 	require.Equal(t, wantConfig, accConfig)
 
-}
+// }
