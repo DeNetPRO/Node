@@ -106,39 +106,49 @@ func TestConfigSetStorageLimit(t *testing.T) {
 		require.Equal(t, 5, configStruct.StorageLimit)
 	})
 
+	t.Run("negative value", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Error(err)
+		}
+
+		defer r.Close()
+		defer w.Close()
+
+		_, err = w.WriteString("-1\n")
+		if err != nil {
+			t.Error(err)
+		}
+
+		os.Stdin = r
+
+		err = config.SetStorageLimit(&configStruct, config.UpdateStatus)
+
+		require.NotEmpty(t, err)
+	})
+
+	t.Run("zero value", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Error(err)
+		}
+
+		defer r.Close()
+		defer w.Close()
+
+		_, err = w.WriteString("0\n")
+		if err != nil {
+			t.Error(err)
+		}
+
+		os.Stdin = r
+
+		err = config.SetStorageLimit(&configStruct, config.UpdateStatus)
+
+		require.NotEmpty(t, err)
+	})
+
 }
-
-// func TestConfigSetNegativeStorageLimit(t *testing.T) {
-// 	address := "some_address"
-
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.RemoveAll(pathToConfig)
-// 	os.MkdirAll(pathToConfig, 0777)
-
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-
-// 	path := filepath.Join(WorkDir, "stdin")
-// 	file, err := os.Create(path)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-
-// 	file.WriteString("-1\n")
-// 	file.Sync()
-// 	file.Seek(0, 0)
-
-// 	os.Stdin = file
-
-// 	defer file.Close()
-// 	defer os.Remove(path)
-
-// 	err = SetStorageLimit(pathToConfig, UpdateStatus, &config)
-
-// 	require.NotEmpty(t, err)
-// }
 
 // func TestConfigSetIP(t *testing.T) {
 // 	address := "some_address"

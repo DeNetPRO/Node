@@ -31,8 +31,6 @@ func GetAvailableSpace() (int, error) {
 	const location = "shared.GetAvailableSpace ->"
 	const KB = uint64(1024)
 
-	fmt.Println(paths.StoragePaths)
-
 	_, err := os.Stat(paths.WorkDirPath)
 	if err != nil {
 		return 0, logger.CreateDetails(location, err)

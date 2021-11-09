@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -227,7 +228,12 @@ func SetStorageLimit(nodeConfig *NodeConfig, state string) error {
 			continue
 		}
 
-		if intSpace < 0 || intSpace >= availableSpace {
+		if intSpace <= 0 || intSpace >= availableSpace {
+
+			if tstpkg.TestMode {
+				return logger.CreateDetails(location, errors.New("out of range"))
+			}
+
 			fmt.Println("Passed value is out of avaliable space range, please try again")
 			continue
 		}
