@@ -152,12 +152,6 @@ func Create(address string) (NodeConfig, error) {
 
 // ====================================================================================
 
-func makeTestConfig(conf *NodeConfig) {
-
-}
-
-// ====================================================================================
-
 // returns selected network
 func SelectNetwork() (string, error) {
 	const location = "config.SelectNetwork"
