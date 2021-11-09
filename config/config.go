@@ -49,7 +49,7 @@ var partiallyReservedIPs = map[string]int{
 
 var TestConfig = NodeConfig{
 	Address:              tstpkg.TestAccAddr,
-	StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, tstpkg.TestAccAddr)},
+	StoragePaths:         []string{filepath.Join(tstpkg.TestWorkDirName, paths.StorageDirName, tstpkg.TestAccAddr)},
 	SendBugReports:       true,
 	RegisteredInNetworks: map[string]bool{},
 	IpAddress:            tstpkg.TestIP,
@@ -199,7 +199,11 @@ func SetStorageLimit(nodeConfig *NodeConfig, state string) error {
 	regNum := regexp.MustCompile(("[0-9]+"))
 
 	for {
-		availableSpace := shared.GetAvailableSpace()
+		availableSpace, err := shared.GetAvailableSpace()
+		if err != nil {
+			return logger.CreateDetails(location, err)
+		}
+
 		fmt.Println("Available space:", availableSpace, "GB")
 		space, err := termEmul.ReadInput()
 		if err != nil {

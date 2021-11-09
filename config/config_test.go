@@ -28,6 +28,11 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
+	err = os.MkdirAll(paths.StoragePaths[0], 0700)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	exitVal := m.Run()
 
 	err = os.RemoveAll(paths.WorkDirPath)

@@ -2,9 +2,11 @@ package shared
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 	"sync"
 
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ricochet2200/go-disk-usage/du"
@@ -24,10 +26,20 @@ var (
 )
 
 //Return nodes available space in GB
-func GetAvailableSpace() int {
-	var KB = uint64(1024)
+func GetAvailableSpace() (int, error) {
+
+	const location = "shared.GetAvailableSpace ->"
+	const KB = uint64(1024)
+
+	fmt.Println(paths.StoragePaths)
+
+	_, err := os.Stat(paths.WorkDirPath)
+	if err != nil {
+		return 0, logger.CreateDetails(location, err)
+	}
+
 	usage := du.NewDiskUsage(paths.WorkDirPath)
-	return int(usage.Free() / (KB * KB * KB))
+	return int(usage.Available() / (KB * KB * KB)), nil
 }
 
 func PrintMemUsage() {
