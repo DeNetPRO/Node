@@ -148,6 +148,27 @@ func TestConfigSetStorageLimit(t *testing.T) {
 		require.NotEmpty(t, err)
 	})
 
+	t.Run("too big value", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer r.Close()
+		defer w.Close()
+
+		_, err = w.WriteString("10000\n")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		os.Stdin = r
+
+		err = config.SetStorageLimit(&configStruct, config.UpdateStatus)
+
+		require.NotEmpty(t, err)
+	})
+
 }
 
 func TestConfigSetIP(t *testing.T) {
