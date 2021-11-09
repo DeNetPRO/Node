@@ -73,7 +73,7 @@ var configUpdateCmd = &cobra.Command{
 
 		fmt.Println("Please enter disk space for usage in GB (should be positive number), or just press enter button to skip")
 
-		err = config.SetStorageLimit(pathToConfigDir, config.UpdateStatus, &nodeConfig)
+		err = config.SetStorageLimit(&nodeConfig, config.UpdateStatus)
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(confUpdateFatalMessage)

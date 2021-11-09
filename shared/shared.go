@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"sync"
 
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ricochet2200/go-disk-usage/du"
 )
@@ -23,9 +24,9 @@ var (
 )
 
 //Return nodes available space in GB
-func GetAvailableSpace(storagePath string) int {
+func GetAvailableSpace() int {
 	var KB = uint64(1024)
-	usage := du.NewDiskUsage(storagePath)
+	usage := du.NewDiskUsage(paths.StoragePaths[0])
 	return int(usage.Free() / (KB * KB * KB))
 }
 

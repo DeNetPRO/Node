@@ -69,6 +69,7 @@ func Create(address string) (NodeConfig, error) {
 
 	if tstpkg.TestMode {
 		nodeConfig = TestConfig
+		paths.StoragePaths = nodeConfig.StoragePaths
 	} else {
 		nodeConfig = NodeConfig{
 			Address:              address,
@@ -76,6 +77,8 @@ func Create(address string) (NodeConfig, error) {
 			SendBugReports:       true,
 			RegisteredInNetworks: map[string]bool{},
 		}
+
+		paths.StoragePaths = nodeConfig.StoragePaths
 
 		network, err := SelectNetwork()
 		if err != nil {
@@ -87,7 +90,7 @@ func Create(address string) (NodeConfig, error) {
 
 		fmt.Println("Please enter disk space for usage in GB (should be positive number)")
 
-		err = SetStorageLimit(paths.ConfigDirPath, CreateStatus, &nodeConfig)
+		err = SetStorageLimit(&nodeConfig, CreateStatus)
 		if err != nil {
 			return nodeConfig, logger.CreateDetails(location, err)
 		}
@@ -116,8 +119,6 @@ func Create(address string) (NodeConfig, error) {
 		fmt.Println("You can stop sending reports by updating config")
 
 	}
-
-	paths.StoragePaths = nodeConfig.StoragePaths
 
 	err := os.MkdirAll(paths.ConfigDirPath, 0700)
 	if err != nil {
@@ -193,12 +194,12 @@ func SelectNetwork() (string, error) {
 // ====================================================================================
 
 //Set storage limit in config file
-func SetStorageLimit(pathToConfig, state string, nodeConfig *NodeConfig) error {
+func SetStorageLimit(nodeConfig *NodeConfig, state string) error {
 	const location = "config.SetStorageLimit->"
 	regNum := regexp.MustCompile(("[0-9]+"))
 
 	for {
-		availableSpace := shared.GetAvailableSpace(pathToConfig)
+		availableSpace := shared.GetAvailableSpace()
 		fmt.Println("Available space:", availableSpace, "GB")
 		space, err := termEmul.ReadInput()
 		if err != nil {
