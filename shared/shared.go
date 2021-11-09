@@ -26,7 +26,7 @@ var (
 //Return nodes available space in GB
 func GetAvailableSpace() int {
 	var KB = uint64(1024)
-	usage := du.NewDiskUsage(paths.StoragePaths[0])
+	usage := du.NewDiskUsage(paths.WorkDirPath)
 	return int(usage.Free() / (KB * KB * KB))
 }
 
