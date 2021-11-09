@@ -1,50 +1,65 @@
 package meminfo_test
 
-// func TestMain(m *testing.M) {
-// 	shared.TestModeOn()
+import (
+	"encoding/json"
+	"log"
+	"os"
+	"path/filepath"
+	"testing"
 
-// 	defer shared.TestModeOff()
+	memInfo "git.denetwork.xyz/DeNet/dfile-secondary-node/mem_info"
 
-// 	err := paths.Init()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
+	"github.com/stretchr/testify/require"
+)
 
-// 	_, err = config.Create(shared.TestAccAddr)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+func TestMain(m *testing.M) {
+	shared.TestModeOn()
 
-// 	exitVal := m.Run()
+	defer shared.TestModeOff()
 
-// 	err = os.RemoveAll(paths.WorkDirPath)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+	err := paths.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 	os.Exit(exitVal)
-// }
+	_, err = config.Create(shared.TestAccAddr)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// func TestRestoreNodeMemory(t *testing.T) {
+	exitVal := m.Run()
 
-// 	const fileSize = 1024
+	err = os.RemoveAll(paths.WorkDirPath)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 	confFilePath := filepath.Join(paths.ConfigDirPath, paths.ConfFileName)
+	os.Exit(exitVal)
+}
 
-// 	memInfo.Restore(confFilePath, fileSize)
+func TestRestoreNodeMemory(t *testing.T) {
 
-// 	configFileBytes, err := os.ReadFile(confFilePath)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	const fileSize = 1024
 
-// 	var config config.NodeConfig
+	confFilePath := filepath.Join(paths.ConfigDirPath, paths.ConfFileName)
 
-// 	err = json.Unmarshal(configFileBytes, &config)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	memInfo.Restore(confFilePath, fileSize)
 
-// 	require.Equal(t, int64(8976), config.UsedStorageSpace)
+	configFileBytes, err := os.ReadFile(confFilePath)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// }
+	var config config.NodeConfig
+
+	err = json.Unmarshal(configFileBytes, &config)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	require.Equal(t, int64(8976), config.UsedStorageSpace)
+
+}
