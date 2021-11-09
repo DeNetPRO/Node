@@ -189,7 +189,6 @@ func Start() {
 					logger.Log(logger.CreateDetails(location, err))
 					continue
 				}
-				confFile.Close()
 				shared.MU.Unlock()
 			}
 		}

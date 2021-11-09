@@ -1,9 +1,11 @@
 package config_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"testing"
 
 	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
@@ -249,7 +251,7 @@ func TestConfigSetPort(t *testing.T) {
 
 	require.Equal(t, "55050", configStruct.HTTPPort)
 
-	t.Run("valid ip address", func(t *testing.T) {
+	t.Run("valid port", func(t *testing.T) {
 		r, w, err := os.Pipe()
 		if err != nil {
 			t.Fatal(err)
@@ -273,79 +275,60 @@ func TestConfigSetPort(t *testing.T) {
 		require.Equal(t, "55051", configStruct.HTTPPort)
 	})
 
+	t.Run("invalid port", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer r.Close()
+		defer w.Close()
+
+		_, err = w.WriteString("-1\n")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		os.Stdin = r
+
+		err = config.SetPort(&configStruct, config.UpdateStatus)
+
+		require.NotEmpty(t, err)
+	})
+
 }
 
-// func TestConfigSeWrongtPort(t *testing.T) {
-// 	address := "some_address"
+func TestConfigSave(t *testing.T) {
 
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.RemoveAll(pathToConfig)
-// 	os.MkdirAll(pathToConfig, 0777)
+	configStruct := config.TestConfig
 
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	configStruct.Network = "kovan"
+	configStruct.Address = "0x0000000000000000000000000000000000000000"
+	configStruct.HTTPPort = "66056"
+	configStruct.IpAddress = "102.103.104.105"
 
-// 	path := filepath.Join(WorkDir, "stdin")
-// 	file, err := os.Create(path)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	configFile, err := os.OpenFile(filepath.Join(paths.ConfigDirPath, paths.ConfFileName), os.O_RDWR, 0777)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer configFile.Close()
 
-// 	port := "-1"
-// 	file.WriteString(port + "\n")
-// 	file.Sync()
-// 	file.Seek(0, 0)
+	err = config.Save(configFile, configStruct)
+	if err != nil {
+		configFile.Close()
+		t.Fatal(err)
+	}
 
-// 	os.Stdin = file
+	var updatedConfig config.NodeConfig
+	data, err := os.ReadFile(filepath.Join(paths.ConfigDirPath, paths.ConfFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	defer file.Close()
-// 	defer os.Remove(path)
+	err = json.Unmarshal(data, &updatedConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	err = SetPort(&config, UpdateStatus)
-// 	require.NotEmpty(t, err)
-// }
-
-// func TestConfigSave(t *testing.T) {
-// 	address := "some_address"
-
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.RemoveAll(pathToConfig)
-// 	os.MkdirAll(pathToConfig, 0777)
-
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	config.Network = "kovan"
-// 	config.Address = "0x"
-// 	config.HTTPPort = "66056"
-// 	config.IpAddress = "102.103.104.105"
-
-// 	path := filepath.Join(pathToConfig, paths.ConfFileName)
-
-// 	configFile, err := os.OpenFile(path, os.O_RDWR, 0777)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	err = Save(configFile, config)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	var got NodeConfig
-// 	data, err := os.ReadFile(path)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	err = json.Unmarshal(data, &got)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	require.Equal(t, config, got)
-// }
+	require.Equal(t, configStruct, updatedConfig)
+}

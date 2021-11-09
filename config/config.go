@@ -340,6 +340,7 @@ func SetPort(nodeConfig *NodeConfig, state string) error {
 
 		match := regPort.MatchString(httpPort)
 		if !match {
+
 			fmt.Println("Value is incorrect, please try again")
 			continue
 
@@ -352,6 +353,11 @@ func SetPort(nodeConfig *NodeConfig, state string) error {
 		}
 
 		if intHttpPort < 49152 || intHttpPort > 65535 {
+
+			if tstpkg.TestMode {
+				return errors.New("incorrect value")
+			}
+
 			fmt.Println("Value is incorrect, please try again")
 			continue
 		}
@@ -428,6 +434,8 @@ func Save(confFile *os.File, nodeConfig NodeConfig) error {
 	if err != nil {
 		return err
 	}
+
+	confFile.Close()
 
 	return nil
 }
