@@ -50,7 +50,6 @@ var partiallyReservedIPs = map[string]int{
 
 var TestConfig = NodeConfig{
 	Address:              tstpkg.TestAccAddr,
-	StoragePaths:         []string{filepath.Join(tstpkg.TestWorkDirName, paths.StorageDirName, tstpkg.TestAccAddr)},
 	SendBugReports:       true,
 	RegisteredInNetworks: map[string]bool{},
 	IpAddress:            tstpkg.TestIP,
@@ -69,6 +68,7 @@ func Create(address string) (NodeConfig, error) {
 	paths.ConfigDirPath = filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
 
 	if tstpkg.TestMode {
+		TestConfig.StoragePaths = []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, tstpkg.TestAccAddr)}
 		nodeConfig = TestConfig
 		paths.StoragePaths = nodeConfig.StoragePaths
 	} else {
