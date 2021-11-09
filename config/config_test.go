@@ -1,95 +1,63 @@
 package config
 
-// import (
-// 	"encoding/json"
-// 	"fmt"
-// 	"log"
-// 	"os"
-// 	"path/filepath"
-// 	"testing"
+import (
+	"fmt"
+	"log"
+	"os"
+	"testing"
 
-// 	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
+	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
+	"github.com/stretchr/testify/require"
 
-// 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
-// 	"github.com/stretchr/testify/require"
-// )
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
+)
 
-// var (
-// 	WorkDir     = "tmp"
-// 	AccountsDir = "accounts"
-// )
+func TestMain(m *testing.M) {
+	tstpkg.TestModeOn()
+	defer tstpkg.TestModeOff()
 
-// func TestMain(m *testing.M) {
-// 	tstpkg.TestModeOn()
-// 	defer tstpkg.TestModeOff()
+	err := paths.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 	os.RemoveAll(WorkDir)
+	exitVal := m.Run()
 
-// 	err := os.Mkdir(WorkDir, 0777)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+	err = os.RemoveAll(paths.WorkDirPath)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 	paths.WorkDirName = WorkDir
-// 	paths.WorkDirPath = WorkDir
-// 	paths.AccsDirPath = filepath.Join(WorkDir, AccountsDir)
+	os.Exit(exitVal)
+}
 
-// 	exitVal := m.Run()
+func TestSelectNetwork(t *testing.T) {
 
-// 	err = os.RemoveAll(WorkDir)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Error(err)
+	}
 
-// 	os.Exit(exitVal)
-// }
+	defer r.Close()
+	defer w.Close()
 
-// func TestConfigCreate(t *testing.T) {
-// 	address := "some_address"
+	_, err = w.WriteString("1\n")
+	if err != nil {
+		t.Error(err)
+	}
 
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.MkdirAll(pathToConfig, 0777)
+	os.Stdin = r
 
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+	got, err := SelectNetwork()
+	if err != nil {
+		fmt.Println(err)
+		t.Error()
+	}
 
-// 	require.NotEmpty(t, config, "config didn't create")
-// 	require.Equal(t, address, config.Address, "account address don't match")
-// 	require.Equal(t, tstpkg.TestIP, config.IpAddress, "ip address is incorrect, want: ", tstpkg.TestIP, " got: ", config.IpAddress)
-// 	require.Equal(t, tstpkg.TestPort, config.HTTPPort, "port is incorrect, want: ", tstpkg.TestPort, " got: ", config.HTTPPort)
-// 	require.Equal(t, tstpkg.TestNetwork, config.Network, "network is incorrect, want: ", tstpkg.TestNetwork, " got: ", config.Network)
-// 	require.Equal(t, tstpkg.TestStorageLimit, config.StorageLimit, "storage limit is incorrect, want: ", tstpkg.TestStorageLimit, " got: ", config.StorageLimit)
-// 	require.Empty(t, tstpkg.UsedStorageSpace, "used storage space must be 0 instead ", config.UsedStorageSpace)
-// }
+	want := []string{"polygon", "mumbai", "kovan"}
 
-// func TestSelectNetwork(t *testing.T) {
-// 	path := filepath.Join(WorkDir, "stdin")
-// 	file, err := os.Create(path)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-
-// 	file.WriteString("1\n")
-// 	file.Sync()
-// 	file.Seek(0, 0)
-
-// 	os.Stdin = file
-
-// 	got, err := SelectNetwork()
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		t.Error()
-// 	}
-
-// 	file.Close()
-// 	os.Remove(path)
-
-// 	want := []string{"polygon", "mumbai", "kovan"}
-
-// 	require.Contains(t, want, got)
-// }
+	require.Contains(t, want, got)
+}
 
 // func TestConfigSetStorageLimit(t *testing.T) {
 // 	address := "some_address"
@@ -117,7 +85,7 @@ package config
 
 // 	os.Stdin = file
 
-// 	err = SetStorageLimit(pathToConfig, UpdateStatus, &config)
+// 	err = SetStorageLimit(&config, UpdateStatus)
 // 	if err != nil {
 // 		fmt.Println(err)
 // 		t.Error(err)
