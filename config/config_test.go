@@ -194,7 +194,6 @@ func TestConfigSetIP(t *testing.T) {
 
 		err = config.SetIpAddr(&configStruct, config.UpdateStatus)
 		if err != nil {
-			fmt.Println(err)
 			t.Fatal(err)
 		}
 
@@ -245,42 +244,36 @@ func TestConfigSetIP(t *testing.T) {
 
 }
 
-// func TestConfigSetPort(t *testing.T) {
-// 	address := "some_address"
+func TestConfigSetPort(t *testing.T) {
+	configStruct := config.TestConfig
 
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.RemoveAll(pathToConfig)
-// 	os.MkdirAll(pathToConfig, 0777)
+	require.Equal(t, "55050", configStruct.HTTPPort)
 
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+	t.Run("valid ip address", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	path := filepath.Join(WorkDir, "stdin")
-// 	file, err := os.Create(path)
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
+		defer r.Close()
+		defer w.Close()
 
-// 	port := "55051"
-// 	file.WriteString(port + "\n")
-// 	file.Sync()
-// 	file.Seek(0, 0)
+		_, err = w.WriteString("55051\n")
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	os.Stdin = file
+		os.Stdin = r
 
-// 	defer file.Close()
-// 	defer os.Remove(path)
+		err = config.SetPort(&configStruct, config.UpdateStatus)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	err = SetPort(&config, UpdateStatus)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		t.Fatal(err)
-// 	}
+		require.Equal(t, "55051", configStruct.HTTPPort)
+	})
 
-// 	require.Equal(t, port, config.HTTPPort)
-// }
+}
 
 // func TestConfigSeWrongtPort(t *testing.T) {
 // 	address := "some_address"
