@@ -86,6 +86,8 @@ var accountLoginCmd = &cobra.Command{
 
 			registeredInNetwork, registrationExists := nodeConfig.RegisteredInNetworks[nodeConfig.Network]
 
+			configWasUpdated := false
+
 			if !registeredInNetwork || !registrationExists {
 
 				fmt.Println("registering node in", nodeConfig.Network)
@@ -101,12 +103,7 @@ var accountLoginCmd = &cobra.Command{
 				}
 
 				nodeConfig.RegisteredInNetworks[nodeConfig.Network] = true
-
-				err = config.Save(confFile, nodeConfig)
-				if err != nil {
-					logger.Log(logger.CreateDetails(location, err))
-					log.Fatal(ipUpdateFatalError)
-				}
+				configWasUpdated = true
 
 			}
 
@@ -131,12 +128,16 @@ var accountLoginCmd = &cobra.Command{
 					}
 
 					nodeConfig.IpAddress = ip
+					configWasUpdated = true
 
-					err = config.Save(confFile, nodeConfig)
-					if err != nil {
-						logger.Log(logger.CreateDetails(location, err))
-						log.Fatal(ipUpdateFatalError)
-					}
+				}
+			}
+
+			if configWasUpdated {
+				err = config.Save(confFile, nodeConfig)
+				if err != nil {
+					logger.Log(logger.CreateDetails(location, err))
+					log.Fatal(ipUpdateFatalError)
 				}
 			}
 
@@ -149,7 +150,7 @@ var accountLoginCmd = &cobra.Command{
 		}
 
 		paths.StoragePaths = nodeConfig.StoragePaths
-		logger.SendLogs = nodeConfig.AgreeSendLogs
+		logger.SendLogs = nodeConfig.SendBugReports
 
 		fmt.Println("Logged in")
 

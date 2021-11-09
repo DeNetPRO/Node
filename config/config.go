@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,6 +15,8 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 	termEmul "git.denetwork.xyz/DeNet/dfile-secondary-node/term_emul"
+	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
+
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
 )
 
@@ -25,7 +28,7 @@ type NodeConfig struct {
 	StorageLimit         int             `json:"storageLimit"`
 	StoragePaths         []string        `json:"storagePaths"`
 	UsedStorageSpace     int64           `json:"usedStorageSpace"`
-	AgreeSendLogs        bool            `json:"agreeSendLogs"`
+	SendBugReports       bool            `json:"sendBugReports"`
 	RegisteredInNetworks map[string]bool `json:"registeredInNetworks"`
 }
 
@@ -45,27 +48,39 @@ var partiallyReservedIPs = map[string]int{
 	"192": 168,
 }
 
+var TestConfig = NodeConfig{
+	Address:              tstpkg.TestAccAddr,
+	StoragePaths:         []string{filepath.Join(tstpkg.TestWorkDirName, paths.StorageDirName, tstpkg.TestAccAddr)},
+	SendBugReports:       true,
+	RegisteredInNetworks: map[string]bool{},
+	IpAddress:            tstpkg.TestIP,
+	HTTPPort:             tstpkg.TestPort,
+	Network:              tstpkg.TestNetwork,
+	StorageLimit:         tstpkg.TestStorageLimit,
+	UsedStorageSpace:     int64(tstpkg.TestUsedStorageSpace),
+}
+
 //Create is used for creating a config file.
 func Create(address string) (NodeConfig, error) {
 	const location = "config.Create->"
 
-	nodeConfig := NodeConfig{
-		Address:              address,
-		StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)},
-		AgreeSendLogs:        true,
-		RegisteredInNetworks: map[string]bool{},
-	}
+	var nodeConfig NodeConfig
 
 	paths.ConfigDirPath = filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
 
-	if shared.TestMode {
-		nodeConfig.IpAddress = shared.TestIP
-		nodeConfig.HTTPPort = shared.TestPort
-		nodeConfig.Network = shared.TestNetwork
-		nodeConfig.StorageLimit = shared.TestStorageLimit
-		nodeConfig.UsedStorageSpace = int64(shared.TestUsedStorageSpace)
-		nodeConfig.StoragePaths = []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)}
+	if tstpkg.TestMode {
+		nodeConfig = TestConfig
+		paths.StoragePaths = nodeConfig.StoragePaths
 	} else {
+		nodeConfig = NodeConfig{
+			Address:              address,
+			StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)},
+			SendBugReports:       true,
+			RegisteredInNetworks: map[string]bool{},
+		}
+
+		paths.StoragePaths = nodeConfig.StoragePaths
+
 		network, err := SelectNetwork()
 		if err != nil {
 			return nodeConfig, logger.CreateDetails(location, err)
@@ -76,7 +91,7 @@ func Create(address string) (NodeConfig, error) {
 
 		fmt.Println("Please enter disk space for usage in GB (should be positive number)")
 
-		err = SetStorageLimit(paths.ConfigDirPath, CreateStatus, &nodeConfig)
+		err = SetStorageLimit(&nodeConfig, CreateStatus)
 		if err != nil {
 			return nodeConfig, logger.CreateDetails(location, err)
 		}
@@ -105,8 +120,6 @@ func Create(address string) (NodeConfig, error) {
 		fmt.Println("You can stop sending reports by updating config")
 
 	}
-
-	paths.StoragePaths = nodeConfig.StoragePaths
 
 	err := os.MkdirAll(paths.ConfigDirPath, 0700)
 	if err != nil {
@@ -182,12 +195,16 @@ func SelectNetwork() (string, error) {
 // ====================================================================================
 
 //Set storage limit in config file
-func SetStorageLimit(pathToConfig, state string, nodeConfig *NodeConfig) error {
+func SetStorageLimit(nodeConfig *NodeConfig, state string) error {
 	const location = "config.SetStorageLimit->"
 	regNum := regexp.MustCompile(("[0-9]+"))
 
 	for {
-		availableSpace := shared.GetAvailableSpace(pathToConfig)
+		availableSpace, err := shared.GetAvailableSpace()
+		if err != nil {
+			return logger.CreateDetails(location, err)
+		}
+
 		fmt.Println("Available space:", availableSpace, "GB")
 		space, err := termEmul.ReadInput()
 		if err != nil {
@@ -201,6 +218,7 @@ func SetStorageLimit(pathToConfig, state string, nodeConfig *NodeConfig) error {
 		match := regNum.MatchString(space)
 
 		if !match {
+
 			fmt.Println("Value is incorrect, please try again")
 			continue
 		}
@@ -211,7 +229,12 @@ func SetStorageLimit(pathToConfig, state string, nodeConfig *NodeConfig) error {
 			continue
 		}
 
-		if intSpace < int(nodeConfig.UsedStorageSpace) || intSpace >= availableSpace {
+		if intSpace <= 0 || intSpace >= availableSpace {
+
+			if tstpkg.TestMode {
+				return logger.CreateDetails(location, errors.New("out of range"))
+			}
+
 			fmt.Println("Passed value is out of avaliable space range, please try again")
 			continue
 		}
@@ -244,6 +267,10 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) error {
 		match := regIp.MatchString(ipAddr)
 
 		if !match {
+			if tstpkg.TestMode {
+				return errors.New("incorrect value")
+			}
+
 			fmt.Println("Value is incorrect, please try again")
 			continue
 		}
@@ -251,6 +278,11 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) error {
 		splitIPAddr := strings.Split(ipAddr, ".")
 
 		if fullyReservedIPs[splitIPAddr[0]] {
+
+			if tstpkg.TestMode {
+				return errors.New("can't be used as a public ip address")
+			}
+
 			fmt.Println("Address", ipAddr, "can't be used as a public ip address")
 			continue
 		}
@@ -264,6 +296,11 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) error {
 			}
 
 			if secondAddrPart <= reservedSecAddrPart {
+
+				if tstpkg.TestMode {
+					return errors.New("can't be used as a public ip address")
+				}
+
 				fmt.Println("Address", ipAddr, "can't be used as a public ip address")
 				continue
 			}
@@ -303,6 +340,7 @@ func SetPort(nodeConfig *NodeConfig, state string) error {
 
 		match := regPort.MatchString(httpPort)
 		if !match {
+
 			fmt.Println("Value is incorrect, please try again")
 			continue
 
@@ -315,6 +353,11 @@ func SetPort(nodeConfig *NodeConfig, state string) error {
 		}
 
 		if intHttpPort < 49152 || intHttpPort > 65535 {
+
+			if tstpkg.TestMode {
+				return errors.New("incorrect value")
+			}
+
 			fmt.Println("Value is incorrect, please try again")
 			continue
 		}
@@ -349,10 +392,10 @@ func ChangeAgreeSendLogs(nodeConfig *NodeConfig, state string) error {
 		}
 
 		if agree == "y" {
-			nodeConfig.AgreeSendLogs = true
+			nodeConfig.SendBugReports = true
 			logger.SendLogs = true
 		} else {
-			nodeConfig.AgreeSendLogs = false
+			nodeConfig.SendBugReports = false
 			logger.SendLogs = false
 		}
 
@@ -391,6 +434,8 @@ func Save(confFile *os.File, nodeConfig NodeConfig) error {
 	if err != nil {
 		return err
 	}
+
+	confFile.Close()
 
 	return nil
 }

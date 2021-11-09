@@ -2,12 +2,6 @@ package test
 
 import (
 	"errors"
-	"log"
-	"os"
-	"testing"
-
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 )
 
 type FileSendInfo struct {
@@ -18,25 +12,6 @@ type FileSendInfo struct {
 var (
 	ErrorInvalidPassword = errors.New(" could not decrypt key with given password")
 )
-
-func TestMain(m *testing.M) {
-	shared.TestModeOn()
-
-	defer shared.TestModeOff()
-
-	err := paths.Init()
-	if err != nil {
-		log.Fatal("Fatal Error: couldn't locate home directory")
-	}
-	exitVal := m.Run()
-
-	err = os.RemoveAll(paths.WorkDirPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	os.Exit(exitVal)
-}
 
 // func TestUpload(t *testing.T) {
 // 	createFilesForTest()

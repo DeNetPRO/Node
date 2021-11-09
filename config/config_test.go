@@ -1,378 +1,334 @@
-package config
-
-// import (
-// 	"encoding/json"
-// 	"fmt"
-// 	"log"
-// 	"os"
-// 	"path/filepath"
-// 	"testing"
-
-// 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
-// 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
-// 	"github.com/stretchr/testify/require"
-// )
-
-// var (
-// 	WorkDir     = "tmp"
-// 	AccountsDir = "accounts"
-// )
-
-// func TestMain(m *testing.M) {
-// 	shared.TestModeOn()
-// 	defer shared.TestModeOff()
-
-// 	os.RemoveAll(WorkDir)
-
-// 	err := os.Mkdir(WorkDir, 0777)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	paths.WorkDirName = WorkDir
-// 	paths.WorkDirPath = WorkDir
-// 	paths.AccsDirPath = filepath.Join(WorkDir, AccountsDir)
-
-// 	exitVal := m.Run()
+package config_test
 
-// 	err = os.RemoveAll(WorkDir)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	os.Exit(exitVal)
-// }
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"testing"
 
-// func TestConfigCreate(t *testing.T) {
-// 	address := "some_address"
-
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.MkdirAll(pathToConfig, 0777)
-
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-
-// 	require.NotEmpty(t, config, "config didn't create")
-// 	require.Equal(t, address, config.Address, "account address don't match")
-// 	require.Equal(t, shared.TestIP, config.IpAddress, "ip address is incorrect, want: ", shared.TestIP, " got: ", config.IpAddress)
-// 	require.Equal(t, shared.TestPort, config.HTTPPort, "port is incorrect, want: ", shared.TestPort, " got: ", config.HTTPPort)
-// 	require.Equal(t, shared.TestNetwork, config.Network, "network is incorrect, want: ", shared.TestNetwork, " got: ", config.Network)
-// 	require.Equal(t, shared.TestStorageLimit, config.StorageLimit, "storage limit is incorrect, want: ", shared.TestStorageLimit, " got: ", config.StorageLimit)
-// 	require.Empty(t, config.UsedStorageSpace, "used storage space must be 0 instead ", config.UsedStorageSpace)
-// }
+	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
+	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
+	"github.com/stretchr/testify/require"
 
-// func TestSelectNetwork(t *testing.T) {
-// 	path := filepath.Join(WorkDir, "stdin")
-// 	file, err := os.Create(path)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
+)
 
-// 	file.WriteString("1\n")
-// 	file.Sync()
-// 	file.Seek(0, 0)
+func TestMain(m *testing.M) {
+	tstpkg.TestModeOn()
+	defer tstpkg.TestModeOff()
 
-// 	os.Stdin = file
+	err := paths.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 	got, err := SelectNetwork()
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		t.Error()
-// 	}
+	_, err = config.Create(tstpkg.TestAccAddr)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 	file.Close()
-// 	os.Remove(path)
-
-// 	want := []string{"polygon", "mumbai", "kovan"}
+	err = os.MkdirAll(paths.StoragePaths[0], 0700)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 	require.Contains(t, want, got)
-// }
+	exitVal := m.Run()
 
-// func TestConfigSetStorageLimit(t *testing.T) {
-// 	address := "some_address"
+	err = os.RemoveAll(paths.WorkDirPath)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.RemoveAll(pathToConfig)
-// 	os.MkdirAll(pathToConfig, 0777)
+	os.Exit(exitVal)
+}
 
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+func TestSelectNetwork(t *testing.T) {
 
-// 	want := 2
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	path := filepath.Join(WorkDir, "stdin")
-// 	file, err := os.Create(path)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+	defer r.Close()
+	defer w.Close()
 
-// 	file.WriteString("2\n")
-// 	file.Sync()
-// 	file.Seek(0, 0)
+	_, err = w.WriteString("1\n")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-// 	os.Stdin = file
+	os.Stdin = r
 
-// 	err = SetStorageLimit(pathToConfig, UpdateStatus, &config)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		t.Error(err)
-// 	}
+	got, err := config.SelectNetwork()
+	if err != nil {
+		fmt.Println(err)
+		t.Fatal()
+	}
 
-// 	file.Close()
-// 	os.Remove(path)
+	want := []string{}
 
-// 	got := config.StorageLimit
+	for net := range blckChain.Networks {
+		want = append(want, net)
+	}
 
-// 	require.Equal(t, want, got)
-// }
+	require.Contains(t, want, got)
+}
 
-// func TestConfigSetNegativeStorageLimit(t *testing.T) {
-// 	address := "some_address"
+func TestConfigSetStorageLimit(t *testing.T) {
 
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.RemoveAll(pathToConfig)
-// 	os.MkdirAll(pathToConfig, 0777)
+	configStruct := config.TestConfig
 
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+	require.Equal(t, 1, configStruct.StorageLimit)
 
-// 	path := filepath.Join(WorkDir, "stdin")
-// 	file, err := os.Create(path)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+	t.Run("correct value", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	file.WriteString("-1\n")
-// 	file.Sync()
-// 	file.Seek(0, 0)
+		defer r.Close()
+		defer w.Close()
 
-// 	os.Stdin = file
+		_, err = w.WriteString("5\n")
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	defer file.Close()
-// 	defer os.Remove(path)
+		os.Stdin = r
 
-// 	err = SetStorageLimit(pathToConfig, UpdateStatus, &config)
+		err = config.SetStorageLimit(&configStruct, config.UpdateStatus)
+		if err != nil {
+			fmt.Println(err)
+			t.Fatal(err)
+		}
 
-// 	require.NotEmpty(t, err)
-// }
+		require.Equal(t, 5, configStruct.StorageLimit)
+	})
 
-// func TestConfigSetIP(t *testing.T) {
-// 	address := "some_address"
+	t.Run("negative value", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.RemoveAll(pathToConfig)
-// 	os.MkdirAll(pathToConfig, 0777)
+		defer r.Close()
+		defer w.Close()
 
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+		_, err = w.WriteString("-1\n")
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	path := filepath.Join(WorkDir, "stdin")
-// 	file, err := os.Create(path)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+		os.Stdin = r
 
-// 	ip := "123.123.123.123"
-// 	file.WriteString(ip + "\n")
-// 	file.Sync()
-// 	file.Seek(0, 0)
+		err = config.SetStorageLimit(&configStruct, config.UpdateStatus)
 
-// 	os.Stdin = file
+		require.NotEmpty(t, err)
+	})
 
-// 	defer file.Close()
-// 	defer os.Remove(path)
+	t.Run("zero value", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	err = SetIpAddr(&config, UpdateStatus)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		t.Error(err)
-// 	}
+		defer r.Close()
+		defer w.Close()
 
-// 	require.Equal(t, ip, config.IpAddress)
-// }
+		_, err = w.WriteString("0\n")
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// func TestConfigSetLocalIP(t *testing.T) {
-// 	address := "some_address"
+		os.Stdin = r
 
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.RemoveAll(pathToConfig)
-// 	os.MkdirAll(pathToConfig, 0777)
+		err = config.SetStorageLimit(&configStruct, config.UpdateStatus)
 
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+		require.NotEmpty(t, err)
+	})
 
-// 	path := filepath.Join(WorkDir, "stdin")
-// 	file, err := os.Create(path)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+	t.Run("too big value", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	ip := "127.0.0.1"
-// 	file.WriteString(ip + "\n")
-// 	file.Sync()
-// 	file.Seek(0, 0)
+		defer r.Close()
+		defer w.Close()
 
-// 	os.Stdin = file
+		_, err = w.WriteString("10000\n")
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	defer file.Close()
-// 	defer os.Remove(path)
+		os.Stdin = r
 
-// 	err = SetIpAddr(&config, UpdateStatus)
+		err = config.SetStorageLimit(&configStruct, config.UpdateStatus)
 
-// 	require.NotEmpty(t, err)
-// }
+		require.NotEmpty(t, err)
+	})
 
-// func TestConfigSetWrongIP(t *testing.T) {
-// 	address := "some_address"
+}
 
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.RemoveAll(pathToConfig)
-// 	os.MkdirAll(pathToConfig, 0777)
+func TestConfigSetIP(t *testing.T) {
+	configStruct := config.TestConfig
 
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+	require.Equal(t, "127.0.0.1", configStruct.IpAddress)
 
-// 	path := filepath.Join(WorkDir, "stdin")
-// 	file, err := os.Create(path)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+	t.Run("valid ip address", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	ip := "1227.0.0.1"
-// 	file.WriteString(ip + "\n")
-// 	file.Sync()
-// 	file.Seek(0, 0)
+		defer r.Close()
+		defer w.Close()
 
-// 	os.Stdin = file
+		_, err = w.WriteString("91.123.123.123\n")
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	defer file.Close()
-// 	defer os.Remove(path)
+		os.Stdin = r
 
-// 	err = SetIpAddr(&config, UpdateStatus)
+		err = config.SetIpAddr(&configStruct, config.UpdateStatus)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	require.NotEmpty(t, err)
-// }
+		require.Equal(t, "91.123.123.123", configStruct.IpAddress)
+	})
 
-// func TestConfigSetPort(t *testing.T) {
-// 	address := "some_address"
+	t.Run("local ip address", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.RemoveAll(pathToConfig)
-// 	os.MkdirAll(pathToConfig, 0777)
+		defer r.Close()
+		defer w.Close()
 
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+		_, err = w.WriteString("192.168.1.1\n")
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	path := filepath.Join(WorkDir, "stdin")
-// 	file, err := os.Create(path)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+		os.Stdin = r
 
-// 	port := "55051"
-// 	file.WriteString(port + "\n")
-// 	file.Sync()
-// 	file.Seek(0, 0)
+		err = config.SetIpAddr(&configStruct, config.UpdateStatus)
 
-// 	os.Stdin = file
+		require.NotEmpty(t, err)
+	})
 
-// 	defer file.Close()
-// 	defer os.Remove(path)
+	t.Run("wrong ip address", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	err = SetPort(&config, UpdateStatus)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		t.Error(err)
-// 	}
+		defer r.Close()
+		defer w.Close()
 
-// 	require.Equal(t, port, config.HTTPPort)
-// }
+		_, err = w.WriteString("11292.168.1.1\n")
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// func TestConfigSeWrongtPort(t *testing.T) {
-// 	address := "some_address"
+		os.Stdin = r
 
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.RemoveAll(pathToConfig)
-// 	os.MkdirAll(pathToConfig, 0777)
+		err = config.SetIpAddr(&configStruct, config.UpdateStatus)
 
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+		require.NotEmpty(t, err)
+	})
 
-// 	path := filepath.Join(WorkDir, "stdin")
-// 	file, err := os.Create(path)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+}
 
-// 	port := "-1"
-// 	file.WriteString(port + "\n")
-// 	file.Sync()
-// 	file.Seek(0, 0)
+func TestConfigSetPort(t *testing.T) {
+	configStruct := config.TestConfig
 
-// 	os.Stdin = file
+	require.Equal(t, "55050", configStruct.HTTPPort)
 
-// 	defer file.Close()
-// 	defer os.Remove(path)
+	t.Run("valid port", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	err = SetPort(&config, UpdateStatus)
-// 	require.NotEmpty(t, err)
-// }
+		defer r.Close()
+		defer w.Close()
 
-// func TestConfigSave(t *testing.T) {
-// 	address := "some_address"
+		_, err = w.WriteString("55051\n")
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.RemoveAll(pathToConfig)
-// 	os.MkdirAll(pathToConfig, 0777)
+		os.Stdin = r
 
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+		err = config.SetPort(&configStruct, config.UpdateStatus)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	config.Network = "kovan"
-// 	config.Address = "0x"
-// 	config.HTTPPort = "66056"
-// 	config.IpAddress = "102.103.104.105"
+		require.Equal(t, "55051", configStruct.HTTPPort)
+	})
 
-// 	path := filepath.Join(pathToConfig, paths.ConfFileName)
+	t.Run("invalid port", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	configFile, err := os.OpenFile(path, os.O_RDWR, 0777)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+		defer r.Close()
+		defer w.Close()
 
-// 	err = Save(configFile, config)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+		_, err = w.WriteString("-1\n")
+		if err != nil {
+			t.Fatal(err)
+		}
 
-// 	var got NodeConfig
-// 	data, err := os.ReadFile(path)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+		os.Stdin = r
 
-// 	err = json.Unmarshal(data, &got)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+		err = config.SetPort(&configStruct, config.UpdateStatus)
 
-// 	require.Equal(t, config, got)
-// }
+		require.NotEmpty(t, err)
+	})
+
+}
+
+func TestConfigSave(t *testing.T) {
+
+	configStruct := config.TestConfig
+
+	configStruct.Network = "kovan"
+	configStruct.Address = "0x0000000000000000000000000000000000000000"
+	configStruct.HTTPPort = "66056"
+	configStruct.IpAddress = "102.103.104.105"
+
+	configFile, err := os.OpenFile(filepath.Join(paths.ConfigDirPath, paths.ConfFileName), os.O_RDWR, 0777)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer configFile.Close()
+
+	err = config.Save(configFile, configStruct)
+	if err != nil {
+		configFile.Close()
+		t.Fatal(err)
+	}
+
+	var updatedConfig config.NodeConfig
+	data, err := os.ReadFile(filepath.Join(paths.ConfigDirPath, paths.ConfFileName))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = json.Unmarshal(data, &updatedConfig)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	require.Equal(t, configStruct, updatedConfig)
+}

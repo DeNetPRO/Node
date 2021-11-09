@@ -13,6 +13,7 @@ import (
 
 	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
+	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
@@ -146,7 +147,7 @@ func Start() {
 							continue
 						}
 
-						if !shared.TestMode {
+						if !tstpkg.TestMode {
 							logger.SendStatistic(spAddress, network, "", logger.Delete, stat.Size())
 						}
 
@@ -188,7 +189,6 @@ func Start() {
 					logger.Log(logger.CreateDetails(location, err))
 					continue
 				}
-				confFile.Close()
 				shared.MU.Unlock()
 			}
 		}

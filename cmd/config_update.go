@@ -73,7 +73,7 @@ var configUpdateCmd = &cobra.Command{
 
 		fmt.Println("Please enter disk space for usage in GB (should be positive number), or just press enter button to skip")
 
-		err = config.SetStorageLimit(pathToConfigDir, config.UpdateStatus, &nodeConfig)
+		err = config.SetStorageLimit(&nodeConfig, config.UpdateStatus)
 		if err != nil {
 			logger.Log(logger.CreateDetails(location, err))
 			log.Fatal(confUpdateFatalMessage)
@@ -107,7 +107,7 @@ var configUpdateCmd = &cobra.Command{
 			stateBefore.Network == nodeConfig.Network &&
 			stateBefore.HTTPPort == nodeConfig.HTTPPort &&
 			stateBefore.StorageLimit == nodeConfig.StorageLimit &&
-			stateBefore.AgreeSendLogs == nodeConfig.AgreeSendLogs {
+			stateBefore.SendBugReports == nodeConfig.SendBugReports {
 			fmt.Println("Nothing was changed")
 			return
 		}
