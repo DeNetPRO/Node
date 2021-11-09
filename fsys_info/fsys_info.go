@@ -161,9 +161,6 @@ func Save(addressPath string, spData *shared.StorageProviderData) error {
 		}
 	}
 
-	// shared.MU.Lock()
-	// defer shared.MU.Unlock()
-
 	spFsFile, err := os.Create(filepath.Join(addressPath, paths.SpFsFilename))
 	if err != nil {
 		return logger.CreateDetails(location, err)
