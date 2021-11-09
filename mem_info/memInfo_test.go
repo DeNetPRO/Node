@@ -8,24 +8,24 @@ import (
 	"testing"
 
 	memInfo "git.denetwork.xyz/DeNet/dfile-secondary-node/mem_info"
+	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMain(m *testing.M) {
-	shared.TestModeOn()
+	tstpkg.TestModeOn()
 
-	defer shared.TestModeOff()
+	defer tstpkg.TestModeOff()
 
 	err := paths.Init()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	_, err = config.Create(shared.TestAccAddr)
+	_, err = config.Create(tstpkg.TestAccAddr)
 	if err != nil {
 		log.Fatal(err)
 	}

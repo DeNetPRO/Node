@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
+	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
 )
 
 var (
@@ -34,8 +34,8 @@ func Init() error {
 		return logger.CreateDetails(location, err)
 	}
 
-	if shared.TestMode {
-		WorkDirName = shared.TestWorkDirName
+	if tstpkg.TestMode {
+		WorkDirName = tstpkg.TestWorkDirName
 	}
 
 	WorkDirPath = filepath.Join(homeDir, WorkDirName)

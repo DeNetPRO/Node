@@ -149,7 +149,7 @@ var accountLoginCmd = &cobra.Command{
 		}
 
 		paths.StoragePaths = nodeConfig.StoragePaths
-		logger.SendLogs = nodeConfig.AgreeSendLogs
+		logger.SendLogs = nodeConfig.SendBugReports
 
 		fmt.Println("Logged in")
 

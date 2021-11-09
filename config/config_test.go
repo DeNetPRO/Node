@@ -8,8 +8,9 @@ package config
 // 	"path/filepath"
 // 	"testing"
 
+// 	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
+
 // 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
-// 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 // 	"github.com/stretchr/testify/require"
 // )
 
@@ -19,8 +20,8 @@ package config
 // )
 
 // func TestMain(m *testing.M) {
-// 	shared.TestModeOn()
-// 	defer shared.TestModeOff()
+// 	tstpkg.TestModeOn()
+// 	defer tstpkg.TestModeOff()
 
 // 	os.RemoveAll(WorkDir)
 
@@ -56,11 +57,11 @@ package config
 
 // 	require.NotEmpty(t, config, "config didn't create")
 // 	require.Equal(t, address, config.Address, "account address don't match")
-// 	require.Equal(t, shared.TestIP, config.IpAddress, "ip address is incorrect, want: ", shared.TestIP, " got: ", config.IpAddress)
-// 	require.Equal(t, shared.TestPort, config.HTTPPort, "port is incorrect, want: ", shared.TestPort, " got: ", config.HTTPPort)
-// 	require.Equal(t, shared.TestNetwork, config.Network, "network is incorrect, want: ", shared.TestNetwork, " got: ", config.Network)
-// 	require.Equal(t, shared.TestStorageLimit, config.StorageLimit, "storage limit is incorrect, want: ", shared.TestStorageLimit, " got: ", config.StorageLimit)
-// 	require.Empty(t, config.UsedStorageSpace, "used storage space must be 0 instead ", config.UsedStorageSpace)
+// 	require.Equal(t, tstpkg.TestIP, config.IpAddress, "ip address is incorrect, want: ", tstpkg.TestIP, " got: ", config.IpAddress)
+// 	require.Equal(t, tstpkg.TestPort, config.HTTPPort, "port is incorrect, want: ", tstpkg.TestPort, " got: ", config.HTTPPort)
+// 	require.Equal(t, tstpkg.TestNetwork, config.Network, "network is incorrect, want: ", tstpkg.TestNetwork, " got: ", config.Network)
+// 	require.Equal(t, tstpkg.TestStorageLimit, config.StorageLimit, "storage limit is incorrect, want: ", tstpkg.TestStorageLimit, " got: ", config.StorageLimit)
+// 	require.Empty(t, tstpkg.UsedStorageSpace, "used storage space must be 0 instead ", config.UsedStorageSpace)
 // }
 
 // func TestSelectNetwork(t *testing.T) {

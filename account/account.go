@@ -14,6 +14,7 @@ import (
 
 	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
+	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
 
 	termEmul "git.denetwork.xyz/DeNet/dfile-secondary-node/term_emul"
 	"github.com/howeyc/gopass"
@@ -84,9 +85,9 @@ func Import() (string, config.NodeConfig, error) {
 	var originalPassword string
 	var err error
 
-	if shared.TestMode {
-		privKey = shared.TestPrivateKey
-		originalPassword = shared.TestPassword
+	if tstpkg.TestMode {
+		privKey = tstpkg.TestPrivateKey
+		originalPassword = tstpkg.TestPassword
 	} else {
 		fmt.Println("Please enter private key of the account you want to import:")
 
@@ -335,7 +336,7 @@ func initAccount(ks *keystore.KeyStore, account *accounts.Account, password stri
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	if !shared.TestMode {
+	if !tstpkg.TestMode {
 		fmt.Println("Registering node...")
 
 		err = blckChain.RegisterNode(ctx, addressString, password, nodeConf.IpAddress, nodeConf.HTTPPort)

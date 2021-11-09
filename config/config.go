@@ -14,6 +14,8 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 	termEmul "git.denetwork.xyz/DeNet/dfile-secondary-node/term_emul"
+	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
+
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/upnp"
 )
 
@@ -25,7 +27,7 @@ type NodeConfig struct {
 	StorageLimit         int             `json:"storageLimit"`
 	StoragePaths         []string        `json:"storagePaths"`
 	UsedStorageSpace     int64           `json:"usedStorageSpace"`
-	AgreeSendLogs        bool            `json:"agreeSendLogs"`
+	SendBugReports       bool            `json:"sendBugReports"`
 	RegisteredInNetworks map[string]bool `json:"registeredInNetworks"`
 }
 
@@ -45,27 +47,36 @@ var partiallyReservedIPs = map[string]int{
 	"192": 168,
 }
 
+var TestConfig = NodeConfig{
+	Address:              tstpkg.TestAccAddr,
+	StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, tstpkg.TestAccAddr)},
+	SendBugReports:       true,
+	RegisteredInNetworks: map[string]bool{},
+	IpAddress:            tstpkg.TestIP,
+	HTTPPort:             tstpkg.TestPort,
+	Network:              tstpkg.TestNetwork,
+	StorageLimit:         tstpkg.TestStorageLimit,
+	UsedStorageSpace:     int64(tstpkg.TestUsedStorageSpace),
+}
+
 //Create is used for creating a config file.
 func Create(address string) (NodeConfig, error) {
 	const location = "config.Create->"
 
-	nodeConfig := NodeConfig{
-		Address:              address,
-		StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)},
-		AgreeSendLogs:        true,
-		RegisteredInNetworks: map[string]bool{},
-	}
+	var nodeConfig NodeConfig
 
 	paths.ConfigDirPath = filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
 
-	if shared.TestMode {
-		nodeConfig.IpAddress = shared.TestIP
-		nodeConfig.HTTPPort = shared.TestPort
-		nodeConfig.Network = shared.TestNetwork
-		nodeConfig.StorageLimit = shared.TestStorageLimit
-		nodeConfig.UsedStorageSpace = int64(shared.TestUsedStorageSpace)
-		nodeConfig.StoragePaths = []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)}
+	if tstpkg.TestMode {
+		nodeConfig = TestConfig
 	} else {
+		nodeConfig = NodeConfig{
+			Address:              address,
+			StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, address)},
+			SendBugReports:       true,
+			RegisteredInNetworks: map[string]bool{},
+		}
+
 		network, err := SelectNetwork()
 		if err != nil {
 			return nodeConfig, logger.CreateDetails(location, err)
@@ -349,10 +360,10 @@ func ChangeAgreeSendLogs(nodeConfig *NodeConfig, state string) error {
 		}
 
 		if agree == "y" {
-			nodeConfig.AgreeSendLogs = true
+			nodeConfig.SendBugReports = true
 			logger.SendLogs = true
 		} else {
-			nodeConfig.AgreeSendLogs = false
+			nodeConfig.SendBugReports = false
 			logger.SendLogs = false
 		}
 

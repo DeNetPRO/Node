@@ -7,7 +7,7 @@ import (
 	"io"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
+	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/pbnjay/memory"
 )
@@ -69,7 +69,7 @@ func DecryptAES(key, data []byte) ([]byte, error) {
 
 //Return N and P scrypt params
 func GetScryptParams() (int, int) {
-	if shared.TestMode {
+	if tstpkg.TestMode {
 		return keystore.LightScryptN, keystore.LightScryptP
 	}
 

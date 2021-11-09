@@ -10,10 +10,10 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
 	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
+	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,8 +23,8 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	shared.TestModeOn()
-	defer shared.TestModeOff()
+	tstpkg.TestModeOn()
+	defer tstpkg.TestModeOff()
 
 	err := paths.Init()
 	if err != nil {
@@ -84,19 +84,7 @@ func TestAccCreate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wantConfig := config.NodeConfig{
-		Address:              accountAddress,
-		IpAddress:            "127.0.0.1",
-		HTTPPort:             "55050",
-		Network:              "kovan",
-		StorageLimit:         1,
-		StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, accountAddress)},
-		UsedStorageSpace:     10000,
-		RegisteredInNetworks: map[string]bool{},
-		AgreeSendLogs:        true,
-	}
-
-	require.Equal(t, wantConfig, accConfig)
+	require.Equal(t, config.TestConfig, accConfig)
 
 }
 
@@ -141,18 +129,6 @@ func TestImportAccount(t *testing.T) {
 		t.Errorf("import account address must not be empty")
 	}
 
-	wantConfig := config.NodeConfig{
-		Address:              accountAddress,
-		IpAddress:            "127.0.0.1",
-		HTTPPort:             "55050",
-		Network:              "kovan",
-		StorageLimit:         1,
-		StoragePaths:         []string{filepath.Join(paths.WorkDirPath, paths.StorageDirName, accountAddress)},
-		UsedStorageSpace:     10000,
-		RegisteredInNetworks: map[string]bool{},
-		AgreeSendLogs:        true,
-	}
-
-	require.Equal(t, wantConfig, accConfig)
+	require.Equal(t, config.TestConfig, accConfig)
 
 }

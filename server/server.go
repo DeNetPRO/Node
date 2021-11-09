@@ -35,6 +35,8 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 	spFiles "git.denetwork.xyz/DeNet/dfile-secondary-node/sp_files"
+	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
+
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -283,7 +285,7 @@ func SaveFiles(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if !shared.TestMode {
+	if !tstpkg.TestMode {
 		logger.SendStatistic(spData.Address, network, req.RemoteAddr, logger.Upload, int64(fileSize))
 	}
 
@@ -352,7 +354,7 @@ func ServeFiles(w http.ResponseWriter, r *http.Request) {
 
 	logger.Log("serving file: " + rqtData.FileName)
 
-	if !shared.TestMode {
+	if !tstpkg.TestMode {
 		logger.SendStatistic(rqtData.RequesterAddr, network, r.RemoteAddr, logger.Download, stat.Size())
 	}
 

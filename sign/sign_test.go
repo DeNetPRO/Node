@@ -7,17 +7,17 @@ import (
 	"testing"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/encryption"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/shared"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/sign"
+	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
 
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
 func TestCheckSignature(t *testing.T) {
 
-	secrKeyHash := sha256.Sum256(shared.TestSecretKey)
+	secrKeyHash := sha256.Sum256(tstpkg.TestSecretKey)
 
-	privateKeyBytes, err := encryption.DecryptAES(secrKeyHash[:], shared.TestPKHash)
+	privateKeyBytes, err := encryption.DecryptAES(secrKeyHash[:], tstpkg.TestPKHash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,7 +37,7 @@ func TestCheckSignature(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = sign.Check(shared.TestAccAddr, hex.EncodeToString(signedData), hashData)
+	err = sign.Check(tstpkg.TestAccAddr, hex.EncodeToString(signedData), hashData)
 	if err != nil {
 		t.Fatal(err)
 	}

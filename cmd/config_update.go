@@ -107,7 +107,7 @@ var configUpdateCmd = &cobra.Command{
 			stateBefore.Network == nodeConfig.Network &&
 			stateBefore.HTTPPort == nodeConfig.HTTPPort &&
 			stateBefore.StorageLimit == nodeConfig.StorageLimit &&
-			stateBefore.AgreeSendLogs == nodeConfig.AgreeSendLogs {
+			stateBefore.SendBugReports == nodeConfig.SendBugReports {
 			fmt.Println("Nothing was changed")
 			return
 		}
