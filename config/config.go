@@ -223,7 +223,7 @@ func SetStorageLimit(nodeConfig *NodeConfig, state string) error {
 			continue
 		}
 
-		if intSpace < int(nodeConfig.UsedStorageSpace) || intSpace >= availableSpace {
+		if intSpace < 0 || intSpace >= availableSpace {
 			fmt.Println("Passed value is out of avaliable space range, please try again")
 			continue
 		}

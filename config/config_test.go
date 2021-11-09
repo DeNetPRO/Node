@@ -1,4 +1,4 @@
-package config
+package config_test
 
 import (
 	"fmt"
@@ -6,6 +6,8 @@ import (
 	"os"
 	"testing"
 
+	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
 	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
 	"github.com/stretchr/testify/require"
 
@@ -17,6 +19,11 @@ func TestMain(m *testing.M) {
 	defer tstpkg.TestModeOff()
 
 	err := paths.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = config.Create(tstpkg.TestAccAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,56 +55,53 @@ func TestSelectNetwork(t *testing.T) {
 
 	os.Stdin = r
 
-	got, err := SelectNetwork()
+	got, err := config.SelectNetwork()
 	if err != nil {
 		fmt.Println(err)
 		t.Error()
 	}
 
-	want := []string{"polygon", "mumbai", "kovan"}
+	want := []string{}
+
+	for net := range blckChain.Networks {
+		want = append(want, net)
+	}
 
 	require.Contains(t, want, got)
 }
 
-// func TestConfigSetStorageLimit(t *testing.T) {
-// 	address := "some_address"
+func TestConfigSetStorageLimit(t *testing.T) {
 
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.RemoveAll(pathToConfig)
-// 	os.MkdirAll(pathToConfig, 0777)
+	configStruct := config.TestConfig
 
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+	require.Equal(t, 1, configStruct.StorageLimit)
 
-// 	want := 2
+	t.Run("correct value", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Error(err)
+		}
 
-// 	path := filepath.Join(WorkDir, "stdin")
-// 	file, err := os.Create(path)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
+		defer r.Close()
+		defer w.Close()
 
-// 	file.WriteString("2\n")
-// 	file.Sync()
-// 	file.Seek(0, 0)
+		_, err = w.WriteString("5\n")
+		if err != nil {
+			t.Error(err)
+		}
 
-// 	os.Stdin = file
+		os.Stdin = r
 
-// 	err = SetStorageLimit(&config, UpdateStatus)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		t.Error(err)
-// 	}
+		err = config.SetStorageLimit(&configStruct, config.UpdateStatus)
+		if err != nil {
+			fmt.Println(err)
+			t.Error(err)
+		}
 
-// 	file.Close()
-// 	os.Remove(path)
+		require.Equal(t, 5, configStruct.StorageLimit)
+	})
 
-// 	got := config.StorageLimit
-
-// 	require.Equal(t, want, got)
-// }
+}
 
 // func TestConfigSetNegativeStorageLimit(t *testing.T) {
 // 	address := "some_address"
