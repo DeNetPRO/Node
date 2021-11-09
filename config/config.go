@@ -218,6 +218,7 @@ func SetStorageLimit(nodeConfig *NodeConfig, state string) error {
 		match := regNum.MatchString(space)
 
 		if !match {
+
 			fmt.Println("Value is incorrect, please try again")
 			continue
 		}
@@ -266,6 +267,10 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) error {
 		match := regIp.MatchString(ipAddr)
 
 		if !match {
+			if tstpkg.TestMode {
+				return errors.New("incorrect value")
+			}
+
 			fmt.Println("Value is incorrect, please try again")
 			continue
 		}
@@ -273,6 +278,11 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) error {
 		splitIPAddr := strings.Split(ipAddr, ".")
 
 		if fullyReservedIPs[splitIPAddr[0]] {
+
+			if tstpkg.TestMode {
+				return errors.New("can't be used as a public ip address")
+			}
+
 			fmt.Println("Address", ipAddr, "can't be used as a public ip address")
 			continue
 		}
@@ -286,6 +296,11 @@ func SetIpAddr(nodeConfig *NodeConfig, state string) error {
 			}
 
 			if secondAddrPart <= reservedSecAddrPart {
+
+				if tstpkg.TestMode {
+					return errors.New("can't be used as a public ip address")
+				}
+
 				fmt.Println("Address", ipAddr, "can't be used as a public ip address")
 				continue
 			}

@@ -47,7 +47,7 @@ func TestSelectNetwork(t *testing.T) {
 
 	r, w, err := os.Pipe()
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	defer r.Close()
@@ -55,7 +55,7 @@ func TestSelectNetwork(t *testing.T) {
 
 	_, err = w.WriteString("1\n")
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	os.Stdin = r
@@ -63,7 +63,7 @@ func TestSelectNetwork(t *testing.T) {
 	got, err := config.SelectNetwork()
 	if err != nil {
 		fmt.Println(err)
-		t.Error()
+		t.Fatal()
 	}
 
 	want := []string{}
@@ -84,7 +84,7 @@ func TestConfigSetStorageLimit(t *testing.T) {
 	t.Run("correct value", func(t *testing.T) {
 		r, w, err := os.Pipe()
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 
 		defer r.Close()
@@ -92,7 +92,7 @@ func TestConfigSetStorageLimit(t *testing.T) {
 
 		_, err = w.WriteString("5\n")
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 
 		os.Stdin = r
@@ -100,7 +100,7 @@ func TestConfigSetStorageLimit(t *testing.T) {
 		err = config.SetStorageLimit(&configStruct, config.UpdateStatus)
 		if err != nil {
 			fmt.Println(err)
-			t.Error(err)
+			t.Fatal(err)
 		}
 
 		require.Equal(t, 5, configStruct.StorageLimit)
@@ -109,7 +109,7 @@ func TestConfigSetStorageLimit(t *testing.T) {
 	t.Run("negative value", func(t *testing.T) {
 		r, w, err := os.Pipe()
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 
 		defer r.Close()
@@ -117,7 +117,7 @@ func TestConfigSetStorageLimit(t *testing.T) {
 
 		_, err = w.WriteString("-1\n")
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 
 		os.Stdin = r
@@ -130,7 +130,7 @@ func TestConfigSetStorageLimit(t *testing.T) {
 	t.Run("zero value", func(t *testing.T) {
 		r, w, err := os.Pipe()
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 
 		defer r.Close()
@@ -138,7 +138,7 @@ func TestConfigSetStorageLimit(t *testing.T) {
 
 		_, err = w.WriteString("0\n")
 		if err != nil {
-			t.Error(err)
+			t.Fatal(err)
 		}
 
 		os.Stdin = r
@@ -155,96 +155,74 @@ func TestConfigSetIP(t *testing.T) {
 
 	require.Equal(t, "127.0.0.1", configStruct.IpAddress)
 
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Error(err)
-	}
+	t.Run("valid ip address", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	defer r.Close()
-	defer w.Close()
+		defer r.Close()
+		defer w.Close()
 
-	_, err = w.WriteString("123.123.123.123\n")
-	if err != nil {
-		t.Error(err)
-	}
+		_, err = w.WriteString("91.123.123.123\n")
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	os.Stdin = r
+		os.Stdin = r
 
-	err = config.SetIpAddr(&configStruct, config.UpdateStatus)
-	if err != nil {
-		fmt.Println(err)
-		t.Error(err)
-	}
+		err = config.SetIpAddr(&configStruct, config.UpdateStatus)
+		if err != nil {
+			fmt.Println(err)
+			t.Fatal(err)
+		}
 
-	require.Equal(t, "123.123.123.123", configStruct.IpAddress)
+		require.Equal(t, "91.123.123.123", configStruct.IpAddress)
+	})
+
+	t.Run("local ip address", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer r.Close()
+		defer w.Close()
+
+		_, err = w.WriteString("192.168.1.1\n")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		os.Stdin = r
+
+		err = config.SetIpAddr(&configStruct, config.UpdateStatus)
+
+		require.NotEmpty(t, err)
+	})
+
+	t.Run("wrong ip address", func(t *testing.T) {
+		r, w, err := os.Pipe()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer r.Close()
+		defer w.Close()
+
+		_, err = w.WriteString("11292.168.1.1\n")
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		os.Stdin = r
+
+		err = config.SetIpAddr(&configStruct, config.UpdateStatus)
+
+		require.NotEmpty(t, err)
+	})
 
 }
-
-// func TestConfigSetLocalIP(t *testing.T) {
-// 	address := "some_address"
-
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.RemoveAll(pathToConfig)
-// 	os.MkdirAll(pathToConfig, 0777)
-
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-
-// 	path := filepath.Join(WorkDir, "stdin")
-// 	file, err := os.Create(path)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-
-// 	ip := "127.0.0.1"
-// 	file.WriteString(ip + "\n")
-// 	file.Sync()
-// 	file.Seek(0, 0)
-
-// 	os.Stdin = file
-
-// 	defer file.Close()
-// 	defer os.Remove(path)
-
-// 	err = SetIpAddr(&config, UpdateStatus)
-
-// 	require.NotEmpty(t, err)
-// }
-
-// func TestConfigSetWrongIP(t *testing.T) {
-// 	address := "some_address"
-
-// 	pathToConfig := filepath.Join(paths.AccsDirPath, address, paths.ConfDirName)
-// 	os.RemoveAll(pathToConfig)
-// 	os.MkdirAll(pathToConfig, 0777)
-
-// 	config, err := Create(address)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-
-// 	path := filepath.Join(WorkDir, "stdin")
-// 	file, err := os.Create(path)
-// 	if err != nil {
-// 		t.Error(err)
-// 	}
-
-// 	ip := "1227.0.0.1"
-// 	file.WriteString(ip + "\n")
-// 	file.Sync()
-// 	file.Seek(0, 0)
-
-// 	os.Stdin = file
-
-// 	defer file.Close()
-// 	defer os.Remove(path)
-
-// 	err = SetIpAddr(&config, UpdateStatus)
-
-// 	require.NotEmpty(t, err)
-// }
 
 // func TestConfigSetPort(t *testing.T) {
 // 	address := "some_address"
@@ -255,13 +233,13 @@ func TestConfigSetIP(t *testing.T) {
 
 // 	config, err := Create(address)
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	path := filepath.Join(WorkDir, "stdin")
 // 	file, err := os.Create(path)
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	port := "55051"
@@ -277,7 +255,7 @@ func TestConfigSetIP(t *testing.T) {
 // 	err = SetPort(&config, UpdateStatus)
 // 	if err != nil {
 // 		fmt.Println(err)
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	require.Equal(t, port, config.HTTPPort)
@@ -292,13 +270,13 @@ func TestConfigSetIP(t *testing.T) {
 
 // 	config, err := Create(address)
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	path := filepath.Join(WorkDir, "stdin")
 // 	file, err := os.Create(path)
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	port := "-1"
@@ -324,7 +302,7 @@ func TestConfigSetIP(t *testing.T) {
 
 // 	config, err := Create(address)
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	config.Network = "kovan"
@@ -336,23 +314,23 @@ func TestConfigSetIP(t *testing.T) {
 
 // 	configFile, err := os.OpenFile(path, os.O_RDWR, 0777)
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	err = Save(configFile, config)
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	var got NodeConfig
 // 	data, err := os.ReadFile(path)
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	err = json.Unmarshal(data, &got)
 // 	if err != nil {
-// 		t.Error(err)
+// 		t.Fatal(err)
 // 	}
 
 // 	require.Equal(t, config, got)
