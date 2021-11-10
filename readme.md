@@ -1,9 +1,9 @@
 # DeNet Node
 
-DeNet Node is a CLI application that allows a user (miner) to connect to the DeNet decentralized network and mine tokens by granting access to their available space for other users.
+DeNet-Node is a CLI application that grants access to your devices unused space for reward.
 
-## Download
-To download, go to [releases](https://github.com/DeNetPRO/StorageProvider/releases), select the latest and choose your OS.
+## Build
+go build -ldflags "-s -w" -o DeNet-Node
 
 ## Get Started
 
