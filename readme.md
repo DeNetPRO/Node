@@ -1,6 +1,13 @@
-# DeNet Node
+# DeNet Node - 
 
-DeNet-Node is a CLI application that grants access to your devices unused space for reward.
+A CLI application that helps to share your unused storage capacity for reward.
+
+## Distributed binary usage
+
+# Importing existing Ethereum wallet for using it as your account
+
+
+
 
 ## Build
 go build -ldflags "-s -w" -o DeNet-Node
