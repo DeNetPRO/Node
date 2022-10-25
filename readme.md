@@ -1,10 +1,8 @@
-# DeNet Node - 
-
-A CLI application that helps to share your unused storage capacity for reward.
+# DeNet Node - a CLI application that helps to share your unused storage capacity for reward.
 
 ## Distributed binary usage
 
-# Importing existing Ethereum wallet for using it as your account
+### Importing existing Ethereum wallet for using it as your account
 
 
 
