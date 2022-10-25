@@ -2,7 +2,7 @@
 
 ## Distributed binary usage
 
-### Importing existing Ethereum wallet for using it as your account
+When you run  Importing existing Ethereum wallet for using it as your account
 
 
 
