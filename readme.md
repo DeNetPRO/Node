@@ -6,7 +6,9 @@ For using the app you need an account. Account is just an Ethereum wallet that y
 
 When you run the app it prompts for password if you already have an account or runs account import command. 
 
-If you run the app for the first time you need to create configuration. It's simple, all you need to do is to answer prompted questions.   
+If you run the app for the first time you need to create configuration. It's simple, all you need to do is to answer prompted questions.
+
+When account is created, used IP address and  writes 
 
 You can run the app in terminal emulator by navigating to the directory that contains the binary file and typing the following command: 
 
@@ -15,6 +17,18 @@ You can run the app in terminal emulator by navigating to the directory that con
 ```
 
 
+
+<!-- video link here [account import](https://app.gitbook.com/o/-MhCmHmTRDb0MF2vIQKk/s/-MhI3_4Kt2DnLxDFkDH8) -->
+
+If you want to create a new account instead of importing an existing one just run the following command:
+
+```bash
+./denet-node account create
+```
+
+
+
+<!-- video link here [account create](https://app.gitbook.com/o/-MhCmHmTRDb0MF2vIQKk/s/-MhI3_4Kt2DnLxDFkDH8) -->
 
 ## Build
 go build -ldflags "-s -w" -o DeNet-Node
@@ -50,7 +64,6 @@ There is an example how to use the commands
 | create | create a new blockchain account |
 | import | imports your account by private key |
 | key | discloses your private key |
-| list | display addresses of all blockchain accounts |
 | login | log in a blockchain accounts |
 
 ```bash
