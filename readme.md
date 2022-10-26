@@ -9,9 +9,9 @@ If you run the app for the first time you need to create configuration. It's sim
 Info about the IP address and port that you specified for remote connections will be added to a smart contract. 
 #### So there are two things you need:
 #### - public IP address
-#### - at least 0.1 MATIC on your Ethereum wallet that is going to be used as an account
+#### - at least 0.1 MATIC on your Ethereum wallet that is going to be used as an account 
 
-Having MATICs in your account wallet is also needed for paying transaction fees when sending file storage proofs, please top it up on time.
+Having MATICs in your account wallet is also needed for paying transaction fees when sending file storage proofs, please top it up on time. DeNet smart contracts are deployed in Polygon. More networks will be added in the future.
 
 You can run the app in terminal emulator by navigating to the directory that contains the binary file and typing the following command: 
 
@@ -43,9 +43,12 @@ If you generated a new wallet when creating an account and need to receive the p
 
 ## FAQ
 
-### What OS is needed for running DeNet Node?
-
-Currently it will be available only for Linux (Windows and MacOS versions will be released later).
+### What are minimal system requirements for running DeNet Node?
+- 1 GB of RAM 
+- Public IP address and the ability to provide access for remote requests to the device
+- 50GB of free storage space.
+- 100% Uptime 
+- OS: Linux or MacOS (Windows version will be released later)
 
 ### Is it ok to run DeNet Node on VPS?
 
