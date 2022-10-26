@@ -67,7 +67,7 @@ You can share as much as you can but sharing out more space will allow you to st
 
 [Discord Miners Group](https://discord.gg/cPz9m4cSWv)
 
-[Our YouTube](https://www.youtube.com/channel/UCeCxt3tYbtSkJvaznNjQimQ)
+[DeNet - YouTube](https://www.youtube.com/channel/UCeCxt3tYbtSkJvaznNjQimQ)
 
 
 
