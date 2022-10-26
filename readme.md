@@ -31,6 +31,10 @@ If you want to create a new account instead of importing an existing one just ru
 
 If you generated a new wallet when creating an account and need to receive the private key run the following command: 
 
+```bash
+./denet-node account export
+```
+
 [Account export command demo](https://www.youtube.com/watch?v=bnstbPGdjKY)
 
 ## Currently available commands cheat sheet
