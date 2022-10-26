@@ -66,6 +66,6 @@ You can share as much as you can, but sharing more space is making you able to s
 
 ##  Links
 
-[Discord Miners Group](https://discord.com/channels/920205740944273449/1033033015489728552)
+[Discord Miners Group](https://discord.gg/cPz9m4cSWv)
 
 
