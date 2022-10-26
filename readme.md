@@ -1,4 +1,4 @@
-# DeNet Node - a CLI application for sharing unused storage capacity for reward.
+# DeNet Node - CLI app for receiving rewards by sharing unused storage
 
 For using the app you need an account. Account is just an Ethereum wallet that you can import or create.
 
@@ -40,4 +40,21 @@ If you generated a new wallet when creating an account and need to receive the p
 | account create | generates new Ethereum wallet that is used as an account |
 | account import | imports Ethereum wallet by its private key |
 | account export | discloses your private key |
+
+## FAQ
+
+### What OS is needed for running DeNet Node?
+
+Currently it will be available only for Linux (Windows and MacOS versions will be released later).
+
+### Is it ok to run DeNet Node on VPS?
+
+Yes, but ....
+
+If you already use a VPS it is ok to launch DeNet Node on it, but if launching the node is your only purpose, we recommend you trying to launch it on your own machine instead of subscribing on a VPS. So if you have a PC or laptop with Linux on board, you'll also need a public IP. It can be obtained via your ISP and is going to cost you cheaper than VPS. 
+
+### How much space should I share?
+
+You can share as much as you can, but sharing more space is making you able to store more files and increases total reward and your chances of receiving it first. 
+
 
