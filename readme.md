@@ -54,7 +54,7 @@ If you generated a new wallet when creating an account and need to receive the p
 
 Yes, but ....
 
-If you already use a VPS it is ok to launch DeNet Node on it, but if launching the node is your only purpose, we recommend you trying to launch it on your own machine instead of subscribing on a VPS. So if you have a PC or laptop with Linux on board, you'll also need a public IP. It can be obtained via your ISP and is going to cost you cheaper than VPS. 
+If you already use a VPS it is ok to launch DeNet Node on it, but if launching the node is your only purpose, we recommend you trying to launch it on your own machine instead of subscribing on a VPS. So if you have a PC or laptop with Linux or MacOS on board, you'll also need a public IP. It can be obtained via your ISP and is going to cost you cheaper than VPS. 
 
 ### How much space should I share?
 
