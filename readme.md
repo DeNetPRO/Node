@@ -8,7 +8,10 @@ When you run the app it prompts for password if you already have an account or r
 
 If you run the app for the first time you need to create configuration. It's simple, all you need to do is to answer prompted questions.
 
-When account is created, used IP address and  writes 
+Info about the IP address and port that you specified for remote connections will be added to a smart contract. 
+### So there are two things you need:
+### - public IP address
+### - at least 0.1 MATIC on your Ethereum wallet that is going to be used as an account
 
 You can run the app in terminal emulator by navigating to the directory that contains the binary file and typing the following command: 
 
