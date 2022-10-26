@@ -13,15 +13,15 @@ Info about the IP address and port that you specified for remote connections wil
 #### - public IP address
 #### - at least 0.1 MATIC on your Ethereum wallet that is going to be used as an account
 
+Having MATICs in your account wallet is also needed for paying transaction fees when sending file storage proofs, please top it up on time.
+
 You can run the app in terminal emulator by navigating to the directory that contains the binary file and typing the following command: 
 
 ```bash
 ./denet-node
 ```
 
-
-
-<!-- video link here [account import](https://app.gitbook.com/o/-MhCmHmTRDb0MF2vIQKk/s/-MhI3_4Kt2DnLxDFkDH8) -->
+[account import](https://www.youtube.com/watch?v=vVRMHlqLA0w)
 
 If you want to create a new account instead of importing an existing one just run the following command:
 
@@ -29,14 +29,11 @@ If you want to create a new account instead of importing an existing one just ru
 ./denet-node account create
 ```
 
+[account create](https://www.youtube.com/watch?v=So8VAjv9o1Y)
 
 
-<!-- video link here [account create](https://app.gitbook.com/o/-MhCmHmTRDb0MF2vIQKk/s/-MhI3_4Kt2DnLxDFkDH8) -->
 
-## Build
-go build -ldflags "-s -w" -o DeNet-Node
-
-## Get Started
+[export key](https://www.youtube.com/watch?v=bnstbPGdjKY)
 
 
 
