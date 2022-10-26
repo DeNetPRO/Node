@@ -1,7 +1,5 @@
 # DeNet Node - a CLI application for sharing unused storage capacity for reward.
 
-## Distributed binary usage
-
 For using the app you need an account. Account is just an Ethereum wallet that you can import or create.
 
 When you run the app it prompts for password if you already have an account or runs account import command. 
@@ -21,7 +19,7 @@ You can run the app in terminal emulator by navigating to the directory that con
 ./denet-node
 ```
 
-[!account import](https://www.youtube.com/watch?v=vVRMHlqLA0w)
+[Account import command demo](https://www.youtube.com/watch?v=vVRMHlqLA0w)
 
 If you want to create a new account instead of importing an existing one just run the following command:
 
@@ -29,51 +27,17 @@ If you want to create a new account instead of importing an existing one just ru
 ./denet-node account create
 ```
 
-[account create](https://www.youtube.com/watch?v=So8VAjv9o1Y)
+[Account create command demo](https://www.youtube.com/watch?v=So8VAjv9o1Y)
 
+If you generated a new wallet when creating an account and need to receive the private key run the following command: 
 
+[Account export command demo](https://www.youtube.com/watch?v=bnstbPGdjKY)
 
-[export key](https://www.youtube.com/watch?v=bnstbPGdjKY)
-
-
-
-## Commands
-Open a terminal / console in the folder where you downloaded DeNet-Node and run the command below. You will see a list of available commands that you can use:
-
-```bash
-./DeNet-Node --help
-``` 
-
-There is an example how to use the commands
-```bash
-./DeNet-Node [command]
-```
-
-| Available Commands | Description |
-|---|---|
-| account | Account is a command that lets you to manage accounts in the different blockchain network |
-| config | Config is a command that lets you change your account configuration |
-| help | Help about any command |
-
-```bash
-./DeNet-Node account [command]
-```
+## Currently available commands cheat sheet
 
 | Account Command | Description |
 |---|---|
-| create | create a new blockchain account |
-| import | imports your account by private key |
-| key | discloses your private key |
-| login | log in a blockchain accounts |
+| account create | generates new Ethereum wallet that is used as an account |
+| account import | imports Ethereum wallet by its private key |
+| account export | discloses your private key |
 
-```bash
-./DeNet-Node config [command]
-```
-
-| Config Command | Description |
-|---|---|
-| update | updates your account configuration |
-
-
-## API Documentation
-[Documentation](https://app.gitbook.com/o/-MhCmHmTRDb0MF2vIQKk/s/-MhI3_4Kt2DnLxDFkDH8)
