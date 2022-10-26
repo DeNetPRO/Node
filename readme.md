@@ -45,14 +45,14 @@ If you generated a new wallet when creating an account and need to receive the p
 | account import | imports Ethereum wallet by its private key |
 | account export | discloses your private key |
 
-## FAQ
-
-### What are minimal system requirements for running DeNet Node?
+## Minimal system requirements
 - 1 GB of RAM 
 - Public IP address and the ability to provide access for remote requests to the device
 - 50GB of free storage space.
 - 100% Uptime 
 - OS: Linux or MacOS (Windows version will be released later)
+
+## FAQ
 
 ### Is it ok to run DeNet Node on VPS?
 
