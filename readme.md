@@ -1,4 +1,4 @@
-# DeNet Node - CLI app for receiving rewards by sharing storage
+# [DeNet](https://denet.pro/en/) Node - CLI app for receiving rewards by sharing storage
 
 To use the app you need an account. The account is just an Ethereum wallet that you can import or create.
 
