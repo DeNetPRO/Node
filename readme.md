@@ -60,4 +60,8 @@ If you already use a VPS it is ok to launch DeNet Node on it, but if launching t
 
 You can share as much as you can, but sharing more space is making you able to store more files and increases total reward and your chances of receiving it first. 
 
+##  Links
+
+[Discord](https://discord.com/channels/920205740944273449/1033033015489728552)
+
 
