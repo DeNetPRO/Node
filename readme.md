@@ -21,7 +21,7 @@ You can run the app in terminal emulator by navigating to the directory that con
 ./denet-node
 ```
 
-[account import](https://www.youtube.com/watch?v=vVRMHlqLA0w)
+[!account import](https://www.youtube.com/watch?v=vVRMHlqLA0w)
 
 If you want to create a new account instead of importing an existing one just run the following command:
 
