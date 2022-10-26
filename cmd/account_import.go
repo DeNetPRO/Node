@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/cleaner"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/server"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/rpcserver"
+
 	"github.com/spf13/cobra"
 )
 
@@ -19,13 +20,16 @@ var accountImportCmd = &cobra.Command{
 		const location = "accountImportCmd->"
 		_, nodeConfig, err := account.Import()
 		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
+			fmt.Println(err)
+			logger.Log(logger.MarkLocation(location, err))
 			log.Fatal("Fatal error, couldn't import an account")
 		}
 
-		go cleaner.Start()
+		err = rpcserver.Start(nodeConfig.HTTPPort)
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		server.Start(nodeConfig.HTTPPort)
 	},
 }
 

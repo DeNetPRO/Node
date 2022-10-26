@@ -7,14 +7,9 @@ import (
 	"net/http"
 	"runtime"
 	"time"
-)
 
-type StatsInfoData struct {
-	Type       string
-	FileSize   int64
-	RemoteAddr string
-	Network    string
-}
+	nodeTypes "git.denetwork.xyz/DeNet/dfile-secondary-node/node_types"
+)
 
 type StatType int
 
@@ -25,20 +20,23 @@ const (
 )
 
 var (
-	SendLogs      = true
+	SendReports   = true
 	loggerAddress = "http://68.183.215.241:9091"
 )
 
-// ====================================================================================
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 func Log(msg interface{}) {
-	if !SendLogs {
-		return
-	}
 
 	currentTime := time.Now().Local()
 
 	logMsg := fmt.Sprintf("%s: %v\n", currentTime.String(), msg)
+
+	fmt.Println(logMsg)
+
+	if !SendReports {
+		return
+	}
 
 	errType := fmt.Sprintf("%T", msg)
 
@@ -53,10 +51,10 @@ func Log(msg interface{}) {
 	}
 }
 
-// ====================================================================================
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 //Сreates an informative error with line.
-func CreateDetails(location string, errMsg error) error {
+func MarkLocation(location string, errMsg error) error {
 	_, _, line, _ := runtime.Caller(1)
 	return fmt.Errorf("%s line %d -> %w", location, line, errMsg)
 }
@@ -64,7 +62,7 @@ func CreateDetails(location string, errMsg error) error {
 func SendStatistic(spAddress, network, remoteAddr string, statType StatType, fileSize int64) {
 	const location = "logger.SendStatistic->"
 	url := loggerAddress + "/stats/" + spAddress
-	body := StatsInfoData{
+	body := nodeTypes.StatsInfoData{
 		Type:       statType.String(),
 		FileSize:   fileSize,
 		RemoteAddr: remoteAddr,
@@ -73,13 +71,13 @@ func SendStatistic(spAddress, network, remoteAddr string, statType StatType, fil
 
 	js, err := json.Marshal(body)
 	if err != nil {
-		Log(CreateDetails(location, err))
+		Log(MarkLocation(location, err))
 	}
 
 	r := bytes.NewReader(js)
 	resp, err := http.Post(url, "application/json", r)
 	if err != nil {
-		Log(CreateDetails(location, err))
+		Log(MarkLocation(location, err))
 	}
 
 	if resp != nil {

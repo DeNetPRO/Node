@@ -13,7 +13,7 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		accs := account.List()
 		if len(accs) == 0 {
-			accountCreateCmd.Run(accountCreateCmd, []string{})
+			accountImportCmd.Run(accountImportCmd, []string{})
 		} else {
 			accountLoginCmd.Run(accountLoginCmd, []string{})
 		}

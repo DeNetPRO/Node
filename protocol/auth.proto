@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package auth;
+
+import "common.proto";
+
+option go_package = "./rpc";
+
+
+enum SignType {
+	UNKNOWN = 0; 
+	COMMON= 1;
+	ETHEREUM= 2; 
+}
+
+message Nonce {
+	bytes nonce = 1;
+}
+
+message Signature {
+	SignType type = 1;
+	bytes signer = 2;
+	bytes 	 nonce = 3;
+	bytes 	 signed_bytes = 4;
+}

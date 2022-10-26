@@ -12,12 +12,12 @@ import (
 //Read reads and returns terminal input
 func ReadInput() (string, error) {
 	const location = "termemul.ReadInput->"
-	fmt.Print("Enter value here: ")
+	fmt.Print("\nAwaiting for value ==> ")
 	reader := bufio.NewReader(os.Stdin)
 	// ReadString will block until the delimiter is entered
 	input, err := reader.ReadString('\n')
 	if err != nil {
-		return "", logger.CreateDetails(location, err)
+		return "", logger.MarkLocation(location, err)
 	}
 
 	// remove the delimiter from the string
@@ -27,4 +27,4 @@ func ReadInput() (string, error) {
 	return input, nil
 }
 
-// ====================================================================================
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

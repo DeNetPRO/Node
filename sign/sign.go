@@ -22,7 +22,7 @@ func Check(signerAddress, signedData string, unsignedDataHash [32]byte) error {
 	signatureAddress := crypto.PubkeyToAddress(*sigPublicKey)
 
 	if signerAddress != signatureAddress.String() {
-		return errs.WrongSignature
+		return errs.List().Signature
 	}
 
 	return nil

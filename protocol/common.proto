@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package common;
+
+option go_package = "./rpc";
+
+message Empty {}
+
+enum Network {
+	UNKNOWN_NETWORK = 0; 
+	POLYGON_NETWORK = 1;
+	KOVAN_NETWORK = 2;
+	ETHEREUM_NETWORK = 3; 
+	BSC_NETWORK = 4;
+}
+
+message Bytes {
+	bytes b = 1;
+}

@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"log"
 	"os"
-	"path/filepath"
 	"testing"
 
 	memInfo "git.denetwork.xyz/DeNet/dfile-secondary-node/mem_info"
+	nodeTypes "git.denetwork.xyz/DeNet/dfile-secondary-node/node_types"
 	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
@@ -17,7 +17,6 @@ import (
 
 func TestMain(m *testing.M) {
 	tstpkg.TestModeOn()
-
 	defer tstpkg.TestModeOff()
 
 	err := paths.Init()
@@ -25,14 +24,14 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	_, err = config.Create(tstpkg.TestAccAddr)
+	_, err = config.Create(tstpkg.Data().AccAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	exitVal := m.Run()
 
-	err = os.RemoveAll(paths.WorkDirPath)
+	err = os.RemoveAll(paths.List().WorkDir)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,7 +43,7 @@ func TestRestoreNodeMemory(t *testing.T) {
 
 	const fileSize = 1024
 
-	confFilePath := filepath.Join(paths.ConfigDirPath, paths.ConfFileName)
+	confFilePath := paths.List().ConfigFile
 
 	memInfo.Restore(confFilePath, fileSize)
 
@@ -53,7 +52,7 @@ func TestRestoreNodeMemory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var config config.NodeConfig
+	var config nodeTypes.Config
 
 	err = json.Unmarshal(configFileBytes, &config)
 	if err != nil {

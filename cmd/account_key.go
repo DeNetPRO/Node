@@ -24,25 +24,25 @@ var showKeyCmd = &cobra.Command{
 		const location = "showKeyCmd->"
 		fmt.Println("Never disclose this key. Anyone with your private keys can steal any assets held in your account")
 
-		nodeAccount, password, err := account.ValidateUser()
+		nodeAccount, password, err := account.Unlock()
 		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
+			logger.Log(logger.MarkLocation(location, err))
 			log.Fatal(showKeyFatalMessage)
 		}
 
 		scryptN, scryptP := encryption.GetScryptParams()
 
-		ks := keystore.NewKeyStore(paths.AccsDirPath, scryptN, scryptP)
+		ks := keystore.NewKeyStore(paths.List().AccsDir, scryptN, scryptP)
 
 		keyJson, err := ks.Export(*nodeAccount, password, password)
 		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
+			logger.Log(logger.MarkLocation(location, err))
 			log.Fatal(showKeyFatalMessage)
 		}
 
 		key, err := keystore.DecryptKey(keyJson, password)
 		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
+			logger.Log(logger.MarkLocation(location, err))
 			log.Fatal(showKeyFatalMessage)
 		}
 

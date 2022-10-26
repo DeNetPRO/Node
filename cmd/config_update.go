@@ -14,6 +14,8 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
 	nodeFile "git.denetwork.xyz/DeNet/dfile-secondary-node/node_file"
+	nodeTypes "git.denetwork.xyz/DeNet/dfile-secondary-node/node_types"
+
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 	"github.com/spf13/cobra"
 )
@@ -37,69 +39,71 @@ var configUpdateCmd = &cobra.Command{
 			}
 		}
 
-		nodeAccount, password, err := account.ValidateUser()
+		nodeAccount, password, err := account.Unlock()
 		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
+			logger.Log(logger.MarkLocation(location, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
-		pathToConfigDir := filepath.Join(paths.AccsDirPath, nodeAccount.Address.String(), paths.ConfDirName)
-		pathToConfigFile := filepath.Join(pathToConfigDir, paths.ConfFileName)
+		fmt.Println("Started configuration update")
 
-		var nodeConfig config.NodeConfig
+		pathToConfigDir := filepath.Join(paths.List().AccsDir, nodeAccount.Address.String(), "config", "config.json") //TODO fix
+		pathToConfigFile := filepath.Join(pathToConfigDir, paths.List().ConfigFile)
+
+		var nodeConfig nodeTypes.Config
 
 		confFile, fileBytes, err := nodeFile.Read(pathToConfigFile)
 		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
+			logger.Log(logger.MarkLocation(location, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 		defer confFile.Close()
 
 		err = json.Unmarshal(fileBytes, &nodeConfig)
 		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
+			logger.Log(logger.MarkLocation(location, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
+
+		config.RPC = nodeConfig.RPC[nodeConfig.Network]
 
 		stateBefore := nodeConfig
 
-		network, err := config.SelectNetwork()
+		err = config.SetNetwork(&nodeConfig)
 		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
+			logger.Log(logger.MarkLocation(location, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
-		nodeConfig.Network = network
+		fmt.Println("\nHow much GB are you going to share? (should be positive number), or just press enter button to skip")
 
-		fmt.Println("Please enter disk space for usage in GB (should be positive number), or just press enter button to skip")
-
-		err = config.SetStorageLimit(&nodeConfig, config.UpdateStatus)
+		err = config.SetStorageLimit(&nodeConfig, config.Stats().Update)
 		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
+			logger.Log(logger.MarkLocation(location, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
-		fmt.Println("Please enter new ip address, or just press enter button to skip")
+		fmt.Println("\nPlease enter new ip address, or just press enter button to skip")
 
-		err = config.SetIpAddr(&nodeConfig, config.UpdateStatus)
+		err = config.SetIpAddr(&nodeConfig, config.Stats().Update)
 		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
+			logger.Log(logger.MarkLocation(location, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
-		fmt.Println("Please enter new http port number, or just press enter button to skip")
+		fmt.Println("\nPlease enter new http port number, or just press enter button to skip")
 
-		err = config.SetPort(&nodeConfig, config.UpdateStatus)
+		err = config.SetPort(&nodeConfig, config.Stats().Update)
 		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
+			logger.Log(logger.MarkLocation(location, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
 		fmt.Println("Do you want to send bug reports to developers? [y/n] (or just press enter button to skip)")
 
-		err = config.ChangeAgreeSendLogs(&nodeConfig, config.UpdateStatus)
+		err = config.SwitchReports(&nodeConfig, config.Stats().Update)
 		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
+			logger.Log(logger.MarkLocation(location, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 
@@ -119,14 +123,14 @@ var configUpdateCmd = &cobra.Command{
 
 			err := blckChain.UpdateNodeInfo(ctx, nodeAccount.Address, password, nodeConfig.IpAddress, nodeConfig.HTTPPort)
 			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
+				logger.Log(logger.MarkLocation(location, err))
 				log.Fatal(confUpdateFatalMessage)
 			}
 		}
 
 		err = config.Save(confFile, nodeConfig) // we dont't use mutex because race condition while config update is impossible
 		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
+			logger.Log(logger.MarkLocation(location, err))
 			log.Fatal(confUpdateFatalMessage)
 		}
 

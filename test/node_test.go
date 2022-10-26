@@ -4,11 +4,6 @@ import (
 	"errors"
 )
 
-type FileSendInfo struct {
-	Hash string `json:"hash"`
-	Body []byte `json:"body"`
-}
-
 var (
 	ErrorInvalidPassword = errors.New(" could not decrypt key with given password")
 )
@@ -116,7 +111,7 @@ var (
 // 	require.Equal(t, "OK", rr.Body.String())
 
 // 	for _, fileName := range oneMBHashes {
-// 		path := filepath.Join(paths.AccsDirPath, shared.NodeAddr.String(), paths.StorageDirName, storageProviderAddress, fileName)
+// 		path := filepath.Join(paths.List().AccsDir, shared.NodeAddr.String(), paths.StorageDirName, storageProviderAddress, fileName)
 // 		_, err := os.Stat(path)
 // 		if err != nil {
 // 			t.Errorf("%v not saved", fileName)
@@ -148,7 +143,7 @@ var (
 
 // 	b := make([]byte, fileSize)
 
-// 	testFilePath = filepath.Join(paths.AccsDirPath, testFileName)
+// 	testFilePath = filepath.Join(paths.List().AccsDir, testFileName)
 
 // 	f, err := os.Create(testFilePath)
 // 	if err != nil {

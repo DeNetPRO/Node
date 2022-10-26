@@ -15,9 +15,7 @@ import (
 
 func TestCheckSignature(t *testing.T) {
 
-	secrKeyHash := sha256.Sum256(tstpkg.TestSecretKey)
-
-	privateKeyBytes, err := encryption.DecryptAES(secrKeyHash[:], tstpkg.TestPKHash)
+	privateKeyBytes, err := encryption.DecryptAES(tstpkg.Data().EncrKey, tstpkg.Data().PKHash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,7 +35,7 @@ func TestCheckSignature(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = sign.Check(tstpkg.TestAccAddr, hex.EncodeToString(signedData), hashData)
+	err = sign.Check(tstpkg.Data().AccAddr, hex.EncodeToString(signedData), hashData)
 	if err != nil {
 		t.Fatal(err)
 	}

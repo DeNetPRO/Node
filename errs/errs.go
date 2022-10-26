@@ -2,21 +2,27 @@ package errs
 
 import (
 	"errors"
+
+	nodeTypes "git.denetwork.xyz/DeNet/dfile-secondary-node/node_types"
 )
 
-var (
-	WrongFile             = errors.New("wrong file")
-	NetworkCheck          = errors.New("unsupported network")
-	FileSaving            = errors.New("file saving failed")
-	UpdateFsInfo          = errors.New("fs info update failed")
-	WrongSignature        = errors.New("wrong signature")
-	FileCheck             = errors.New("file check failed")
-	ParseMultipartForm    = errors.New("parse multipart form failed")
-	SpaceCheck            = errors.New("space check failed")
-	NoSpace               = errors.New("not enough space")
-	Internal              = errors.New("node internal error")
-	InvalidArgument       = errors.New("invalid argument")
-	StorageSystemNotFound = errors.New("storage filesystem not found")
-)
+var errorList = nodeTypes.ErrList{
+	FileName:      errors.New("wrong file"),
+	Network:       errors.New("unsupported network"),
+	FileSave:      errors.New("file saving failed"),
+	FsUpdate:      errors.New("fs info update failed"),
+	Signature:     errors.New("wrong signature"),
+	FileCheck:     errors.New("file check failed"),
+	Multipart:     errors.New("parse multipart form failed"),
+	SpaceCheck:    errors.New("space check failed"),
+	Space:         errors.New("not enough space"),
+	Internal:      errors.New("node internal error"),
+	Argument:      errors.New("invalid argument"),
+	StorageSystem: errors.New("storage filesystem not found"),
+}
 
-// ====================================================================================
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+func List() nodeTypes.ErrList {
+	return errorList
+}
