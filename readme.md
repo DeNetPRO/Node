@@ -1,6 +1,6 @@
 # [DeNet](https://denet.pro/en/) Node - CLI app for receiving rewards by sharing storage
 
-[DeNet Node for Linux](https://github.com/cyb3rKn1ght/Node/releases/download/v1.0.0/denet-node-linux.tar.gz))
+[DeNet Node for Linux](https://github.com/cyb3rKn1ght/Node/releases/download/v1.0.0/denet-node-linux.tar.gz)
 
 [DeNet Node for MacOS](https://github.com/cyb3rKn1ght/Node/releases/download/v1.0.0/denet-node-macOS.zip)
 
