@@ -51,6 +51,10 @@ If you generated a new wallet when creating an account and need to receive the p
 - 100% Uptime 
 - OS: Linux or MacOS (Windows version will be released later)
 
+## Useful info
+
+[Permitting DeNet Node execution on MacOS ](https://www.youtube.com/watch?v=vw7yyDjyhS8)
+
 ## FAQ
 
 ### Is it ok to run DeNet Node on VPS?
