@@ -83,6 +83,12 @@ When your DeNet Node received files from users and started calculating if they c
 
 Note if you don't see something similar for several days, please send as a message [here](https://discord.gg/cPz9m4cSWv) 
 
+### How can I calculate my earnings?
+
+When DeNet Node receives files it starts sending proofs to blockchain smart contract using Proof-Of-Storage algorithm
+
+Nodes are rewarded in TBY tokens. One TBY can be received for storing 1 TB of data for a year. If you stored 500 GB for a year you will receive 0.5 TBY and so on. Our early miners will be additionally rewarded for every successful proof request. Also additional rewards for using miners resources are coming in the future.
+
 ##  Links
 
 [Discord Miners Group](https://discord.gg/cPz9m4cSWv)
