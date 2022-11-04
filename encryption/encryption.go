@@ -12,30 +12,25 @@ import (
 	"github.com/pbnjay/memory"
 )
 
-var (
-	EncryptedPK []byte
-	SecretKey   []byte
-)
-
-// ====================================================================================
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 //EncryptAES encrypts data using a provided key.
 func EncryptAES(key, data []byte) ([]byte, error) {
 	const location = "encryption.encryptAES->"
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, logger.CreateDetails(location, err)
+		return nil, logger.MarkLocation(location, err)
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, logger.CreateDetails(location, err)
+		return nil, logger.MarkLocation(location, err)
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	_, err = io.ReadFull(rand.Reader, nonce)
 	if err != nil {
-		return nil, logger.CreateDetails(location, err)
+		return nil, logger.MarkLocation(location, err)
 	}
 
 	ciphertext := gcm.Seal(nonce, nonce, data, nil)
@@ -43,33 +38,33 @@ func EncryptAES(key, data []byte) ([]byte, error) {
 	return ciphertext, nil
 }
 
-// ====================================================================================
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 //DecryptAES decrypts data using a provided key.
 func DecryptAES(key, data []byte) ([]byte, error) {
 	const location = "encryption.decryptAES->"
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, logger.CreateDetails(location, err)
+		return nil, logger.MarkLocation(location, err)
 	}
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, logger.CreateDetails(location, err)
+		return nil, logger.MarkLocation(location, err)
 	}
 	nonce, encrData := data[:gcm.NonceSize()], data[gcm.NonceSize():]
 	decrData, err := gcm.Open(nil, nonce, encrData, nil)
 	if err != nil {
-		return nil, logger.CreateDetails(location, err)
+		return nil, logger.MarkLocation(location, err)
 	}
 
 	return decrData, nil
 }
 
-// ====================================================================================
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 //Return N and P scrypt params
 func GetScryptParams() (int, int) {
-	if tstpkg.TestMode {
+	if tstpkg.Data().TestMode {
 		return keystore.LightScryptN, keystore.LightScryptP
 	}
 

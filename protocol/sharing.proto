@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package share;
+
+import "auth.proto";
+import "common.proto";
+
+option go_package = "./rpc";
+
+
+message FilePart {
+	bytes partkey = 1;
+	repeated uint64 nodes_addresses = 2;
+}
+
+message DirEntry {
+	oneof entry {
+		SharedFile file = 1;
+		SharedDir dir = 2;
+	}
+}
+
+message SharedFile {
+	string name = 1;
+	bytes file_key = 2;
+	bytes encr_key = 3;
+	uint64 padding = 4;
+	repeated FilePart file_parts = 5;
+}
+
+message SharedDir {
+	string name = 1;
+	bytes dir_key = 2;
+	bytes encr_key = 3;
+	repeated DirEntry entries = 4;
+}
+
+service SharingSerivce {
+	rpc ShareFile(ShareFileRequest) returns (ShareFileResponse);
+	rpc ShareDir(ShareDirRequest) returns (ShareFileResponse);
+	rpc DeleteShared(DeleteSharedRequest) returns (common.Empty);
+}
+
+message ShareFileRequest {
+	common.Network net = 1;
+	auth.Signature sign = 2;
+	SharedFile file = 3;
+}
+
+message ShareFileResponse {
+	string path = 1;
+}
+
+message ShareDirRequest {
+	common.Network net = 1;
+	auth.Signature sign = 2;
+	SharedDir dir = 3;
+}
+
+
+message ShareDirResponse {
+	string host = 1;
+	repeated string paths = 2;
+}
+
+message DeleteSharedRequest {
+	common.Network net = 1;
+	auth.Signature sign = 2;
+	bytes entry_key = 3;
+}
+

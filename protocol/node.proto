@@ -1,0 +1,175 @@
+syntax = "proto3";
+
+package node;
+
+import "common.proto";
+
+option go_package = "./rpc";
+
+
+message NodeInfo {
+	bytes node_id = 1;
+	uint32 node_version = 2;
+	repeated uint32 proto_versions = 3;
+	repeated common.Network nets = 4;
+	uint64 available_space = 5; // MiB
+}
+
+service Node {
+
+	//////////////////////////////////////////////////////////////////////////////////
+	// General node info block
+
+	rpc ListParts(FileLocation) returns(PartList) {}
+	rpc GetNodeInfo(common.Empty) returns(NodeInfo) {}
+
+	//////////////////////////////////////////////////////////////////////////////////
+	// Traffic block
+
+	rpc GetTrafficInfo(TrafficInfo) returns (TrafficInfo) {} 
+
+	//////////////////////////////////////////////////////////////////////////////////
+	// Upload block
+
+	rpc UploadPart(UploadPartReq) returns (common.Empty) {}
+	rpc UploadParts(stream UploadPartsReq) returns (common.Empty) {}
+
+	//////////////////////////////////////////////////////////////////////////////////
+	// Download block
+
+	rpc DownloadPart(DownloadPartReq) returns (common.Bytes) {}
+	rpc DownloadParts(stream DownloadPartsReq) returns (stream PartDownloadResp) {}
+
+
+	//////////////////////////////////////////////////////////////////////////////////
+	// FS block 
+
+	rpc UpdateRoothashInfo(UpdateRoothashInfoReq) returns (FileSystemStateResp) {}
+	rpc GetRoothashInfo(AuthReq) returns (RoothashInfo) {}
+
+	rpc UploadFS(stream UploadFSReq) returns (common.Empty) {}
+	rpc DownloadFS(AuthReq) returns(stream common.Bytes) {}
+
+	//////////////////////////////////////////////////////////////////////////////////
+}
+
+message AuthReq {
+	common.Network net = 1;
+	bytes sp_addr = 2;
+	bytes sign = 3; // sign( sha256sum(net + node_id) )
+} 
+
+message UploadFSReq {
+	oneof req {
+		AuthReq first_req = 1;
+		bytes fs = 2;
+	}
+}
+
+enum LoadStatus {
+	OK  = 0;
+	NOT_FOUND = 1;
+	NO_MEMORY = 2;
+}
+
+message Part {
+	bytes key = 1;
+	bytes data = 2;
+}
+
+message PartList {
+	repeated bytes partkeys = 1;
+}
+
+message TrafficInfo {
+	bytes sign = 1;// sign( sha256sum(node_id + net + paid_traffic(BigEndian)) )
+	common.Network net = 2;
+	bytes sp_addr = 3;
+	uint64 paid_traffic= 4;
+}
+
+message FileLocation {
+	common.Network net = 1;
+	bytes sp_addr = 2;
+	bytes filekey = 3;
+}
+
+message PartDownloadResp {
+	LoadStatus status = 1;
+	Part part = 2;
+}
+
+message PartUpload {
+	TrafficInfo updated_traffic = 1;
+	Part part = 2;
+}
+
+message UploadPartReq {
+	FileLocation location = 1;
+	PartUpload payload = 2;
+}
+
+message UploadPartsReq {
+	oneof req {
+		FileLocation location = 1;
+		PartUpload payload = 2;
+	}
+}
+
+message PartDownload {
+	TrafficInfo updated_traffic = 1;
+	bytes partkey = 2;
+}
+
+message DownloadPartReq {
+	FileLocation location = 1;
+	PartDownload payload = 2;
+}
+
+message DownloadPartsReq {
+	oneof req {
+		FileLocation location = 1;
+		PartDownload payload = 2;
+	}
+}
+
+message UpdateRoothashInfoReq {
+	RoothashInfo roothash_info = 1;
+	repeated bytes partkeys = 2;
+}
+
+message RoothashInfo {
+	bytes roothash_sign = 1;
+
+	common.Network net = 2;
+	bytes sp_addr = 3;
+	bytes roothash = 4;  // merkle tree of FS
+	uint64 stored_parts = 5; // parts count (MiB)
+	bytes version = 6; // used as nonce (big.Int) 
+
+	uint64 created_at = 7; // Unix timestamp
+}
+
+message GetFS {
+	common.Network net = 1;
+	bytes sp_addr = 2;
+	bytes signed_roothash = 3;
+}
+
+// This enum is used to identify storage provider's fs relevace.
+enum FileSystemState {
+	INVALID = 0;
+	//ACTUAL returned when sp device has most relevant fs.
+	ACTUAL = 1;
+	//NEW returned when sp has greater version than gateway/nodes.
+	NEW = 2;
+	//OLD returned when sp has older version than gateway/nodes.
+	OLD = 3;
+	//DIFF returned when NEW fs updated from different devices asynchronisly.
+	DIFF = 4; 
+}
+
+message FileSystemStateResp {
+	FileSystemState state = 1;
+}
+

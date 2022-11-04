@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package node_metrics;
+
+import "common.proto";
+
+option go_package = "./rpc";
+
+service NodeMetrics {
+    rpc GetSpaceStat(NetworkInfo) returns(SpaceStat) {}
+	rpc GetSystemStat(common.Empty) returns(SystemStat) {}
+}
+
+message SpaceStat {
+	message StoredByUser {
+		bytes sp_addr = 1;
+		uint64 stored = 2;
+	}
+
+	uint64 available_space = 1; //MiB
+	uint64 allocate_space = 2; //MiB
+	uint64 stored_parts_count = 3;
+
+	repeated StoredByUser stored_by_user = 4;
+}
+
+message SystemStat {
+	message CpuInfo {
+		uint64 cpu_usage = 1; // percent (* 1000) of cpu usage
+		uint64 proc_cpu_usage = 2; // percent (* 1000) of cpu usage by process
+	}
+
+	message MemoryInfo {
+		uint64 total_mem = 1; // percent (* 1000) of all virtual mem usage
+		uint64 used_mem = 2; // percent (* 1000) of all virtual mem usage
+		uint64 proc_used_mem = 3; // percent (* 1000) of all virtual mem usage
+	}
+
+	CpuInfo cpu = 1;
+	MemoryInfo mem = 2; 
+
+}
+
+message NetworkInfo {
+	common.Network net = 1;
+}

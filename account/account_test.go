@@ -1,15 +1,11 @@
 package account_test
 
 import (
-	"encoding/json"
 	"log"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/account"
-	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
 	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
@@ -33,7 +29,7 @@ func TestMain(m *testing.M) {
 
 	exitVal := m.Run()
 
-	err = os.RemoveAll(paths.WorkDirPath)
+	err = os.RemoveAll(paths.List().WorkDir)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,38 +49,15 @@ func TestAccCreate(t *testing.T) {
 
 	testAccAddr = accountAddress
 
-	_, err = os.Stat(paths.AccsDirPath)
+	_, err = os.Stat(paths.List().AccsDir)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	pathToStorage := filepath.Join(paths.StoragePaths[0], blckChain.CurrentNetwork)
-
-	_, err = os.Stat(pathToStorage)
+	_, err = os.Stat(paths.List().Storages[0])
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	pathToConfigFile := filepath.Join(paths.ConfigDirPath, paths.ConfFileName)
-
-	_, err = os.Stat(pathToConfigFile)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	confFileBytes, err := os.ReadFile(pathToConfigFile)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var accConfig config.NodeConfig
-
-	err = json.Unmarshal(confFileBytes, &accConfig)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	require.Equal(t, config.TestConfig, accConfig)
 
 }
 
@@ -119,8 +92,8 @@ func TestAccountLogin(t *testing.T) {
 
 }
 
-func TestImportAccount(t *testing.T) {
-	accountAddress, accConfig, err := account.Import()
+func TestImportAccount(t *testing.T) { //TODO add test checks
+	accountAddress, _, err := account.Import()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +101,5 @@ func TestImportAccount(t *testing.T) {
 	if accountAddress == "" {
 		t.Errorf("import account address must not be empty")
 	}
-
-	require.Equal(t, config.TestConfig, accConfig)
 
 }

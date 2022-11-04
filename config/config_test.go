@@ -2,19 +2,21 @@ package config_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"testing"
 
-	blckChain "git.denetwork.xyz/DeNet/dfile-secondary-node/blockchain_provider"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/config"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/networks"
+	nodeTypes "git.denetwork.xyz/DeNet/dfile-secondary-node/node_types"
 	tstpkg "git.denetwork.xyz/DeNet/dfile-secondary-node/tst_pkg"
+
 	"github.com/stretchr/testify/require"
 
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/paths"
 )
+
+var testConfig nodeTypes.Config
 
 func TestMain(m *testing.M) {
 	tstpkg.TestModeOn()
@@ -25,19 +27,19 @@ func TestMain(m *testing.M) {
 		log.Fatal(err)
 	}
 
-	_, err = config.Create(tstpkg.TestAccAddr)
+	testConfig, err = config.Create(tstpkg.Data().AccAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = os.MkdirAll(paths.StoragePaths[0], 0700)
+	err = os.MkdirAll(paths.List().Storages[0], 0700)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	exitVal := m.Run()
 
-	err = os.RemoveAll(paths.WorkDirPath)
+	err = os.RemoveAll(paths.List().WorkDir)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,31 +57,26 @@ func TestSelectNetwork(t *testing.T) {
 	defer r.Close()
 	defer w.Close()
 
-	_, err = w.WriteString("1\n")
+	_, err = w.WriteString("2\n")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	os.Stdin = r
 
-	got, err := config.SelectNetwork()
+	err = config.SetNetwork(&testConfig)
 	if err != nil {
-		fmt.Println(err)
-		t.Fatal()
+		t.Fatal(err)
 	}
 
-	want := []string{}
+	want := networks.List()
 
-	for net := range blckChain.Networks {
-		want = append(want, net)
-	}
-
-	require.Contains(t, want, got)
+	require.Contains(t, want, testConfig.Network)
 }
 
 func TestConfigSetStorageLimit(t *testing.T) {
 
-	configStruct := config.TestConfig
+	configStruct := testConfig
 
 	require.Equal(t, 1, configStruct.StorageLimit)
 
@@ -92,20 +89,19 @@ func TestConfigSetStorageLimit(t *testing.T) {
 		defer r.Close()
 		defer w.Close()
 
-		_, err = w.WriteString("5\n")
+		_, err = w.WriteString("2\n")
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		os.Stdin = r
 
-		err = config.SetStorageLimit(&configStruct, config.UpdateStatus)
+		err = config.SetStorageLimit(&configStruct, config.Stats().Update)
 		if err != nil {
-			fmt.Println(err)
 			t.Fatal(err)
 		}
 
-		require.Equal(t, 5, configStruct.StorageLimit)
+		require.Equal(t, 3, configStruct.StorageLimit)
 	})
 
 	t.Run("negative value", func(t *testing.T) {
@@ -124,7 +120,7 @@ func TestConfigSetStorageLimit(t *testing.T) {
 
 		os.Stdin = r
 
-		err = config.SetStorageLimit(&configStruct, config.UpdateStatus)
+		err = config.SetStorageLimit(&configStruct, config.Stats().Update)
 
 		require.NotEmpty(t, err)
 	})
@@ -145,7 +141,7 @@ func TestConfigSetStorageLimit(t *testing.T) {
 
 		os.Stdin = r
 
-		err = config.SetStorageLimit(&configStruct, config.UpdateStatus)
+		err = config.SetStorageLimit(&configStruct, config.Stats().Update)
 
 		require.NotEmpty(t, err)
 	})
@@ -166,7 +162,7 @@ func TestConfigSetStorageLimit(t *testing.T) {
 
 		os.Stdin = r
 
-		err = config.SetStorageLimit(&configStruct, config.UpdateStatus)
+		err = config.SetStorageLimit(&configStruct, config.Stats().Update)
 
 		require.NotEmpty(t, err)
 	})
@@ -174,7 +170,7 @@ func TestConfigSetStorageLimit(t *testing.T) {
 }
 
 func TestConfigSetIP(t *testing.T) {
-	configStruct := config.TestConfig
+	configStruct := testConfig
 
 	require.Equal(t, "127.0.0.1", configStruct.IpAddress)
 
@@ -194,7 +190,7 @@ func TestConfigSetIP(t *testing.T) {
 
 		os.Stdin = r
 
-		err = config.SetIpAddr(&configStruct, config.UpdateStatus)
+		err = config.SetIpAddr(&configStruct, config.Stats().Update)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -218,7 +214,7 @@ func TestConfigSetIP(t *testing.T) {
 
 		os.Stdin = r
 
-		err = config.SetIpAddr(&configStruct, config.UpdateStatus)
+		err = config.SetIpAddr(&configStruct, config.Stats().Update)
 
 		require.NotEmpty(t, err)
 	})
@@ -239,7 +235,7 @@ func TestConfigSetIP(t *testing.T) {
 
 		os.Stdin = r
 
-		err = config.SetIpAddr(&configStruct, config.UpdateStatus)
+		err = config.SetIpAddr(&configStruct, config.Stats().Update)
 
 		require.NotEmpty(t, err)
 	})
@@ -247,9 +243,9 @@ func TestConfigSetIP(t *testing.T) {
 }
 
 func TestConfigSetPort(t *testing.T) {
-	configStruct := config.TestConfig
+	configStruct := testConfig
 
-	require.Equal(t, "55050", configStruct.HTTPPort)
+	require.Equal(t, ":55050", configStruct.HTTPPort)
 
 	t.Run("valid port", func(t *testing.T) {
 		r, w, err := os.Pipe()
@@ -267,12 +263,12 @@ func TestConfigSetPort(t *testing.T) {
 
 		os.Stdin = r
 
-		err = config.SetPort(&configStruct, config.UpdateStatus)
+		err = config.SetPort(&configStruct, config.Stats().Update)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		require.Equal(t, "55051", configStruct.HTTPPort)
+		require.Equal(t, ":55051", configStruct.HTTPPort)
 	})
 
 	t.Run("invalid port", func(t *testing.T) {
@@ -291,7 +287,7 @@ func TestConfigSetPort(t *testing.T) {
 
 		os.Stdin = r
 
-		err = config.SetPort(&configStruct, config.UpdateStatus)
+		err = config.SetPort(&configStruct, config.Stats().Update)
 
 		require.NotEmpty(t, err)
 	})
@@ -300,14 +296,14 @@ func TestConfigSetPort(t *testing.T) {
 
 func TestConfigSave(t *testing.T) {
 
-	configStruct := config.TestConfig
+	configStruct := testConfig
 
 	configStruct.Network = "kovan"
 	configStruct.Address = "0x0000000000000000000000000000000000000000"
 	configStruct.HTTPPort = "66056"
 	configStruct.IpAddress = "102.103.104.105"
 
-	configFile, err := os.OpenFile(filepath.Join(paths.ConfigDirPath, paths.ConfFileName), os.O_RDWR, 0777)
+	configFile, err := os.OpenFile(paths.List().ConfigFile, os.O_RDWR, 0777)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -319,8 +315,8 @@ func TestConfigSave(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var updatedConfig config.NodeConfig
-	data, err := os.ReadFile(filepath.Join(paths.ConfigDirPath, paths.ConfFileName))
+	var updatedConfig nodeTypes.Config
+	data, err := os.ReadFile(paths.List().ConfigFile)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package loads;
+
+option go_package = "../pb";
+
+
+
+message Response {
+    string msg = 1; 
+}
+
+message FsInfo {
+    string signature = 1;
+    string sp_address = 2;
+    string signed_address = 3;
+    string network = 4;
+    repeated string new_fs = 5;                  
+    uint32 nonce = 6;
+    uint32 storage = 7;
+}
+
+message UploadRequest {
+    uint32 file_size = 1;
+    string file_name = 2;
+    string sp_address = 3;
+    string signed_address = 4;
+    string network = 5;
+    bytes chunk_data = 6;
+}
+
+message DownloadRequest {
+    repeated string file_names = 1;
+    string sp_address = 2;
+    string signed_address = 3;
+    string network = 4;
+}
+
+message DownloadResponse {
+    bytes chunk_data = 1;
+}
+
+message GatewayDownloadRequest {
+    repeated string file_names = 1;
+    string sp_address = 2;
+    string gateway_address = 3;
+    string signed_gateway_address = 4;
+    string network = 5;
+}
+
+
+service NodeService {
+    rpc UploadFile(stream UploadRequest) returns (Response);
+    rpc UpdateFs(FsInfo) returns (Response);
+    rpc DownloadFile(DownloadRequest) returns (stream DownloadResponse);
+    rpc GatewayDownloadFile(GatewayDownloadRequest) returns (stream DownloadResponse);
+}

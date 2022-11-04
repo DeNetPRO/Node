@@ -1,24 +1,60 @@
 package tstpkg
 
-var (
-	TestMode             = false
-	TestWorkDirName      = "denet-node-test"
-	TestIP               = "127.0.0.1"
-	TestPort             = "55050"
-	TestStorageLimit     = 1
-	TestNetwork          = "kovan"
-	TestPassword         = "123"
-	TestAccAddr          = "0x3D4dFC62B4F0BDD7730fCB68FaC150E71D76bc24"
-	TestPrivateKey       = "16f98d96422dd7f21965755bd64c9dcd9cfc5d36e029002d9cc579f42511c7ed"
-	TestSecretKey        = []byte{66, 180, 56, 47, 96, 21, 163, 67, 241, 114, 1, 225, 108, 61, 241, 226, 250, 28, 194, 158, 234, 62, 230, 223, 251, 50, 73, 76, 245, 218, 143, 115}
-	TestPKHash           = []byte{166, 130, 151, 14, 57, 26, 220, 249, 192, 230, 178, 57, 69, 112, 95, 215, 238, 209, 203, 160, 153, 131, 179, 84, 254, 192, 244, 101, 221, 161, 9, 80, 78, 2, 215, 181, 73, 131, 244, 221, 204, 127, 249, 128, 178, 53, 213, 80, 200, 75, 110, 83, 92, 171, 184, 10, 242, 169, 37, 21}
-	TestUsedStorageSpace = 10000
+import (
+	nodeTypes "git.denetwork.xyz/DeNet/dfile-secondary-node/node_types"
 )
 
-func TestModeOn() {
-	TestMode = true
+type TstData struct {
+	TestMode    bool
+	WorkDirName string
+	AccAddr     string
+	Password    string
+	PrivateKey  string
+	EncrKey     []byte
+	PKHash      []byte
 }
 
-func TestModeOff() {
-	TestMode = false
+var testData = TstData{
+	TestMode:    false,
+	WorkDirName: "denet-node-test",
+	AccAddr:     "0x5Cae405D9A28B51D1bDfFdF6B22c97D2E78dc527",
+	Password:    "123",
+	PrivateKey:  "e9c9abe3bb861c9d393e369683bc321690a6a7496e81858269d34e141272c4f7",
+	EncrKey:     []byte{34, 54, 133, 210, 117, 225, 63, 166, 227, 161, 232, 86, 255, 62, 147, 233, 65, 187, 194, 144, 138, 170, 98, 49, 253, 187, 26, 244, 233, 194, 172, 45},
+	PKHash:      []byte{51, 136, 239, 160, 130, 219, 203, 136, 55, 18, 22, 72, 57, 208, 79, 187, 186, 86, 203, 140, 33, 245, 198, 96, 97, 234, 61, 140, 204, 114, 120, 64, 203, 170, 59, 173, 111, 237, 233, 237, 254, 82, 190, 80, 42, 182, 13, 42, 86, 150, 209, 74, 136, 70, 187, 249, 229, 99, 204, 74},
 }
+
+func Data() TstData {
+	return testData
+}
+
+var testConfig = nodeTypes.Config{
+	Address:              testData.AccAddr,
+	SendBugReports:       false,
+	RegisteredInNetworks: map[string]bool{},
+	IpAddress:            "127.0.0.1",
+	HTTPPort:             ":55050",
+	Network:              "kovan",
+	StorageLimit:         1,
+	StoragePaths:         []string{},
+	UsedStorageSpace:     int64(10000),
+	RPC:                  map[string]string{"kovan": "https://kovan.infura.io/v3/45b81222fded4427b3a6589e0396c596"},
+}
+
+func TestModeOn() {
+	testData.TestMode = true
+}
+
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+func TestModeOff() {
+	testData.TestMode = false
+}
+
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+func TestConfig() nodeTypes.Config {
+	return testConfig
+}
+
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

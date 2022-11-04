@@ -14,41 +14,41 @@ func Read(path string) (*os.File, []byte, error) {
 	const location = "nodefile.ReadFile->"
 	f, err := os.OpenFile(path, os.O_RDWR, 0700)
 	if err != nil {
-		return nil, nil, logger.CreateDetails(location, err)
+		return nil, nil, logger.MarkLocation(location, err)
 	}
 
 	fBytes, err := io.ReadAll(f)
 	if err != nil {
 		f.Close()
-		return nil, nil, logger.CreateDetails(location, err)
+		return nil, nil, logger.MarkLocation(location, err)
 	}
 
 	return f, fBytes, nil
 }
 
-// ====================================================================================
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 func Write(f *os.File, data interface{}) error {
 	const location = "nodefile.ReadFromConsole->"
 
 	js, err := json.Marshal(data)
 	if err != nil {
-		return logger.CreateDetails(location, err)
+		return logger.MarkLocation(location, err)
 	}
 
 	err = f.Truncate(0)
 	if err != nil {
-		return logger.CreateDetails(location, err)
+		return logger.MarkLocation(location, err)
 	}
 
 	_, err = f.Seek(0, 0)
 	if err != nil {
-		return logger.CreateDetails(location, err)
+		return logger.MarkLocation(location, err)
 	}
 
 	_, err = f.Write(js)
 	if err != nil {
-		return logger.CreateDetails(location, err)
+		return logger.MarkLocation(location, err)
 	}
 
 	f.Sync()
@@ -56,7 +56,7 @@ func Write(f *os.File, data interface{}) error {
 	return nil
 }
 
-// ====================================================================================
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 func ReadDirFiles(path string) ([]fs.FileInfo, error) {
 
@@ -64,13 +64,13 @@ func ReadDirFiles(path string) ([]fs.FileInfo, error) {
 
 	dir, err := os.Open(path)
 	if err != nil {
-		return nil, logger.CreateDetails(location, err)
+		return nil, logger.MarkLocation(location, err)
 	}
 
 	files, err := dir.Readdir(0)
 	if err != nil {
-		logger.CreateDetails(location, err)
-		return nil, logger.CreateDetails(location, err)
+		logger.MarkLocation(location, err)
+		return nil, logger.MarkLocation(location, err)
 	}
 
 	return files, nil

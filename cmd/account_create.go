@@ -9,7 +9,7 @@ import (
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/cleaner"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/hash"
 	"git.denetwork.xyz/DeNet/dfile-secondary-node/logger"
-	"git.denetwork.xyz/DeNet/dfile-secondary-node/server"
+	"git.denetwork.xyz/DeNet/dfile-secondary-node/rpcserver"
 	"github.com/howeyc/gopass"
 	"github.com/spf13/cobra"
 )
@@ -25,13 +25,13 @@ var accountCreateCmd = &cobra.Command{
 		const location = "accountCreateCmd->"
 		var password1, password2 string
 
-		fmt.Println("Password is required for account creation. It can't be restored, please save it in a safe place.")
-		fmt.Println("Please enter your new password: ")
+		fmt.Println("\nPassword is required for account creation. It can't be restored, please save it in a safe place.")
+		fmt.Println("\nPlease enter your new password: ")
 
 		for {
 			bytePassword, err := gopass.GetPasswdMasked()
 			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
+				logger.Log(logger.MarkLocation(location, err))
 				log.Fatal(accCreateFatalMessage)
 			}
 			password1 = string(bytePassword)
@@ -44,7 +44,7 @@ var accountCreateCmd = &cobra.Command{
 			fmt.Println("Enter password again: ")
 			bytePassword, err = gopass.GetPasswdMasked()
 			if err != nil {
-				logger.Log(logger.CreateDetails(location, err))
+				logger.Log(logger.MarkLocation(location, err))
 				log.Println(accCreateFatalMessage)
 			}
 
@@ -62,13 +62,16 @@ var accountCreateCmd = &cobra.Command{
 
 		_, nodeConfig, err := account.Create(password)
 		if err != nil {
-			logger.Log(logger.CreateDetails(location, err))
+			logger.Log(logger.MarkLocation(location, err))
 			log.Fatal(accCreateFatalMessage)
 		}
 
 		go cleaner.Start()
 
-		server.Start(nodeConfig.HTTPPort)
+		err = rpcserver.Start(nodeConfig.HTTPPort)
+		if err != nil {
+			log.Fatal(err)
+		}
 	},
 }
 

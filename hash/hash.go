@@ -19,7 +19,7 @@ func Password(password string) string {
 	return hex.EncodeToString(pBytes[:])
 }
 
-// ====================================================================================
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 // OneMbParts calculates and returns array of file part's root hash info.
 func OneMbParts(reqFileParts []*multipart.FileHeader) ([]string, error) {
@@ -33,13 +33,13 @@ func OneMbParts(reqFileParts []*multipart.FileHeader) ([]string, error) {
 
 		rqFile, err := reqFilePart.Open()
 		if err != nil {
-			return nil, logger.CreateDetails(location, err)
+			return nil, logger.MarkLocation(location, err)
 		}
 
 		_, err = io.Copy(&buf, rqFile)
 		if err != nil {
 			rqFile.Close()
-			return nil, logger.CreateDetails(location, err)
+			return nil, logger.MarkLocation(location, err)
 		}
 
 		rqFile.Close()
@@ -54,11 +54,11 @@ func OneMbParts(reqFileParts []*multipart.FileHeader) ([]string, error) {
 
 		oneMBHash, _, err := CalcRoot(eightKBHashes)
 		if err != nil {
-			return nil, logger.CreateDetails(location, err)
+			return nil, logger.MarkLocation(location, err)
 		}
 
 		if reqFilePart.Filename != oneMBHash {
-			return nil, logger.CreateDetails(location, err)
+			return nil, logger.MarkLocation(location, err)
 		}
 
 		oneMBHashes = append(oneMBHashes, oneMBHash)
@@ -67,7 +67,7 @@ func OneMbParts(reqFileParts []*multipart.FileHeader) ([]string, error) {
 	return oneMBHashes, nil
 }
 
-// ====================================================================================
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 //CalcRoot calculates root hash by building merkle tree
 func CalcRoot(hashArr []string) (string, [][][]byte, error) {
@@ -76,20 +76,20 @@ func CalcRoot(hashArr []string) (string, [][][]byte, error) {
 	arrLen := len(hashArr)
 
 	if arrLen == 0 {
-		return "", nil, logger.CreateDetails(location, errors.New("hash array is empty"))
+		return "", nil, logger.MarkLocation(location, errors.New("hash array is empty"))
 	}
 
 	base := make([][]byte, 0, arrLen+1)
 
 	emptyValue, err := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000000")
 	if err != nil {
-		return "", nil, logger.CreateDetails(location, err)
+		return "", nil, logger.MarkLocation(location, err)
 	}
 
 	for _, v := range hashArr {
 		decoded, err := hex.DecodeString(v)
 		if err != nil {
-			return "", nil, logger.CreateDetails(location, err)
+			return "", nil, logger.MarkLocation(location, err)
 		}
 		base = append(base, decoded)
 	}
@@ -125,4 +125,4 @@ func CalcRoot(hashArr []string) (string, [][][]byte, error) {
 	return hex.EncodeToString(resByte[len(resByte)-1][0]), resByte, nil
 }
 
-// ====================================================================================
+// ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
