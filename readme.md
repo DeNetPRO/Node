@@ -52,12 +52,12 @@ If you generated a new wallet when creating an account and need to receive the p
 | account delete | delete your account |
 
 ## Minimal system requirements
-🔸Stable internet connection, at least 100Mb/sec
-🔸Public and static IP address
-🔸Uptime close to 100%
-🔸Minimum allocated free disk space 0.5 TiB
-🔸1GiB of RAM
-🔸OS: Linux, MacOS, Windows (all x64)
+▪ Stable internet connection, at least 100Mb/sec \
+▪ Public and static IP address\
+▪ Uptime close to 100%\
+▪ Minimum allocated free disk space 0.5 TiB\
+▪ 1GiB of RAM\
+▪ OS: Linux, MacOS, Windows (all x64)
 ## Useful info
 
 [Permitting DeNet Node execution on MacOS ](https://www.youtube.com/watch?v=vw7yyDjyhS8)
@@ -97,7 +97,7 @@ Nodes are rewarded in TBY tokens. One TBY can be received for storing 1 TB of da
 
 ## How fast should the internet speed be ❓
 
-▪️ Recommended speed is 100Mb/sec, and the connection should be stable.
+▪ Recommended speed is 100Mb/sec, and the connection should be stable.
 
 ## When should I expect to get an income ❓
 
