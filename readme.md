@@ -1,6 +1,9 @@
 # [DeNet](https://denet.pro) Node - CLI app for receiving rewards by sharing storage
 
-[Latest release](https://github.com/DeNetPRO/srcPRO/Node/releases/latest)
+[Download latest release](https://github.com/DeNetPRO/Node/releases/latest)
+
+[Discord](https://discord.gg/cPz9m4cSWv) |
+[YouTube](https://www.youtube.com/channel/UCeCxt3tYbtSkJvaznNjQimQ)
 
 To use the app you need an account. The account is just an Ethereum wallet that you can import or create.
 
@@ -8,16 +11,17 @@ When you run the app it prompts you for password if you already have an account 
 If you run the app for the first time you need to setup the configuration. It's simple, all you need to do is to answer the question prompts.
 Information about the IP address and port that you specified for remote connections will be added to a smart contract.
 
-#### You will need two things:
+## To launch a node, you will need:
 #### - public IP address
 #### - at least 0.1 MATIC on your Ethereum wallet that is going to be used as an account 
+#### - $TBY token equal to node id you will own ([how to get $TBY](./doc/deposit.md))
 
 Having MATICs in your account wallet is also needed for paying transaction fees when sending file storage proofs, please top it up on time. DeNet smart contracts are deployed in Polygon. More networks will be added in the future.
 
 You can run the app in the terminal emulator by navigating to the directory that contains the binary file and typing the following command: 
 
 ```bash
-./denet-node
+./denode
 ```
 
 [Account import command demo](https://www.youtube.com/watch?v=vVRMHlqLA0w)
@@ -25,7 +29,7 @@ You can run the app in the terminal emulator by navigating to the directory that
 If you want to create a new account instead of importing an existing one just run the following command:
 
 ```bash
-./denet-node account create
+./denode account create
 ```
 
 [Account create command demo](https://www.youtube.com/watch?v=So8VAjv9o1Y)
@@ -33,7 +37,7 @@ If you want to create a new account instead of importing an existing one just ru
 If you generated a new wallet when creating an account and need to receive the private key run the following command: 
 
 ```bash
-./denet-node account export
+./denode account export
 ```
 
 [Account export command demo](https://www.youtube.com/watch?v=bnstbPGdjKY)
@@ -45,53 +49,64 @@ If you generated a new wallet when creating an account and need to receive the p
 | account create | generates new Ethereum wallet that is used as an account |
 | account import | imports Ethereum wallet by its private key |
 | account export | discloses your private key |
+| account delete | delete your account |
 
 ## Minimal system requirements
-- 1 GB of RAM 
-- Public IP address and the ability to provide access for remote requests to the device
-- 50GB of free storage space.
-- 100% Uptime 
-- OS: Linux or MacOS (Windows version will be released later)
-
+🔸Stable internet connection, at least 100Mb/sec
+🔸Public and static IP address
+🔸Uptime close to 100%
+🔸Minimum allocated free disk space 0.5 TiB
+🔸1GiB of RAM
+🔸OS: Linux, MacOS, Windows (all x64)
 ## Useful info
 
 [Permitting DeNet Node execution on MacOS ](https://www.youtube.com/watch?v=vw7yyDjyhS8)
 
-## FAQ
+# FAQ 
 
-### Is it ok to run DeNet Node on VPS?
+## Is it ok to run DeNet Node on VPS ❓
 
-Yes, but ....
+▪️ Yes, but ....
 
 If you already use a VPS it is ok to launch DeNet Node on it, but if launching the node is your only purpose, we recommend you try to launch it on your own machine instead of subscribing on a VPS. So if you have a PC or laptop with Linux or MacOS on board, you'll also need a public IP. It can be obtained via your ISP and is going to be cheaper than VPS.
 
-### How much space should I share?
+## How much space should I share ❓
 
-You can share as much as you can but sharing out more space will allow you to store more files and increases reward totals and your chances of being the first to receive it.
+▪️ You can share as much as you can but sharing out more space will allow you to store more files and increases reward totals and your chances of being the first to receive it.
 
-### Is my DeNet Node working properly?
+## Is my DeNet Node working properly ❓
 
-When the start is successful you will see these messages in your terminal emulator
+▪️ When the start is successful you will see these messages in your terminal emulator
 
-![node started](./images/nodestarted.png)
+![node started](./doc/nodestarted.png)
 
-When your DeNet Node received files from users and started calculating if they can be used for receiving reward you will see this
+️ When your DeNet Node received files from users and started calculating if they can be used for receiving reward you will see this
 
-![node is mining](./images/nodemining.png)
+![node is mining](./doc/nodemining.png)
 
 Note if you don't see something similar for several days, please send as a message [here](https://discord.gg/cPz9m4cSWv) 
 
-### How can I calculate my earnings?
+## How can I calculate my earnings ❓
 
-When DeNet Node receives files it starts sending proofs to blockchain smart contract using Proof-Of-Storage algorithm
-
+▪ When DeNet Node receives files it starts sending proofs to blockchain smart contract using Proof-Of-Storage algorithm.
 Nodes are rewarded in TBY tokens. One TBY can be received for storing 1 TB of data for a year. If you stored 500 GB for a year you will receive 0.5 TBY and so on. Our early miners will be additionally rewarded for every successful proof request. Also additional rewards for using miners resources are coming in the future
 
-##  Links
+## Does the disk have to be ssd? 
 
-[Discord Miners Group](https://discord.gg/cPz9m4cSWv)
+▪️ There are no special requirements, but the faster your I/O speed, the more files you are able to store simultaneously and send proofs. However, your hard drive must be in working condition without any damage. 
 
-[DeNet - YouTube](https://www.youtube.com/channel/UCeCxt3tYbtSkJvaznNjQimQ)
+## How fast should the internet speed be ❓
 
+▪️ Recommended speed is 100Mb/sec, and the connection should be stable.
 
+## When should I expect to get an income ❓
 
+▪️ You will start earning TBY_Mined when files are uploaded to your node and you find proof for these files (based on the DeNet Proof-of-Storage algorithm)
+
+## How much can I earn for providing 1TiB ❓
+
+▪️ The approximate reward for providing 1TB is $100. But we're improving our rewarding system and creating conditions for more profitable storage usage. 
+
+## When will I be able to launch a node ❓
+
+▪️ We are preparing a new release of our protocol. DeNet Node will be released this week.
