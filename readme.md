@@ -74,27 +74,24 @@ If you already use a VPS it is ok to launch DeNet Node on it, but if launching t
 
 ▪️ You can share as much as you can but sharing out more space will allow you to store more files and increases reward totals and your chances of being the first to receive it.
 
-## How can I calculate my earnings ❓
+## Does the disk have to be ssd ❓
 
-▪ When DeNet Node receives files it starts sending proofs to blockchain smart contract using Proof-Of-Storage algorithm. Nodes are rewarded in TBY tokens. One TBY can be received for storing 1 TB of data for a year. If you stored 500 GB for a year you will receive 0.5 TBY and so on. The inflation rate will be 2% out of TBY Total Supply. Daily system reward is shared among all Datakeepers. 
-You can also calculate your expected income in more detail depending on your Node ID in Dune Analytics. Moreover, the DeNet team always offers Datakeepers additional incentives.
-
-## Does the disk have to be ssd? 
-
-▪️ There are no special requirements, but the faster your I/O speed, the more files you are able to store simultaneously and send proofs. However, your hard drive must be in working condition without any damage. 
+▪️ There are no special requirements, but the faster your I/O speed, the more files you are able to store simultaneously and send proofs. However, your hard drive must be in working condition without any damage.
 
 ## How fast should the internet speed be ❓
 
 ▪ Recommended speed is 100Mb/sec, and the connection should be stable.
 
+## How can I calculate my earnings ❓
+
+▪ Nodes are rewarded in TBY tokens. One TBY can be received for storing 1 TB of data for a year. If you stored 500 GB for a year you will receive 0.5 TBY and so on. The inflation rate will be 2% out of TBY Total Supply. Daily system reward is shared among all Datakeepers. 
+You can also calculate your expected income in more detail depending on your Node ID in Dune Analytics. 
+
 ## When should I expect to get an income ❓
 
-▪️ You will start earning TBY_Mined when files are uploaded to your node and you find proof for these files (based on the DeNet Proof-of-Storage algorithm)
+▪️ You will start earning TBY_Mined when files are uploaded to your node and you find proof for these files (based on the DeNet Proof-of-Storage algorithm).
 
 ## How much can I earn for providing 1TiB ❓
 
 ▪️ The approximate reward for providing 1TB is $100. But we're improving our rewarding system and creating conditions for more profitable storage usage. 
 
-## When will I be able to launch a node ❓
-
-▪️ We are preparing a new release of our protocol. DeNet Node will be released this week.
