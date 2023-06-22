@@ -16,7 +16,7 @@ testing:
   stage: test
   script:
     - go test -p 1 ./...
-    - go build -ldflags "-s -w" -o builds/DeNet-Node-linux-amd64
+    - go build -ldflags "-s -w" -o builds/DeNet-Node-linux-amd64 src/main
   artifacts:
     paths:
       - builds/
