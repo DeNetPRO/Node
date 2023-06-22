@@ -74,18 +74,6 @@ If you already use a VPS it is ok to launch DeNet Node on it, but if launching t
 
 ▪️ You can share as much as you can but sharing out more space will allow you to store more files and increases reward totals and your chances of being the first to receive it.
 
-## Is my DeNet Node working properly ❓
-
-▪️ When the start is successful you will see these messages in your terminal emulator
-
-![node started](./doc/nodestarted.png)
-
-️ When your DeNet Node received files from users and started calculating if they can be used for receiving reward you will see this
-
-![node is mining](./doc/nodemining.png)
-
-Note if you don't see something similar for several days, please send as a message [here](https://discord.gg/cPz9m4cSWv) 
-
 ## How can I calculate my earnings ❓
 
 ▪ When DeNet Node receives files it starts sending proofs to blockchain smart contract using Proof-Of-Storage algorithm.
