@@ -84,8 +84,15 @@ If you already use a VPS it is ok to launch DeNet Node on it, but if launching t
 
 ## How can I calculate my earnings ❓
 
+▪️ Nodes are rewarded in TBY tokens. One TBY can be received for storing 1 TB of data for a year. If you stored 500 GB for a year you will receive 0.5 TBY and so on. The inflation rate will be 2% out of TBY Total Supply. Daily system reward is shared among all Datakeepers.
+You can also calculate your expected income in more detail depending on your Node ID in [Dune Analytics](https://dune.com/djdeniro/denet-v3). 
+
 ▪ Nodes are rewarded in TBY tokens. One TBY can be received for storing 1 TB of data for a year. If you stored 500 GB for a year you will receive 0.5 TBY and so on. The inflation rate will be 2% out of TBY Total Supply. Daily system reward is shared among all Datakeepers. 
 You can also calculate your expected income in more detail depending on your Node ID in Dune Analytics. 
+
+## What Node ID will I get❓
+▪️You can take a look at current node supply in [contract](https://polygonscan.com/token/0xcb19bede3e4f64b6b0085d99127f6d0a25b7180d).
+That means if there are already 5 nodes in the contract, you will be the sixth to register there and your ID is going to be number 6 in this contract. That also means that you must have 6 TBY on your balance in order to register your node.
 
 ## When should I expect to get an income ❓
 
