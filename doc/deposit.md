@@ -5,7 +5,7 @@ How to deposit $TBY
 
 2. Go to [DeNet Payments](https://pay.denet.app/) to lock DE in the smart contract and issue TBY. Keep in mind that you also need MATICs for a transaction fee. 
 
-3. Make sure you have enough TBY to launch DeNet Datakeeper in [DeNet Payments](https://pay.denet.app/). Required TBY amount is equal to your Node ID. 
+3. Make sure you have enough TBY to launch DeNet Datakeeper in [DeNet Payments](https://p.denet.app/). Required TBY amount is equal to your Node ID. 
 You can take a look at current node supply in [contract](https://polygonscan.com/token/0xcb19bede3e4f64b6b0085d99127f6d0a25b7180d).
 
 <img src="./datakeepers_total_supply.JPG"  width="50%">
