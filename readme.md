@@ -22,7 +22,7 @@ Information about the IP address and port that you specified for remote connecti
 
 
 - [Requirements](#requiremnts)
-- [Installation](#instalation)
+- [Installation](#installation)
 - [Usage](#usage)
 - [Video tutorials](#video-tutorials)
 - [FAQ](#faq)
@@ -32,14 +32,14 @@ Information about the IP address and port that you specified for remote connecti
 - Public & static IP address
 - At least 0.1 Polygon MATIC (in order to send proofs)
 - 1GiB of RAM
-- Datakeeper ID rented ([how to?](./doc/getting_id.md))
+- Datakeeper ID rented ([how to?](./doc/get_id.md))
 - Stable internet connection
 - Provided free disk space > 512 GiB
 - Operating system: Linux, MacOS, Windows (all x64)
 
 
 ## Installation
-💡 Make sure you meet all the requirements, and you've already received datakeeper ID [here](./doc/getting_id.md) 💡 
+💡 Make sure you meet all the requirements, and you've already received datakeeper ID [here](./doc/getting_id.md).
 
 - [Linux/MacOS installation](./doc/installation_unix.md)
 - [Windows installation](./doc/installation_windows.md)
