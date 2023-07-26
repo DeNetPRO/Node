@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # allow specifying different destination directory
-DIR="${DIR:-"/bin"}"
+DIR="${DIR:-"$HOME/.local/bin"}"
 
 # map different architecture variations to the available binaries
 ARCH=$(uname | tr [:upper:] [:lower:])
