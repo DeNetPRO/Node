@@ -1,7 +1,7 @@
 Linux & MacOS installation 
 ------------------
 
-This guide shows you how to launc datakeeper on your Linux / MacOS machine.\
+This guide shows you how to launch datakeeper on your Linux / MacOS machine.\
 If you still have questions, you can ask it in discord or telegram support channels\
 </br><img src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" height="30" width="120"/> 
 <img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="30" width="120"/> 
@@ -11,7 +11,7 @@ If you still have questions, you can ask it in discord or telegram support chann
 - Public & static IP address
 - At least 0.1 Polygon MATIC (in order to send proofs)
 - 1GiB of RAM
-- Datakeeper ID rented ([how to?](./doc/get_id.md))
+- Datakeeper ID ([how to?](./doc/get_id.md))
 - Stable internet connection
 - Provided free disk space > 512 GiB
 - Operating system: Linux, MacOS, Windows (all x64)
@@ -46,7 +46,7 @@ denode
 
 3. Next follow the instructions and input next fields:
 
-- Export Private key, with datakeeper ID rented from it
+- Export Private key, with datakeeper ID from it
 
 - Set the passowrd to protect your private key
 
@@ -78,7 +78,7 @@ denode
 
 #### 🪙 Earn $TBY as a system reward from protocol  (2% APY of $TBY total supply)
 - use it for storing data
-- soon: convert it to $TBYmined using charity proofs. Read how it will work [here](https://medium.cojm/denetpro/denet-storage-protocol-v3-to-address-key-challenge-of-decentralization-f19b9041b0fa#:~:text=close%20the%20deposit.-,Charity%20Proof,-%3A%20The%20DeNet)
+- soon: convert it to $TBYmined using charity proofs. Read how it will work [here](https://medium.com/denetpro/denet-storage-protocol-v3-to-address-key-challenge-of-decentralization-f19b9041b0fa#:~:text=close%20the%20deposit.-,Charity%20Proof,-%3A%20The%20DeNet)
 
 ### Also...
 #### ❗️ Make sure you always have enough $MATIC on yur balance, in order to send proofs.

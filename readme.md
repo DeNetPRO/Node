@@ -32,7 +32,7 @@ Information about the IP address and port that you specified for remote connecti
 - Public & static IP address
 - At least 0.1 Polygon MATIC (in order to send proofs)
 - 1GiB of RAM
-- Datakeeper ID rented ([how to?](./doc/get_id.md))
+- Datakeeper ID ([how to?](./doc/get_id.md))
 - Stable internet connection
 - Provided free disk space > 512 GiB
 - Operating system: Linux, MacOS, Windows (all x64)

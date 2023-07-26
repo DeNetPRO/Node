@@ -1,8 +1,8 @@
 Getting datakeeper ID
 ===============
 
-This guide shows you how to rent datakeeper ID in most easiest way.\
-If you still have questions, please ask them in discord or telegram support channels\
+This guide shows you how to get a Datakeeper ID in the easiest way possible.\
+If you still have questions, ask them in discord or telegram support channels
 </br><img src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" height="30" width="120"/> 
 <img src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="30" width="120"/> 
 
@@ -31,7 +31,7 @@ If you still have questions, please ask them in discord or telegram support chan
 
 ### Congratulations 🎉
 Now you can start your datakeeper, send your first proofs and earn $TBY and $TBYmined as a reward.
-</br> See the installation guide [here](installation.md).
+</br> See the installation guides [here](/readme.md#installation).
 
 #### 🪙 Withdraw $TBYmined to $DE token
 - use to influence protocol parameters in [Consensus](https://consensus.denet.app/#welcome_to_consensus)
