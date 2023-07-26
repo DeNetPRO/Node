@@ -1,6 +1,5 @@
 #!/bin/bash
-set -exuo pipefail
-
+#
 # allow specifying different destination directory
 DIR="${DIR:-"/bin"}"
 

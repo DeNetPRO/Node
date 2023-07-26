@@ -31,18 +31,17 @@ If you still have questions, you can ask it in discord or telegram support chann
 1. Run next command to install node locally:
 
 ```console
-$ sh -c "$(curl -fsSL https://raw.githubusercontent.com/denetpro/node/master/scripts/install.sh)"
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/denetpro/node/master/scripts/install.sh)"
 ```
-
-or using wget
+    or using wget
 
 ```console
-$ sh -c "$(wget  -O - https://raw.githubusercontent.com/denetpro/node/master/scripts/install.sh)"
+sh -c "$(wget  -O - https://raw.githubusercontent.com/denetpro/node/master/scripts/install.sh)"
 ```
 
 2. Launch denode binary
 ```console
-$ denode
+denode
 ```
 
 3. Next follow the instructions and input next fields:
