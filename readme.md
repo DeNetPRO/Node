@@ -41,8 +41,8 @@ Information about the IP address and port that you specified for remote connecti
 ## Installation
 💡 Make sure you meet all the requirements, and you've already received datakeeper ID [here](./doc/getting_id.md) 💡 
 
-- Linux/MacOS installation guide
-- Windows installation guide
+- [Linux/MacOS installation](./doc/installation_unix.md)
+- [Windows installation](./doc/installation_windows.md)
 
 ## Usage
 | Account management| Description | Demo video |
