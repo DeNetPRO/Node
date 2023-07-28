@@ -2,7 +2,7 @@
 <a href="https://denet.pro">
     <img alt="tg.png" src="https://img.shields.io/badge/website-000000?style=for-the-badge&logo=About.me&logoColor=white" height="31" width="120" href="https://discord.gg/cPz9m4cSWv"/>
 </a> 
-<a href="https://discord.gg/cPz9m4cSWv">
+<a href="https://t.me/+Yu5KnSruttc5ZGRi">
     <img alt="tg.png" src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" height="30" width="120" href="https://discord.gg/cPz9m4cSWv"/>
 </a> 
 <a href="https://discord.gg/cPz9m4cSWv">
