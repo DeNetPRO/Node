@@ -15,4 +15,5 @@ GITHUB_URL="https://github.com/denetpro/node/releases/download/${GITHUB_LATEST_V
 curl -L -o denode.zip $GITHUB_URL
 unzip -a denode.zip 
 mv builds/denode-$ARCH ./denode && rm -rf builds denode.zip
-install -Dm 555 denode -t "$DIR"
+mkdir -p $DIR
+install -m 555 denode -t "$DIR"

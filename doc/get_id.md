@@ -1,4 +1,4 @@
-required TBY amount ≥ Dataeeper ID you'll getGetting datakeeper ID
+Datakeeper ID
 ===============
 
 This guide shows you how to get a Datakeeper ID in the easiest way possible.\
