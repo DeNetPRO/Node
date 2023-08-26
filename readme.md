@@ -1,100 +1,167 @@
-# [DeNet](https://denet.pro) Node - CLI app for receiving rewards by sharing storage
+# DeNet Datakeeper
 
-[Download latest release](https://github.com/DeNetPRO/Node/releases/latest)
+Join our community and get all your questions covered!
 
-[Discord](https://discord.gg/cPz9m4cSWv) |
-[YouTube](https://www.youtube.com/channel/UCeCxt3tYbtSkJvaznNjQimQ)
+<a href="https://denet.pro">
+    <img alt="tg.png" src="https://img.shields.io/badge/website-000000?style=for-the-badge&logo=About.me&logoColor=white" height="31" width="120" href="https://discord.gg/cPz9m4cSWv"/>
+</a> 
+<a href="https://t.me/+Yu5KnSruttc5ZGRi">
+    <img alt="tg.png" src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" height="30" width="120" href="https://discord.gg/cPz9m4cSWv"/>
+</a> 
+<a href="https://discord.gg/cPz9m4cSWv">
+    <img alt="discord.png" src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="30" width="120" />
+</a>
+<a href="https://www.youtube.com/channel/UCeCxt3tYbtSkJvaznNjQimQ">
+    <img alt="youtube.png" src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" height="30" width="120" href="https://discord.gg/cPz9m4cSWv"/>
+</a>
 
-To use the app you need an account. The account is just an Ethereum wallet that you can import or create.
+[The latest release](https://github.com/DeNetPRO/Node/releases/latest)
 
-When you run the app it prompts you for password if you already have an account otherwise it runs the account import command.
-If you run the app for the first time you need to setup the configuration. It's simple, all you need to do is to answer the question prompts.
+## Provide your storage space & earn $80 for 1TB!
+
+💽  Datakeepers offer their unused storage space to DeNet Storage users, creating a mutually beneficial conditions for all without any intermediaries. By utilizing the DeNet Storage Protocol, users pay for the storage they need, while Datakeepers are rewarded for the storage they provide. Rent out your computer, HDD or old unused devices and benefit!
+
+💰 [Calculate your potential reward](https://p.denet.app/datakeeper)
+
+Follow the navigation to become a Datakeeper:
+
+- [Requirements](#requirements)
+- [Step 1: Download](#download)
+- [Step 2: Installation process](#installation)
+- [Step 3: Get your Datakeeper ID](#id)
+- [Step 4: Send proofs and get rewards](#rewards)
+- [FAQ](#faq)
+
+
+## Requirements:
+- Public & static IP address
+- At least 0.1 Polygon MATIC (in order to send proofs)
+- 1GiB of RAM
+- Stable internet connection, minimum speed - 20Mb/sec
+- Provided free disk space > 512 GiB
+- Operating system: Linux, MacOS, Windows (all x64)
+
+## Download
+
+💡 **Make sure you meet all the requirements first.**
+
+As the step 1, you need to download DeNode for your OC. You can always find the latest release [here](https://github.com/DeNetPRO/Node/releases/latest)
+
+## Installation
+
+To use the app you need an account. The account is just an Ethereum wallet that you can import or create. When you run the app it prompts you for password if you already have an account otherwise it runs the account import command. If you run the app for the first time you need to setup the configuration. It's simple, all you need to do is to answer the question prompts.
+
 Information about the IP address and port that you specified for remote connections will be added to a smart contract.
 
-## To launch a node, you will need:
-#### - public IP address
-#### - at least 0.1 MATIC on your Ethereum wallet that is going to be used as an account 
-#### - $TBY token equal to node id you will own ([how to get $TBY](./doc/deposit.md))
+| Account management| Description | Demo video |
+|---|---|----|
+| account create | create new Ethereum wallet (if didn't exist)| [video](https://www.youtube.com/watch?v=So8VAjv9o1Y) |
+| account import | imports Ethereum wallet by its private key | [video](https://www.youtube.com/watch?v=vVRMHlqLA0w) |
+| account export | show your private key | [video](https://www.youtube.com/watch?v=bnstbPGdjKY)|
+| account delete | delete your current account | - |
 
-Having MATICs in your account wallet is also needed for paying transaction fees when sending file storage proofs, please top it up on time. DeNet smart contracts are deployed in Polygon. More networks will be added in the future.
+**Installation process:**
 
-You can run the app in the terminal emulator by navigating to the directory that contains the binary file and typing the following command: 
+1. Run next command to install node locally:
 
-```bash
-./denode
+Using curl:
+```console
+$ sh -c "$(curl -fsSL https://raw.githubusercontent.com/denetpro/node/master/scripts/install.sh)"
+```
+Using wget:
+```console
+$ sh -c "$(wget  -O - https://raw.githubusercontent.com/denetpro/node/master/scripts/install.sh)"
 ```
 
-[Account import command demo](https://www.youtube.com/watch?v=vVRMHlqLA0w)
-
-If you want to create a new account instead of importing an existing one just run the following command:
-
-```bash
-./denode account create
+2. Launch denode binary
+```console
+denode
 ```
 
-[Account create command demo](https://www.youtube.com/watch?v=So8VAjv9o1Y)
+3. Аllow the instructions and input next fields:
 
-If you generated a new wallet when creating an account and need to receive the private key run the following command: 
+- Export Private key
 
-```bash
-./denode account export
-```
+- Set the passцщrd to protect your private key
 
-[Account export command demo](https://www.youtube.com/watch?v=bnstbPGdjKY)
+- Your public IP address
 
-## Currently available commands cheat sheet
+- Port or use default 55050 (press enter)
 
-| Account Command | Description |
-|---|---|
-| account create | generates new Ethereum wallet that is used as an account |
-| account import | imports Ethereum wallet by its private key |
-| account export | discloses your private key |
-| account delete | delete your account |
+- Share existing free partition (disk) dirpath
 
-## Minimal system requirements
-▪ Stable internet connection, at least 100Mb/sec \
-▪ Public and static IP address\
-▪ Uptime close to 100%\
-▪ Minimum allocated free disk space 0.5 TiB\
-▪ 1GiB of RAM\
-▪ OS: Linux, MacOS, Windows (all x64)
-## Useful info
+    - Path to existing directory
 
-[Permitting DeNet Node execution on MacOS ](https://www.youtube.com/watch?v=vw7yyDjyhS8)
+    - Size of this partition (in GiB)
+- Choose blockchain (currently only polygon is available)
 
-# FAQ 
+    - Press enter on polygon
 
-## Is it ok to run DeNet Node on VPS ❓
+    - Choose custom RPC, or use default one (press enter)
 
-▪️ Yes, but ....
 
-If you already use a VPS it is ok to launch DeNet Node on it, but if launching the node is your only purpose, we recommend you try to launch it on your own machine instead of subscribing on a VPS. So if you have a PC or laptop with Linux or MacOS on board, you'll also need a public IP. It can be obtained via your ISP and is going to be cheaper than VPS.
+4. Complete
 
-## How much space should I share ❓
 
-▪️ You can share as much as you can but sharing out more space will allow you to store more files and increases reward totals and your chances of being the first to receive it.
+#### If you see similliar logs, congratulations! 🎉 You will soon get your first files and rewards.
+![image](https://github.com/Arthurbrain/Node/assets/143201292/abdd3eec-a7d4-45d4-8cc3-04e2b98504d7)
 
-## How can I calculate my earnings ❓
+## ID
 
-▪ When DeNet Node receives files it starts sending proofs to blockchain smart contract using Proof-Of-Storage algorithm.
-Nodes are rewarded in TBY tokens. One TBY can be received for storing 1 TB of data for a year. If you stored 500 GB for a year you will receive 0.5 TBY and so on. Our early miners will be additionally rewarded for every successful proof request. Also additional rewards for using miners resources are coming in the future
+To be part of the network, you should get a Datakeeper ID. To get an ID you need to make a TBY deposit. The amount of TBY necessary to launch each new node is determined by the number of existing Datakeepers. 
 
-## Does the disk have to be ssd? 
+For example, if there are already 10 Datakeepers in the network, your ID will be assigned as number 11, along with the necessary TBY deposit. It is important to note that the deposit remains your own property and it's not spent!
 
-▪️ There are no special requirements, but the faster your I/O speed, the more files you are able to store simultaneously and send proofs. However, your hard drive must be in working condition without any damage. 
+## Rewards
 
-## How fast should the internet speed be ❓
+Send your first proofs and earn $TBY and $TBYmined as a reward.
 
-▪ Recommended speed is 100Mb/sec, and the connection should be stable.
+**Earn $TBYmined for sending proofs. Withdraw $TBYmined to $DE token**
+- Use to influence protocol parameters at Consensus
+- Use it for your own benefit
 
-## When should I expect to get an income ❓
+**Earn $TBY as a system reward from the protocol (2% APY of $TBY total supply)**
+- Soon: convert it to $TBYmined with charity proofs.
+- Use it for storing data
 
-▪️ You will start earning TBY_Mined when files are uploaded to your node and you find proof for these files (based on the DeNet Proof-of-Storage algorithm)
 
-## How much can I earn for providing 1TiB ❓
+## FAQ 
 
-▪️ The approximate reward for providing 1TB is $100. But we're improving our rewarding system and creating conditions for more profitable storage usage. 
+### Can I run DeNet Node on a VPS  ❓
 
-## When will I be able to launch a node ❓
+▪️ Yes, it is possible to run DeNode on a VPS. However, we recommend running the node on your own machine if it is your only purpose. If you have a PC or laptop with Linux or MacOS, obtaining a public IP from your ISP will be cheaper than using a VPS.
 
-▪️ We are preparing a new release of our protocol. DeNet Node will be released this week.
+### Do I need an SSD for my hard drive  ❓
+
+▪️ There are no specific requirements for your hard drive, but faster I/O speed will allow you to store more files simultaneously and send proofs. Your hard drive must be in working condition without any damage.
+
+### What Internet speed do I need ❓
+
+▪️ The minimum speed required is 20Mb/sec. However, higher and more stable internet speeds will provide better income opportunities.
+
+### How do I calculate my potential earnings ❓
+
+▪ DeNet Datakeepers have a stable income for sending proofs, and there are additional incentive programs. Visit [DeNet Payments](https://p.denet.app/datakeeper) and use our calculator to estimate your potential income.
+
+### When will I start earning income ❓
+
+▪ You will start earning TBY_Mined when files are uploaded to your node, and you send proof of storing these files based on the DeNet Proof-of-Storage algorithm.
+
+### How much can I earn for providing 1TiB ❓
+
+▪️ The approximate reward for providing 1TB is $80, but our rewarding system is constantly improving to create more profitable storage usage conditions.
+
+### What is the purpose of getting a Datakeeper ID ❓
+
+▪️ To become a Datakeeper and run a DeNode, you must make a TBY deposit equal to the ID you'll take up. The deposit improves network stability, enhances upload and download speeds, and provides a secure environment for all members. For more information, please refer to our [article](https://medium.com/denetpro/denet-storage-protocol-v3-to-address-key-challenge-of-decentralization-f19b9041b0fa).
+
+### Why do I need TBY on my balance ❓
+▪️ You can only send proofs and earn rewards if your TBY balance ≥ your Datakeeper ID.
+
+### Will my deposit be spent when running a node ❓
+
+▪️ No, the deposit amount remains the same and is only used to assert your ID.
+
+### What can I do with my deposit if I want to leave ❓
+
+▪️ Your deposit remains your property and can be withdrawn at any time. However, note that your ID may be taken by another member after you leave.
