@@ -1,7 +1,4 @@
 # DeNet Datakeeper
-
-Join our community and get all your questions covered!
-
 <a href="https://denet.pro">
     <img alt="tg.png" src="https://img.shields.io/badge/website-000000?style=for-the-badge&logo=About.me&logoColor=white" height="31" width="120" href="https://discord.gg/cPz9m4cSWv"/>
 </a> 
@@ -78,11 +75,11 @@ $ sh -c "$(wget  -O - https://raw.githubusercontent.com/denetpro/node/master/scr
 denode
 ```
 
-3. Аllow the instructions and input next fields:
+3. Follow  the instructions and input next fields:
 
 - Export Private key
 
-- Set the passцщrd to protect your private key
+- Set the password to protect your private key
 
 - Your public IP address
 
@@ -106,7 +103,7 @@ denode
 #### If you see similliar logs, congratulations! 🎉 You will soon get your first files and rewards.
 ![image](https://github.com/Arthurbrain/Node/assets/143201292/abdd3eec-a7d4-45d4-8cc3-04e2b98504d7)
 
-## ID
+## Get your Datakeeper ID
 
 To be part of the network, you should get a Datakeeper ID. To get an ID you need to make a TBY deposit. The amount of TBY necessary to launch each new node is determined by the number of existing Datakeepers. 
 
