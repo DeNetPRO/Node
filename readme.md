@@ -42,22 +42,9 @@ Follow the navigation to become a Datakeeper:
 
 💡 **Make sure you meet all the requirements first.**
 
-As the step 1, you need to download DeNode for your OC. You can always find the latest release [here](https://github.com/DeNetPRO/Node/releases/latest)
+As the step 1, you need to download DeNode for your OS. You can always find the latest release [here](https://github.com/DeNetPRO/Node/releases/latest)
 
-## Installation
-
-To use the app you need an account. The account is just an Ethereum wallet that you can import or create. When you run the app it prompts you for password if you already have an account otherwise it runs the account import command. If you run the app for the first time you need to setup the configuration. It's simple, all you need to do is to answer the question prompts.
-
-Information about the IP address and port that you specified for remote connections will be added to a smart contract.
-
-| Account management| Description | Demo video |
-|---|---|----|
-| account create | create new Ethereum wallet (if didn't exist)| [video](https://www.youtube.com/watch?v=So8VAjv9o1Y) |
-| account import | imports Ethereum wallet by its private key | [video](https://www.youtube.com/watch?v=vVRMHlqLA0w) |
-| account export | show your private key | [video](https://www.youtube.com/watch?v=bnstbPGdjKY)|
-| account delete | delete your current account | - |
-
-**Installation process:**
+## Linux/MacOS installation
 
 1. Run next command to install node locally:
 
