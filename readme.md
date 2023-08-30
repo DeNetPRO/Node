@@ -4,7 +4,7 @@
 
 
 <p align="center">
-    Rent out your computer's free storage and get benefit
+    Monetize your computer's storage now!
     <br/>
     <br/>
     <a href="https://denet.pro">
@@ -21,7 +21,8 @@
     </a>
 </p>
 
-💽 **Datakeepers** offer their unused storage space to DeNet Storage users, creating a mutually beneficial conditions for all without any intermediaries. By utilizing the DeNet Storage Protocol, users pay for the storage they need, while Datakeepers are rewarded for the storage they provide. Rent out your computer, HDD or old unused devices and benefit!
+💽 **Datakeepers** offer their unused storage space to DeNet Storage users, creating a mutually beneficial conditions for all without any intermediaries. \
+By utilizing the DeNet Storage Protocol, users pay for the storage they need, while Datakeepers are rewarded for the storage they provide.
 #### 💰 [Calculate your potential reward](https://p.denet.app/datakeeper)
 
 ### Table of contents:
@@ -31,24 +32,39 @@
     - [Linux](#linuxmacosarmv6)
     - [ARMv6](#linuxmacosarmv6)
     - [MacOS](#linuxmacosarmv6)
-- [Step 2: Getting Datakeeper ID](#step-2-getting-datakeeper-id)
+- [Step 2: Configuration](#step-2-configuration)
+- [Step 3: Getting Datakeeper ID](#step-3-getting-datakeeper-id)
 - [Send proofs](#send-proofs-and-earn-reward)
 - [FAQ](#faq)
 
 
 ## Requirements
 💡 **Make sure you meet all the requirements:**
-- 1G of RAM
+- 1GB of RAM
 - Public and static IP address
-- Stable internet connection, with at least **20Mbps** speed
-- At least 0.1 Polygon MATIC (in order to send proofs)
+- Stable internet connection, with a minimum speed of **20Mbps**
+- At least 0.1 Polygon MATIC (for sending proofs)
 - Free disk space > 512G
-- OS: Linux, MacOS, Windows (all x64)
+- Operating Systems: Linux, MacOS, Windows (all x64)
 
 ## Step 1: Installation
 
 ### Windows
 
+**1. Download latest release from [here](https://github.com/DeNetPRO/Node/releases/latest/download/denode-windows.zip)**
+
+**2. Open containing folder, and extract archive to any location**
+
+**3. Open that location using CMD**
+
+<img alt="win1.png" src="assets/win_open_cmd1.png" width="350" >
+<img alt="win2.png" src="assets/win_open_cmd2.png" width="350" >
+
+**4. Run denode.exe using CMD**
+
+<img alt="win3.png" src="assets/win_open_cmd3.png" width="450" >
+
+-------------------
 ### Linux/MacOS/ARMv6
 
 **1. Download binary using next command**
@@ -68,9 +84,10 @@ denode
 ```
 -------------------
 
-**3. Follow the instructions and configure your node:**
+## Step 2: Configuration
 
-- Export Private key
+**Follow the instructions and configure your node:**
+- Export Private key 
 - Set the password to protect your private key
 - Enter your public IP address
 - Port or use default 55050 (press enter)
@@ -81,7 +98,7 @@ denode
     - Choose polygon **(press enter to use default)**
     - Choose custom RPC, or use default one **(press enter to use default)**
 
-## Step 2: Getting Datakeeper ID
+## Step 3: Getting Datakeeper ID
 
 To be part of the network, you should get a Datakeeper ID.\
 You will need DE [(0x081Ec4c0e30159C8259BAD8F4887f83010a681DC)](https://polygonscan.com/address/0x081ec4c0e30159c8259bad8f4887f83010a681dc) in order to open deposit of TBY [(0x1a9b54A3075119f1546C52cA0940551A6ce5d2D0)](https://polygonscan.com/address/0x1a9b54a3075119f1546c52ca0940551a6ce5d2d0) and get Datakeeper ID
@@ -124,12 +141,14 @@ Send your first proofs and earn $TBY and $TBYmined as a reward.
 Go to [datakeeper page](https://p.denet.app/datakeeper). Login with your datakeeper account, and withdraw your TBY_Mined.
 
 Ask your questions here and get help:
+
 <a href="https://t.me/+Yu5KnSruttc5ZGRi">
     <img alt="tg.png" src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" height="30" width="120" href="https://discord.gg/cPz9m4cSWv"/>
 </a> 
 <a href="https://discord.gg/cPz9m4cSWv">
     <img alt="discord.png" src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="30" width="120" />
 </a>
+
 ## FAQ 
 
 ### How do I calculate my potential earnings ❓
