@@ -54,7 +54,7 @@
 **1. Download binary using next command**
 
 Using curl:
-```console
+```
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/denetpro/node/master/scripts/install.sh)"
 ```
 Using wget:
@@ -63,7 +63,7 @@ sh -c "$(wget  -O - https://raw.githubusercontent.com/denetpro/node/master/scrip
 ```
 
 **2. Launch denode binary**
-```console
+```
 denode
 ```
 -------------------
