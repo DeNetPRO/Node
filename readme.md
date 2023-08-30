@@ -27,9 +27,10 @@
 ### Table of contents:
 - [Requirements](#requirements)
 - [Step 1: Installation](#step-1-installation)
-    - [Windows](#windows-installation)
+    - [Windows](#windows)
     - [Linux](#linuxmacosarmv6)
-    - [MacOS](#linux-installation)
+    - [ARMv6](#linuxmacosarmv6)
+    - [MacOS](#linuxmacosarmv6)
 - [Step 2: Getting Datakeeper ID](#step-2-getting-datakeeper-id)
 - [Send proofs](#send-proofs-and-earn-reward)
 - [FAQ](#faq)
@@ -45,6 +46,9 @@
 - OS: Linux, MacOS, Windows (all x64)
 
 ## Step 1: Installation
+
+### Windows
+
 ### Linux/MacOS/ARMv6
 
 **1. Download binary using next command**
@@ -62,6 +66,7 @@ sh -c "$(wget  -O - https://raw.githubusercontent.com/denetpro/node/master/scrip
 ```console
 denode
 ```
+-------------------
 
 **3. Follow the instructions and configure your node:**
 
@@ -72,9 +77,6 @@ denode
 - Share your free disk
     - Enter: path to existing folder on your drive
     - Select how much GiB you want to share 
-</br>
-</br>
-
 - Choose blockchain (currently only polygon is available)
     - Choose polygon **(press enter to use default)**
     - Choose custom RPC, or use default one **(press enter to use default)**
