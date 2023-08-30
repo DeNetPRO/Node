@@ -89,14 +89,14 @@ denode
 **Follow the instructions and configure your node:**
 - Export Private key 
 - Set the password to protect your private key
-- Enter your public IP address
-- Port or use default 55050 (press enter)
-- Share your free disk
-    - Enter: path to existing folder on your drive
-    - Select how much GiB you want to share 
-- Choose blockchain (currently only polygon is available)
-    - Choose polygon **(press enter to use default)**
-    - Choose custom RPC, or use default one **(press enter to use default)**
+- Enter your public IP address – you can simply Google “whats my ip” to determine this
+- Port **(press enter to use default)**
+- Share disk (can be repeated with many disks)
+    - Folder path of that you want to share
+    - Size of the partition in GiB
+- Choose the blockchain (currently only Polygon is supported)
+    - Confirm selection of polygon **(press enter to use default)**
+    - Select RPC – you can use a custom RPC or the default (https://polygon-rpc.com)
 
 ## Step 3: Getting Datakeeper ID
 
