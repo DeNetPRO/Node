@@ -106,7 +106,7 @@ You will need DE [(0x081Ec4c0e30159C8259BAD8F4887f83010a681DC)](https://polygons
 
 1. Go to https://p.denet.app/datakeeper 
 
-2. Connect your wallet from [step 1](#step-1-installation) (currently only [Metamask](https://metamask.io/) and Wallet Connect are supported), and be sure to switch to the Polygon network (chain id 137).
+2. Connect your wallet from [step 1](#step-1-installation) (currently only [Metamask](https://metamask.io/) and Wallet Connect are supported), and be sure to switch to the Polygon network (chain 137).
 
 
 3. Check that you have required amount of TBY to rent a Datakeeper ID.\
