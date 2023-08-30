@@ -1,139 +1,147 @@
-# DeNet Datakeeper
-<a href="https://denet.pro">
-    <img alt="tg.png" src="https://img.shields.io/badge/website-000000?style=for-the-badge&logo=About.me&logoColor=white" height="31" width="120" href="https://discord.gg/cPz9m4cSWv"/>
-</a> 
+<p align="center">
+    <img src="assets/LOGO.png">
+</p>
+
+
+<p align="center">
+    Rent out your computer's free storage and get benefit
+    <br/>
+    <br/>
+    <a href="https://denet.pro">
+        <img alt="tg.png" src="https://img.shields.io/badge/website-000000?style=for-the-badge&logo=About.me&logoColor=white" height="31" width="120" href="https://discord.gg/cPz9m4cSWv"/>
+    </a> 
+    <a href="https://t.me/+Yu5KnSruttc5ZGRi">
+        <img alt="tg.png" src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" height="30" width="120" href="https://discord.gg/cPz9m4cSWv"/>
+    </a> 
+    <a href="https://discord.gg/cPz9m4cSWv">
+        <img alt="discord.png" src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="30" width="120" />
+    </a>
+    <a href="https://www.youtube.com/channel/UCeCxt3tYbtSkJvaznNjQimQ">
+        <img alt="youtube.png" src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" height="30" width="120" href="https://discord.gg/cPz9m4cSWv"/>
+    </a>
+</p>
+
+💽 **Datakeepers** offer their unused storage space to DeNet Storage users, creating a mutually beneficial conditions for all without any intermediaries. By utilizing the DeNet Storage Protocol, users pay for the storage they need, while Datakeepers are rewarded for the storage they provide. Rent out your computer, HDD or old unused devices and benefit!
+#### 💰 [Calculate your potential reward](https://p.denet.app/datakeeper)
+
+### Table of contents:
+- [Requirements](#requirements)
+- [Step 1: Installation](#step-1-installation)
+    - [Windows](#windows-installation)
+    - [Linux](#linuxmacosarmv6)
+    - [MacOS](#linux-installation)
+- [Step 2: Getting Datakeeper ID](#step-2-getting-datakeeper-id)
+- [Send proofs](#send-proofs-and-earn-reward)
+- [FAQ](#faq)
+
+
+## Requirements
+💡 **Make sure you meet all the requirements:**
+- 1G of RAM
+- Public and static IP address
+- Stable internet connection, with at least **20Mbps** speed
+- At least 0.1 Polygon MATIC (in order to send proofs)
+- Free disk space > 512G
+- OS: Linux, MacOS, Windows (all x64)
+
+## Step 1: Installation
+### Linux/MacOS/ARMv6
+
+**1. Download binary using next command**
+
+Using curl:
+```console
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/denetpro/node/master/scripts/install.sh)"
+```
+Using wget:
+```
+sh -c "$(wget  -O - https://raw.githubusercontent.com/denetpro/node/master/scripts/install.sh)"
+```
+
+**2. Launch denode binary**
+```console
+denode
+```
+
+**3. Follow the instructions and configure your node:**
+
+- Export Private key
+- Set the password to protect your private key
+- Enter your public IP address
+- Port or use default 55050 (press enter)
+- Share your free disk
+    - Enter: path to existing folder on your drive
+    - Select how much GiB you want to share 
+</br>
+</br>
+
+- Choose blockchain (currently only polygon is available)
+    - Choose polygon **(press enter to use default)**
+    - Choose custom RPC, or use default one **(press enter to use default)**
+
+## Step 2: Getting Datakeeper ID
+
+To be part of the network, you should get a Datakeeper ID.\
+You will need DE [(0x081Ec4c0e30159C8259BAD8F4887f83010a681DC)](https://polygonscan.com/address/0x081ec4c0e30159c8259bad8f4887f83010a681dc) in order to open deposit of TBY [(0x1a9b54A3075119f1546C52cA0940551A6ce5d2D0)](https://polygonscan.com/address/0x1a9b54a3075119f1546c52ca0940551a6ce5d2d0) and get Datakeeper ID
+
+
+1. Go to https://p.denet.app/datakeeper 
+
+2. Connect your wallet from [step 1](#step-1-installation) (currently only [Metamask](https://metamask.io/) and Wallet Connect are supported), and be sure to switch to the Polygon network (chain id 137).
+
+
+3. Check that you have required amount of TBY to rent a Datakeeper ID.\
+</br><img src="assets/not_enough_tby.png" width="360"/>
+
+    If you don't have enough TBY and DE:
+    1. Top up your DE balance (if you haven't)
+</br><img src="assets/top_up_de_cta.png" width="400"/>
+</br><img src="assets/top_up_de.png" width="400"/>
+
+   2. Convert DE to TBY (required TBY amount ≥ Dataeeper ID you'll get)
+</br><img src="assets/de_to_tby_cta.png" width="400"/>
+</br><img src="assets/de_to_tby.png" width="400"/>
+
+
+4. When you have enough TBY deposit, you now able to run node and lock your Datakeeper ID\
+Relaunch your node and start getting files.
+
+## Send proofs and earn reward: 
+
+Wait for first files to be uploaded on your node.
+Send your first proofs and earn $TBY and $TBYmined as a reward.
+
+🪙 **Earn $TBYmined for sending proofs. Withdraw $TBYmined to $DE token**
+- Use to influence protocol parameters at Consensus
+- Use it for your own benefit
+
+🪙 **Earn $TBY as a system reward from the protocol (2% APY of $TBY total supply)**
+- Use it for storing data
+- Soon: convert it to $TBYmined with charable proofs.
+
+Go to [datakeeper page](https://p.denet.app/datakeeper). Login with your datakeeper account, and withdraw your TBY_Mined.
+
+Ask your questions here and get help:
 <a href="https://t.me/+Yu5KnSruttc5ZGRi">
     <img alt="tg.png" src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" height="30" width="120" href="https://discord.gg/cPz9m4cSWv"/>
 </a> 
 <a href="https://discord.gg/cPz9m4cSWv">
     <img alt="discord.png" src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="30" width="120" />
 </a>
-<a href="https://www.youtube.com/channel/UCeCxt3tYbtSkJvaznNjQimQ">
-    <img alt="youtube.png" src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" height="30" width="120" href="https://discord.gg/cPz9m4cSWv"/>
-</a>
-
-[The latest release](https://github.com/DeNetPRO/Node/releases/latest)
-
-## Provide your storage space & earn $80 for 1TB!
-
-💽  Datakeepers offer their unused storage space to DeNet Storage users, creating a mutually beneficial conditions for all without any intermediaries. By utilizing the DeNet Storage Protocol, users pay for the storage they need, while Datakeepers are rewarded for the storage they provide. Rent out your computer, HDD or old unused devices and benefit!
-
-💰 [Calculate your potential reward](https://p.denet.app/datakeeper)
-
-Follow the navigation to become a Datakeeper:
-
-- [Requirements](#requirements)
-- [Step 1: Download](#download)
-- [Step 2: Installation process](#installation)
-- [Step 3: Get your Datakeeper ID](#id)
-- [Step 4: Send proofs and get rewards](#rewards)
-- [FAQ](#faq)
-
-
-## Requirements:
-- Public & static IP address
-- At least 0.1 Polygon MATIC (in order to send proofs)
-- 1GiB of RAM
-- Stable internet connection, minimum speed - 20Mb/sec
-- Provided free disk space > 512 GiB
-- Operating system: Linux, MacOS, Windows (all x64)
-
-## Download
-
-💡 **Make sure you meet all the requirements first.**
-
-As the step 1, you need to download DeNode for your OS. You can always find the latest release [here](https://github.com/DeNetPRO/Node/releases/latest)
-
-## Linux/MacOS installation
-
-1. Run next command to install node locally:
-
-Using curl:
-```console
-$ sh -c "$(curl -fsSL https://raw.githubusercontent.com/denetpro/node/master/scripts/install.sh)"
-```
-Using wget:
-```console
-$ sh -c "$(wget  -O - https://raw.githubusercontent.com/denetpro/node/master/scripts/install.sh)"
-```
-
-2. Launch denode binary
-```console
-denode
-```
-
-3. Follow  the instructions and input next fields:
-
-- Export Private key
-
-- Set the password to protect your private key
-
-- Your public IP address
-
-- Port or use default 55050 (press enter)
-
-- Share existing free partition (disk) dirpath
-
-    - Path to existing directory
-
-    - Size of this partition (in GiB)
-- Choose blockchain (currently only polygon is available)
-
-    - Press enter on polygon
-
-    - Choose custom RPC, or use default one (press enter)
-
-
-4. Complete
-
-
-#### If you see similliar logs, congratulations! 🎉 You will soon get your first files and rewards.
-![image](https://github.com/Arthurbrain/Node/assets/143201292/abdd3eec-a7d4-45d4-8cc3-04e2b98504d7)
-
-## Get your Datakeeper ID
-
-To be part of the network, you should get a Datakeeper ID. To get an ID you need to make a TBY deposit. The amount of TBY necessary to launch each new node is determined by the number of existing Datakeepers. 
-
-For example, if there are already 10 Datakeepers in the network, your ID will be assigned as number 11, along with the necessary TBY deposit. It is important to note that the deposit remains your own property and it's not spent!
-
-## Rewards
-
-Send your first proofs and earn $TBY and $TBYmined as a reward.
-
-**Earn $TBYmined for sending proofs. Withdraw $TBYmined to $DE token**
-- Use to influence protocol parameters at Consensus
-- Use it for your own benefit
-
-**Earn $TBY as a system reward from the protocol (2% APY of $TBY total supply)**
-- Soon: convert it to $TBYmined with charity proofs.
-- Use it for storing data
-
-
 ## FAQ 
-
-### Can I run DeNet Node on a VPS  ❓
-
-▪️ Yes, it is possible to run DeNode on a VPS. However, we recommend running the node on your own machine if it is your only purpose. If you have a PC or laptop with Linux or MacOS, obtaining a public IP from your ISP will be cheaper than using a VPS.
-
-### Do I need an SSD for my hard drive  ❓
-
-▪️ There are no specific requirements for your hard drive, but faster I/O speed will allow you to store more files simultaneously and send proofs. Your hard drive must be in working condition without any damage.
-
-### What Internet speed do I need ❓
-
-▪️ The minimum speed required is 20Mb/sec. However, higher and more stable internet speeds will provide better income opportunities.
 
 ### How do I calculate my potential earnings ❓
 
-▪ DeNet Datakeepers have a stable income for sending proofs, and there are additional incentive programs. Visit [DeNet Payments](https://p.denet.app/datakeeper) and use our calculator to estimate your potential income.
+▪ Visit [datakeeper page](https://p.denet.app/datakeeper) and use calculator to estimate your potential income.
+
+### How to see and withdraw my reward ❓
+
+▪ Go to [datakeeper page](https://p.denet.app/datakeeper). Login with your datakeeper account, and withdraw your TBY_Mined.
 
 ### When will I start earning income ❓
 
 ▪ You will start earning TBY_Mined when files are uploaded to your node, and you send proof of storing these files based on the DeNet Proof-of-Storage algorithm.
 
-### How much can I earn for providing 1TiB ❓
-
-▪️ The approximate reward for providing 1TB is $80, but our rewarding system is constantly improving to create more profitable storage usage conditions.
 
 ### What is the purpose of getting a Datakeeper ID ❓
 
@@ -149,3 +157,10 @@ Send your first proofs and earn $TBY and $TBYmined as a reward.
 ### What can I do with my deposit if I want to leave ❓
 
 ▪️ Your deposit remains your property and can be withdrawn at any time. However, note that your ID may be taken by another member after you leave.
+### Can I run DeNet Node on a VPS  ❓
+
+▪️ Yes, it is possible to run DeNode on a VPS. However, we recommend running the node on your own machine if it is your only purpose. If you have a PC or laptop with Linux or MacOS, obtaining a public IP from your ISP will be cheaper than using a VPS.
+
+### Do I need an SSD for my hard drive  ❓
+
+▪️ There are no specific requirements for your hard drive, but faster I/O speed will allow you to store more files simultaneously and send proofs more often. Your hard drive must be in working condition without any damage.
