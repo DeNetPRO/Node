@@ -8,7 +8,7 @@
     <br/>
     <br/>
     <a href="https://denet.pro">
-        <img alt="website.png" src="/home/xasai/doc/denet/github.denode/assets/denet.pro..svg" height="31" width="120"/>
+        <img alt="website.png" src="assets/denet.pro..svg" height="31" width="120"/>
     </a> 
     <a href="https://t.me/+Yu5KnSruttc5ZGRi">
         <img alt="tg.png" src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" height="30" width="120"/>
