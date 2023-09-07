@@ -1,0 +1,26 @@
+# 1. Substitute HOME var with your home path
+# 2. Substitute DENODE_PASSWORD var with your secret denode password
+# 3. Save this file to /etc/systemd/system/denode.service (require root privileges)
+# 4. Run next coommands:
+#
+#       sudo systemctl daemon-reload 
+#       sudo systemctl enable --now denode.service
+# 
+# 5. Check that everything is ok 
+# 
+#       systemctl status denode.service
+#       journalctl -u denode.service  --output=cat --all --no-pager
+
+[Unit]
+After=network.target
+Description=Denode Service
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/absolute/path/to/denode_binary
+Environment=HOME=/home/PASTE_YOUR_USERNAME_HERE
+Environment=DENODE_PASSWORD=PASTE_YOUR_DENODE_PASSWORD_HERE
+
+[Install]
+WantedBy=default.target
