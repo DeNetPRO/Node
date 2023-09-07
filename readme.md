@@ -8,16 +8,16 @@
     <br/>
     <br/>
     <a href="https://denet.pro">
-        <img alt="tg.png" src="https://img.shields.io/badge/website-000000?style=for-the-badge&logo=About.me&logoColor=white" height="31" width="120" href="https://discord.gg/cPz9m4cSWv"/>
+        <img alt="website.png" src="https://img.shields.io/badge/website-000000?style=for-the-badge&logo=About.me&logoColor=white" height="31" width="120"/>
     </a> 
     <a href="https://t.me/+Yu5KnSruttc5ZGRi">
-        <img alt="tg.png" src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" height="30" width="120" href="https://discord.gg/cPz9m4cSWv"/>
+        <img alt="tg.png" src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" height="30" width="120"/>
     </a> 
     <a href="https://discord.gg/cPz9m4cSWv">
         <img alt="discord.png" src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="30" width="120" />
     </a>
     <a href="https://www.youtube.com/channel/UCeCxt3tYbtSkJvaznNjQimQ">
-        <img alt="youtube.png" src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" height="30" width="120" href="https://discord.gg/cPz9m4cSWv"/>
+        <img alt="youtube.png" src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" height="30" width="120" />
     </a>
 </p>
 
