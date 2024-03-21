@@ -13,7 +13,6 @@ GITHUB_URL="https://github.com/denetpro/node/releases/download/${GITHUB_LATEST_V
 
 # install/update the local binary
 curl -L -o denode.zip $GITHUB_URL
-unzip -a denode.zip 
-mv builds/denode ./denode && rm -rf builds denode.zip
+unzip -a denode.zip && rm -rf denode.zip
 mkdir -p $DIR
 install -m 555 denode -t "$DIR"
