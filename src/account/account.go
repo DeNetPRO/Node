@@ -301,7 +301,7 @@ func Unlock() (*accounts.Account, string, error) {
 	}
 
 	if !loggedIn {
-		return nil, "", logger.MarkLocation(location, errors.New("couldn't log in in 3 attempts"))
+		return nil, "", logger.MarkLocation(location, errors.New("couldn't log in 3 attempts"))
 	}
 
 	return nodeAccount, password, nil
