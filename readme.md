@@ -36,9 +36,8 @@ This guide walks you through setting up and running a DeNet Node, enabling your 
 - [Step 2: Download Datakeeper Node](#step-2-download-datakeeper-node)
 - [Step 3: Start Node](#step-3-start-denet-node)
   - [Windows](#windows)
-  - [Linux](#linuxmacosarmv6)
-  - [ARMv6](#linuxmacosarmv6)
-  - [MacOS](#linuxmacosarmv6)
+  - [Linux](#linux)
+  - [MacOS](#macos)
 - [Step 2: Configuration](#step-2-configuration)
 - [Step 3: Becoming Online](#step-3-becoming-online)
 - [FAQ](#faq)
@@ -67,12 +66,14 @@ You need the private key from a wallet with a Datakeeper Node License.
 2. Go to "Profile" -> "Settings"-> “Security”.
 3. Copy the 64-character HEX private key (e.g., a1b2c3d4...).
 4. Save it securely. Never share your private key!
-### From Metamask
+### From other wallet (we take Metamask as an example)
 1. Open Metamask in your browser or app.
 2. Select the account with the Datakeeper Node License.
 3. Go to "Account Details" > "Export Private Key."
 4. Enter your Metamask password and copy the private key.
 5. Store it securely. Do not share it!
+
+_If you use any other wallet, the steps may differ but should be similar to the list above._
 
 ## Step 2: Download Datakeeper Node
 
@@ -103,7 +104,7 @@ Launch the node via a terminal.
 2. Start the Application: Navigate to the Application Folder and Run application executable
    ![](assets/mac-linux-run.png)
 
-### macOS
+### MacOS
 1. Open "Terminal" via Spotlight or Applications  
    ![](assets/mac-terminal.png)
    ![](assets/mac-opened-terminal.png)
@@ -125,20 +126,20 @@ NOTE: you may need “xattr -d com.apple.quarantine denode” to allow executabl
 - Ensure the directory exists and has sufficient space.
 5. **Set Storage Space**:
 - Specify the amount of disk space to allocate for DeNet Storage (e.g., 10). Enter the value (only number, without GiB) when prompted.
-7. **Optional Second Drive**: Press Enter to skip
-- If you want to use another drive, provide its path when prompted.
-8. **Select RPC for peaq Blockchain**: Press Enter to use default one
-- Choose the RPC endpoint (Select RPC for peaq (ChainID: 3338)). Press Enter for the default option.
+7. **Optional Second Drive**: Enter 'N' to skip.
+- Or if you want to use another drive, provide its path when prompted.
+8. **Select RPC for peaq Blockchain**: Press Enter to use default one.
+- Or choose the RPC endpoint (Select RPC for peaq (ChainID: 3338)).
 9. **Verify Operation**: 
-Watch the terminal output. If no errors appear, your DeNet Node is running correctly.
+- Watch the terminal output. If no errors appear, your DeNet Node is running correctly.
    ![](assets/successful-launch.png)
 
 ## Step 4: Monitor Transactions
 
-Track your node’s activity using the Peaq Subscan web interface.
-1. Visit the PEAQ Subscan website (e.g., https://peaq.subscan.io/account/YOUR_ADDRESS).
+Track your node’s activity using the peaq Subscan web interface.
+1. Visit the peaq Subscan website (e.g., https://peaq.subscan.io/account/YOUR_ADDRESS).
   - Search for your node’s transactions using your Datakeeper address.
-2. Check transaction statuses. Green checkmarks indicate successful transactions, confirming your node is working correctly.
+2. Check transaction statuses. Green check marks indicate successful transactions, confirming your node is working correctly.
    ![](assets/successful-trxs.png)
 ## Troubleshooting
 
@@ -147,12 +148,14 @@ Track your node’s activity using the Peaq Subscan web interface.
   ![](assets/failed-trx.png)
 - **Port Conflicts**: If port 55050 is in use, try another port (e.g., 55051)
   ![](assets/port-error.png)
-- **Subscan Issues:** If transactions don’t appear, confirm your node is running and has enough gas tokens (> 0.03 PEAQ).
+- **Subscan Issues:** If transactions don’t appear, confirm your node is running and has enough gas tokens (> 0.03 $PEAQ).
 ## Notes
 - Keep your terminal open to maintain the node’s operation. Closing it stops the node. Otherwise, set up the node as a background service (see [Advanced Settings: Systemd Service](#advanced-settings)).
 - Additional steps (e.g., advanced settings) will be added as needed — check for updates from DeNet.
 
 Congratulations, Datakeeper! Your DeNet Node is now contributing to the decentralized storage network.
+
+A graphical user interface (GUI) for seamless node operation coming soon. Stay tuned!
 
 ## Advanced Settings:
 
