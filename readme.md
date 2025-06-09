@@ -22,7 +22,6 @@
 
 💽 **Datakeepers** offer their unused storage space to DeNet Storage users, creating a mutually beneficial conditions for all without any intermediaries. \
 By utilizing the DeNet Storage Protocol, users pay for the storage they need, while Datakeepers are rewarded for the storage they provide.
-#### 💰 [Calculate your potential reward](https://node.denet.app/)
 
 # Becoming Datakeeper: node set up instruction
 
