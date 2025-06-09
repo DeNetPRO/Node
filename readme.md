@@ -38,9 +38,8 @@ This guide walks you through setting up and running a DeNet Node, enabling your 
   - [Windows](#windows)
   - [Linux](#linux)
   - [MacOS](#macos)
-- [Step 2: Configuration](#step-2-configuration)
-- [Step 3: Becoming Online](#step-3-becoming-online)
-- [FAQ](#faq)
+- [Step 4: Run DeNet Node](#step-4-run-denet-node)
+- [Step 5: Monitor Transactions](#step-5-monitor-transactions)
 
 
 ## Requirements
@@ -134,7 +133,7 @@ NOTE: you may need “xattr -d com.apple.quarantine denode” to allow executabl
 - Watch the terminal output. If no errors appear, your DeNet Node is running correctly.
    ![](assets/successful-launch.png)
 
-## Step 4: Monitor Transactions
+## Step 5: Monitor Transactions
 
 Track your node’s activity using the peaq Subscan web interface.
 1. Visit the peaq Subscan website (e.g., https://peaq.subscan.io/account/YOUR_ADDRESS).
@@ -161,7 +160,7 @@ A graphical user interface (GUI) for seamless node operation coming soon. Stay t
 
 #### Systemd service (Linux)
 - It is recommended to run as non-root user.
-- Follow **Setup account and configuration** section first.
+- Follow [Step 4](#step-4-run-denet-node) first. You should have config files in the path
   You should have config files in the path `/home/denet/.denode/`
 - We used **denet** user as an example, replace it with your username.
 
@@ -176,7 +175,7 @@ User=denet
 Group=denet
 Type=simple
 ExecStart=/usr/local/bin/denode
-EnvironmentFile=/home/denode/denode.env
+EnvironmentFile=/home/denet/denode.env
 Restart=always
 RestartSec=5
 ```
