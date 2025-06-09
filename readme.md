@@ -25,168 +25,177 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
 #### 💰 [Calculate your potential reward](https://node.denet.app/)
 
 # Becoming Datakeeper: node set up instruction
-❗️ POLYGON NODES ARE SOLD OUT, STAY TUNED FOR UPDATES!
+
+This guide walks you through setting up and running a DeNet Node, enabling your device to join the DeNet decentralized storage network
 
 ### Table of contents:
+
 - [Requirements](#requirements)
-- [Step 1: Installation](#step-1-installation)
-    - [Windows](#windows)
-    - [Linux](#linuxmacosarmv6)
-    - [ARMv6](#linuxmacosarmv6)
-    - [MacOS](#linuxmacosarmv6)
+- [Step 0: License Verification](#step-0-verify-your-account-has-license)
+- [Step 1: Copy Private Key](#step-1-copy-your-private-key)
+- [Step 2: Download Datakeeper Node](#step-2-download-datakeeper-node)
+- [Step 3: Start Node](#step-3-start-denet-node)
+  - [Windows](#windows)
+  - [Linux](#linuxmacosarmv6)
+  - [ARMv6](#linuxmacosarmv6)
+  - [MacOS](#linuxmacosarmv6)
 - [Step 2: Configuration](#step-2-configuration)
 - [Step 3: Becoming Online](#step-3-becoming-online)
 - [FAQ](#faq)
 
 
 ## Requirements
-💡 **Before setting up a node, make sure you meet all the requirements:**
-- Public & static IP address
-- At least 0.1 Polygon MATIC (in order to send proofs)
-- 1GiB of RAM
-- Stable internet connection, minimum speed - 20Mb/sec
-- Provided free disk space > 512 GiB
-- Operating system: Linux, MacOS, Windows (all x64)
-- TBY balance ≥ your Datakeeper ID
 
+  - A wallet address (DeNet app/Metamask/any other wallet) holding a Datakeeper Node License.
+  - Device with free disk space for storing DeNet user data.
+  - Terminal access (Command Prompt/PowerShell on Windows, Terminal on macOS/Linux).
+  - DeNet Node application downloaded.
+  - PEAQ balance: tokens will be distributed to Datakeepers automatically and will be regularly credited for successful completed transactions, if the node is running and does not disconnect from the network, no deposits will be required.
 
-## Step 1: Installation
+## Step 0: Verify your account has license
+
+  - Open https://peaq.subscan.io/account/YOUR_ADDRESS
+  - Replace YOUR_ADDRESS with your wallet address.
+  - The license(s) should be seen as a sNL NFT.
+
+![](assets/license.png)
+
+## Step 1: Copy Your Private Key
+You need the private key from a wallet with a Datakeeper Node License.
+### From DeNet App
+1. Open the DeNet app.
+2. Go to "Profile" -> "Settings"-> “Security”.
+3. Copy the 64-character HEX private key (e.g., a1b2c3d4...).
+4. Save it securely. Never share your private key!
+### From Metamask
+1. Open Metamask in your browser or app.
+2. Select the account with the Datakeeper Node License.
+3. Go to "Account Details" > "Export Private Key."
+4. Enter your Metamask password and copy the private key.
+5. Store it securely. Do not share it!
+
+## Step 2: Download Datakeeper Node
+
+1. Visit [https://github.com/DeNetPRO/Node/releases](https://github.com/DeNetPRO/Node/releases)
+2. Download the latest application executable for your OS (Linux, macOS, or Windows)  
+   ![](assets/executables.png)
+   **macOS**: use amd64 for Intel hardware, arm64 for Apple Silicon.
+
+3. Copy application to another directory.  
+   **Example:**   
+   - macOS/Linux: copy denode executable to `~/denet/` directory  
+   - Windows: copy to `C:\denet\` directory
+
+## Step 3: Start DeNet Node
+Launch the node via a terminal.
 
 ### Windows
+1. Open Terminal: Press **Win + R**, type cmd or powershell, and press Enter.
+   ![](assets/win-powershell.png)
+2. Start the Application: 
+- Navigate to the Application Folder
+   ![](assets/win-folder.png)
+- Run application executable
+   ![](assets/win-run.png)
+### Linux
+1. Open Terminal: Use Ctrl + Alt + T or your terminal shortcut.
+   Or SSH to your remote host.
+2. Start the Application: Navigate to the Application Folder and Run application executable
+   ![](assets/mac-linux-run.png)
 
-**1. Download latest release from [here](https://github.com/DeNetPRO/Node/releases)**
+### macOS
+1. Open "Terminal" via Spotlight or Applications  
+   ![](assets/mac-terminal.png)
+   ![](assets/mac-opened-terminal.png)
+2. Start the Application: same as for Linux systems 
+NOTE: you may need “xattr -d com.apple.quarantine denode” to allow executable
+   ![](assets/mac-linux-run.png)
 
-**2. Open containing folder, and extract archive to any location**
+## Step 4: Run DeNet Nod
+1. When prompted 
+- Enter private key of the account you want to import), paste the copied private key and press Enter.
+2. Set Password: 
+- Enter a strong password to encrypt your private key (Set password to protect your private key).
+The key is stored securely on your device, encrypted with this password.
+3. Choose Port:
+- At the prompt (Select port (value from 10000 to 65535) (default: 55050)), press Enter for the default port (55050) or specify another (e.g., 55051) if needed.
+4. Specify Storage Directory:
+- Enter the path for storing user files (Select storage path), e.g., /home/user/denet_storage (Linux/macOS) or C:\denet_storage (Windows). Ensure the directory exists and has sufficient space.
+5. Set Storage Space:
+- Specify the amount of disk space to allocate for DeNet Storage (e.g., 10). Enter the value (only number, without GiB) when prompted.
+7. Optional Second Drive:
+- If you want to use another drive, provide its path when prompted. Otherwise, skip by entering “N”.
+8. Select RPC for peaq Blockchain:
+- Choose the RPC endpoint (Select RPC for peaq (ChainID: 3338)). Press Enter for the default option.
+9. Verify Operation:
+Watch the terminal output. If no errors appear, your DeNet Node is running correctly.
+   ![](assets/successful-launch.png)
 
-**3. Open that location using CMD**
+## Step 4: Monitor Transactions
 
-<img alt="win1.png" src="assets/win_open_cmd1.png" width="350" >
-<img alt="win2.png" src="assets/win_open_cmd2.png" width="350" >
+Track your node’s activity using the Peaq Subscan web interface.
+1. Visit the PEAQ Subscan website (e.g., https://peaq.subscan.io/account/YOUR_ADDRESS).
+  - Search for your node’s transactions using your Datakeeper address.
+2. Check transaction statuses. Green checkmarks indicate successful transactions, confirming your node is working correctly.
+   ![](assets/successful-trxs.png)
+## Troubleshooting
 
-**4. Run denode.exe using CMD**
+- **Errors in Terminal**: Carefully check error message. Most of the errors are related to the lack of Internet, insufficient balance of gas tokens, or the result of manually changing the data generated by the node. Ask for help from community members or contact support in Discord.
+- **Failed Transactions in Subscan**: There may be some unusual situations where transactions fail. If you encounter such cases, please open a support ticket.
+  ![](assets/failed-trx.png)
+- **Port Conflicts**: If port 55050 is in use, try another port (e.g., 55051)
+  ![](assets/port-error.png)
+- **Subscan Issues:** If transactions don’t appear, confirm your node is running and has enough gas tokens (> 0.03 PEAQ).
+## Notes
+- Keep your terminal open to maintain the node’s operation. Closing it stops the node. Otherwise, set up the node as a background service (see [Advanced Settings: Systemd Service](#advanced-settings)).
+- Additional steps (e.g., advanced settings) will be added as needed — check for updates from DeNet.
 
-<img alt="win3.png" src="assets/win_open_cmd3.png" width="450" >
+Congratulations, Datakeeper! Your DeNet Node is now contributing to the decentralized storage network.
 
--------------------
-### Linux/MacOS/ARMv6
+## Advanced Settings:
 
-**1. Download binary using next command**
+#### Systemd service (Linux)
+- It is recommended to run as non-root user.
+- Follow **Setup account and configuration** section first.
+  You should have config files in the path `/home/denet/.denode/`
+- We used **denet** user as an example, replace it with your username.
 
-Using curl:
+**/etc/systemd/system/denode.service**
+```ini
+[Unit]
+Description=DeNode Service
+After=network.target
+
+[Service]
+User=denet
+Group=denet
+Type=simple
+ExecStart=/usr/local/bin/denode
+EnvironmentFile=/home/denode/denode.env
+Restart=always
+RestartSec=5
 ```
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/denetpro/node/master/scripts/install.sh)"
-```
-Using wget:
-```
-sh -c "$(wget  -O - https://raw.githubusercontent.com/denetpro/node/master/scripts/install.sh)"
+**/home/denet/denode.env**
+```text
+DENODE_PASSWORD='your password'
 ```
 
-**2. Launch denode binary**
+Run the following commands to enable startup and run node
+```shell
+sudo systemctl daemon-reload
+sudo systemctl enable denode.service
+sudo systemctl start denode.service
 ```
-denode
-```
--------------------
+Now your node will be running and start at boot.
 
-## Step 2: Configuration
+**View latest logs**
+`journalctl -u denode -r`
 
-**Follow the instructions and configure your node:**
-- Export Private key (we advise to create a new wallet address specifically to run DeNet Node)
-- Set the password to protect your private key
-- Enter your public IP address – you can simply Google “whats my ip” to determine this
-- Port (from 10000 to 65535) or use default 55050 (press enter)
-- Share disk (can be repeated with many disks)
-    - Folder path of that you want to share
-    - Size of the partition in GiB
-- Choose the blockchain (currently only Polygon is supported)
-    - Confirm selection of polygon **(press enter to use default)**
-    - Select RPC – you can use a custom RPC or the default (https://polygon-rpc.com)
- 
-## Step 3: Becoming Online
-To start receiving files from users and earning rewards, your computer needs to act as a server, which requires having a fixed IPv4 address through which it can be accessed.
-You can own fixed IP in 2 ways: 
 
-**Own fixed IP:**
-Contact your ISP and request a fixed IP address. They may provide it for an additional fee or as part of a special plan for hosting servers or other services requiring a public IP. Once you have done that:
-- Set up port forwarding on your router to direct incoming TCP traffic from the router's port to your local node's IP address and port.
-- Ensure your firewall allows incoming connections for configured port.
-- Restart denode.
 
-**VPN port forwarding:**
-- Setup a VPN with port forwarding function. You can use your own VPS server to configure VPN and forward connections, or you can find third-party VPN services with such features.
-*Make sure that you’ve set correct IPv4 address and Port in your config.json*
+#### Ask your questions here and get help:
 
-Ask your questions here and get help:
-
-<a href="https://t.me/+Yu5KnSruttc5ZGRi">
-    <img alt="tg.png" src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" height="30" width="120" href="https://discord.gg/cPz9m4cSWv"/>
-</a> 
 <a href="https://discord.gg/cPz9m4cSWv">
     <img alt="discord.png" src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="30" width="120" />
 </a>
 
-## FAQ 
-
-### Who is Datakeeper? ❓
-
-▪ A Datakeeper launches a node in the DeNet network and provides storage space to users. It’s simple: Users pay for storage, Datakeepers are rewarded, no intermediaries (not even DeNet itself). 
-
-### What is a Datakeeper ID ❓
-
-▪ Datakeeper ID is your serial number in the network, obtained by making a TBY deposit. For example, if there are 10 Datakeepers, you need to deposit 11 TBY to take the next spot. 
-
-### What data will I store ❓
-
-▪ Actually, you will store only some encrypted file parts. Users can upload any kind of data through DeNet Storage, after files are split into 1MB parts, encrypted and distributed across the network. 
-
-### Why is the Datakeeper ID price increasing with each new node ❓
-
-▪ To send proofs and earn rewards, you need to have TBY balance ≥ your Datakeeper ID. It's crucial for ensuring network security: it prevents sudden exits of Datakeepers, potential attacks like the 51% or Sybil attacks, and ensures timely file replication. 
-
-### Which drive is better to use (HDD, SSD, NVMe) ❓
-
-▪️ There are no special requirements, but the faster your I/O speed, the more files you are able to store simultaneously and the higher rewards will be.
-
-### Will my TBY deposit be spent ❓
-
-▪️ No, the deposit amount remains the same and is only used to assert your ID.
-
-### What is rTBY? ❓
-
-▪️ rTBY stands for Rented TBY. Rented TBY enables you to obtain a Datakeeper ID and operate a node for a limited duration. Once the rental period ends, you must either renew the rental or obtain a permanent ID with TBY. Otherwise, there is a risk of your ID being intercepted.
-
-Note that rTBY does not count within the Store&Earn program, only TBY does.
-
-### What is a node interception ❓
-
-▪️ Note that in some cases, your ID may be intercepted or "stolen." This can occur if your TBY deposit is less than your Datakeeper ID, or if your node has been inactive for 30 days. Losing your Datakeeper ID will likely result in a higher cost to secure another spot, so it's crucial to monitor your TBY deposit and node activity closely. Be sure to update your node regularly.
-
-### Can I run DeNet Node on a VPS  ❓
-
-▪️ Yes, it is possible to run DeNode on a VPS. However, we recommend running the node on your own machine if it is your only purpose. If you have a PC or laptop with Linux or MacOS, obtaining a public IP from your ISP will be cheaper than using a VPS.
-
-### What Internet speed do I need ❓
-
-▪️ The minimum speed required is 20Mb/sec. However, higher and more stable internet speeds will provide better income opportunities.
-
-### How much space should I share ❓
-
-▪️ You can share as much space as you want. The more you allocate, the greater the potential rewards you can receive.
-
-### How much can I earn monthly  ❓
-
-Currently, there are 2 types of rewards for Datakeepers:
-
-**1. Rewards for providing storage capacity and sending proofs of storage**
-
-Visit https://node.denet.app/#calculator and calculate your potential reward based on capacity you provide. Please note that the reward is relevant in case of fulfilling the capacity chosen. The amount of rewards depends on several factors, including storage capacity, network activity, and Max Loss Rate settings.
-
-**Max Loss Rate:**
-- This parameter determines the maximum acceptable loss ratio for Polygon network transactions when sending proofs.
-- Higher Max Loss Rate allows larger proof rewards but increases transaction cost risks. It is determined by the condition: proof_reward_in_matic > tx_cost_in_matic / max_loss_rate.
-Y- ou can learn more about Max Loss Rate and other reward factors in the [DeNet Consensus documentation](https://consensus.denet.app/onchain)
-
-**2. Store&Earn program rewards**
-
-S&E rewards are based on your TBY balance and completed tasks. Upon joining the Store&Earn program, Datakeepers get +4 to their Total Boost, which can significantly increase their rewards.
-
-Visit https://beta.storeandearn.denet.app/ to calculate your potential reward based on your TBY balance.
