@@ -111,23 +111,25 @@ Launch the node via a terminal.
 NOTE: you may need “xattr -d com.apple.quarantine denode” to allow executable
    ![](assets/mac-linux-run.png)
 
-## Step 4: Run DeNet Nod
-1. When prompted 
-- Enter private key of the account you want to import), paste the copied private key and press Enter.
-2. Set Password: 
-- Enter a strong password to encrypt your private key (Set password to protect your private key).
-The key is stored securely on your device, encrypted with this password.
-3. Choose Port:
-- At the prompt (Select port (value from 10000 to 65535) (default: 55050)), press Enter for the default port (55050) or specify another (e.g., 55051) if needed.
-4. Specify Storage Directory:
-- Enter the path for storing user files (Select storage path), e.g., /home/user/denet_storage (Linux/macOS) or C:\denet_storage (Windows). Ensure the directory exists and has sufficient space.
-5. Set Storage Space:
+## Step 4: Run DeNet Node
+1. **Enter private key**: Paste the copied private key and press Enter.  
+- The key is stored securely on your device, encrypted with this password.
+
+2. **Set Password**: Enter a strong password
+- The private key is encrypted with the password.
+
+3. **Choose Port**: Press Enter for the default one
+- Or specify another (value from 10000 to 65535)
+4. **Specify Storage Directory**: Enter path to the user files storage
+- **e.g.**, /home/user/denet_storage (Linux/macOS) or C:\denet_storage (Windows). 
+- Ensure the directory exists and has sufficient space.
+5. **Set Storage Space**:
 - Specify the amount of disk space to allocate for DeNet Storage (e.g., 10). Enter the value (only number, without GiB) when prompted.
-7. Optional Second Drive:
-- If you want to use another drive, provide its path when prompted. Otherwise, skip by entering “N”.
-8. Select RPC for peaq Blockchain:
+7. **Optional Second Drive**: Press Enter to skip
+- If you want to use another drive, provide its path when prompted.
+8. **Select RPC for peaq Blockchain**: Press Enter to use default one
 - Choose the RPC endpoint (Select RPC for peaq (ChainID: 3338)). Press Enter for the default option.
-9. Verify Operation:
+9. **Verify Operation**: 
 Watch the terminal output. If no errors appear, your DeNet Node is running correctly.
    ![](assets/successful-launch.png)
 
