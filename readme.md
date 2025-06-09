@@ -50,13 +50,13 @@ This guide walks you through setting up and running a DeNet Node, enabling your 
   - Device with free disk space for storing DeNet user data.
   - Terminal access (Command Prompt/PowerShell on Windows, Terminal on macOS/Linux).
   - DeNet Node application downloaded.
-  - PEAQ balance: tokens will be distributed to Datakeepers automatically and will be regularly credited for successful completed transactions, if the node is running and does not disconnect from the network, no deposits will be required.
+  - PEAQ balance: tokens will be distributed to Datakeepers automatically and will be regularly credited for successfully completed transactions, if the node is running and does not disconnect from the network, no deposits will be required.
 
 ## Step 0: Verify your account has license
 
   - Open https://peaq.subscan.io/account/YOUR_ADDRESS
   - Replace YOUR_ADDRESS with your wallet address.
-  - The license(s) should be seen as a sNL NFT.
+  - The license(s) should be seen as a sNL ERC-721 token.
 
 ![](assets/license.png)
 
