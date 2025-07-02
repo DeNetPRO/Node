@@ -272,8 +272,14 @@ Now your node will be running and start at boot.
     chmod +x install.sh denode-manager.sh
     ```
 3. Run installation script that will install the application in ~/.denode-manager by default
+    ```shell
+   sudo bash install.sh
+   ```
    ![](assets/mac-install-gui.png)
 4. Then start the application and check its state using ***denode-manager.sh*** script
+    ```shell
+   sudo bash denode-manager.sh
+   ```
    ![](assets/mac-start-server.png)
 ### Windows
 Use .msi installer
