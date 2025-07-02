@@ -41,7 +41,7 @@ This guide walks you through setting up and running a DeNet Node, enabling your 
       - [macOS](#macos)
     - [Step 4: Run DeNet Node](#step-4-run-denet-node)
     - [Step 5: Monitor Transactions](#step-5-monitor-transactions)
-- [Node Manager (GUI)]()
+- [Node Manager (GUI)](#denode-manager-gui)
   - [Installation](#installation-1) 
     - [Step 1: Download Node Manager](#step-1-download-node-manager)
     - [Step 2: Install And Run](#step-1-install-and-run)
