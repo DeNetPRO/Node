@@ -29,32 +29,30 @@ This guide walks you through setting up and running a DeNet Node, enabling your 
 
 ### Table of contents:
 
-- [Denode](#denode)
+- [Datakeeper Node](#denode)
     - [Installation](#installation)
-    - [Requirements](#requirements)
-    - [Step 0: License Verification](#step-0-verify-your-account-has-license)
-    - [Step 1: Copy Private Key](#step-1-copy-your-private-key)
-    - [Step 2: Download Datakeeper Node](#step-2-download-datakeeper-node)
-    - [Step 3: Start Node](#step-3-start-denet-node)
-        - [Windows](#windows)
-        - [Linux](#linux)
-        - [macOS](#macos)
-    - [Step 4: Run DeNet Node](#step-4-run-denet-node)
-    - [Step 5: Monitor Transactions](#step-5-monitor-transactions)
+      - [Requirements](#requirements)
+      - [Step 0: License Verification](#step-0-verify-your-account-has-license)
+      - [Step 1: Copy Private Key](#step-1-copy-your-private-key)
+      - [Step 2: Download Datakeeper Node](#step-2-download-datakeeper-node)
+      - [Step 3: Start Node](#step-3-start-denet-node)
+          - [Windows](#windows)
+          - [Linux](#linux)
+          - [macOS](#macos)
+      - [Step 4: Run DeNet Node](#step-4-run-denet-node)
+      - [Step 5: Monitor Transactions](#step-5-monitor-transactions)
 - [License Management](#managing-license-addresses)
 - [Node Manager (GUI)](#denode-manager-gui)
     - [Installation](#installation-1)
-    - [Step 0: Prepare Environment](#step-0-prepare-environment)
-    - [Step 1: Download Node Manager](#step-1-download-application)
-    - [Step 2: Install And Run](#step-2-install-and-run)
-        - [Windows](#windows-1)
-        - [Linux](#linux-1)
-        - [macOS](#macos-1)
-    - [Step 3: Open Application Interface in Browser](#step-3-open-application-interface-in-browser)
+      - [Step 0: Prepare Environment](#step-0-prepare-environment)
+      - [Step 1: Download Node Manager](#step-1-download-application)
+      - [Step 2: Install And Run](#step-2-install-and-run)
+          - [Windows](#windows-1)
+          - [Linux](#linux-1)
+          - [macOS](#macos-1)
+      - [Step 3: Open Application Interface in Browser](#step-3-open-application-interface-in-browser)
 
-
-
-# Denode
+# Datakeeper Node
 ## Installation
 ## Requirements
 
