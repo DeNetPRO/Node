@@ -23,7 +23,7 @@
 💽 **Datakeepers** offer their unused storage space to DeNet Storage users, creating a mutually beneficial conditions for all without any intermediaries. \
 By utilizing the DeNet Storage Protocol, users pay for the storage they need, while Datakeepers are rewarded for the storage they provide.
 
-# Becoming Datakeeper: node set up instruction
+# Becoming Datakeeper: Node Set Up Instructions
 
 This guide walks you through setting up and running a DeNet Node, enabling your device to join the DeNet decentralized storage network
 
@@ -114,7 +114,7 @@ Launch the node via a terminal.
    Or SSH to your remote host.
 2. Run the following commands to create folder, copy and run denode
 ```bash
-curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.0.0-rc1/denode-linux-amd64
+curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc5/denode-linux-amd64
 mkdir ~/denet
 cp denode-linux-amd64 ~/denet/denode
 cd ~/denet
@@ -127,7 +127,7 @@ chmod +x denode
    ![](assets/mac-terminal.png)
 2. Run the following commands to create folder, copy and run denode
 ```bash
-curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.0.0-rc1/denode-macos-amd64
+curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc5/denode-macos-amd64
 mkdir ~/denet
 cp ~/Downloads/denode-macos-amd64 ~/denet/denode
 cd ~/denet
@@ -138,25 +138,27 @@ xattr -d com.apple.quarantine denode
 
 ## Step 4: Run DeNet Node
 1. **Enter private key**: Paste the copied private key and press Enter.
-- The key is stored securely on your device, encrypted with this password.
+   - The key is stored securely on your device, encrypted with this password.
 
 2. **Set Password**: Enter a strong password
-- The private key is encrypted with the password.
+   - The private key is encrypted with the password.
 
 3. **Choose Port**: Press Enter for the default one
-- Or specify another (value from 10000 to 65535)
+   - Or specify another (value from 10000 to 65535)
 4. **Specify Storage Directory**: Enter path to the user files storage
-- **e.g.**, /home/user/denet_storage (Linux/macOS) or C:\denet_storage (Windows).
-- Ensure the directory exists and has sufficient space.
+   - **e.g.**, /home/user/denet_storage (Linux/macOS) or C:\denet_storage (Windows).
+   - Ensure the directory exists and has sufficient space.
+   - NOTE: use different storage paths for managing different licenses
+   - **e.g.**, `/home/user/denet_storage_1` for license with id 1, `/home/user/denet_storage_2` for license with id 2, etc.
 5. **Set Storage Space**:
-- Specify the amount of disk space to allocate for DeNet Storage (e.g., 10). Enter the value (only number, without GiB) when prompted.
+   - Specify the amount of disk space to allocate for DeNet Storage (e.g., 10). Enter the value (only number, without GiB) when prompted.
 7. **Optional Second Drive**: Enter 'N' to skip.
-- Or if you want to use another drive, provide its path when prompted.
+   - Or if you want to use another drive, provide its path when prompted.
 8. **Select RPC for peaq Blockchain**: Press Enter to use default one.
-- Or choose the RPC endpoint (Select RPC for peaq (ChainID: 3338)).
+   - Or choose the RPC endpoint (Select RPC for peaq (ChainID: 3338)).
 9. **Verify Operation**:
-- Watch the terminal output. If no errors appear, your DeNet Node is running correctly.
-  ![](assets/successful-launch.png)
+   - Watch the terminal output. If no errors appear, your DeNet Node is running correctly.
+     ![](assets/successful-launch.png)
 
 ## Step 5: Monitor Transactions
 
@@ -194,7 +196,7 @@ A graphical user interface (GUI) for seamless node operation coming soon. Stay t
 #### Systemd service (Linux)
 - It is recommended to run as non-root user.
 - Follow [Step 4](#step-4-run-denet-node) first.
-  You should have config files in the path `/home/denet/.denode/`
+  You should have config files in the path `/home/denet/.denode/` (could be generated interactively in the console by running ./denode)
 - We used **denet** user as an example, replace it with your username.
 
 **/etc/systemd/system/denode.service**
@@ -207,7 +209,7 @@ After=network.target
 User=denet
 Group=denet
 Type=simple
-ExecStart=/usr/local/bin/denode
+ExecStart=/usr/local/bin/denode --address 'your Datakeeper account ethereum address' --license 'id of the one of the owned licenses'
 EnvironmentFile=/home/denet/denode.env
 Restart=always
 RestartSec=5
@@ -282,16 +284,7 @@ Now your node will be running and start at boot.
 ## Installation
 
 ## Step 0: Prepare environment
-1. Remove old credentials and configurations, they should be imported from scratch:
-   ### Linux/macOS
-    ```shell
-    rm -rf ~/.denode
-    ```
-   ### Windows
-   Use cmd or graphical user interface to remove the folder.
-   ![](assets/win-rm-denode.png)
-
-2. For **Linux/macOS**: Download installation and management scripts from the [scripts](https://github.com/DeNetPRO/Node) directory
+1. For **Linux/macOS**: Download installation and management scripts from the [scripts](https://github.com/DeNetPRO/Node) directory
     ```shell
     install.sh
     denode-manager.sh
