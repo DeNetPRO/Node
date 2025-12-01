@@ -1,4 +1,4 @@
-# Denode CLI Account and Config Management Guide
+# DeNode CLI Account and Config Management Guide
 
 ## Overview
 The `account` and `config` commands allow users to manage Ethereum wallets and node configuration files for the Denode (peaq DePIN node).
