@@ -27,21 +27,20 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
 
 This guide walks you through setting up and running a DeNet Node, enabling your device to join the DeNet decentralized storage network
 
-### Table of contents:
+Overview: describe Node and Node Manager
+
+## Table of Contents
 
 - [Datakeeper Node](#denode)
-    - [Installation](#installation)
-      - [Requirements](#requirements)
-      - [Step 0: License Verification](#step-0-verify-your-account-has-license)
-      - [Step 1: Copy Private Key](#step-1-copy-your-private-key)
-      - [Step 2: Download Datakeeper Node](#step-2-download-datakeeper-node)
-      - [Step 3: Start Node](#step-3-start-denet-node)
-          - [Windows](#windows)
-          - [Linux](#linux)
-          - [macOS](#macos)
-      - [Step 4: Run DeNet Node](#step-4-run-denet-node)
-      - [Step 5: Monitor Transactions](#step-5-monitor-transactions)
-- [License Management](#managing-license-addresses)
+  - [Requirements](#requirements)
+    - [License Verification](#step-0-verify-your-account-has-license)
+    - [Copy Private Key](#step-1-copy-your-private-key)
+  - [Installation](#installation)
+    - [Windows](./guides/install-denode-windows.md)
+    - [Linux](./guides/install-denode-linux.md)
+    - [MacOS](./guides/install-denode-mac.md)
+  - [Monitor Transactions](#step-5-monitor-transactions)
+
 - [Node Manager (GUI)](#denode-manager-gui)
     - [Installation](#installation-1)
       - [Step 0: Prepare Environment](#step-0-prepare-environment)
@@ -51,6 +50,7 @@ This guide walks you through setting up and running a DeNet Node, enabling your 
           - [Linux](#linux-1)
           - [macOS](#macos-1)
       - [Step 3: Open Application Interface in Browser](#step-3-open-application-interface-in-browser)
+- [License Management](#managing-license-addresses)
 
 # Datakeeper Node
 ## Installation
@@ -137,28 +137,7 @@ xattr -d com.apple.quarantine denode
 ![](assets/mac-run.png)
 
 ## Step 4: Run DeNet Node
-1. **Enter private key**: Paste the copied private key and press Enter.
-   - The key is stored securely on your device, encrypted with this password.
 
-2. **Set Password**: Enter a strong password
-   - The private key is encrypted with the password.
-
-3. **Choose Port**: Press Enter for the default one
-   - Or specify another (value from 10000 to 65535)
-4. **Specify Storage Directory**: Enter path to the user files storage
-   - **e.g.**, /home/user/denet_storage (Linux/macOS) or C:\denet_storage (Windows).
-   - Ensure the directory exists and has sufficient space.
-   - NOTE: use different storage paths for managing different licenses
-   - **e.g.**, `/home/user/denet_storage_1` for license with id 1, `/home/user/denet_storage_2` for license with id 2, etc.
-5. **Set Storage Space**:
-   - Specify the amount of disk space to allocate for DeNet Storage (e.g., 10). Enter the value (only number, without GiB) when prompted.
-7. **Optional Second Drive**: Enter 'N' to skip.
-   - Or if you want to use another drive, provide its path when prompted.
-8. **Select RPC for peaq Blockchain**: Press Enter to use default one.
-   - Or choose the RPC endpoint (Select RPC for peaq (ChainID: 3338)).
-9. **Verify Operation**:
-   - Watch the terminal output. If no errors appear, your DeNet Node is running correctly.
-     ![](assets/successful-launch.png)
 
 ## Step 5: Monitor Transactions
 
@@ -233,53 +212,6 @@ Now your node will be running and start at boot.
 **View latest logs**
 `journalctl -u denode -r`
 
-## Managing License Addresses
-
-🔐 **Managing License Addresses in DeNet**
-
-📌 **Roles for the License**
-- **License Owner** - The license holder with full management rights.
-- **Admin** - Can change the Manager, but cannot transfer the license.
-- **Manager** - Has a limited set of actions, with no rights in the smart contract.
-
-🧭 **Steps for Managing Addresses**
-
-🔗 **Connecting a Wallet**
-- Open the [web page manager](https://nodemanager.denet.app/) and connect:
-    - Click the **Connect Wallet** button.
-    - Choose a connection method:
-        - Metamask
-        - Wallet Connect
-- After connecting, your address will appear in the top right corner.
-
-📋 **Viewing the List of Licenses**
-- After connecting the wallet:
-    - Each license is displayed as a card with an ID (e.g., ID #2276) and a **Manage** button.
-
-⚙️ **Managing a License**
-- Click **Manage** on the desired license. A window will open:
-    - "You can change address here"
-    - Two fields are available:
-        - **New Admin Address** - For changing the administrator.
-        - **New Manager Address** - For changing the manager.
-
-🛠 **Changing Addresses**
-
-▶️ **Changing the Admin**
-- Enter the new Ethereum address in the **New Admin Address** field.
-- Click the **Change Admin** button.
-- Confirm the transaction in your wallet.
-
-▶️ **Changing the Manager**
-- Enter the new manager’s address in the **New Manager Address** field.
-- Click **Change Manager**.
-- Confirm the action in your wallet.
-
-📌 **Notes**
-- All changes are processed through a smart contract, requiring gas fees.
-- Ensure the provided addresses are valid (Ethereum format).
-
-
 # Denode Manager GUI
 ## Installation
 
@@ -333,6 +265,52 @@ Use .msi installer
 1. Application should always be running in the background, otherwise the application will not work, check the status using ***denode-manager.sh*** script (Mac/Linux)
 2. You shouldn't use both CLI and GUI at the same time, otherwise you will get an undefined applications behaviour.
 3. We recommend to change rpc to the private one exactly after the node launch. It will allow to avoid problems with the default version limitations.
+
+## Managing License Addresses
+
+🔐 **Managing License Addresses in DeNet**
+
+📌 **Roles for the License**
+- **License Owner** - The license holder with full management rights.
+- **Admin** - Can change the Manager, but cannot transfer the license.
+- **Manager** - Has a limited set of actions, with no rights in the smart contract.
+
+🧭 **Steps for Managing Addresses**
+
+🔗 **Connecting a Wallet**
+- Open the [web page manager](https://nodemanager.denet.app/) and connect:
+    - Click the **Connect Wallet** button.
+    - Choose a connection method:
+        - Metamask
+        - Wallet Connect
+- After connecting, your address will appear in the top right corner.
+
+📋 **Viewing the List of Licenses**
+- After connecting the wallet:
+    - Each license is displayed as a card with an ID (e.g., ID #2276) and a **Manage** button.
+
+⚙️ **Managing a License**
+- Click **Manage** on the desired license. A window will open:
+    - "You can change address here"
+    - Two fields are available:
+        - **New Admin Address** - For changing the administrator.
+        - **New Manager Address** - For changing the manager.
+
+🛠 **Changing Addresses**
+
+▶️ **Changing the Admin**
+- Enter the new Ethereum address in the **New Admin Address** field.
+- Click the **Change Admin** button.
+- Confirm the transaction in your wallet.
+
+▶️ **Changing the Manager**
+- Enter the new manager’s address in the **New Manager Address** field.
+- Click **Change Manager**.
+- Confirm the action in your wallet.
+
+📌 **Notes**
+- All changes are processed through a smart contract, requiring gas fees.
+- Ensure the provided addresses are valid (Ethereum format).
 
 #### Ask your questions here and get help:
 
