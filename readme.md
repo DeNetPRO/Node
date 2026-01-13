@@ -117,11 +117,10 @@ The DeNet Datakeeper Node offers flexible installation approaches to accommodate
 
 ## Requirements
 
-- A wallet address (DeNet app/Metamask/any other wallet) holding a Datakeeper Node License
-- Device with free disk space for storing DeNet user data
-- Terminal access (Command Prompt/PowerShell on Windows, Terminal on macOS/Linux)
-- DeNet Node application downloaded
-- PEAQ balance: tokens will be distributed to Datakeepers automatically and will be regularly credited for successfully completed transactions, if the node is running and does not disconnect from the network, no deposits will be required
+- A wallet address (ERC-20 compatible) holding a Datakeeper Node License
+- Device with at least 10GB of free disk space for storing DeNet user data
+- Operating system supported by DeNet (see [Supported Platforms](#supported-platforms) section)
+- PEAQ balance: tokens are distributed to Datakeepers automatically and are being regularly credited for successfully completed transactions, if the node is running and does not disconnect from the network. If you balance is zero, please contact [support](https://discord.com/channels/920205740944273449/1341396814502559846)
 
 ## Step 0: Verify Your Account Has License
 
