@@ -2,6 +2,15 @@
 
 This guide provides simplified step-by-step instructions for installing and running a DeNet Datakeeper Node on Linux systems.
 
+## Table of Contents
+1. [Quick Start Installation](#quick-start-installation)
+    - [Method 1: Download via curl (Recommended)](#method-1-download-via-curl-recommended)
+    - [Method 2: Download from GitHub Website](#method-2-download-from-github-website)
+2. [Configuring Node](#configuring-node)
+3. [Running Your Node](#running-your-node)
+4. [Advanced: Systemd Service Setup (Optional)](#advanced-systemd-service-setup-optional)
+5. [Useful Commands](#useful-commands)
+
 ## Quick Start Installation
 
 ### Method 1: Download via curl (Recommended)
@@ -35,7 +44,7 @@ chmod +x denode
    chmod +x denode
    ```
    
-## Configuring Node 
+## Configuring Node
 - Instructions [here](./configuring.md)
 
 ## Running Your Node

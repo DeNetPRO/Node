@@ -2,6 +2,11 @@
 
 This guide provides simplified step-by-step instructions for installing and running a DeNet Datakeeper Node on macOS systems.
 
+1. [Quick Start Installation](#quick-start-installation)
+2. [Configuring Node](#configuring-node)
+3. [Running Your Node](#running-your-node)
+4. [Useful Commands](#useful-commands)
+
 ## Quick Start Installation
 
 ### Method 1: Download via curl (Recommended)

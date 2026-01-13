@@ -2,6 +2,18 @@
 
 This guide provides simplified step-by-step instructions for installing and running a DeNet Datakeeper Node on Windows systems.
 
+## Table of Contents
+1. [Quick Start Installation](#quick-start-installation)
+2. [Opening PowerShell](#opening-powershell)
+    - [Method 1: Using Windows Search](#method-1-using-windows-search-recommended-for-beginners)
+    - [Method 2: Using Run Dialog](#method-2-using-run-dialog-quick-access)
+    - [Method 3: From File Explorer](#method-3-from-file-explorer-for-executing-commands-in-specific-directories)
+    - [Method 4: Using Command Prompt](#method-4-using-command-prompt-alternative-approach)
+    - [Method 5: Task Manager](#method-5-task-manager-advanced-users)
+3. [Running Your Node](#running-your-node)
+4. [Configuring Node](#configuring-node)
+5. [Useful Commands](#useful-commands)
+
 ## Quick Start Installation
 
 ### Download from GitHub Website
