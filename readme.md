@@ -33,6 +33,8 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
 - [Node Manager](#node-manager-installation)
 - [License Management](#license-management)
 
+TODO: add transactions monitoring info
+
 # Becoming Datakeeper: Node Setup Instructions
 
 This guide walks you through setting up and running a Datakeeper Node, enabling your device to join the DeNet decentralized storage network.
