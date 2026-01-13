@@ -30,9 +30,10 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
 - [Requirements](#requirements)
   - [Step 0: Verify Your Account Has License](#step-0-verify-your-account-has-license)
   - [Step 1: Copy Your Private Key](#step-1-copy-your-private-key)
-- [Datakeeper Node](#datakeeper-node-installation)
-- [Node Manager](#node-manager-installation)
-- [License Management](#license-management)
+- [Detailed Installation Guide](#detailed-installation-guide)
+  - [Datakeeper Node Binary](#datakeeper-node-binary)  
+  - TODO: add Node Manager binary
+- [License Management](./guides/license-management.md)
 
 TODO: add transactions monitoring info
 
@@ -46,7 +47,7 @@ DeNet Datakeeper Nodes can be installed on various operating systems depending o
 
 ## Available Builds
 
-### DeNet Node Binary Builds
+### Datakeeper Node Binary Builds
 
 | Operating System | Architecture | Download Link |
 |------------------|--------------|---------------|
@@ -115,6 +116,8 @@ The DeNet Datakeeper Node offers flexible installation approaches to accommodate
 - **Installation**: Available for Windows, macOS, and Linux desktop versions
 - **Management**: Intuitive GUI with real-time monitoring
 
+> 💡 **Tip**: Use the Desktop Node Manager download page at https://node.denet.app/ to conveniently download and install the graphical interface for managing your DeNet Datakeeper Node.
+
 ## Requirements
 
 - A wallet address (ERC-20 compatible) holding a Datakeeper Node License
@@ -149,64 +152,13 @@ You need the private key from a wallet with a Datakeeper Node License.
 
 If you use any other wallet, the steps may differ but should be similar to the list above._
 
-## Datakeeper Node Installation
+## Detailed Installation Guide
 
-Choose your operating system for detailed installation instructions:
+### Datakeeper Node Binary
 
 - [Windows](./guides/install-denode-windows.md)
 - [Linux](./guides/install-denode-linux.md)
 - [MacOS](./guides/install-denode-mac.md)
-
-## Node Manager Installation
-
-For a graphical interface to manage your node, install the Desktop Node Manager application.
-Detailed installation instructions can be found in: [Node Manager Installation Guide](./guides/denode-manager.md)
-
-## License Management
-
-🔐 **Managing License Addresses in DeNet**
-
-📌 **Roles for the License**
-- **License Owner** - The license holder with full management rights
-- **Admin** - Can change the Manager, but cannot transfer the license
-- **Manager** - Has a limited set of actions, with no rights in the smart contract
-
-🧭 **Steps for Managing Addresses**
-
-🔗 **Connecting a Wallet**
-- Open the [web page manager](https://nodemanager.denet.app/) and connect:
-    - Click the **Connect Wallet** button
-    - Choose a connection method:
-        - Metamask
-        - Wallet Connect
-- After connecting, your address will appear in the top right corner
-
-📋 **Viewing the List of Licenses**
-- After connecting the wallet:
-    - Each license is displayed as a card with an ID (e.g., ID #2276) and a **Manage** button
-
-⚙️ **Managing a License**
-- Click **Manage** on the desired license. A window will open:
-    - "You can change address here"
-    - Two fields are available:
-        - **New Admin Address** - For changing the administrator
-        - **New Manager Address** - For changing the manager
-
-🛠 **Changing Addresses**
-
-▶️ **Changing the Admin**
-- Enter the new Ethereum address in the **New Admin Address** field
-- Click the **Change Admin** button
-- Confirm the transaction in your wallet
-
-▶️ **Changing the Manager**
-- Enter the new manager's address in the **New Manager Address** field
-- Click **Change Manager**
-- Confirm the action in your wallet
-
-📌 **Notes**
-- All changes are processed through a smart contract, requiring gas fees
-- Ensure the provided addresses are valid (Ethereum format)
 
 #### Ask your questions here and get help:
 
