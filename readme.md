@@ -25,12 +25,11 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Requirements](#requirements)
-    - [Step 0: Verify Your Account Has License](#step-0-verify-your-account-has-license)
-    - [Step 1: Copy Your Private Key](#step-1-copy-your-private-key)
 - [Supported Platforms](#supported-platforms)
 - [Installation Options](#installation-options)
+- [Requirements](#requirements)
+  - [Step 0: Verify Your Account Has License](#step-0-verify-your-account-has-license)
+  - [Step 1: Copy Your Private Key](#step-1-copy-your-private-key)
 - [Datakeeper Node](#datakeeper-node-installation)
 - [Node Manager](#node-manager-installation)
 - [License Management](#license-management)
@@ -40,15 +39,6 @@ TODO: add transactions monitoring info
 # Becoming Datakeeper: Node Setup Instructions
 
 This guide walks you through setting up and running a Datakeeper Node, enabling your device to join the DeNet decentralized storage network.
-
-## Overview
-
-There are two primary ways to manage your DeNet Node:
-
-1. [**CLI Node**](#datakeeper-node-installation): A command-line interface application that runs in your terminal
-2. [**Desktop Node Manager**](#node-manager-installation): A graphical desktop application for easier management
-
-Download the Desktop Node Manager: [Node Manager Desktop Application](https://node.denet.app/)
 
 # Supported Platforms
 
