@@ -29,8 +29,8 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
 - [Requirements](#requirements)
     - [Step 0: Verify Your Account Has License](#step-0-verify-your-account-has-license)
     - [Step 1: Copy Your Private Key](#step-1-copy-your-private-key)
-- [Datakeeper Node Installation](#installation)
-- [Node Manager Installation](#node-manager-gui)
+- [Datakeeper Node Installation](#datakeeper-node-installation)
+- [Node Manager Installation](#node-manager-installation)
 - [License Management](#license-management)
 
 # Becoming Datakeeper: Node Setup Instructions
