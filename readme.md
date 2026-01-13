@@ -33,6 +33,7 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
 - [Detailed Installation Guide](#detailed-installation-guide)
   - [Datakeeper Node Binary](#datakeeper-node-binary)  
   - TODO: add Node Manager binary
+- [Node Activity Monitoring](./guides/monitoring.md)
 - [License Management](./guides/license-management.md)
 
 TODO: add transactions monitoring info
