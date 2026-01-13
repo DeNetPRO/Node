@@ -41,8 +41,8 @@ This guide walks you through setting up and running a Datakeeper Node, enabling 
 
 There are two ways to manage your DeNet Node:
 
-1. **CLI Node**: A command-line interface application that runs in your terminal
-2. **Desktop Node Manager**: A graphical desktop application for easier management
+1. [**CLI Node**](#datakeeper-node-installation): A command-line interface application that runs in your terminal
+2. [**Desktop Node Manager**](#node-manager-installation): A graphical desktop application for easier management
 
 Download the Desktop Node Manager: [Node Manager Desktop Application](https://node.denet.app/)
 
