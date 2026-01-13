@@ -38,4 +38,6 @@
       ![](assets/successful-launch.png)
 
 
-**NOTE:** Storage path could be changed or added using [CLI commands](./disks-management.md)
+**NOTE:**
+1. Configuration parameters could be viewed or changed using [CLI config commands](./denode-command.md#config-management-commands)
+2. Shared space parameters could be changed using [CLI disks commands](./disks-management.md)
