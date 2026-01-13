@@ -45,7 +45,7 @@ chmod +x denode
    ```
    
 ## Configuring Node
-- Instructions [here](./configuring.md)
+- Instructions are [here](./configuring.md)
 
 ## Running Your Node
 

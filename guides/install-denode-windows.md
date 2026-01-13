@@ -77,7 +77,7 @@ cd C:\denet
 ```
 
 ## Configuring Node
-- Instructions [here](./configuring.md)
+- Instructions are [here](./configuring.md)
 
 
 After the initial installation, you can run the node in background:
