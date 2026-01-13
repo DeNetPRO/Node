@@ -16,12 +16,6 @@ Track your node's activity using the peaq Subscan web interface.
     - Green check marks indicate successful transactions, confirming your node is working correctly
     - Regular and stable transactions confirm proper node operation
 
-### Transaction Details
-
-- **Expected Transactions**: 2 Proof of Storage regular transactions for every running node
-    - One confirms data storage of the whole node file system
-    - Another makes a specific user data snapshot
-
 ### Transaction Status Indicators
 
 #### ✅ Successful Transactions
