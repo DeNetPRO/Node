@@ -32,7 +32,7 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
   - [Step 1: Copy Your Private Key](#step-1-copy-your-private-key)
 - [Detailed Installation Guide](#detailed-installation-guide)
   - [Datakeeper Node Binary](#datakeeper-node-binary)  
-  - TODO: add Node Manager binary
+  - TODO: add Node Manager updating information
 - [Node Activity Monitoring](./guides/monitoring.md)
 - [License Management](./guides/license-management.md)
 
