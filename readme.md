@@ -23,294 +23,122 @@
 💽 **Datakeepers** offer their unused storage space to DeNet Storage users, creating a mutually beneficial conditions for all without any intermediaries. \
 By utilizing the DeNet Storage Protocol, users pay for the storage they need, while Datakeepers are rewarded for the storage they provide.
 
-# Becoming Datakeeper: Node Set Up Instructions
-
-This guide walks you through setting up and running a DeNet Node, enabling your device to join the DeNet decentralized storage network
-
-Overview: describe Node and Node Manager
-
 ## Table of Contents
 
-- [Datakeeper Node](#denode)
-  - [Requirements](#requirements)
-    - [License Verification](#step-0-verify-your-account-has-license)
-    - [Copy Private Key](#step-1-copy-your-private-key)
-  - [Installation](#installation)
-    - [Windows](./guides/install-denode-windows.md)
-    - [Linux](./guides/install-denode-linux.md)
-    - [MacOS](./guides/install-denode-mac.md)
-  - [Monitor Transactions](#step-5-monitor-transactions)
+- [Overview](#overview)
+- [Requirements](#requirements)
+    - [Step 0: Verify Your Account Has License](#step-0-verify-your-account-has-license)
+    - [Step 1: Copy Your Private Key](#step-1-copy-your-private-key)
+- [Datakeeper Node Installation](#installation)
+- [Node Manager Installation](#node-manager-gui)
+- [License Management](#license-management)
 
-- [Node Manager (GUI)](#denode-manager-gui)
-    - [Installation](#installation-1)
-      - [Step 0: Prepare Environment](#step-0-prepare-environment)
-      - [Step 1: Download Node Manager](#step-1-download-application)
-      - [Step 2: Install And Run](#step-2-install-and-run)
-          - [Windows](#windows-1)
-          - [Linux](#linux-1)
-          - [macOS](#macos-1)
-      - [Step 3: Open Application Interface in Browser](#step-3-open-application-interface-in-browser)
-- [License Management](#managing-license-addresses)
+# Becoming Datakeeper: Node Setup Instructions
 
-# Datakeeper Node
-## Installation
+This guide walks you through setting up and running a Datakeeper Node, enabling your device to join the DeNet decentralized storage network.
+
+## Overview
+
+There are two ways to manage your DeNet Node:
+
+1. **CLI Node**: A command-line interface application that runs in your terminal
+2. **Desktop Node Manager**: A graphical desktop application for easier management
+
+Download the Desktop Node Manager: [Node Manager Desktop Application](https://node.denet.app/)
+
 ## Requirements
 
-- A wallet address (DeNet app/Metamask/any other wallet) holding a Datakeeper Node License.
-- Device with free disk space for storing DeNet user data.
-- Terminal access (Command Prompt/PowerShell on Windows, Terminal on macOS/Linux).
-- DeNet Node application downloaded.
-- PEAQ balance: tokens will be distributed to Datakeepers automatically and will be regularly credited for successfully completed transactions, if the node is running and does not disconnect from the network, no deposits will be required.
+- A wallet address (DeNet app/Metamask/any other wallet) holding a Datakeeper Node License
+- Device with free disk space for storing DeNet user data
+- Terminal access (Command Prompt/PowerShell on Windows, Terminal on macOS/Linux)
+- DeNet Node application downloaded
+- PEAQ balance: tokens will be distributed to Datakeepers automatically and will be regularly credited for successfully completed transactions, if the node is running and does not disconnect from the network, no deposits will be required
 
-## Step 0: Verify your account has license
+## Step 0: Verify Your Account Has License
 
 - Open https://peaq.subscan.io/account/YOUR_ADDRESS
-- Replace YOUR_ADDRESS with your wallet address.
-- The license(s) should be seen as a sNL ERC-721 token.
+- Replace YOUR_ADDRESS with your wallet address
+- The license(s) should be seen as a sNL ERC-721 token
 
 ![](assets/license.png)
 
 ## Step 1: Copy Your Private Key
+
 You need the private key from a wallet with a Datakeeper Node License.
+
 ### From DeNet App
-1. Open the DeNet app.
-2. Go to "Profile" -> "Settings"-> “Security”.
-3. Copy the 64-character HEX private key (e.g., a1b2c3d4...).
+1. Open the DeNet app
+2. Go to "Profile" -> "Settings" -> "Security"
+3. Copy the 64-character HEX private key (e.g., a1b2c3d4...)
 4. Save it securely. Never share your private key!
-### From other wallet (we take Metamask as an example)
-1. Open Metamask in your browser or app.
-2. Select the account with the Datakeeper Node License.
-3. Go to "Account Details" > "Export Private Key."
-4. Enter your Metamask password and copy the private key.
+
+### From Other Wallet (Example: Metamask)
+1. Open Metamask in your browser or app
+2. Select the account with the Datakeeper Node License
+3. Go to "Account Details" > "Export Private Key"
+4. Enter your Metamask password and copy the private key
 5. **Store it securely! Do not share it anywhere!**
 
-_If you use any other wallet, the steps may differ but should be similar to the list above._
+If you use any other wallet, the steps may differ but should be similar to the list above._
 
-## Step 2: Download Datakeeper Node
+## Datakeeper Node Installation
 
-1. Visit [https://github.com/DeNetPRO/Node/releases](https://github.com/DeNetPRO/Node/releases)
-2. Download the latest application executable for your OS (Linux, macOS, or Windows)
-   ![](assets/executables.png)
-   **macOS**: use amd64 for Intel hardware, arm64 for Apple Silicon.
+Choose your operating system for detailed installation instructions:
 
-3. Copy application to another directory.
-   **Example:**
-    - macOS/Linux: copy denode executable to `~/denet/` directory
-    - Windows: copy to `C:\denet\` directory
+- [Windows](./guides/install-denode-windows.md)
+- [Linux](./guides/install-denode-linux.md)
+- [MacOS](./guides/install-denode-mac.md)
 
-## Step 3: Start DeNet Node
-Launch the node via a terminal.
+## Node Manager Installation
 
-### Windows
-1. Open Terminal: Press **Win + R**, type cmd or powershell, and press Enter.
-   ![](assets/win-cmd.png)
-2. Start the Application:
-- Navigate to the Application Folder
-  ![](assets/win-folder.png)
-- Run application executable
-  ![](assets/win-run.png)
-### Linux
-1. Open Terminal: Use Ctrl + Alt + T or your terminal shortcut.
-   Or SSH to your remote host.
-2. Run the following commands to create folder, copy and run denode
-```bash
-curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc5/denode-linux-amd64
-mkdir ~/denet
-cp denode-linux-amd64 ~/denet/denode
-cd ~/denet
-chmod +x denode
-```
-![](assets/linux-run.png)
+For a graphical interface to manage your node, install the Desktop Node Manager application.
+Detailed installation instructions can be found in: [Node Manager Installation Guide](./guides/denode-manager.md)
 
-### macOS
-1. Open "Terminal" via Spotlight or Applications
-   ![](assets/mac-terminal.png)
-2. Run the following commands to create folder, copy and run denode
-```bash
-curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc5/denode-macos-amd64
-mkdir ~/denet
-cp ~/Downloads/denode-macos-amd64 ~/denet/denode
-cd ~/denet
-chmod +x denode
-xattr -d com.apple.quarantine denode
-```
-![](assets/mac-run.png)
-
-## Step 4: Run DeNet Node
-
-
-## Step 5: Monitor Transactions
-
-Track your node’s activity using the peaq Subscan web interface.
-1. Visit the peaq Subscan website (e.g., https://peaq.subscan.io/account/YOUR_ADDRESS).
-- Search for your node’s transactions using your Datakeeper address.
-2. Check transaction statuses. Green check marks indicate successful transactions, confirming your node is working correctly.
-   ![](assets/successful-trxs.png)
-## Troubleshooting
-
-- **Errors in Terminal**: Carefully check error message. Most of the errors are related to the lack of Internet, insufficient balance of gas tokens, or the result of manually changing the data generated by the node. Ask for help from community members or contact support in Discord.
-- **Failed Transactions in Subscan**: There may be some unusual situations where transactions fail. If you encounter such cases, please open a support ticket.
-  ![](assets/failed-trx.png)
-- **Port Conflicts**: If port 55050 is in use, try another port (e.g., 55051)
-  ![](assets/port-error.png)
-- **Subscan Issues:** If transactions don’t appear, confirm your node is running and has enough gas tokens (> 0.03 $PEAQ).
-- **Not Opened macOS:**
-    - Run the following command to allow `denode` executable:
-    - `xattr -d com.apple.quarantine denode`
-      ![](assets/mac-error-01.png)
-- **Permission denied**
-   ```bash
-   user@desktop:~/denet$ ./denode
-   -bash: ./denode: Permission denied
-   ```
-    - Allow execution by running `chmod +x denode`
-## Notes
-- Keep your terminal open to maintain the node’s operation. Closing it stops the node. Otherwise, set up the node as a background service (see [Advanced Settings: Systemd Service](#advanced-settings)).
-- Additional steps (e.g., advanced settings) will be added as needed — check for updates from DeNet.
-
-Congratulations, Datakeeper! Your DeNet Node is now contributing to the decentralized storage network.
-
-A graphical user interface (GUI) for seamless node operation coming soon. Stay tuned!
-
-#### Systemd service (Linux)
-- It is recommended to run as non-root user.
-- Follow [Step 4](#step-4-run-denet-node) first.
-  You should have config files in the path `/home/denet/.denode/` (could be generated interactively in the console by running ./denode)
-- We used **denet** user as an example, replace it with your username.
-
-**/etc/systemd/system/denode.service**
-```ini
-[Unit]
-Description=DeNode Service
-After=network.target
-
-[Service]
-User=denet
-Group=denet
-Type=simple
-ExecStart=/usr/local/bin/denode --address 'your Datakeeper account ethereum address' --license 'id of the one of the owned licenses'
-EnvironmentFile=/home/denet/denode.env
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
-**/home/denet/denode.env**
-```text
-DENODE_PASSWORD='your password'
-```
-
-Run the following commands to enable startup and run node
-```shell
-sudo systemctl daemon-reload
-sudo systemctl enable denode.service
-sudo systemctl start denode.service
-```
-Now your node will be running and start at boot.
-
-**View latest logs**
-`journalctl -u denode -r`
-
-# Denode Manager GUI
-## Installation
-
-## Step 0: Prepare environment
-1. For **Linux/macOS**: Download installation and management scripts from the [scripts](https://github.com/DeNetPRO/Node) directory
-    ```shell
-    install.sh
-    denode-manager.sh
-    ```
-## Step 1: Download Application
-1. Download archive for your system from https://github.com/DeNetPRO/Node/releases as well as for [denode](#step-2-download-datakeeper-node)
-   ### Windows
-    ```
-    denode-manager-win-amd64.msi
-    ```
-   ### Linux
-    ```
-    denode-manager-linux-amd64.zip
-    denode-manager-linux-arm64.zip
-    ```
-   ### macOS
-    ```
-    denode-manager-darwin-amd64.zip
-    denode-manager-darwin-arm64.zip
-    ```
-## Step 2: Install And Run
-### macOS/Linux
-1. Open terminal as for [denode installation](#macos)
-2. Allow scripts execution on this device
-    ```shell
-    cd ~/Downloads
-    chmod +x install.sh denode-manager.sh
-    ```
-3. Run installation script that will install the application in ~/.denode-manager by default
-    ```shell
-   sudo bash install.sh
-   ```
-   ![](assets/mac-install-gui.png)
-4. Then start the application and check its state using ***denode-manager.sh*** script
-    ```shell
-   sudo bash denode-manager.sh
-   ```
-   ![](assets/mac-start-server.png)
-### Windows
-Use .msi installer
-## Step 3: Open Application Interface in Browser
-1. Open browser and go to http://localhost:1111
-   ![](assets/node-gui.png)
-
-## NOTES:
-1. Application should always be running in the background, otherwise the application will not work, check the status using ***denode-manager.sh*** script (Mac/Linux)
-2. You shouldn't use both CLI and GUI at the same time, otherwise you will get an undefined applications behaviour.
-3. We recommend to change rpc to the private one exactly after the node launch. It will allow to avoid problems with the default version limitations.
-
-## Managing License Addresses
+## License Management
 
 🔐 **Managing License Addresses in DeNet**
 
 📌 **Roles for the License**
-- **License Owner** - The license holder with full management rights.
-- **Admin** - Can change the Manager, but cannot transfer the license.
-- **Manager** - Has a limited set of actions, with no rights in the smart contract.
+- **License Owner** - The license holder with full management rights
+- **Admin** - Can change the Manager, but cannot transfer the license
+- **Manager** - Has a limited set of actions, with no rights in the smart contract
 
 🧭 **Steps for Managing Addresses**
 
 🔗 **Connecting a Wallet**
 - Open the [web page manager](https://nodemanager.denet.app/) and connect:
-    - Click the **Connect Wallet** button.
+    - Click the **Connect Wallet** button
     - Choose a connection method:
         - Metamask
         - Wallet Connect
-- After connecting, your address will appear in the top right corner.
+- After connecting, your address will appear in the top right corner
 
 📋 **Viewing the List of Licenses**
 - After connecting the wallet:
-    - Each license is displayed as a card with an ID (e.g., ID #2276) and a **Manage** button.
+    - Each license is displayed as a card with an ID (e.g., ID #2276) and a **Manage** button
 
 ⚙️ **Managing a License**
 - Click **Manage** on the desired license. A window will open:
     - "You can change address here"
     - Two fields are available:
-        - **New Admin Address** - For changing the administrator.
-        - **New Manager Address** - For changing the manager.
+        - **New Admin Address** - For changing the administrator
+        - **New Manager Address** - For changing the manager
 
 🛠 **Changing Addresses**
 
 ▶️ **Changing the Admin**
-- Enter the new Ethereum address in the **New Admin Address** field.
-- Click the **Change Admin** button.
-- Confirm the transaction in your wallet.
+- Enter the new Ethereum address in the **New Admin Address** field
+- Click the **Change Admin** button
+- Confirm the transaction in your wallet
 
 ▶️ **Changing the Manager**
-- Enter the new manager’s address in the **New Manager Address** field.
-- Click **Change Manager**.
-- Confirm the action in your wallet.
+- Enter the new manager's address in the **New Manager Address** field
+- Click **Change Manager**
+- Confirm the action in your wallet
 
 📌 **Notes**
-- All changes are processed through a smart contract, requiring gas fees.
-- Ensure the provided addresses are valid (Ethereum format).
+- All changes are processed through a smart contract, requiring gas fees
+- Ensure the provided addresses are valid (Ethereum format)
 
 #### Ask your questions here and get help:
 
