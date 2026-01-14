@@ -15,7 +15,7 @@ You need to prove you have permission to be a Datakeeper.
 2. Replace YOUR_ADDRESS with your actual wallet address (the long string of letters and numbers)
 3. Look for "sNL ERC-721 token" - this shows you have a license
 
-![](assets/license.png)
+![](../assets/license.png)
 
 In the Subscan interface, you'll see details about your license:
 - **Inventory For**: [starter] Datakeeper License
