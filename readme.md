@@ -1,59 +1,162 @@
-## Requirements
+<p align="center">
+    <img src="assets/LOGO.png">
+</p>
 
-Before installing, you need to have:
+<p align="center">
+    Monetize your computer's storage now!
+    <br/>
+    <br/>
+    <a href="https://denet.pro">
+        <img alt="website.png" src="assets/denet.pro.svg" height="31" width="120"/>
+    </a>
+    <a href="https://t.me/+Yu5KnSruttc5ZGRi">
+        <img alt="tg.png" src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" height="30" width="120"/>
+    </a>
+    <a href="https://discord.gg/cPz9m4cSWv">
+        <img alt="discord.png" src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="30" width="120" />
+    </a>
+    <a href="https://www.youtube.com/channel/UCeCxt3tYbtSkJvaznNjQimQ">
+        <img alt="youtube.png" src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" height="30" width="120" />
+    </a>
+</p>
 
-1. **A [wallet](#what-is-a-wallet) address (ERC-20 compatible)** - This is like a bank account number for digital money and also serves as your identity for participating in the DeNet network
-2. **At least 100GB of free disk space** - Your computer needs room to store other people's data
-3. **Operating system supported by DeNet** (see [Supported Platforms](#supported-platforms) section)
-4. [**PEAQ balance**](#why-i-need-peaq-on-my-balance) - tokens are distributed to Datakeepers automatically and are being regularly credited for successfully completed transactions, if the node is running and does not disconnect from the network. If you balance is zero, please contact [support](https://discord.com/channels/920205740944273449/1341396814502559846)
+<p align="center">
+    <strong>⚠️ This guide is designed for people who are new to computers and blockchain technology. If you're already familiar with these concepts, you might find some explanations too basic.</strong>
+</p>
 
-## Step 0: Verify Your Account Has License
+💽 **Datakeepers** offer their unused storage space to DeNet Storage users, creating a mutually beneficial conditions for all without any intermediaries. \
+By utilizing the DeNet Storage Protocol, users pay for the storage they need, while Datakeepers are rewarded for the storage they provide.
 
-You need to prove you have permission to be a Datakeeper.
+## Table of Contents
 
-1. Go to https://peaq.subscan.io/account/YOUR_ADDRESS
-2. Replace YOUR_ADDRESS with your actual wallet address (the long string of letters and numbers)
-3. Look for "sNL ERC-721 token" - this shows you have a license
+- [Overview](#overview)
+- [Supported Platforms](#supported-platforms)
+- [Installation Options](#installation-options)
+- [Installation Guide](#step-by-step-installation-process-beginner-friendly)
+- [Node Activity Monitoring](./guides/monitoring.md)
+- [License Management](./guides/license-management.md)
 
-![](assets/license.png)
+# Overview
 
-In the Subscan interface, you'll see details about your license:
-- **Inventory For**: [starter] Datakeeper License
-- **Token ID**: Your license ID
-- **Owner**: Your wallet address
+**DeNet** is a decentralized storage network that allows you to earn money by sharing your computer's unused storage space. Think of it like renting out your empty room to someone who needs storage space.
 
-This ERC-721 token represents your right to operate a Datakeeper node on the DeNet network.
+## How It Works:
+1. You install special software on your computer
+2. This software connects to the DeNet network
+3. When other users need storage space, your computer stores their data
+4. You are rewarded for the space provided
 
-## Step 1: Copy Your [Private Key](#what-is-a-private-key)
+# Becoming Datakeeper: Node Setup Instructions
 
-You need the private key from a wallet with a Datakeeper Node License.
+This guide walks you through setting up and running a Datakeeper Node, enabling your device to join the DeNet decentralized storage network.
 
-### From DeNet App
-1. Open the DeNet app
-2. Go to "Profile" → "Settings" → "Security"
-3. Copy the 64-character HEX private key (e.g., a1b2c3d4...)
-4. Save it securely. Never share your private key!
+# Supported Platforms
 
-### From Other Wallet (Example: Metamask)
-1. Open Metamask in your browser or app
-2. Select the account with the Datakeeper Node License
-3. Go to "Account Details" → "Export Private Key"
-4. Enter your Metamask password and copy the private key
-5. **Store it securely! Do not share it anywhere!**
+DeNet Datakeeper Nodes can be installed on various operating systems depending on your needs and technical requirements:
 
-If you use any other wallet, the steps may differ but should be similar to the list above.
+## Available Builds
 
-## FAQ:
-### Why I need PEAQ on my balance?
+### Datakeeper Node Binary Builds
 
-Tokens are required for your node to send transactions on the network and prove that your node actually stores the data. This is not a reward for storage, but the funds necessary to keep the node running.
-### What is a Wallet?
-A wallet is like a digital purse that holds your cryptocurrency. You can think of it as a special account that stores digital money. For DeNet, you need a wallet that supports Ethereum-based tokens (ERC-20).
+| Operating System | Architecture | Download Link |
+|------------------|--------------|---------------|
+| **Windows** | x86_64 | [denode-windows-amd64.exe](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/denode-windows-amd64.exe) |
+| **Linux** | x86_64 | [denode-linux-amd64](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/denode-linux-amd64) |
+| **Linux** | ARM64 | [denode-linux-arm64](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/denode-linux-arm64) |
+| **macOS** | x86_64 | [denode-macos-amd64](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/denode-macos-amd64) |
+| **macOS** | ARM64 | [denode-macos-arm64](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/denode-macos-arm64) |
 
-Your wallet also serves as your identity on the DeNet network and contains your Datakeeper Node License, which is required to participate in the network as a Datakeeper.
+### How to Choose the Right Architecture
 
-### What is a Private Key?
-A private key is like a secret password that gives you access to your wallet. It's very important because:
-- Only you should know it
-- If someone else gets it, they can steal your money or license
-- You must keep it safe and never share it with anyone
+When downloading the DeNet Node Binary Build, it's important to select the version that matches your computer's processor architecture:
+
+- **x86_64 (also called AMD64)**: This is the most common architecture for Intel and AMD processors used in most desktops and laptops
+- **ARM64 (also called AArch64)**: This is used by Apple Silicon (M1, M2, etc.) Macs and some ARM-based Linux devices
+
+To determine your system architecture:
+
+**On macOS:**
+1. Click the Apple menu and select "About This Mac"
+2. Click "System Report..."
+3. Under "Hardware", look for "Chip" or "Processor" - if it says "Apple M1", "Apple M2", etc., you have ARM64; otherwise, you have x86_64
+
+**On Linux:**
+1. Open a terminal and run: `uname -m`
+2. If it shows `x86_64`, you have x86_64 architecture
+3. If it shows `aarch64`, you have ARM64 architecture
+
+### Desktop Node Manager Builds
+
+| Operating System | Architecture | Download Link | Package Format | Installation Command |
+|------------------|--------------|---------------|----------------|---------------------|
+| **Windows** | x86_64 | [DeNode_Manager_1.0.4_x64-setup.exe](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/DeNode_Manager_1.0.4_x64-setup.exe) | Installer | Double-click to install |
+| **macOS** | x86_64 | [DeNode_Manager-1.0.4.dmg](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/DeNode_Manager-1.0.4.dmg) | Disk Image | Open .dmg file and drag to Applications |
+| **macOS** | ARM64 | [DeNode_Manager-1.0.4-arm64.dmg](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/DeNode_Manager-1.0.4-arm64.dmg) | Disk Image | Open .dmg file and drag to Applications |
+| **Linux** | x86_64 | [DeNode_Manager_1.0.4_amd64.deb](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/DeNode_Manager_1.0.4_amd64.deb) | DEB (Debian/Ubuntu) | `sudo dpkg -i DeNode_Manager_1.0.4_amd64.deb` then `sudo apt install -f` |
+| **Linux** | ARM64 | [DeNode_Manager_1.0.4_arm64.deb](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/DeNode_Manager_1.0.4_arm64.deb) | DEB (Debian/Ubuntu) | `sudo dpkg -i DeNode_Manager_1.0.4_arm64.deb` then `sudo apt install -f` |
+| **Linux** | x86_64 | [DeNode_Manager-1.0.4-1.x86_64.rpm](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/DeNode_Manager-1.0.4-1.x86_64.rpm) | RPM (Red Hat/Fedora/CentOS) | `sudo rpm -ivh DeNode_Manager-1.0.4-1.x86_64.rpm` |
+| **Linux** | ARM64 | [DeNode_Manager-1.0.4-1.aarch64.rpm](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/DeNode_Manager-1.0.4-1.aarch64.rpm) | RPM (Red Hat/Fedora/CentOS) | `sudo rpm -ivh DeNode_Manager-1.0.4-1.aarch64.rpm` |
+
+> ⚠️ **Important**: Desktop Node Manager is not available for server operating systems (Ubuntu Server, CentOS, etc.) due to lack of GUI support.
+
+## Package Format Explanation
+
+- **DEB packages** (ending in `.deb`) are used for Debian, Ubuntu, and other Debian-based Linux distributions
+    - Install with: `sudo dpkg -i package.deb` then `sudo apt install -f`
+
+- **RPM packages** (ending in `.rpm`) are used for Red Hat, Fedora, CentOS, and other RPM-based Linux distributions
+    - Install with: `sudo rpm -ivh package.rpm`
+
+> 💡 **Tip**: If you're unsure what Linux distribution you're using, run `cat /etc/os-release` in your terminal to find out.
+
+## Installation Options
+
+The DeNet Datakeeper Node offers flexible installation approaches to accommodate different deployment scenarios:
+
+### 1. Command Line Interface (CLI) Node
+- **Best for**: Server environments, headless systems, advanced users
+- **Features**: Full functionality via terminal commands
+- **Installation**: Available for all supported platforms
+- **Management**: Requires manual configuration and monitoring
+- **For beginners**: This approach requires typing commands in a terminal window
+
+### 2. Desktop Node Manager
+- **Best for**: Desktop users, beginners, easy management
+- **Features**: Graphical interface for node management
+- **Installation**: Available for Windows, macOS, and Linux desktop versions
+- **Management**: Intuitive GUI with real-time monitoring
+- **For beginners**: This approach has buttons and windows you can click
+
+> 💡 **Tip**: Use the Desktop Node Manager download page at https://node.denet.app/ to conveniently download and install the graphical interface for managing your DeNet Datakeeper Node.
+
+## Step-by-Step Installation Process (Beginner-Friendly)
+
+1. **Make sure that your setup meets the [requirements](./guides/requirements.md)**
+2. **Choose the appropriate application** (CLI or Desktop Application):
+    - See the [Installation Options](#installation-options) section
+3. **Download the right file**:
+    - First, determine your computer's [architecture](#how-to-choose-the-right-architecture) (x86_64 or ARM64)
+    - Then choose the correct file from the [Supported Platforms](#supported-platforms) section
+
+4. **Save the file**:
+    - On Windows: Save to your Downloads folder
+    - On Mac/Linux: Save to your home directory or Downloads folder
+
+5. **Install the software**:
+    - For Desktop Node Manager: Double-click the installer and follow the prompts
+    - For CLI version: You'll need to run commands in a terminal
+
+6. **Start the node**:
+    - After installation, launch the program
+    - Enter your private key when prompted and [configure](./guides/configuring.md) the node
+
+### More details here:
+- [Windows](./guides/install-denode-windows.md)
+- [Linux](./guides/install-denode-linux.md)
+- [MacOS](./guides/install-denode-mac.md)
+
+#### Ask your questions here and get help:
+
+<a href="https://discord.gg/cPz9m4cSWv">
+    <img alt="discord.png" src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="30" width="120" />
+</a>
