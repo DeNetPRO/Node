@@ -20,23 +20,31 @@
     </a>
 </p>
 
+<p align="center">
+    <strong>⚠️ This guide is designed for people who are new to computers and blockchain technology. If you're already familiar with these concepts, you might find some explanations too basic.</strong>
+</p>
+
 💽 **Datakeepers** offer their unused storage space to DeNet Storage users, creating a mutually beneficial conditions for all without any intermediaries. \
 By utilizing the DeNet Storage Protocol, users pay for the storage they need, while Datakeepers are rewarded for the storage they provide.
 
 ## Table of Contents
 
+- [Overview](#overview)
 - [Supported Platforms](#supported-platforms)
 - [Installation Options](#installation-options)
-- [Requirements](#requirements)
-  - [Step 0: Verify Your Account Has License](#step-0-verify-your-account-has-license)
-  - [Step 1: Copy Your Private Key](#step-1-copy-your-private-key)
-- [Detailed Installation Guide](#detailed-installation-guide)
-  - [Datakeeper Node Binary](#datakeeper-node-binary)  
-  - TODO: add Node Manager updating information
+- [Installation Guide](#step-by-step-installation-process-beginner-friendly)
 - [Node Activity Monitoring](./guides/monitoring.md)
 - [License Management](./guides/license-management.md)
 
-TODO: add transactions monitoring info
+# Overview
+
+**DeNet** is a decentralized storage network that allows you to earn money by sharing your computer's unused storage space. Think of it like renting out your empty room to someone who needs storage space.
+
+## How It Works:
+1. You install special software on your computer
+2. This software connects to the DeNet network
+3. When other users need storage space, your computer stores their data
+4. You are rewarded for the space provided
 
 # Becoming Datakeeper: Node Setup Instructions
 
@@ -110,53 +118,39 @@ The DeNet Datakeeper Node offers flexible installation approaches to accommodate
 - **Features**: Full functionality via terminal commands
 - **Installation**: Available for all supported platforms
 - **Management**: Requires manual configuration and monitoring
+- **For beginners**: This approach requires typing commands in a terminal window
 
 ### 2. Desktop Node Manager
 - **Best for**: Desktop users, beginners, easy management
 - **Features**: Graphical interface for node management
 - **Installation**: Available for Windows, macOS, and Linux desktop versions
 - **Management**: Intuitive GUI with real-time monitoring
+- **For beginners**: This approach has buttons and windows you can click
 
 > 💡 **Tip**: Use the Desktop Node Manager download page at https://node.denet.app/ to conveniently download and install the graphical interface for managing your DeNet Datakeeper Node.
 
-## Requirements
+## Step-by-Step Installation Process (Beginner-Friendly)
 
-- A wallet address (ERC-20 compatible) holding a Datakeeper Node License
-- Device with at least 100GB of free disk space for storing DeNet user data
-- Operating system supported by DeNet (see [Supported Platforms](#supported-platforms) section)
-- PEAQ balance: tokens are distributed to Datakeepers automatically and are being regularly credited for successfully completed transactions, if the node is running and does not disconnect from the network. If you balance is zero, please contact [support](https://discord.com/channels/920205740944273449/1341396814502559846)
+1. **Make sure that your setup meets the [requirements](./guides/requirements.md)**
+2. **Choose the appropriate application** (CLI or Desktop Application):
+    - See the [Installation Options](#installation-options) section
+3. **Download the right file**:
+    - First, determine your computer's [architecture](#how-to-choose-the-right-architecture) (x86_64 or ARM64)
+    - Then choose the correct file from the [Supported Platforms](#supported-platforms) section
 
-## Step 0: Verify Your Account Has License
+4. **Save the file**:
+    - On Windows: Save to your Downloads folder
+    - On Mac/Linux: Save to your home directory or Downloads folder
 
-- Open https://peaq.subscan.io/account/YOUR_ADDRESS
-- Replace YOUR_ADDRESS with your wallet address
-- The license(s) should be seen as a sNL ERC-721 token
+5. **Install the software**:
+    - For Desktop Node Manager: Double-click the installer and follow the prompts
+    - For CLI version: You'll need to run commands in a terminal
 
-![](assets/license.png)
+6. **Start the node**:
+    - After installation, launch the program
+    - Enter your private key when prompted and [configure](./guides/configuring.md) the node
 
-## Step 1: Copy Your Private Key
-
-You need the private key from a wallet with a Datakeeper Node License.
-
-### From DeNet App
-1. Open the DeNet app
-2. Go to "Profile" -> "Settings" -> "Security"
-3. Copy the 64-character HEX private key (e.g., a1b2c3d4...)
-4. Save it securely. Never share your private key!
-
-### From Other Wallet (Example: Metamask)
-1. Open Metamask in your browser or app
-2. Select the account with the Datakeeper Node License
-3. Go to "Account Details" > "Export Private Key"
-4. Enter your Metamask password and copy the private key
-5. **Store it securely! Do not share it anywhere!**
-
-If you use any other wallet, the steps may differ but should be similar to the list above._
-
-## Detailed Installation Guide
-
-### Datakeeper Node Binary
-
+### More details here:
 - [Windows](./guides/install-denode-windows.md)
 - [Linux](./guides/install-denode-linux.md)
 - [MacOS](./guides/install-denode-mac.md)
