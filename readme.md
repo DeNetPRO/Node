@@ -20,35 +20,35 @@
     </a>
 </p>
 
-<p align="center">
-    <strong>⚠️ This guide is designed for people who are new to computers and blockchain technology. If you're already familiar with these concepts, you might find some explanations too basic.</strong>
-</p>
-
-💽 **Datakeepers** offer their unused storage space to DeNet Storage users, creating a mutually beneficial conditions for all without any intermediaries. \
-By utilizing the DeNet Storage Protocol, users pay for the storage they need, while Datakeepers are rewarded for the storage they provide.
-
 ## Table of Contents
 
-- [Overview](#overview)
+- [What is DeNet?](#what-is-denet)
 - [Supported Platforms](#supported-platforms)
 - [Installation Options](#installation-options)
-- [Installation Guide](#step-by-step-installation-process-beginner-friendly)
+- [Step-by-Step Installation Process](#step-by-step-installation-process)
 - [Node Activity Monitoring](./guides/monitoring.md)
 - [License Management](./guides/license-management.md)
 
-# Overview
+## What is DeNet?
 
 **DeNet** is a decentralized storage network that allows you to earn money by sharing your computer's unused storage space. Think of it like renting out your empty room to someone who needs storage space.
 
-## How It Works:
-1. You install special software on your computer
-2. This software connects to the DeNet network
-3. When other users need storage space, your computer stores their data
-4. You are rewarded for the space provided
+### Key Benefits:
+- **Earn money** from your unused hard drive space
+- **No intermediaries** - direct peer-to-peer transactions
+- **Secure** - data is encrypted and distributed across the network
+- **Easy to use** - simple setup process for beginners
 
-# Becoming Datakeeper: Node Setup Instructions
+### How It Works:
 
-This guide walks you through setting up and running a Datakeeper Node, enabling your device to join the DeNet decentralized storage network.
+1. **Install special software** on your computer
+2. **Connect to the DeNet network**
+3. **Store data** from other users when they need storage space
+4. **Get rewarded** for the storage you provide
+
+### Who is a Datakeeper?
+
+A **Datakeeper** is a user who provides storage space to the DeNet network. By running a Datakeeper Node, you become part of a global network that provides opportunities to store data for others while earning rewards.
 
 # Supported Platforms
 
@@ -129,7 +129,7 @@ The DeNet Datakeeper Node offers flexible installation approaches to accommodate
 
 > 💡 **Tip**: Use the Desktop Node Manager download page at https://node.denet.app/ to conveniently download and install the graphical interface for managing your DeNet Datakeeper Node.
 
-## Step-by-Step Installation Process (Beginner-Friendly)
+## Step-by-Step Installation Process
 
 1. **Make sure that your setup meets the [requirements](./guides/requirements.md)**
 2. **Choose the appropriate application** (CLI or Desktop Application):
