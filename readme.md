@@ -113,7 +113,7 @@ To determine your system architecture:
 
 The DeNet Datakeeper Node offers flexible installation approaches to accommodate different deployment scenarios:
 
-### 1. Command Line Interface (CLI) Node
+### 1. Command Line Interface (CLI) Node  
 - **Best for**: Server environments, headless systems, advanced users
 - **Features**: Full functionality via terminal commands
 - **Installation**: Available for all supported platforms
@@ -128,7 +128,7 @@ The DeNet Datakeeper Node offers flexible installation approaches to accommodate
 - **For beginners**: This approach has buttons and windows you can click
 
 > 💡 **Tip**: Use the Desktop Node Manager download page at https://node.denet.app/ to conveniently download and install the graphical interface for managing your DeNet Datakeeper Node.
-
+> 
 ## Step-by-Step Installation Process
 
 1. **Make sure that your setup meets the [requirements](./guides/requirements.md)**
