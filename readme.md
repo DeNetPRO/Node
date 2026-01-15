@@ -144,7 +144,7 @@ The DeNet Datakeeper Node offers flexible installation approaches to accommodate
 
 5. **Install the software**:
     - For Desktop Node Manager: Double-click the installer and follow the prompts
-    - For CLI version view detailed guides
+    - For CLI version view detailed guides:
       - [Windows](./guides/install-denode-windows.md)
       - [Linux](./guides/install-denode-linux.md)
       - [MacOS](./guides/install-denode-mac.md)
