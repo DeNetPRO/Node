@@ -46,6 +46,7 @@
 3. **Store data** from other users when they need storage space
 4. **Get rewarded** for the storage you provide
 
+Detailed requirements explained [here](./guides/requirements.md)
 ### Who is a Datakeeper?
 
 A **Datakeeper** is a user who provides storage space to the DeNet network. By running a Datakeeper Node, you become part of a global network that provides opportunities to store data for others while earning rewards.
