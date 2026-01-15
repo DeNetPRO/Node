@@ -2,10 +2,10 @@
 
 Before installing, you need to have:
 
-1. **A [wallet](#what-is-a-wallet) address (ERC-20 compatible)** - This is like a bank account number for digital money and also serves as your identity for participating in the DeNet network
+1. **A [wallet](./faq.md#what-is-a-wallet) address (ERC-20 compatible)** - This is like a bank account number for digital money and also serves as your identity for participating in the DeNet network
 2. **At least 100GB of free disk space** - Your computer needs room to store other people's data
-3. **Operating system supported by DeNet** (see [Supported Platforms](#supported-platforms) section)
-4. [**PEAQ balance**](#why-i-need-peaq-on-my-balance) - tokens are distributed to Datakeepers automatically and are being regularly credited for successfully completed transactions, if the node is running and does not disconnect from the network. If you balance is zero, please contact [support](https://discord.com/channels/920205740944273449/1341396814502559846)
+3. **Operating system supported by DeNet** (see [Supported Platforms](../readme.md#supported-platforms) section)
+4. [**PEAQ balance**](./faq.md#why-i-need-peaq-on-my-balance) - tokens are distributed to Datakeepers automatically and are being regularly credited for successfully completed transactions, if the node is running and does not disconnect from the network. If you balance is zero, please contact [support](https://discord.com/channels/920205740944273449/1341396814502559846)
 
 ## Step 0: Verify Your Account Has License
 
@@ -24,7 +24,7 @@ In the Subscan interface, you'll see details about your license:
 
 This ERC-721 token represents your right to operate a Datakeeper node on the DeNet network.
 
-## Step 1: Copy Your [Private Key](#what-is-a-private-key)
+## Step 1: Copy Your [Private Key](./faq.md#what-is-a-private-key)
 
 You need the private key from a wallet with a Datakeeper Node License.
 
@@ -43,17 +43,3 @@ You need the private key from a wallet with a Datakeeper Node License.
 
 If you use any other wallet, the steps may differ but should be similar to the list above.
 
-## FAQ:
-### Why I need PEAQ on my balance?
-
-Tokens are required for your node to send transactions on the network and prove that your node actually stores the data. This is not a reward for storage, but the funds necessary to keep the node running.
-### What is a Wallet?
-A wallet is like a digital purse that holds your cryptocurrency. You can think of it as a special account that stores digital money. For DeNet, you need a wallet that supports Ethereum-based tokens (ERC-20).
-
-Your wallet also serves as your identity on the DeNet network and contains your Datakeeper Node License, which is required to participate in the network as a Datakeeper.
-
-### What is a Private Key?
-A private key is like a secret password that gives you access to your wallet. It's very important because:
-- Only you should know it
-- If someone else gets it, they can steal your money or license
-- You must keep it safe and never share it with anyone
