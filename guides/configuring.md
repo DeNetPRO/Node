@@ -35,7 +35,7 @@
 
 10. **Verify Operation**:
     - Watch the terminal output. If no errors appear, your DeNet Node is running correctly.
-      ![](assets/successful-launch.png)
+      ![](../assets/successful-launch.png)
 
 
 **NOTE:**
