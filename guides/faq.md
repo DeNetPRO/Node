@@ -1,4 +1,10 @@
 ## FAQ:
+
+- [Why I need PEAQ on my balance?](#why-i-need-peaq-on-my-balance)
+- [What is a Wallet?](#what-is-a-wallet)
+- [What is a Private Key?](#what-is-a-private-key)
+- [What is an RPC and why do we use it?](#what-is-an-rpc-and-why-do-we-use-it)
+
 ### Why I need PEAQ on my balance?
 
 Tokens are required for your node to send transactions on the network and prove that your node actually stores the data. This is not a reward for storage, but the funds necessary to keep the node running.
