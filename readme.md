@@ -33,18 +33,13 @@
 
 **DeNet** is a decentralized storage network that allows you to earn money by sharing your computer's unused storage space. Think of it like renting out your empty room to someone who needs storage space.
 
-### Key Benefits:
-- **Earn money** from your unused hard drive space
-- **No intermediaries** - direct peer-to-peer transactions
-- **Secure** - data is encrypted and distributed across the network
-- **Easy to use** - simple setup process for beginners
-
 ### How It Works:
 
-1. **Install special software** on your computer
-2. **Connect to the DeNet network**
-3. **Store data** from other users when they need storage space
-4. **Get rewarded** for the storage you provide
+1. **Get** a [Datakeeper's license](https://nodesale.denet.app/)
+2. **Install** [special software](#available-builds) on your computer
+3. **Connect** to the DeNet network and **share** your disk space
+4. **Store** user and business data
+5. **Get rewarded** directly from storage users
 
 Detailed requirements explained [here](./guides/requirements.md)
 ### Who is a Datakeeper?
