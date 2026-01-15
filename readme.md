@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-    Turn your computer's storage into cash!
+    Monetize your computer's storage now!
     <br/>
     <br/>
     <a href="https://denet.pro">
@@ -19,6 +19,9 @@
         <img alt="youtube.png" src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" height="30" width="120" />
     </a>
 </p>
+
+💽 Datakeepers offer their unused storage space to DeNet Storage users, creating a mutually beneficial conditions for all without any intermediaries.
+By utilizing the DeNet Storage Protocol, users pay for the storage they need, while Datakeepers are rewarded for the storage they provide.
 
 ## Table of Contents
 
@@ -118,6 +121,7 @@ The DeNet Datakeeper Node offers flexible installation approaches to accommodate
 - **Installation**: Available for all supported platforms
 - **Management**: Requires manual configuration and monitoring
 - **Beginner-friendly**: Not recommended for users unfamiliar with terminal operations
+
 ### 2. Desktop Node Manager
 - **Best for**: Desktop users, beginners, easy management
 - **Features**: Graphical interface for node management
