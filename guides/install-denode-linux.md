@@ -9,7 +9,8 @@ This guide provides simplified step-by-step instructions for installing and runn
 2. [Configuring Node](#configuring-node)
 3. [Running Your Node](#running-your-node)
 4. [Advanced: Systemd Service Setup (Optional)](#advanced-systemd-service-setup-optional)
-5. [Useful Commands](#useful-commands)
+5. [Reinstalling Your Node](#reinstalling-your-node)
+6. [Useful Commands](#useful-commands)
 
 ## Quick Start Installation
 
@@ -43,7 +44,7 @@ chmod +x denode
    cd ~/denet
    chmod +x denode
    ```
-   
+
 ## Configuring Node
 - Instructions are [here](./configuring.md)
 
@@ -106,6 +107,30 @@ For automatic startup on boot:
    sudo systemctl enable denode.service
    sudo systemctl start denode.service
    ```
+
+## Reinstalling Your Node
+
+If you need to reinstall your DeNet Datakeeper Node, follow these steps:
+
+1. **Stop the current node process**:
+   ```bash
+   pkill denode
+   ```
+
+2. **Remove the existing installation directory**:
+   ```bash
+   rm -rf ~/denet
+   ```
+
+3. **(Optional) Remove systemd service** (if previously configured):
+   ```bash
+   sudo systemctl stop denode.service
+   sudo systemctl disable denode.service
+   sudo rm /etc/systemd/system/denode.service
+   sudo systemctl daemon-reload
+   ```
+
+4. **Follow the Quick Start Installation steps** from the beginning to install the node again
 
 ## Useful Commands
 
