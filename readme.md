@@ -20,9 +20,6 @@
     </a>
 </p>
 
-💽 Datakeepers offer their unused storage space to DeNet Storage users, creating a mutually beneficial conditions for all without any intermediaries.
-By utilizing the DeNet Storage Protocol, users pay for the storage they need, while Datakeepers are rewarded for the storage they provide.
-
 ## Table of Contents
 
 - [What is DeNet?](#what-is-denet)
@@ -48,7 +45,8 @@ More details about requirements can be found [here](./guides/requirements.md)
 
 ### Who is a Datakeeper?
 
-A **Datakeeper** is someone who provides storage space to the DeNet network. By running a Datakeeper Node, you become part of a global network that helps people store data while earning rewards for your contribution.
+💽 Datakeepers offer their unused storage space to DeNet Storage users, creating a mutually beneficial conditions for all without any intermediaries.
+By utilizing the DeNet Storage Protocol, users pay for the storage they need, while Datakeepers are rewarded for the storage they provide.
 
 # Supported Platforms
 
