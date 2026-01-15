@@ -31,7 +31,7 @@
 
 ## What is DeNet?
 
-**DeNet** is a decentralized storage network that lets you earn money by sharing your computer's unused storage space. Think of it like renting out your empty room to someone who needs storage space.
+**DeNet** is a decentralized data storage protocol that unlocks the global potential of unused storage. It connects storage providers with those in need of sovereign decentralized storage.
 
 ### How It Works:
 
