@@ -66,6 +66,9 @@ DeNet Datakeeper Nodes can be installed on various operating systems depending o
 | **macOS** | x86_64 | [denode-macos-amd64](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/denode-macos-amd64) |
 | **macOS** | ARM64 | [denode-macos-arm64](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/denode-macos-arm64) |
 
+> 📝 **Note**: The DeNet Datakeeper Node CLI is distributed as a standalone binary file without any installation package. Simply download the appropriate binary for your system
+
+
 ### How to Choose the Right Architecture
 
 When downloading the DeNet Node Binary Build, it's important to select the version that matches your computer's processor architecture:
