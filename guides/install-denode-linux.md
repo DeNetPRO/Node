@@ -27,9 +27,6 @@ cd ~/denet
 
 # Make executable
 chmod +x denode
-
-# Run the node (this will prompt for configuration)
-./denode
 ```
 ![](assets/linux-run.png)
 

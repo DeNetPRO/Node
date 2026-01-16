@@ -8,6 +8,7 @@
 - [How to Get a Public IP Address](#how-to-get-a-public-ip-address)
 - [Port Forwarding Requirements](#port-forwarding-requirements)
 - [Is a Public IP Required?](#is-a-public-ip-required)
+- [Setting Up Your Node with Public IP](#setting-up-your-node-with-public-ip)
 
 ## What is a Public (White) IP and Why Does It Matter?
 
@@ -103,3 +104,26 @@ The more nodes with public IPs in a pool, the more effective and resilient that 
 No, having a public IP is not mandatory for participating in our network. While nodes with public IPs offer significant advantages in terms of performance and reward potential, we are actively developing a mechanism that will allow nodes without public IPs to still participate effectively.
 
 Under the current system, nodes without public IPs are able to copy data from public nodes and earn rewards for contributing to the network's functionality. This ensures that all participants can contribute to and benefit from the network, regardless of their IP configuration.
+
+## Setting Up Your Node with Public IP
+
+Once you have a public IP address, you'll need to configure your node to use it properly. This involves setting up the correct IP address and port in your node configuration.
+
+## How to Change IP Address in Datakeeper Node
+
+### Using Datakeeper Node CLI
+If you already have a node configured and want to update it to use a public IP address, you can use the interactive configuration tool:
+
+1. Run the command: [`./denode config set`](./denode-command.md#command-config-set)
+2. Navigate through the interactive menu to find the network configuration options
+3. Update the IP address field with your new public IP address and Port
+4. Ensure the port number is correctly set (default is usually 55050)
+5. Save your changes and restart your node for the new configuration to take effect
+
+### Using Node Manager GUI
+1. Click ```Edit``` button
+   ![](../assets/edit-config.png)
+2. Click ```Next```
+   ![](../assets/edit-config-2.png)
+3. Paste your IP Address in the special section
+   ![](../assets/edit-ip.png)
