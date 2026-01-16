@@ -97,11 +97,11 @@ When running multiple DeNet Datakeeper Nodes on the same machine, each node need
    ```bash
    # Run first node in background
    cd ~/denet-node1
-   nohup ./denode --address your_address_1 --license license_1 > denode.log 2>&1 &
+   DENODE_PASSWORD=your_password nohup ./denode --address your_address_1 --license license_1 > denode.log 2>&1 &
 
    # Run second node in background
    cd ~/denet-node2
-   nohup ./denode --address your_address_2 --license license_2 > denode.log 2>&1 &
+   DENODE_PASSWORD=your_password nohup ./denode --address your_address_2 --license license_2 > denode.log 2>&1 &
    ```
 
 4. **Monitor processes:**
