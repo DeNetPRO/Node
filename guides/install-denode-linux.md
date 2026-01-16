@@ -27,8 +27,10 @@ cd ~/denet
 
 # Make executable
 chmod +x denode
+
+# Run the node (this will prompt for configuration)
+./denode
 ```
-![](assets/linux-run.png)
 
 ### Method 2: Download from GitHub Website
 1. Visit [https://github.com/DeNetPRO/Node/releases](https://github.com/DeNetPRO/Node/releases)
@@ -41,7 +43,10 @@ chmod +x denode
    mv /path/to/downloaded/denode-linux-amd64 ~/denet/denode
    cd ~/denet
    chmod +x denode
+   ./denode
    ```
+
+![](../assets/linux-run.png)
 
 ## Configuring Node
 - Instructions are [here](./configuring.md)
@@ -116,6 +121,8 @@ When running multiple DeNet Datakeeper Nodes on the same machine, each node need
    # Kill all denode processes
    pkill denode
    ```
+
+**Important:** Each node requires its own unique license id. When configuring each node, make sure to use a different license number for each instance.
 
 ## Advanced: Systemd Service Setup (Optional)
 
