@@ -49,7 +49,6 @@ chmod +x denode
 ## Configuring Node
 After the node is installed, you can proceed with the configuration
 
-![](../assets/linux-run.png)
 - Instructions are [here](./configuring.md)
 
 ## Running Your Node
