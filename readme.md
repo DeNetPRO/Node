@@ -137,18 +137,12 @@ The DeNet Datakeeper Node offers flexible installation approaches to accommodate
 3. **Download the right file**:
     - First, determine your computer's [architecture](#how-to-choose-the-right-architecture) (x86_64 or ARM64)
     - Then choose the correct file from the [Supported Platforms](#supported-platforms) section
-4. **Save the file**:
-    - On Windows: Save to your Downloads folder
-    - On Mac/Linux: Save to your home directory or Downloads folder
-5. **Install the software**:
-    - For Desktop Node Manager: Double-click the installer and follow the prompts
+4. **Install the software**:
+    - For Desktop Node Manager: Double-click the downloaded file and follow the prompts
     - For CLI version view detailed guides:
         - [Windows](./guides/install-denode-windows.md)
         - [Linux](./guides/install-denode-linux.md)
         - [MacOS](./guides/install-denode-mac.md)
-6. **Start the node**:
-    - After installation, launch the program
-    - Enter your private key when prompted and [configure](./guides/configuring.md) the node
 
 #### Ask your questions here and get help:
 
