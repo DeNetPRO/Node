@@ -7,6 +7,7 @@ If you see the following window, your node is ready to be configured.
 
 1. **Choose the account or import a new one**:
     - To use already imported account: Choose it in the displayed list
+    ![](../assets/imported-accounts.png)
     - To import: Choose the **import** option and paste the copied [private key](./requirements.md#step-1-copy-your-private-key), then press Enter
     ![](../assets/import-account.png)
 2. **Set Password**: Enter a strong password
@@ -17,7 +18,9 @@ If you see the following window, your node is ready to be configured.
     - Enter any license number from the **Available licenses** list
     ![](../assets/choose-license.png)
    > ⚠️ **Important**: Do not choose the same license number when running multiple node instances. This is not prohibited, but it can lead to undefined behavior
-   
+
+   > 💡 **Tip**: If you want to run multiple licenses on the same computer at the same time, you can conveniently do this using the Node Manager desktop application with a graphical interface. [Download now](../readme.md#desktop-node-manager-builds)
+
 4. **Enter IP Address**: Press enter to use the default one (0.0.0.0)
     - If you'd like to set up the [public IP](./public-ip.md), enter it in the following format: xxx.xxx.xxx.xxx
     ![](../assets/default-ip.png)
