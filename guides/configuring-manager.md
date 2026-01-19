@@ -6,7 +6,7 @@
 3. [Node Activation](#node-activation)
 4. [Monitoring Your Node](#monitoring-your-node)
 
-When you first install Node Manager, you will see the following window, which means that you need to configure the environment to run the nodes.
+When you first install Node Manager, you will see the following window, which means that you need to configure the environment to run the nodes
 ![](../assets/import-account-dm.png)
 
 ## Account Setup
@@ -25,32 +25,32 @@ When you first install Node Manager, you will see the following window, which me
 
 ## Node Activation
 At startup, all licenses will be disabled
-![](../assets/launched-dm.png)
+   ![](../assets/launched-dm.png)
 In order to **activate the nodes**, you need to set additional configuration settings for each node:
 1. **Choose License ID**: сlick on the toggle to the left of the license number to proceed to the activation
-   ![](../assets/choose-license-dm.png)
+    ![](../assets/choose-license-dm.png)
 2. **Specify Storage Directory**: Enter path to the directory you would like to share for the storage users data
     - Click on the folder icon on the right to select a directory interactively.
     - Or enter the path manually, **e.g.**, /Users/user/denet_storage (Linux/macOS) or C:\denet_storage (Windows)
     - Ensure the directory exists and has sufficient space
-      ![](../assets/choose-storage-dm.png)
+    ![](../assets/choose-storage-dm.png)
 3. **Select [RPC](./faq.md#what-is-an-rpc-and-why-do-we-use-it) for peaq Blockchain (Chain Id: 3338)**
-   ![](../assets/choose-rpc-dm.png)
+    ![](../assets/choose-rpc-dm.png)
 4. **Set Storage Space**:
     - Specify the amount of disk space to allocate for DeNet Storage (e.g., 100). Enter the value (only number, without GiB) when prompted.
-      ![](../assets/set-storage-amount-dm.png)
+    ![](../assets/set-storage-amount-dm.png)
 5. **Enter IP Address**: Press enter to use the default one (0.0.0.0)
     - If you'd like to set up the [public IP](./public-ip.md), enter it in the following format: xxx.xxx.xxx.xxx
-      ![](../assets/choose-ip-dm.png)
+    ![](../assets/choose-ip-dm.png)
 6. **Choose Port**: Press `Use Default` to configure it automatically
     - Or specify another (value from 10000 to 65535)
     - If you use the public IP address, make sure that the port is [forwarded](./public-ip.md#port-forwarding-requirements)
-      ![](../assets/choose-port-dm.png)
+    ![](../assets/choose-port-dm.png)
 
 7. **Verify Operation**:
-    - If the startup icon turns green, and you receive a notification that the node has entered the pool, you can consider it running
-      ![](../assets/launch-node-dm.png)
-      ![](../assets/join-pool.png)
+    - If the startup icon turns green, and you receive a [notification](#viewing-notifications) that the node has entered the pool, you can consider it running
+    ![](../assets/launch-node-dm.png)
+    ![](../assets/join-pool.png)
 
 ## Monitoring Your Node
 ### Viewing Notifications
@@ -78,6 +78,6 @@ In order to **activate the nodes**, you need to set additional configuration set
 - A green light indicates that your node is active and connected to the network
 - The node should display as "Running" in the list of active nodes
 - Verify that your node has successfully joined the pool by checking the notifications
-- Go to the peaq subscan website to check which transactions the node is sending.
+- Go to the peaq subscan website to check which transactions the node is sending
     ![](../assets/transactions-dm.png)
-- [Monitor](./monitoring.md) your nodes node state regularly
+- [Monitor](./monitoring.md) your nodes node state regularly (at least once a day)
