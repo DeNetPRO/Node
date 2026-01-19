@@ -4,8 +4,9 @@ This guide provides simplified step-by-step instructions for installing and runn
 
 1. [Quick Start Installation](#quick-start-installation)
 2. [Configuring Node](#configuring-node)
-3. [Running Multiple Nodes](#running-multiple-nodes)
-4. [Useful Commands](#useful-commands)
+3. [Run in background](#run-in-background)
+4. [Running Multiple Nodes](#running-multiple-nodes)
+5. [Useful Commands](#useful-commands)
 
 ## Quick Start Installation
 
@@ -46,7 +47,7 @@ After the node is installed, you can proceed with the configuration
 
 - Instructions are [here](./configuring.md)
 
-## Running Your Node
+## Run In Background
 
 To run in background:
 ```bash
