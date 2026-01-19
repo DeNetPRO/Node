@@ -37,10 +37,10 @@ In order to **activate the nodes**, you need to set additional configuration set
 3. **Select [RPC](./faq.md#what-is-an-rpc-and-why-do-we-use-it) for peaq Blockchain (Chain Id: 3338)**
     ![](../assets/choose-rpc-dm.png)
 4. **Set Storage Space**:
-    - Specify the amount of disk space to allocate for DeNet Storage (e.g., 100). Enter the value (only number, without GiB) when prompted.
+    - Specify the amount of disk space to allocate for DeNet Storage (e.g., 100). Enter the value (only number, without GiB) when prompted  
     ![](../assets/set-storage-amount-dm.png)
 5. **Enter IP Address**: Press enter to use the default one (0.0.0.0)
-    - If you'd like to set up the [public IP](./public-ip.md), enter it in the following format: xxx.xxx.xxx.xxx
+    - If you'd like to set up the [public IP](./public-ip.md), enter it in the following format: xxx.xxx.xxx.xxx  
     ![](../assets/choose-ip-dm.png)
 6. **Choose Port**: Press `Use Default` to configure it automatically
     - Or specify another (value from 10000 to 65535)
