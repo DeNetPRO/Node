@@ -68,7 +68,7 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
     - **Windows**: Double-click the downloaded .exe file and follow the prompts
     - **macOS**: Double-click the .dmg file and drag the app to Applications folder
     - **Linux**: Install with appropriate package manager command
-4. **Launch the Desktop Node Manager** and configure your node
+4. **Launch the Desktop Node Manager** and [configure](./guides/configuring-manager.md) your node
 
 
 ## Command Line Interface (CLI) Node
