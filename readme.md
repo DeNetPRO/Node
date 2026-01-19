@@ -24,6 +24,8 @@
 
 - [What is DeNet?](#what-is-denet)
 - [Supported Platforms](#supported-platforms)
+  - [Command Line Interface (CLI) Node](#command-line-interface-cli-node)
+  - [Desktop Node Manager](#desktop-node-manager)
 - [Installation Options](#installation-options)
 - [Step-by-Step Installation Process](#step-by-step-installation-process)
 - [Node Activity Monitoring](./guides/monitoring.md)
@@ -52,9 +54,9 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
 
 DeNet Datakeeper Nodes can be installed on various operating systems depending on your needs and technical requirements:
 
-## Available Builds
+## Command Line Interface (CLI) Node
 
-### Datakeeper Node Binary Builds
+### Available CLI Builds
 
 | Operating System | Architecture | Download Link |
 |------------------|--------------|---------------|
@@ -85,7 +87,9 @@ To determine your system architecture:
 2. If it shows `x86_64`, you have x86_64 architecture
 3. If it shows `aarch64`, you have ARM64 architecture
 
-### Desktop Node Manager Builds
+## Desktop Node Manager
+
+### Available Desktop Builds
 
 | Operating System | Architecture | Download Link | Package Format | Installation Command |
 |------------------|--------------|---------------|----------------|---------------------|
@@ -113,14 +117,14 @@ To determine your system architecture:
 
 The DeNet Datakeeper Node offers flexible installation approaches to accommodate different deployment scenarios:
 
-### 1. Command Line Interface (CLI) Node
+### Command Line Interface (CLI) Node
 - **Best for**: Server environments, headless systems, advanced users
 - **Features**: Full functionality via terminal commands
 - **Installation**: Available for all supported platforms
 - **Management**: Requires manual configuration and monitoring
 - **Beginner-friendly**: Not recommended for users unfamiliar with terminal operations
 
-### 2. Desktop Node Manager
+### Desktop Node Manager
 - **Best for**: Desktop users, beginners, easy management
 - **Features**: Graphical interface for node management
 - **Installation**: Available for Windows, macOS, and Linux desktop versions
@@ -134,12 +138,12 @@ The DeNet Datakeeper Node offers flexible installation approaches to accommodate
 1. **Make sure that your setup meets the [requirements](./guides/requirements.md)**
 2. **Choose the appropriate application** (CLI or Desktop Application):
     - See the [Installation Options](#installation-options) section
-3. **Download the right file**:
+3. **For Desktop Node Manager**:
     - First, determine your computer's [architecture](#how-to-choose-the-right-architecture) (x86_64 or ARM64)
-    - Then choose the correct file from the [Supported Platforms](#supported-platforms) section
-4. **Install the software**:
-    - For Desktop Node Manager: Double-click the downloaded file and follow the prompts
-    - For CLI version view detailed guides:
+    - Download the appropriate file from the [Supported Platforms](#supported-platforms) section
+    - Double-click the downloaded file and follow the prompts
+4. **For CLI Node**:
+    - See detailed guides:
         - [Windows](./guides/install-denode-windows.md)
         - [Linux](./guides/install-denode-linux.md)
         - [MacOS](./guides/install-denode-mac.md)
