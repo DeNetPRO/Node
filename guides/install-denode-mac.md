@@ -13,23 +13,19 @@ This guide provides simplified step-by-step instructions for installing and runn
 ### Method 1: Download via curl (Recommended)
 ```bash
 # Download node executable
-curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/denode-macos-amd64
+curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/denode-macos-arm64
 
 # Create directory for the node executable and copy it
 mkdir -p ~/denet
-cp denode-macos-amd64 ~/denet/denode
+cp denode-macos-arm64 ~/denet/denode
 cd ~/denet
 
 # Make executable
 chmod +x denode
 
-# Remove quarantine attribute (required for macOS)
-xattr -d com.apple.quarantine denode
-
 # Run the node (this will prompt for configuration)
 ./denode
 ```
-![](assets/mac-run.png)
 
 ### Method 2: Download from GitHub Website
 1. Visit [https://github.com/DeNetPRO/Node/releases](https://github.com/DeNetPRO/Node/releases)
@@ -39,13 +35,15 @@ xattr -d com.apple.quarantine denode
 3. Move the downloaded file to your desired location:
    ```bash
    mkdir -p ~/denet
-   mv /path/to/downloaded/denode-macos-amd64 ~/denet/denode
+   mv /path/to/downloaded/denode-macos-arm64 ~/denet/denode
    cd ~/denet
    chmod +x denode
-   xattr -d com.apple.quarantine denode
    ```
    
 ## Configuring Node
+
+After the node is installed, you can proceed with the configuration
+
 - Instructions are [here](./configuring.md)
 
 ## Running Your Node
