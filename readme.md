@@ -140,7 +140,7 @@ The DeNet Datakeeper Node offers flexible installation approaches to accommodate
     - See the [Installation Options](#installation-options) section
 3. **For Desktop Node Manager**:
     - First, determine your computer's [architecture](#how-to-choose-the-right-architecture) (x86_64 or ARM64)
-    - Download the appropriate file from the [Supported Platforms](#available-desktop-builds) section
+    - Download the appropriate file from the [Available Builds](#available-desktop-builds) section
     - Double-click the downloaded file and follow the prompts
 4. **For CLI Node**:
     - See detailed guides:
