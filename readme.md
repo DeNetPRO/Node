@@ -51,9 +51,9 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
 
 ## Installation Process
 **Step 1**: Make sure that your setup meets the [requirements](./guides/requirements.md)  
-**Step 2**: Choose the installation option that better suits you
+**Step 2**: Choose the **installation option** that better suits you
 
-### Desktop Node Manager
+> ### Desktop Node Manager
 - **Best for**: Desktop users, beginners, easy management
 - **Features**: Graphical interface for node management
 - **Installation**: Available for Windows, macOS, and Linux desktop versions
@@ -71,7 +71,7 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
 4. **Launch the Desktop Node Manager** and configure your node
 
 
-### Command Line Interface (CLI) Node
+> ### Command Line Interface (CLI) Node
 - **Best for**: Server environments, headless systems, advanced users
 - **Features**: Full functionality via terminal commands
 - **Installation**: Available for all supported platforms
