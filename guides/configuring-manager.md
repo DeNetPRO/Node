@@ -30,7 +30,7 @@ In order to **activate the nodes**, you need to set additional configuration set
 1. **Choose License ID**: сlick on the toggle to the left of the license number to proceed to the activation
     ![](../assets/choose-license-dm.png)
 2. **Specify Storage Directory**: Enter path to the directory you would like to share for the storage users data
-    - Click on the folder icon on the right to select a directory interactively.
+    - Click on the folder icon on the right to select a directory interactively
     - Or enter the path manually, **e.g.**, /Users/user/denet_storage (Linux/macOS) or C:\denet_storage (Windows)
     - Ensure the directory exists and has sufficient space
     ![](../assets/choose-storage-dm.png)
@@ -39,7 +39,7 @@ In order to **activate the nodes**, you need to set additional configuration set
 4. **Set Storage Space**:
     - Specify the amount of disk space to allocate for DeNet Storage (e.g., 100). Enter the value (only number, without GiB) when prompted  
     ![](../assets/set-storage-amount-dm.png)
-5. **Enter IP Address**: Press enter to use the default one (0.0.0.0)
+5. **Enter IP Address**: Skip to use the default one (0.0.0.0)
     - If you'd like to set up the [public IP](./public-ip.md), enter it in the following format: xxx.xxx.xxx.xxx  
     ![](../assets/choose-ip-dm.png)
 6. **Choose Port**: Press `Use Default` to configure it automatically
@@ -74,9 +74,7 @@ In order to **activate the nodes**, you need to set additional configuration set
 - Save changes to apply them
 
 ### Checking Node Status
-- Look for the status indicator in the main dashboard
-- A green light indicates that your node is active and connected to the network
-- The node should display as "Running" in the list of active nodes
+- The node should display as "Active" in the list of active nodes
 - Verify that your node has successfully joined the pool by checking the notifications
 - Go to the peaq subscan website to check which transactions the node is sending
     ![](../assets/transactions-dm.png)
