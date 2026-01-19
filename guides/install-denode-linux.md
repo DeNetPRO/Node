@@ -7,11 +7,10 @@ This guide provides simplified step-by-step instructions for installing and runn
     - [Method 1: Download via curl (Recommended)](#method-1-download-via-curl-recommended)
     - [Method 2: Download from GitHub Website](#method-2-download-from-github-website)
 2. [Configuring Node](#configuring-node)
-3. [Running Your Node](#running-your-node)
-4. [Running Multiple Nodes](#running-multiple-nodes)
-5. [Advanced: Systemd Service Setup (Optional)](#advanced-systemd-service-setup-optional)
-6. [Reinstalling Your Node](#reinstalling-your-node)
-7. [Useful Commands](#useful-commands)
+3. [Running Multiple Nodes](#running-multiple-nodes)
+4. [Advanced: Systemd Service Setup (Optional)](#advanced-systemd-service-setup-optional)
+5. [Reinstalling Your Node](#reinstalling-your-node)
+6. [Useful Commands](#useful-commands)
 
 ## Quick Start Installation
 
@@ -50,14 +49,6 @@ chmod +x denode
 After the node is installed, you can proceed with the configuration
 
 - Instructions are [here](./configuring.md)
-
-## Running Your Node
-
-After initial setup of all configuration parameters, simply run:
-```bash
-cd ~/denet
-./denode
-```
 
 To run in background:
 ```bash

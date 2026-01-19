@@ -4,9 +4,8 @@ This guide provides simplified step-by-step instructions for installing and runn
 
 1. [Quick Start Installation](#quick-start-installation)
 2. [Configuring Node](#configuring-node)
-3. [Running Your Node](#running-your-node)
-4. [Running Multiple Nodes](#running-multiple-nodes)
-5. [Useful Commands](#useful-commands)
+3. [Running Multiple Nodes](#running-multiple-nodes)
+4. [Useful Commands](#useful-commands)
 
 ## Quick Start Installation
 
@@ -38,6 +37,7 @@ chmod +x denode
    mv /path/to/downloaded/denode-macos-arm64 ~/denet/denode
    cd ~/denet
    chmod +x denode
+   ./denode
    ```
    
 ## Configuring Node
@@ -47,12 +47,6 @@ After the node is installed, you can proceed with the configuration
 - Instructions are [here](./configuring.md)
 
 ## Running Your Node
-
-After initial setup of all configuration parameters, simply run:
-```bash
-cd ~/denet
-./denode
-```
 
 To run in background:
 ```bash
