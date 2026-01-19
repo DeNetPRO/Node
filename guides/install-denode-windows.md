@@ -98,7 +98,7 @@ Start-Process -FilePath ".\denode.exe" -ArgumentList "--address", "your_datakeep
 ## Configuring Node
 After the node is installed, you can proceed with the configuration
 
-- Instructions are [here](./configuring.md)
+- Instructions are [here](configuring-cli.md)
 
 
 ## Running Multiple Nodes

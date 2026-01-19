@@ -1,4 +1,4 @@
-# DeNet Datakeeper Node Configuration
+# DeNet Datakeeper Node CLI Configuration
 
 If you see the following window, your node is ready to be configured.
 ![](../assets/successful-startup.png)
@@ -14,7 +14,7 @@ If you see the following window, your node is ready to be configured.
     - The private key will be stored securely on your device, encrypted with this password
     ![](../assets/set-password.png)
     ![](../assets/confirm-password.png)
-3. **Choose License ID**: enter license bumber you'd like to start
+3. **Choose License ID**: enter license number you'd like to start
     - Enter any license number from the **Available licenses** list
     ![](../assets/choose-license.png)
    > ⚠️ **Important**: Do not choose the same license number when running multiple node instances. This is not prohibited, but it can lead to undefined behavior

@@ -45,7 +45,7 @@ chmod +x denode
 
 After the node is installed, you can proceed with the configuration
 
-- Instructions are [here](./configuring.md)
+- Instructions are [here](configuring-cli.md)
 
 ## Run In Background
 
