@@ -27,6 +27,7 @@
 - [Supported Platforms](#supported-platforms)
     - [Command Line Interface (CLI) Node](#command-line-interface-cli-node)
     - [Desktop Node Manager](#desktop-node-manager)
+    - [Web Node Manager](#web-node-manager)
 - [Node Activity Monitoring](./guides/monitoring.md)
 - [License Management](./guides/license-management.md)
 
@@ -70,6 +71,21 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
     - **Linux**: Install with appropriate package manager command
 4. **Launch the Desktop Node Manager** and [configure](./guides/configuring-manager.md) your node
 
+## Web Node Manager
+- **Best for**: Server environments, headless systems, advanced users, and desktop users who want a lightweight solution
+- **Features**: Web-based interface accessible through browser, suitable for servers without GUI
+- **Installation**: Available for all supported platforms with additional setup steps for server environments
+- **Management**: Accessible through web browser at http://localhost:1111
+- **Beginner-friendly**: Requires basic terminal knowledge for initial setup
+
+> ⚠️ **Important**: Web Node Manager is suitable for server operating systems (Ubuntu Server, CentOS, etc.) and can be installed on any platform with proper setup. For server environments, additional configuration may be required.
+
+#### Installation Guide:
+
+For platform-specific instructions, see:
+- [Windows](./guides/install-denode-manager-web-windows.md)
+- [macOS](./guides/install-denode-manager-web-mac.md)
+- [Linux](./guides/install-denode-manager-web-linux.md)
 
 ## Command Line Interface (CLI) Node
 - **Best for**: Server environments, headless systems, advanced users
@@ -119,6 +135,18 @@ DeNet Datakeeper Nodes can be installed on various operating systems depending o
 
 > 💡 **Tip**: Use the Desktop Node Manager download page at https://node.denet.app/ to conveniently download the specific application version.
 
+## Web Node Manager Builds
+
+| Operating System | Architecture | Download Link |
+|------------------|--------------|---------------|
+| **Windows** | x86_64 | [denode-manager-win-amd64.msi](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/denode-manager-win-amd64.msi) |
+| **Linux** | x86_64 | [denode-manager-linux-amd64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/denode-manager-linux-amd64.zip) |
+| **Linux** | ARM64 | [denode-manager-linux-arm64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/denode-manager-linux-arm64.zip) |
+| **macOS** | x86_64 | [denode-manager-darwin-amd64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/denode-manager-darwin-amd64.zip) |
+| **macOS** | ARM64 | [denode-manager-darwin-arm64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/denode-manager-darwin-arm64.zip) |
+
+> 📝 **Note**: Web Node Manager is distributed as a zip or msi file that requires additional setup steps compared to Desktop Node Manager. It's suitable for both desktop and server environments.
+
 ### How to Choose the Right Architecture
 
 When downloading the DeNet Node Binary Build, it's important to select the version that matches your computer's processor architecture:
@@ -147,4 +175,17 @@ To determine your system architecture:
     - Install with: `sudo rpm -ivh package.rpm`
 
 > 💡 **Tip**: If you're unsure what Linux distribution you're using, run `cat /etc/os-release` in your terminal to find out.
+
+## Web Node Manager vs Desktop Node Manager
+
+| Feature | Web Node Manager | Desktop Node Manager |
+|---------|------------------|----------------------|
+| Platform Support | All platforms including servers | Desktop platforms only |
+| Interface | Browser-based | Native GUI |
+| Installation | Requires additional setup steps | Simple installer |
+| Server Compatibility | ✅ Fully compatible | ❌ Not compatible |
+| Resource Usage | Lower | Higher |
+| Accessibility | Accessible from any device with browser | Limited to desktop |
+
+> 📝 **Note**: The Web Node Manager is ideal for server environments where GUI support is not available, while Desktop Node Manager provides a more user-friendly experience for desktop users.
 
