@@ -25,5 +25,4 @@
 
 ## Notes:
 1. Application should always be running in the background, otherwise the application will not work, check the status using the application's interface
-2. You shouldn't use both CLI and GUI at the same time, otherwise you will get an undefined applications behaviour.
-3. We recommend to change rpc to the private one exactly after the node launch. It will allow to avoid problems with the default version limitations.
+2. You shouldn't use both CLI and GUI at the same time, otherwise you will get an undefined application behaviour
