@@ -82,10 +82,10 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
 
 #### Installation Guide:
 
-For platform-specific instructions, see:
-- [Windows](./guides/install-denode-manager-web-windows.md)
-- [macOS](./guides/install-denode-manager-web-mac.md)
-- [Linux](./guides/install-denode-manager-web-linux.md)
+> 💡 **Tip**: For platform-specific instructions, see:
+> - [Windows](./guides/install-denode-manager-web-windows.md)
+> - [Linux](./guides/install-denode-manager-web-linux.md)
+> - [MacOS](./guides/install-denode-manager-web-mac.md)
 
 ## Command Line Interface (CLI) Node
 - **Best for**: Server environments, headless systems, advanced users
