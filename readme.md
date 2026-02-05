@@ -80,8 +80,6 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
 
 > ⚠️ **Important**: Web Node Manager is suitable for server operating systems (Ubuntu Server, CentOS, etc.) and can be installed on any platform with proper setup. For server environments, additional configuration may be required.
 
-#### Installation Guide:
-
 > 💡 **Tip**: For platform-specific instructions, see:
 > - [Windows](./guides/install-denode-manager-web-windows.md)
 > - [Linux](./guides/install-denode-manager-web-linux.md)
