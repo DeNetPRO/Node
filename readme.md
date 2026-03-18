@@ -60,16 +60,10 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
 - **Management**: Intuitive GUI with real-time monitoring
 - **Beginner-friendly**: Ideal for users who prefer visual interfaces and point-and-click operations
 
-#### Installation Guide:
-
-1. **Determine your computer's [architecture](#how-to-choose-the-right-architecture) (x86_64 or ARM64)**
-2. **Download the appropriate file** from the [Available Desktop Builds](#available-desktop-builds) section
-3. **Install the application**:
-    - **Windows**: Double-click the downloaded .exe file and follow the prompts
-    - **macOS**: Double-click the .dmg file and drag the app to Applications folder
-    - **Linux**: Install with appropriate package manager command
-4. **Launch the Desktop Node Manager** and [configure](./guides/configuring-manager.md) your node
-
+> 💡 **Tip**: For detailed platform-specific installation instructions, see:
+> - [Windows](./guides/install-denode-manager-windows.md)
+> - [Linux](./guides/install-denode-manager-linux.md)
+> - [macOS](./guides/install-denode-manager-macos.md)
 
 ## Command Line Interface (CLI) Node
 - **Best for**: Server environments, headless systems, advanced users
