@@ -3,7 +3,7 @@
 ## Installation Guide
 
 ### Step 0: Prepare Environment
-1. Download installation and management scripts from the [scripts](https://github.com/DeNetPRO/Node) directory
+1. Download installation and management scripts from the [scripts](https://github.com/DeNetPRO/Node/tree/Dev/scripts) directory
     ```shell
     install.sh
     denode-manager.sh
@@ -40,5 +40,5 @@
    ![Node GUI](../assets/node-gui.png)
 
 ## Notes:
-1. Application should always be running in the background, otherwise the application will not work, check the status using ***denode-manager.sh*** script
+1. Launched server should always be running in the background, otherwise the application will not work, check the status using ***denode-manager.sh*** script
 2. You shouldn't use both CLI and GUI at the same time, otherwise you will get an undefined application behaviour
