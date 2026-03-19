@@ -18,7 +18,7 @@ This guide provides simplified step-by-step instructions for installing and runn
 ### Method 1: Download via curl (Recommended)
 ```powershell
 # Download node executable
-curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc10/denode-windows-amd64.exe
+curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc11/denode-windows-amd64.exe
 
 # Create directory for the node executable and copy it
 mkdir -Force C:\denet
