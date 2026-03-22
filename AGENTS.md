@@ -101,3 +101,78 @@ command --flag "argument"
 
 ## No Build Process Required
 This is a documentation repository - no compilation, linting, or testing is required. Changes are deployed directly from the main branch.
+
+## Development Commands
+
+### Previewing Changes
+```bash
+# Serve locally with any static server
+python3 -m http.server 8000
+# or
+npx serve .
+```
+
+### Link Checking
+```bash
+# Manual verification - check all internal links resolve
+# Use browser dev tools or markdown link checker extensions
+```
+
+## Git Workflow
+```bash
+# Standard workflow for documentation changes
+git checkout -b docs/update-guide-name
+# Make changes
+git add .
+git commit -m "docs: update installation guide with new screenshots"
+git push origin docs/update-guide-name
+# Create PR for review
+```
+
+## Commit Message Conventions
+- Prefix with `docs:` for documentation changes
+- Keep messages concise and descriptive
+- Example: `docs: add Windows installation guide`
+
+## Agent Guidelines
+
+### When Adding Documentation
+1. Check existing guides in `/guides/` for similar content
+2. Follow established structure and formatting
+3. Add screenshots to `/assets/` and create WebP versions
+4. Update Table of Contents in readme.md if adding new pages
+5. Verify all links work before committing
+
+### When Updating Existing Content
+1. Maintain consistent tone and style
+2. Update screenshots if UI/commands change
+3. Check cross-references are still valid
+4. Keep version numbers current
+
+### Image Best Practices
+- Use WebP format for smaller file sizes
+- Compress images before adding
+- Name files descriptively: `feature-name-step.png`
+- Include alt text in markdown: `![description](path)`
+
+### Platform-Specific Content
+- Use tabs or clear sections for different OS instructions
+- Label commands with language: ```bash, ```powershell
+- Test commands on each platform before documenting
+
+## Troubleshooting Common Issues
+
+### Broken Links
+- Run link checker or manually verify after edits
+- Use relative paths for internal links
+- Check anchor link casing (GitHub uses lowercase)
+
+### Image Issues
+- Verify file exists at specified path
+- Check file permissions
+- Ensure WebP fallbacks exist for critical images
+
+### Formatting Problems
+- Keep lines at ~100 chars for readability
+- Use consistent heading hierarchy (## then ###)
+- Maintain consistent list formatting

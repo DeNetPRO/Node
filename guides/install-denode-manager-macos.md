@@ -4,16 +4,14 @@ This guide provides step-by-step instructions for installing and running the DeN
 
 ## Table of Contents
 
-1. [Quick Start](#quick-start)
-2. [Download the Application](#download-the-application)
-3. [Installation](#installation)
-4. [Launch DeNode Manager](#launch-denode-manager)
-5. [Troubleshooting](#troubleshooting)
-6. [Next Steps](#next-steps)
+1. [Setup Guide](#setup-guide)
+2. [Next Steps](#next-steps)
+3. [Troubleshooting](#troubleshooting)
+4. [Additional Resources](#additional-resources)
 
 ---
 
-## Quick Start
+## Setup Guide
 
 > ⚠️ **Important:** Before starting, please review the [System and Account Requirements](./requirements.md) to ensure you have everything needed.
 
@@ -31,19 +29,17 @@ For detailed instructions, see:
 - [Node Activity Monitoring](./monitoring.md) - Monitor your node performance
 - [License Management](./license-management.md) - Manage your Datakeeper licenses
 
----
-
-## Download the Application
+### Step 0: Download
 
 Choose one of the following methods to download the Desktop Node Manager:
 
-### Method 1: Direct Download from GitHub (Recommended)
+#### Method 1: Direct Download from GitHub (Recommended)
 
 1. Visit the [DeNet Node Releases page](https://github.com/DeNetPRO/Node/releases/latest)
 2. Download the macOS version:
    - **macOS (Intel/Apple Silicon):** `DeNode_Manager_1.0.5_x64.dmg`
 
-### Method 2: Using Terminal
+#### Method 2: Using Terminal
 
 Open Terminal and run:
 
@@ -51,18 +47,16 @@ Open Terminal and run:
 curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc11/DeNode_Manager_1.0.5_x64.dmg
 ```
 
-### Verify Download (Optional)
+#### Verify Download (Optional)
 
 ```bash
 # Check if the file downloaded successfully
 ls -lh ~/Downloads/DeNode_Manager*.dmg
 ```
 
----
+### Step 1: Installation
 
-## Installation
-
-### Step 1: Open the DMG File
+#### Open the DMG File
 
 Navigate to your Downloads folder and double-click the `.dmg` file:
 
@@ -75,7 +69,7 @@ open ~/Downloads/DeNode_Manager*.dmg
 
 A window will appear showing the DeNode Manager application icon and the Applications folder shortcut.
 
-### Step 2: Drag to Applications Folder
+#### Drag to Applications Folder
 
 Drag the **DeNode Manager** icon into the **Applications** folder shortcut in the installation window.
 
@@ -85,11 +79,9 @@ Wait for the copy process to complete. This may take some time depending on your
 
 > 💡 **Tips:** After copying, you can eject the disk image (drag to Trash or right-click → Eject) and delete the `.dmg` file to free up space, or keep it for future reinstallations.
 
----
+### Step 2: Launch
 
-## Launch DeNode Manager
-
-### Open the Application and View Initial Screen
+#### Open the Application and View Initial Screen
 
 1. Open **Finder** → **Applications**
 2. Find **DeNode Manager** in your Applications folder
@@ -107,13 +99,6 @@ On first launch, macOS will confirm that the app is verified by Apple, and you w
 The application will display a list of licenses associated with your wallet. Initially, all licenses will be disabled until configured.
 
 > 💡 **Tip:** The first launch may take some time as the application initializes its components.
-
----
-
-## Troubleshooting
-
-Contact support if you encounter issues:
-- [Discord Support](https://discord.gg/cPz9m4cSWv)
 
 ---
 
@@ -143,6 +128,17 @@ Improve node performance with a public IP address:
 
 ---
 
+## Troubleshooting
+
+Contact support if you encounter issues:
+- [Discord Support](https://discord.gg/cPz9m4cSWv)
+
+**Need Help?**  
+If you encounter any issues not covered in this guide, please reach out through our community channels:
+- [Discord Support](https://discord.gg/cPz9m4cSWv)
+
+---
+
 ## Additional Resources
 
 ### Documentation
@@ -160,9 +156,3 @@ Improve node performance with a public IP address:
 
 - [Windows Installation](./install-denode-manager-windows.md)
 - [Linux Installation](./install-denode-manager-linux.md)
-
----
-
-**Need Help?**  
-If you encounter any issues not covered in this guide, please reach out through our community channels:
-- [Discord Support](https://discord.gg/cPz9m4cSWv)
