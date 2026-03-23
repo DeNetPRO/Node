@@ -15,20 +15,6 @@ This guide provides step-by-step instructions for installing and running the DeN
 
 > ⚠️ **Important:** Before starting, please review the [System and Account Requirements](./requirements.md) to ensure you have everything needed.
 
-Get started with DeNet Desktop Node Manager in just a few steps:
-
-1. **Download:** Get the `.dmg` file for your Mac from the [GitHub Releases page](https://github.com/DeNetPRO/Node/releases/latest)
-2. **Install:** Double-click the `.dmg` file and drag the DeNode Manager app to your Applications folder
-3. **Launch:** Open DeNode Manager from Applications (macOS will verify the app is from Apple)
-4. **Configure:** Follow the setup wizard to import your wallet account and activate your node
-
-That's it! Your node will be ready to run after configuration.
-
-For detailed instructions, see:
-- [Configuring Node Manager Guide](./configuring-manager.md) - Complete configuration steps
-- [Node Activity Monitoring](./monitoring.md) - Monitor your node performance
-- [License Management](./license-management.md) - Manage your Datakeeper licenses
-
 ### Step 0: Download
 
 Choose one of the following methods to download the Desktop Node Manager:
@@ -133,10 +119,6 @@ Improve node performance with a public IP address:
 Contact support if you encounter issues:
 - [Discord Support](https://discord.gg/cPz9m4cSWv)
 
-**Need Help?**  
-If you encounter any issues not covered in this guide, please reach out through our community channels:
-- [Discord Support](https://discord.gg/cPz9m4cSWv)
-
 ---
 
 ## Additional Resources
@@ -156,3 +138,7 @@ If you encounter any issues not covered in this guide, please reach out through 
 
 - [Windows Installation](./install-denode-manager-windows.md)
 - [Linux Installation](./install-denode-manager-linux.md)
+
+**Need Help?**  
+If you encounter any issues not covered in this guide, please reach out through our community channels:
+- [Discord Support](https://discord.gg/cPz9m4cSWv)

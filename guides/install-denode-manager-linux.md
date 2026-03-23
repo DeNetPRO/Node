@@ -4,49 +4,31 @@ This guide provides step-by-step instructions for installing and running the DeN
 
 ## Table of Contents
 
-1. [Quick Start](#quick-start)
-2. [Download the Application](#download-the-application)
-3. [Installation](#installation)
-4. [Launch DeNode Manager](#launch-denode-manager)
-5. [Troubleshooting](#troubleshooting)
-6. [Next Steps](#next-steps)
+1. [Setup Guide](#setup-guide)
+2. [Next Steps](#next-steps)
+3. [Troubleshooting](#troubleshooting)
+4. [Additional Resources](#additional-resources)
 
 ---
 
-## Quick Start
+## Setup Guide
 
 > ⚠️ **Important:** Before starting, please review the [System and Account Requirements](./requirements.md) to ensure you have everything needed.
 
-Get started with DeNet Desktop Node Manager in just a few steps:
-
-1. **Download:** Get the `.deb` or `.rpm` file for your Linux distribution from the [GitHub Releases page](https://github.com/DeNetPRO/Node/releases)
-2. **Install:** Install the package using your package manager or double-click the file
-3. **Launch:** Open DeNode Manager from your applications menu
-4. **Configure:** Follow the setup wizard to import your wallet account and activate your node
-
-That's it! Your node will be ready to run after configuration.
-
-For detailed instructions, see:
-- [Configuring Node Manager Guide](./configuring-manager.md) - Complete configuration steps
-- [Node Activity Monitoring](./monitoring.md) - Monitor your node performance
-- [License Management](./license-management.md) - Manage your Datakeeper licenses
-
----
-
-## Download the Application
+### Step 0: Download
 
 Choose one of the following methods to download the Desktop Node Manager:
 
-### Method 1: Direct Download from GitHub (Recommended)
+#### Method 1: Direct Download from GitHub (Recommended)
 
-1. Visit the [DeNet Node Releases page](https://github.com/DeNetPRO/Node/releases)
+1. Visit the [DeNet Node Releases page](https://github.com/DeNetPRO/Node/releases/latest)
 2. Download the appropriate version for your Linux distribution:
    - **Debian/Ubuntu (x86_64):** `DeNode_Manager_1.0.5_amd64.deb`
    - **Debian/Ubuntu (ARM64):** `DeNode_Manager_1.0.5_arm64.deb`
    - **Red Hat/Fedora/CentOS (x86_64):** `DeNode_Manager-1.0.5-1.x86_64.rpm`
    - **Red Hat/Fedora/CentOS (ARM64):** `DeNode_Manager-1.0.5-1.aarch64.rpm`
 
-### Method 2: Using Terminal
+#### Method 2: Using Terminal
 
 Open Terminal and run the appropriate command for your distribution:
 
@@ -64,20 +46,9 @@ curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc11/DeNode_M
 curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc11/DeNode_Manager-1.0.5-1.aarch64.rpm
 ```
 
-### Check Your Architecture
+### Step 1: Installation
 
-```bash
-# Check your system architecture
-uname -m
-
-# x86_64 = AMD64, aarch64 = ARM64
-```
-
----
-
-## Installation
-
-### Install the Package
+#### Install the Package
 
 **For Debian/Ubuntu (DEB):**
 
@@ -96,9 +67,9 @@ sudo apt install -f
 sudo rpm -ivh DeNode_Manager-1.0.5-1.x86_64.rpm
 ```
 
-[image: linux_screen_1.jpg]
+![](../assets/webp/linux-app-install.webp)
 
-## Launch DeNode Manager
+### Step 2: Launch
 
 **From Applications Menu:**
 
@@ -112,20 +83,9 @@ sudo rpm -ivh DeNode_Manager-1.0.5-1.x86_64.rpm
 denode-manager
 ```
 
-On first launch, you will see the configuration screen:
-
-[image: linux_screen_2.jpg]
-
 The application will display a list of licenses associated with your wallet. Initially, all licenses will be disabled until configured.
 
 > 💡 **Tip:** The first launch may take some time as the application initializes its components.
-
----
-
-## Troubleshooting
-
-Contact support if you encounter issues:
-- [Discord Support](https://discord.gg/cPz9m4cSWv)
 
 ---
 
@@ -155,6 +115,13 @@ Improve node performance with a public IP address:
 
 ---
 
+## Troubleshooting
+
+Contact support if you encounter issues:
+- [Discord Support](https://discord.gg/cPz9m4cSWv)
+
+---
+
 ## Additional Resources
 
 ### Documentation
@@ -172,8 +139,6 @@ Improve node performance with a public IP address:
 
 - **Official Website:** [denet.pro](https://denet.pro)
 - **Discord Server:** [Join our community](https://discord.gg/cPz9m4cSWv)
-
----
 
 **Need Help?**  
 If you encounter any issues not covered in this guide, please reach out through our community channels:
