@@ -44,23 +44,15 @@ curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc11/DeNode_M
 2. Double-click `DeNode_Manager_1.0.5_x64-setup.exe`
 3. If prompted by User Account Control, click **Yes** to allow the installation
 
-[image: win-run.png]
-
 #### Follow the Installation Wizard
 
-1. Choose your installation language and click **OK**
-2. Click **Next** on the welcome screen
-3. Accept the license agreement
-4. Choose the installation location (default is recommended)
-5. Click **Install** to begin the installation
+1. Click **Next** on the welcome screen
+2. Choose the installation location (default is recommended)
+3. Click **Install** to begin the installation
+4. Wait for the installation to complete an click **Finish** to exit the wizard
+5. Optionally, check "Launch DeNode Manager" to start the application immediately
 
-[image: win-folder.png]
-
-#### Complete Installation
-
-1. Wait for the installation to complete
-2. Click **Finish** to exit the wizard
-3. Optionally, check "Launch DeNode Manager" to start the application immediately
+![](../assets/webp/dm-windows-install.webp)
 
 > 💡 **Tips:** 
 > - The installer will create a Start Menu shortcut and optionally a Desktop shortcut
@@ -82,11 +74,9 @@ curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc11/DeNode_M
 1. Navigate to `C:\Program Files\DeNode Manager`
 2. Double-click `DeNode Manager.exe`
 
-On first launch, you will see the initial configuration screen:
+![](../assets/webp/dm-windows-launch.webp)
 
-[image: windows_screen_1.png]
-
-The application will display a list of licenses associated with your wallet. Initially, all licenses will be disabled until configured.
+After authorization, you will see a list of licenses associated with your wallet. Initially, all licenses will be disabled until configured.
 
 > 💡 **Tip:** The first launch may take some time as the application initializes its components.
 

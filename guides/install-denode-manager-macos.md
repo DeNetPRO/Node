@@ -51,7 +51,7 @@ Navigate to your Downloads folder and double-click the `.dmg` file:
 open ~/Downloads/DeNode_Manager*.dmg
 ```
 
-![](../assets/webp/macos-install-gui-step-1.webp)
+![](../assets/webp/dm-macos-install-step-1.png)
 
 A window will appear showing the DeNode Manager application icon and the Applications folder shortcut.
 
@@ -59,7 +59,7 @@ A window will appear showing the DeNode Manager application icon and the Applica
 
 Drag the **DeNode Manager** icon into the **Applications** folder shortcut in the installation window.
 
-![](../assets/webp/macos-install-gui-step-2.webp)
+![](../assets/webp/dm-macos-install-step-2.webp)
 
 Wait for the copy process to complete. This may take some time depending on your Mac's performance.
 
@@ -80,9 +80,9 @@ open -a "DeNode Manager"
 
 On first launch, macOS will confirm that the app is verified by Apple, and you will see the initial configuration screen:
 
-![](../assets/webp/macos-app-start.webp)
+![](../assets/webp/dm-macos-launch.webp)
 
-The application will display a list of licenses associated with your wallet. Initially, all licenses will be disabled until configured.
+After authorization, you will see a list of licenses associated with your wallet. Initially, all licenses will be disabled until configured.
 
 > 💡 **Tip:** The first launch may take some time as the application initializes its components.
 

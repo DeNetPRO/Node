@@ -67,7 +67,7 @@ sudo apt install -f
 sudo rpm -ivh DeNode_Manager-1.0.5-1.x86_64.rpm
 ```
 
-![](../assets/webp/linux-app-install.webp)
+![](../assets/webp/dm-linux-install.webp)
 
 ### Step 2: Launch
 
@@ -83,7 +83,9 @@ sudo rpm -ivh DeNode_Manager-1.0.5-1.x86_64.rpm
 denode-manager
 ```
 
-The application will display a list of licenses associated with your wallet. Initially, all licenses will be disabled until configured.
+![](../assets/webp/dm-linux-launch.webp)
+
+After authorization, you will see a list of licenses associated with your wallet. Initially, all licenses will be disabled until configured.
 
 > 💡 **Tip:** The first launch may take some time as the application initializes its components.
 
