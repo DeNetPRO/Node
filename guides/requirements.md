@@ -5,7 +5,7 @@ Before installing, you need to have:
 1. **A [wallet](./faq.md#what-is-a-wallet) address (ERC-20 compatible)** - This is like a bank account number for digital money and also serves as your identity for participating in the DeNet network
 2. **At least 100GB of free disk space** - Your computer needs room to store other people's data
 3. **Operating system supported by DeNet** (see [Supported Platforms](../readme.md#supported-platforms) section)
-4. [**PEAQ balance**](./faq.md#why-i-need-peaq-on-my-balance) - tokens are distributed to Datakeepers automatically and are being regularly credited for successfully completed transactions, if the node is running and does not disconnect from the network. If you balance is zero, please contact [support](https://discord.com/channels/920205740944273449/1341396814502559846)
+4. [**PEAQ balance**](./faq.md#why-i-need-peaq-on-my-balance) - tokens are distributed to Datakeepers automatically and are being regularly credited for successfully completed transactions, if the node is running and does not disconnect from the network. If you balance is zero, please contact <a href="https://discord.com/channels/920205740944273449/1341396814502559846" target="_blank" rel="noopener noreferrer">support</a>
 
 ## Step 0: Verify Your Account Has License
 

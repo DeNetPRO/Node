@@ -6,16 +6,16 @@
     Monetize your computer's storage now!
     <br/>
     <br/>
-    <a href="https://denet.pro">
+    <a href="https://denet.pro" target="_blank" rel="noopener noreferrer">
         <img alt="website.png" src="assets/denet.pro.svg" height="31" width="120"/>
     </a>
-    <a href="https://t.me/+Yu5KnSruttc5ZGRi">
+    <a href="https://t.me/denetnews" target="_blank" rel="noopener noreferrer">
         <img alt="tg.png" src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" height="30" width="120"/>
     </a>
-    <a href="https://discord.gg/cPz9m4cSWv">
+    <a href="https://discord.gg/cPz9m4cSWv" target="_blank" rel="noopener noreferrer">
         <img alt="discord.png" src="https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" height="30" width="120" />
     </a>
-    <a href="https://www.youtube.com/channel/UCeCxt3tYbtSkJvaznNjQimQ">
+    <a href="https://www.youtube.com/channel/UCeCxt3tYbtSkJvaznNjQimQ" target="_blank" rel="noopener noreferrer">
         <img alt="youtube.png" src="https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white" height="30" width="120" />
     </a>
 </p>
@@ -36,7 +36,7 @@
 
 ### How It Works:
 
-1. Get a [Datakeeper's license](https://nodesale.denet.app/)
+1. Get a <a href="https://nodesale.denet.app/" target="_blank" rel="noopener noreferrer">Datakeeper's license</a>
 2. [Install special software](#installation-process) on your computer
 3. Connect to the DeNet network and share your disk space
 4. Store user and business data
@@ -107,7 +107,7 @@ DeNet Datakeeper Nodes can be installed on various operating systems depending o
 
 > ⚠️ **Important**: DeNode Manager Desktop is not available for server operating systems (Ubuntu Server, CentOS, etc.) due to lack of GUI support.
 
-> 💡 **Tip**: Use the DeNode Manager Desktop download page at https://node.denet.app/ to conveniently download the specific application version.
+> 💡 **Tip**: Use the DeNode Manager Desktop download page at <a href="https://node.denet.app/" target="_blank" rel="noopener noreferrer">https://node.denet.app/</a> to conveniently download the specific application version.
 
 ### How to Choose the Right Architecture
 

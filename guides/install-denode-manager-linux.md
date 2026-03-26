@@ -119,8 +119,15 @@ Improve node performance with a public IP address:
 
 ## Troubleshooting
 
+### Multiple Licenses Transaction Issues
+If you have multiple licenses, launch them one by one. Starting all licenses simultaneously may prevent transactions from processing correctly.
+
+### Reinstallation Issues
+Before reinstalling DeNode Manager, make sure to properly quit the application and verify that the `denode` process is also stopped. Simply closing the window may not terminate background processes.
+
+### Still Need Help?
 Contact support if you encounter issues:
-- [Discord Support](https://discord.gg/cPz9m4cSWv)
+- <a href="https://discord.gg/cPz9m4cSWv" target="_blank" rel="noopener noreferrer">Discord Support</a>
 
 ---
 
@@ -139,9 +146,9 @@ Contact support if you encounter issues:
 
 ### Community & Support
 
-- **Official Website:** [denet.pro](https://denet.pro)
-- **Discord Server:** [Join our community](https://discord.gg/cPz9m4cSWv)
+- **Official Website:** <a href="https://denet.pro" target="_blank" rel="noopener noreferrer">denet.pro</a>
+- **Discord Server:** <a href="https://discord.gg/cPz9m4cSWv" target="_blank" rel="noopener noreferrer">Join our community</a>
 
 **Need Help?**  
 If you encounter any issues not covered in this guide, please reach out through our community channels:
-- [Discord Support](https://discord.gg/cPz9m4cSWv)
+- <a href="https://discord.gg/cPz9m4cSWv" target="_blank" rel="noopener noreferrer">Discord Support</a>
