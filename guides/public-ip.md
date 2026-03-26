@@ -55,7 +55,7 @@ In many countries, this is a standard service, sometimes a small monthly fee is 
 
 As soon as your Internet service provider turns on the public IP, this new address will be used on your internet connection.
 
-You can confirm this by visiting <a href="https://whatismyip.com" target="_blank" rel="noopener noreferrer">whatismyip.com</a> or <a href="https://ipinfo.io" target="_blank" rel="noopener noreferrer">ipinfo.io</a>.
+You can confirm this by visiting [whatismyip.com](https://whatismyip.com) or [ipinfo.io](https://ipinfo.io).
 
 ### Step 3. Open the port (for your node)
 
@@ -71,7 +71,7 @@ Your node needs an open port so that it can communicate with the outside world. 
 
 ### Step 4. Check the settings
 
-Visit the website <a href="https://canyouseeme.org" target="_blank" rel="noopener noreferrer">canyouseeme.org</a> and enter the port number (for example, 8080) to find out if it is open.
+Visit the website [canyouseeme.org](https://canyouseeme.org) and enter the port number (for example, 8080) to find out if it is open.
 
 As soon as the port is open and available, your node is ready to receive external connections.
 

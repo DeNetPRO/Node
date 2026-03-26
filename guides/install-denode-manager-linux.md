@@ -127,7 +127,7 @@ Before reinstalling DeNode Manager, make sure to properly quit the application a
 
 ### Still Need Help?
 Contact support if you encounter issues:
-- <a href="https://discord.gg/cPz9m4cSWv" target="_blank" rel="noopener noreferrer">Discord Support</a>
+- [Discord Support](https://discord.gg/cPz9m4cSWv)
 
 ---
 
@@ -146,9 +146,9 @@ Contact support if you encounter issues:
 
 ### Community & Support
 
-- **Official Website:** <a href="https://denet.pro" target="_blank" rel="noopener noreferrer">denet.pro</a>
-- **Discord Server:** <a href="https://discord.gg/cPz9m4cSWv" target="_blank" rel="noopener noreferrer">Join our community</a>
+- **Official Website:** [denet.pro](https://denet.pro)
+- **Discord Server:** [Join our community](https://discord.gg/cPz9m4cSWv)
 
 **Need Help?**  
 If you encounter any issues not covered in this guide, please reach out through our community channels:
-- <a href="https://discord.gg/cPz9m4cSWv" target="_blank" rel="noopener noreferrer">Discord Support</a>
+- [Discord Support](https://discord.gg/cPz9m4cSWv)

@@ -29,7 +29,7 @@ Occasional single errors are normal - don't worry if previous and subsequent tra
 ![Single Failure](../assets/single-failure.png)
 
 #### ❌ Multiple Errors
-If you see several errors in a row, contact <a href="https://discord.com/channels/920205740944273449/1341396814502559846" target="_blank" rel="noopener noreferrer">support</a> with Node [logs](#log-file-information)  
+If you see several errors in a row, contact [support](https://discord.com/channels/920205740944273449/1341396814502559846) with Node [logs](#log-file-information)  
 ![Failed Transactions](../assets/failed-trxs.png)
 
 ## Step 2: Locate Node Logs
@@ -70,4 +70,4 @@ Screenshot the latest logs or a particular errors from your terminal.
 - Regular transaction monitoring helps identify issues early
 - Keep an eye on transaction frequency and success rates
 - If you notice persistent errors, consult the logs for detailed error messages
-- Contact <a href="https://discord.com/channels/920205740944273449/1341396814502559846" target="_blank" rel="noopener noreferrer">support</a> with logs when experiencing multiple consecutive transaction failures
+- Contact [support](https://discord.com/channels/920205740944273449/1341396814502559846) with logs when experiencing multiple consecutive transaction failures

@@ -10,7 +10,7 @@
 🧭 **Steps for Managing Addresses**
 
 🔗 **Connecting a Wallet**
-- Open the <a href="https://nodemanager.denet.app/" target="_blank" rel="noopener noreferrer">web page manager</a> and connect:
+- Open the [web page manager](https://nodemanager.denet.app/) and connect:
     - Click the **Connect Wallet** button
     - Choose a connection method:
         - Metamask
