@@ -24,9 +24,9 @@
 
 - [What is DeNet?](#what-is-denet)
 - [Installation Process](#installation-process)
-- [Supported Platforms](#supported-platforms)
+    - [DeNode Manager Desktop](#denode-manager-desktop)
     - [Command Line Interface (CLI) Node](#command-line-interface-cli-node)
-    - [Desktop Node Manager](#desktop-node-manager)
+- [Supported Platforms](#supported-platforms)
 - [Node Activity Monitoring](./guides/monitoring.md)
 - [License Management](./guides/license-management.md)
 
@@ -53,7 +53,7 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
 **Step 1**: Make sure that your setup meets the [requirements](./guides/requirements.md)  
 **Step 2**: Choose the **installation option** that better suits you
 
-## Desktop Node Manager
+## DeNode Manager Desktop
 - **Best for**: Desktop users, beginners, easy management
 - **Features**: Graphical interface for node management
 - **Installation**: Available for Windows, macOS, and Linux desktop versions
@@ -81,8 +81,6 @@ By utilizing the DeNet Storage Protocol, users pay for the storage they need, wh
 
 DeNet Datakeeper Nodes can be installed on various operating systems depending on your needs and technical requirements:
 
-## Command Line Interface (CLI) Node
-
 ### Available CLI Builds
 
 | Operating System | Architecture | Download Link                                                                                                       |
@@ -95,9 +93,7 @@ DeNet Datakeeper Nodes can be installed on various operating systems depending o
 
 > 📝 **Note**: The DeNet Datakeeper Node CLI is distributed as a standalone binary file without any installation package. Just download the appropriate binary for your system
 
-## Desktop Node Manager
-
-### Available Desktop Builds
+### Available Desktop Node Manager Builds
 
 | Operating System | [Architecture](#how-to-choose-the-right-architecture) | Download Link                                                                                                                           | [Package Format](#package-format-explanation) | Installation Command |
 |------------------|----------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------|---------------------|
@@ -109,9 +105,9 @@ DeNet Datakeeper Nodes can be installed on various operating systems depending o
 | **Linux** | x86_64                                             | [DeNode_Manager-1.0.5-1.x86_64.rpm](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc11/DeNode_Manager-1.0.5-1.x86_64.rpm)   | RPM (Red Hat/Fedora/CentOS)                   | `sudo rpm -ivh DeNode_Manager-1.0.5-1.x86_64.rpm` |
 | **Linux** | ARM64                                              | [DeNode_Manager-1.0.5-1.aarch64.rpm](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc11/DeNode_Manager-1.0.5-1.aarch64.rpm) | RPM (Red Hat/Fedora/CentOS)                   | `sudo rpm -ivh DeNode_Manager-1.0.5-1.aarch64.rpm` |
 
-> ⚠️ **Important**: Desktop Node Manager is not available for server operating systems (Ubuntu Server, CentOS, etc.) due to lack of GUI support.
+> ⚠️ **Important**: DeNode Manager Desktop is not available for server operating systems (Ubuntu Server, CentOS, etc.) due to lack of GUI support.
 
-> 💡 **Tip**: Use the Desktop Node Manager download page at https://node.denet.app/ to conveniently download the specific application version.
+> 💡 **Tip**: Use the DeNode Manager Desktop download page at https://node.denet.app/ to conveniently download the specific application version.
 
 ### How to Choose the Right Architecture
 

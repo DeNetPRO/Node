@@ -5,7 +5,7 @@ This guide provides step-by-step instructions for installing and running the DeN
 ## Table of Contents
 
 1. [Setup Guide](#setup-guide)
-2. [Next Steps](#next-steps)
+2. [Bonus Guide](#bonus-guide)
 3. [Troubleshooting](#troubleshooting)
 4. [Additional Resources](#additional-resources)
 
@@ -19,7 +19,7 @@ This guide provides step-by-step instructions for installing and running the DeN
 
 Choose one of the following methods to download the Desktop Node Manager:
 
-#### Method 1: Direct Download from GitHub (Recommended)
+#### **Method 1: Direct Download from GitHub (Recommended)**
 
 1. Visit the [DeNet Node Releases page](https://github.com/DeNetPRO/Node/releases/latest)
 2. Download the appropriate version for your Linux distribution:
@@ -89,28 +89,28 @@ After authorization, you will see a list of licenses associated with your wallet
 
 > 💡 **Tip:** The first launch may take some time as the application initializes its components.
 
----
-
-## Next Steps
-
-Congratulations! You have successfully installed and launched the DeNet Desktop Node Manager. Here's what to do next:
-
-### 1. Configure Your Node
+### Step 3: Configure Your Node
 
 Learn how to configure and activate your node:
 - [Configuring Node Manager Guide](./configuring-manager.md)
 
-### 2. Monitor Your Node
+---
+
+## Bonus Guide
+
+Congratulations! You have successfully installed and launched the DeNet Desktop Node Manager. Here are some bonus resources to enhance your experience:
+
+### 1. Monitor Your Node
 
 Learn how to monitor node activity and performance:
 - [Node Activity Monitoring](./monitoring.md)
 
-### 3. Manage Your License
+### 2. Manage Your License
 
 Understand license management and transactions:
 - [License Management](./license-management.md)
 
-### 4. Set Up Public IP (Optional)
+### 3. Set Up Public IP (Optional)
 
 Improve node performance with a public IP address:
 - [Public IP Setup Guide](./public-ip.md)
