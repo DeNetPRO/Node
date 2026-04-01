@@ -137,7 +137,7 @@ DeNet Datakeeper Nodes can be installed on various operating systems depending o
 
 | Operating System | Architecture | Download Link                                                                                                                     |
 |------------------|--------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| **Windows** | x86_64 | [denode-manager-win-amd64.msi](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc12/denode-manager-windows-amd64.msi)   |
+| **Windows** | x86_64 | [denode-manager-win-amd64.msi](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc12/denode-manager-windows-amd64.zip)   |
 | **Linux** | x86_64 | [denode-manager-linux-amd64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc12/denode-manager-linux-amd64.zip)   |
 | **Linux** | ARM64 | [denode-manager-linux-arm64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc12/denode-manager-linux-arm64.zip)   |
 | **macOS** | x86_64 | [denode-manager-darwin-amd64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.0.1-rc12/denode-manager-darwin-amd64.zip) |
