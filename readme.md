@@ -1,4 +1,3 @@
-# ![](./assets/logo.png)
 ![](./assets/logo.png)
 
 <div align="center">
