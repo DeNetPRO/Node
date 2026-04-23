@@ -1,4 +1,5 @@
 # ![](./assets/logo.png)
+![](./assets/logo.png)
 
 <div align="center">
     Monetize your computer's storage now!<br><br>
@@ -164,5 +165,5 @@ To determine your system architecture:
 | Resource Usage | Lower | Higher |
 | Accessibility | Accessible from any device with browser | Limited to desktop |
 
-> 📝 **Note**: The Web Node Manager is ideal for server environments where GUI support is not available, while Desktop Node Manager provides a more user-friendly experience for desktop users.
+> 📝 **Note**: The DeNode Manager Web is ideal for server environments where GUI support is not available, while DeNode Manager Desktop provides a more user-friendly experience for desktop users.
 
