@@ -1,8 +1,8 @@
-<p align="center">
-![](./assets/logo.png)
-</p>
 <div align="center">
-    Monetize your computer's storage now!<br><br>
+
+# ![](./assets/logo.png)
+
+Monetize your computer's storage now!<br><br>
     <p align="center">
         <a href="https://denet.pro"><img src="assets/denet.pro.svg" height="28"/></a>
         <a href="https://t.me/denetnews"><img src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white" height="28"/></a>
