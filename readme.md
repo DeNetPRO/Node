@@ -1,6 +1,7 @@
 <div align="center">
 
-# ![](./assets/logo.png)
+# DeNet Node
+![](./assets/logo.png)
 
 Monetize your computer's storage now!<br><br>
     <p align="center">
