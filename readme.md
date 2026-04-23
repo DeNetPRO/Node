@@ -1,5 +1,6 @@
+<p align="center">
 ![](./assets/logo.png)
-
+</p>
 <div align="center">
     Monetize your computer's storage now!<br><br>
     <p align="center">
