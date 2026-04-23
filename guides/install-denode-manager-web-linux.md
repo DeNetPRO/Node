@@ -1,4 +1,4 @@
-# DeNet Manager Web for Linux
+# DeNode Manager Web for Linux
 
 ## Installation Guide
 

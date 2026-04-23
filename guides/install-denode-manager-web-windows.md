@@ -1,4 +1,4 @@
-# DeNet Manager Web for Windows
+# DeNode Manager Web for Windows
 
 ## Installation Guide
 

@@ -1,4 +1,4 @@
-# DeNet Manager Web for macOS
+# DeNode Manager Web for macOS
 
 ## Installation Guide
 

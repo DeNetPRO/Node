@@ -1,4 +1,4 @@
-# DeNet Datakeeper Node Manager Configuration
+# DeNode Manager Configuration
 
 ## Table of Contents
 1. [Account Setup](#account-setup)

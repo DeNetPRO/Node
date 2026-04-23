@@ -1,6 +1,6 @@
-# DeNet Desktop Node Manager Installation Guide for Linux
+# DeNode Manager Desktop Installation Guide for Linux
 
-This guide provides step-by-step instructions for installing and running the DeNet Desktop Node Manager on Linux systems. The Desktop Node Manager offers a user-friendly graphical interface for managing your DeNet Datakeeper nodes.
+This guide provides step-by-step instructions for installing and running the DeNode Manager on Linux systems. The DeNode Manager offers a user-friendly graphical interface for managing your DeNet Datakeeper nodes.
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ This guide provides step-by-step instructions for installing and running the DeN
 
 ### Step 0: Download
 
-Choose one of the following methods to download the Desktop Node Manager:
+Choose one of the following methods to download the DeNode Manager Desktop:
 
 #### **Method 1: Direct Download from GitHub (Recommended)**
 
@@ -98,7 +98,7 @@ Learn how to configure and activate your node:
 
 ## Bonus Guide
 
-Congratulations! You have successfully installed and launched the DeNet Desktop Node Manager. Here are some bonus resources to enhance your experience:
+Congratulations! You have successfully installed and launched the DeNode Manager. Here are some bonus resources to enhance your experience:
 
 ### 1. Monitor Your Node
 
