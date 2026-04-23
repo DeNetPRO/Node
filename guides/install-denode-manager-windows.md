@@ -19,8 +19,6 @@ This guide provides step-by-step instructions for installing and running the DeN
 
 Choose one of the following methods to download the DeNode Manager:
 
-#### Method 1: Direct Download from GitHub (Recommended)
-
 1. Visit the [DeNet Node Releases page](https://github.com/DeNetPRO/Node/releases/latest)
 2. Download the Windows version:
    - **Windows (x86_64):** `DeNode_Manager_1.0.5_x64-setup.exe`
@@ -61,13 +59,7 @@ Choose one of the following methods to download the DeNode Manager:
 **From Desktop:**
 1. Double-click the **DeNode Manager** shortcut on your Desktop (if created during installation)
 
-**From Installation Folder:**
-1. Navigate to `C:\Program Files\DeNode Manager`
-2. Double-click `DeNode Manager.exe`
-
 ![](../assets/webp/dm-windows-launch.webp)
-
-After authorization, you will see a list of licenses associated with your wallet. Initially, all licenses will be disabled until configured.
 
 > 💡 **Tip:** The first launch may take some time as the application initializes its components.
 

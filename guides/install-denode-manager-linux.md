@@ -85,8 +85,6 @@ denode-manager
 
 ![](../assets/webp/dm-linux-launch.webp)
 
-After authorization, you will see a list of licenses associated with your wallet. Initially, all licenses will be disabled until configured.
-
 > 💡 **Tip:** The first launch may take some time as the application initializes its components.
 
 ### Step 3: Configure Your Node

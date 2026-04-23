@@ -19,8 +19,6 @@ This guide provides step-by-step instructions for installing and running the DeN
 
 Choose one of the following methods to download the DeNode Manager Desktop:
 
-#### **Method 1: Direct Download from GitHub (Recommended)**
-
 1. Visit the [DeNet Node Releases page](https://github.com/DeNetPRO/Node/releases/latest)
 2. Download the macOS version:
    - **macOS (Intel/Apple Silicon):** `DeNode_Manager_1.0.5_x64.dmg`
@@ -66,8 +64,6 @@ open -a "DeNode Manager"
 On first launch, macOS will confirm that the app is verified by Apple, and you will see the initial configuration screen:
 
 ![](../assets/webp/dm-macos-launch.webp)
-
-After authorization, you will see a list of licenses associated with your wallet. Initially, all licenses will be disabled until configured.
 
 > 💡 **Tip:** The first launch may take some time as the application initializes its components.
 
