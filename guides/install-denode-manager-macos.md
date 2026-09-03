@@ -21,7 +21,7 @@ Choose one of the following methods to download the DeNode Manager Desktop:
 
 1. Visit the [DeNet Node Releases page](https://github.com/DeNetPRO/Node/releases/latest)
 2. Download the macOS version:
-   - **macOS (Intel/Apple Silicon):** `DeNode_Manager_1.0.14_x64.dmg`
+   - **macOS (Intel/Apple Silicon):** `DeNode_Manager_1.0.15_x64.dmg`
 
 ### Step 1: Installation
 
