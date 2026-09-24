@@ -18,7 +18,7 @@ This guide provides simplified step-by-step instructions for installing and runn
 ### Method 1: Download via curl (Recommended)
 ```bash
 # Download node executable
-curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.1.2/denode-linux-amd64
+curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-linux-amd64
 
 # Create directory for the node executable and copy it
 mkdir -p ~/denet

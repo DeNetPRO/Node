@@ -13,7 +13,7 @@ This guide provides simplified step-by-step instructions for installing and runn
 ### Method 1: Download via curl (Recommended)
 ```bash
 # Download node executable (replace with darwin-arm64 or darwin-amd64 for your architecture)
-curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.1.2/denode-darwin-arm64
+curl -LO https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-darwin-arm64
 
 # Create directory for the node executable and copy it
 mkdir -p ~/denet

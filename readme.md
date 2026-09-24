@@ -91,11 +91,11 @@ DeNet Datakeeper Nodes can be installed on various operating systems depending o
 
 | Operating System | Architecture | Download Link                                                                                                       |
 |------------------|--------------|---------------------------------------------------------------------------------------------------------------------|
-| **Windows** | x86_64 | [denode-windows-amd64.exe](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/denode-windows-amd64.exe) |
-| **Linux** | x86_64 | [denode-linux-amd64](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/denode-linux-amd64)             |
-| **Linux** | ARM64 | [denode-linux-arm64](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/denode-linux-arm64)             |
-| **macOS** | x86_64 | [denode-darwin-amd64](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/denode-darwin-amd64)             |
-| **macOS** | ARM64  | [denode-darwin-arm64](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/denode-darwin-arm64)             |
+| **Windows** | x86_64 | [denode-windows-amd64.exe](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-windows-amd64.exe) |
+| **Linux** | x86_64 | [denode-linux-amd64](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-linux-amd64)             |
+| **Linux** | ARM64 | [denode-linux-arm64](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-linux-arm64)             |
+| **macOS** | x86_64 | [denode-darwin-amd64](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-darwin-amd64)             |
+| **macOS** | ARM64  | [denode-darwin-arm64](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-darwin-arm64)             |
 
 > 📝 **Note**: The DeNet Datakeeper Node CLI is distributed as a standalone binary file without any installation package. Just download the appropriate binary for your system
 
@@ -105,12 +105,12 @@ DeNet Datakeeper Nodes can be installed on various operating systems depending o
 
 | Operating System | [Architecture](#how-to-choose-the-right-architecture) | Download Link                                                                                                                        | [Package Format](#package-format-explanation) | Installation Command                                                      |
 |------------------|----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------|---------------------------------------------------------------------------|
-| **Windows** | x86_64                                             | [DeNode_Manager_1.0.14_x64-setup.exe](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/DeNode_Manager_1.0.14_x64-setup.exe) | Installer                                     | Double-click to install                                                   |
-| **macOS** | x86_64 / ARM64                                     | [DeNode_Manager_1.0.14_x64.dmg](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/DeNode_Manager_1.0.14_x64.dmg)             | Disk Image                                    | Open .dmg file and drag to Applications                                   |
-| **Linux** | x86_64                                             | [DeNode_Manager_1.0.14_amd64.deb](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/DeNode_Manager_1.0.14_amd64.deb)         | DEB (Debian/Ubuntu)                           | `sudo dpkg -i DeNode_Manager_1.0.14_amd64.deb` then `sudo apt install -f` |
-| **Linux** | ARM64                                              | [DeNode_Manager_1.0.14_arm64.deb](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/DeNode_Manager_1.0.14_arm64.deb)         | DEB (Debian/Ubuntu)                           | `sudo dpkg -i DeNode_Manager_1.0.14_arm64.deb` then `sudo apt install -f` |
-| **Linux** | x86_64                                             | [DeNode_Manager-1.0.14-1.x86_64.rpm](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/DeNode_Manager-1.0.14-1.x86_64.rpm)   | RPM (Red Hat/Fedora/CentOS)                   | `sudo rpm -ivh DeNode_Manager-1.0.14-1.x86_64.rpm`                        |
-| **Linux** | ARM64                                              | [DeNode_Manager-1.0.14-1.aarch64.rpm](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/DeNode_Manager-1.0.14-1.aarch64.rpm) | RPM (Red Hat/Fedora/CentOS)                   | `sudo rpm -ivh DeNode_Manager-1.0.14-1.aarch64.rpm`                       |
+| **Windows** | x86_64                                             | [DeNode_Manager_1.0.15_x64-setup.exe](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/DeNode_Manager_1.0.15_x64-setup.exe) | Installer                                     | Double-click to install                                                   |
+| **macOS** | x86_64 / ARM64                                     | [DeNode_Manager_1.0.15_x64.dmg](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/DeNode_Manager_1.0.15_x64.dmg)             | Disk Image                                    | Open .dmg file and drag to Applications                                   |
+| **Linux** | x86_64                                             | [DeNode_Manager_1.0.15_amd64.deb](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/DeNode_Manager_1.0.15_amd64.deb)         | DEB (Debian/Ubuntu)                           | `sudo dpkg -i DeNode_Manager_1.0.15_amd64.deb` then `sudo apt install -f` |
+| **Linux** | ARM64                                              | [DeNode_Manager_1.0.15_arm64.deb](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/DeNode_Manager_1.0.15_arm64.deb)         | DEB (Debian/Ubuntu)                           | `sudo dpkg -i DeNode_Manager_1.0.15_arm64.deb` then `sudo apt install -f` |
+| **Linux** | x86_64                                             | [DeNode_Manager-1.0.15-1.x86_64.rpm](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/DeNode_Manager-1.0.15-1.x86_64.rpm)   | RPM (Red Hat/Fedora/CentOS)                   | `sudo rpm -ivh DeNode_Manager-1.0.15-1.x86_64.rpm`                        |
+| **Linux** | ARM64                                              | [DeNode_Manager-1.0.15-1.aarch64.rpm](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/DeNode_Manager-1.0.15-1.aarch64.rpm) | RPM (Red Hat/Fedora/CentOS)                   | `sudo rpm -ivh DeNode_Manager-1.0.15-1.aarch64.rpm`                       |
 
 > ⚠️ **Important**: DeNode Manager Desktop is not available for server operating systems (Ubuntu Server, CentOS, etc.) due to lack of GUI support.
 
@@ -120,11 +120,11 @@ DeNet Datakeeper Nodes can be installed on various operating systems depending o
 
 | Operating System | Architecture | Download Link                                                                                                                     |
 |------------------|--------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| **Windows** | x86_64 | [denode-manager-win-amd64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/denode-manager-windows-amd64.zip)   |
-| **Linux** | x86_64 | [denode-manager-linux-amd64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/denode-manager-linux-amd64.zip)   |
-| **Linux** | ARM64 | [denode-manager-linux-arm64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/denode-manager-linux-arm64.zip)   |
-| **macOS** | x86_64 | [denode-manager-darwin-amd64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/denode-manager-darwin-amd64.zip) |
-| **macOS** | ARM64 | [denode-manager-darwin-arm64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.2/denode-manager-darwin-arm64.zip) |
+| **Windows** | x86_64 | [denode-manager-win-amd64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-manager-windows-amd64.zip)   |
+| **Linux** | x86_64 | [denode-manager-linux-amd64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-manager-linux-amd64.zip)   |
+| **Linux** | ARM64 | [denode-manager-linux-arm64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-manager-linux-arm64.zip)   |
+| **macOS** | x86_64 | [denode-manager-darwin-amd64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-manager-darwin-amd64.zip) |
+| **macOS** | ARM64 | [denode-manager-darwin-arm64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-manager-darwin-arm64.zip) |
 
 > 📝 **Note**: DeNode Manager Web is distributed as a zip or msi file that requires additional setup steps compared to DeNode Manager Desktop. It's suitable for both desktop and server environments.
 
