@@ -40,6 +40,8 @@ First way is using the [Node Manager](../readme.md#desktop-node-manager-builds) 
 
 ### Method 2: File System Explorer
 
+> ⚠️ **Note**: `logs` folder is created when the node runs **under DeNode Manager** (Desktop or Web). A standalone CLI node prints logs to the terminal only — redirect them to a file if you need to keep them, e.g. `./denode >> denode.log 2>&1` (see [CLI install guides](./install-denode-linux.md)).
+
 #### Windows:
 You can find your node logs by entering this line in Windows Explorer:
 ```

@@ -120,13 +120,13 @@ DeNet Datakeeper Nodes can be installed on various operating systems depending o
 
 | Operating System | Architecture | Download Link                                                                                                                     |
 |------------------|--------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| **Windows** | x86_64 | [denode-manager-win-amd64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-manager-windows-amd64.zip)   |
+| **Windows** | x86_64 | [denode-manager-windows-amd64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-manager-windows-amd64.zip)   |
 | **Linux** | x86_64 | [denode-manager-linux-amd64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-manager-linux-amd64.zip)   |
 | **Linux** | ARM64 | [denode-manager-linux-arm64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-manager-linux-arm64.zip)   |
 | **macOS** | x86_64 | [denode-manager-darwin-amd64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-manager-darwin-amd64.zip) |
 | **macOS** | ARM64 | [denode-manager-darwin-arm64.zip](https://github.com/DeNetPRO/Node/releases/download/v4.1.3/denode-manager-darwin-arm64.zip) |
 
-> 📝 **Note**: DeNode Manager Web is distributed as a zip or msi file that requires additional setup steps compared to DeNode Manager Desktop. It's suitable for both desktop and server environments.
+> 📝 **Note**: DeNode Manager Web is distributed as a zip archive that requires additional setup steps compared to DeNode Manager Desktop. It's suitable for both desktop and server environments.
 
 ## How to Choose the Right Architecture
 

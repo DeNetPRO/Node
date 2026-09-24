@@ -50,6 +50,6 @@ If you see the following window, your node is ready to be configured.
 1. Configuration parameters could be viewed or changed using [CLI config commands](./denode-command.md#config-management-commands)
 2. Shared space parameters could be changed using [CLI disks commands](./disks-management.md)
 3. To completely reset your configuration and start from scratch, delete the configuration files located at:
-    - Linux/macOS: `~/.denode/config-(license-id).json` and `~/.denode/config-(license-id).json.bak`
-    - Windows: `%USERPROFILE%\.denode\config-(license-id).json` and `%USERPROFILE%\.denode\config-(license-id).json.bak`
-    - Replace `(license-id)` with your actual license number
+    - Linux/macOS: `~/.denode/(wallet-address)/config-(license-id).json` and `~/.denode/(wallet-address)/config-(license-id).json.bak`
+    - Windows: `%USERPROFILE%\.denode\(wallet-address)\config-(license-id).json` and `%USERPROFILE%\.denode\(wallet-address)\config-(license-id).json.bak`
+    - Replace `(license-id)` with your actual license number and `(wallet-address)` with your account address (lowercase, starting with `0x`) — each account has its own subfolder inside `.denode`
