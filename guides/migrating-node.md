@@ -11,7 +11,6 @@ This guide covers moving an existing Datakeeper node — its license, account, a
 5. [Step 4: Install the Node Software on the New Computer](#step-4-install-the-node-software-on-the-new-computer)
 6. [Step 5: Import Your Account](#step-5-import-your-account)
 7. [Step 6: Configure and Start the Node](#step-6-configure-and-start-the-node)
-8. [Common Pitfalls](#common-pitfalls)
 
 ---
 
@@ -78,4 +77,5 @@ You'll be asked to set a new password — the private key is stored locally, enc
 
 ## Step 6: Configure and Start the Node
 
-Reconfigure the license from scratch on the new computer, rather than trying to carry over the old configurations files — it's simpler and less error-prone. Point the storage directory to your moved drive (Step 3) or a fresh empty folder.
+Reconfigure the license from scratch on the new computer, rather than trying to carry over the old configurations files — it's simpler and less error-prone. Point the storage directory to your moved drive (Step 3) or a fresh empty folder. Point it to the folder that **contains** the `denode.storage-<license-id>` subdirectory of the old setup — the node keeps stored data inside that subdirectory.
+

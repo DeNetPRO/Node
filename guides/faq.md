@@ -1,5 +1,5 @@
 ## FAQ
-**Last update:** 2026-09-01
+**Last update:** 2026-09-24
 
 > In the following answers, using the term "node", we mean the **Datakeeper node**.
 
@@ -106,6 +106,14 @@ No, there are no monthly fees for running nodes. There are only network fees to 
 
 The system supports both multiple drives per node and multiple nodes per single drive.
 
+### What causes constant disk activity (read/write) on a node — is it the public-node status?
+
+The continuous disk activity comes mainly from replication and client traffic, not from being publicly reachable. Each 1 MB file part is replicated to at least 3 copies across the pool, and every upload/download of a part hits the disk. The routing/tunnel features used by publicly reachable nodes are memory-and-network work, not disk work. So disk wear scales with the volume of data replicated and served, not with the open port.
+
+### Can an NVMe cache drive be added to reduce HDD wear and speed things up?
+
+An NVMe cache reduces HDD wear only when data gets rewritten (a write-back cache collapses repeated writes). A DeNet data part is written exactly once and never modified, so there is nothing to collapse — every byte still lands on the HDD once, so wear is unchanged and just partly shifts to the cache drive. What a cache does help with is read-heavy moments — serving chunks to clients and to peers catching up — and leveling write bursts. Until a cache tier exists, run the node's storage entirely on an NVMe/SSD drive. A fast/cache node tier is noted as a possible future addition.
+
 ## Node Pools
 
 ### What is a Node Pool in the DeNet ecosystem?
@@ -176,10 +184,10 @@ Check your nodes [onchain activity](./monitoring.md) and an official [Datakeeper
 
 ### How does the node operation cycle work?
 
-Each node operates in a continuous 90-minute cycle with three stages:
-- **FillRoothash** — the node creates and sends a snapshot of all stored files. If there are no files, nothing is sent to the smart contract and transaction `0x8929ed2f` won't occur.
-- **HoldData** — the longest stage; the node sends no transactions and just stores data.
-- **CollectProofs** — the node sends proofs that the files from the FillRoothash stage are still stored. If no snapshot was sent earlier (e.g., no files), there's nothing to prove.
+Each node operates in a repeating cycle with three stages (stage durations are protocol settings that are adjusted over time, so the total cycle length is not fixed):
+- **Filling** — the node creates and sends a snapshot of all stored files. If there are no files, nothing is sent to the smart contract and transaction `0x8929ed2f` won't occur.
+- **Challenge** — the node sends no transactions and just stores data.
+- **Collecting** — the node sends proofs that the files from the Filling stage are still stored. If no snapshot was sent earlier (e.g., no files), there's nothing to prove.
 
 ## Errors & Troubleshooting
 
@@ -267,11 +275,21 @@ Earnings come from real user payments for storage. When a node successfully subm
 
 The more data a node stores and successfully proves, the higher its earnings.
 
+### How are rewards actually calculated?
+
+Node earnings come from what the pool's users pay. Users top up a balance in the pool contract, which is drawn down over time into the pool's reward jar.
+
+Each round, about 1/30 of the jar is split among the nodes with a valid proof, in proportion to how much data each one stores. Paying out only a small share per round smooths irregular payments into steady rewards and means a node can't take the money and stop proving: it earns only while its data keeps being proven.
+
+This is also why rewards can change even while the stored data doesn't. Since each round takes a share of what's left, a new payment pays out most within the first ~30 rounds, then tapers off. Payouts jump when fresh payment arrives and shrink until the next payment.
+
+Reserved capacity that the user does not fill is still billed and still lands in the jar, while the jar is split by data actually stored, so nodes carrying real data earn more per occupied terabyte than the plain user rate would suggest. Earnings therefore follow demand in the pool, not disk size — a pool without demand stays empty no matter how many terabytes you provide. But demand is exactly what grows as the network finds its users: every file stored and every balance topped up flows straight into the jar, so for a reliable node that keeps proving each round, payouts grow with the network.
+
 ## Uptime & Penalties
 
 ### How does the penalty system work?
 
-If a node doesn't send any proof during a full cycle, it receives 1 penalty. After 10 penalties (10 missed cycles, ~15 hours), the protocol considers the node offline and exits it from the pool. After restarting, the node automatically creates a join transaction to re-enter an available pool. If a node has fewer than 10 penalties (e.g., 5) and then sends a valid proof, the counter resets to 0.
+If a node doesn't send any proof during a full cycle, it receives 1 penalty. After 10 penalties (10 missed cycles; how long that takes depends on the current stage durations), the protocol considers the node offline and exits it from the pool. After restarting, the node automatically creates a join transaction to re-enter an available pool. If a node has fewer than 10 penalties (e.g., 5) and then sends a valid proof, the counter resets to 0.
 
 ### Do penalties ever reset or are they permanent?
 
