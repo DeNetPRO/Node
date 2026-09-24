@@ -275,6 +275,16 @@ Earnings come from real user payments for storage. When a node successfully subm
 
 The more data a node stores and successfully proves, the higher its earnings.
 
+### How are rewards actually calculated?
+
+Node earnings come from what the pool's users pay. Users top up a balance in the pool contract, which is drawn down over time into the pool's reward jar.
+
+Each round, about 1/30 of the jar is split among the nodes with a valid proof, in proportion to how much data each one stores. Paying out only a small share per round smooths irregular payments into steady rewards and means a node can't take the money and stop proving: it earns only while its data keeps being proven.
+
+This is also why rewards can change even while the stored data doesn't. Since each round takes a share of what's left, a new payment pays out most within the first ~30 rounds, then tapers off. Payouts jump when fresh payment arrives and shrink until the next payment.
+
+Reserved capacity that the user does not fill is still billed and still lands in the jar, while the jar is split by data actually stored, so nodes carrying real data earn more per occupied terabyte than the plain user rate would suggest. Earnings therefore follow demand in the pool, not disk size — a pool without demand stays empty no matter how many terabytes you provide. But demand is exactly what grows as the network finds its users: every file stored and every balance topped up flows straight into the jar, so for a reliable node that keeps proving each round, payouts grow with the network.
+
 ## Uptime & Penalties
 
 ### How does the penalty system work?
