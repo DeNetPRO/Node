@@ -79,11 +79,10 @@ This shape does three things:
 
 - **Smooths payouts.** One user top-up keeps paying the pool's nodes for tens of cycles, so nodes do not live from deposit to deposit.
 - **Keeps payouts honest.** A node collects its share only cycle by cycle, and only while its proofs keep passing — being paid for storage that can no longer be proven is impossible.
-- It smooths income instead of paying on demand. A deposit keeps feeding payouts for about 30 cycles (~1.5 days), so a wave of user top-ups lifts them briefly and a quiet week dents them. These are short-term ripples around a stable average: over any longer stretch, what a node earns tracks what its pool's users pay.
 
 ## A Worked Example
 
-The protocol runs a cycle roughly every 75 minutes (cycle length is a protocol setting and gets adjusted), so about **19 cycles a day**. Data is kept in at least 3 copies, so a pool storing 10 TB of user data confirms about 30 TB.
+Let's assume the protocol runs a cycle every 75 minutes (cycle length is a protocol setting and gets adjusted), so about **19 cycles a day**. Data is kept in at least 3 copies, so a pool storing 10 TB of user data confirms about 30 TB.
 
 **Pool A** — 10 TB of data from many users:
 
