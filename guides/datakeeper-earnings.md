@@ -29,14 +29,14 @@ When a user pays, the tokens move into the pool's smart contract and stay there 
 
 ## The Reward Fund
 
-Fees are transferred from user balances into the pool's shared **reward fund** in *draws* — small charges that happen as the user's data occupies storage:
+Fees are transferred from user balances into the pool's shared **reward fund** in *draws* when the user performs one of the following actions:
 
 | Event | What happens |
 |---|---|
 | User uploads / deletes files | A draw runs along with the node's report |
 | User tops up or claims funds back | A draw runs |
-| One week passes with no activity | An automatic draw runs |
 | User's balance runs out | The draw takes the remainder; the data is no longer funded storage |
+| One week passes with no activity | An automatic draw runs |
 
 Storage is billed on elapsed time at **1 TBY per terabyte per year**, with one rule: accounts below 100 GB are billed as 100 GB. Nothing is charged between draws — if a draw is skipped, the next one simply collects the whole passed period at once.
 
@@ -48,7 +48,7 @@ A pool works in repeated **cycles**. Each cycle has four stages:
 
 1. The node reports which users uploaded or removed their data.
 2. The node reports how many files it stores.
-3. The network waits for all reports to settle.
+3. The period in which the node continues to store user data.
 4. The node proves the stored files are still intact — payouts happen, and a new cycle starts.
 
 A node that fails to prove its data in a cycle gets nothing for that cycle and takes one **penalty**. Ten penalties in a row mean leaving the pool — its share of the distribution goes to the remaining nodes. One successful proof resets the counter. **Rewards already earned are never taken away.**
@@ -79,7 +79,7 @@ This shape does three things:
 
 - **Smooths payouts.** One user top-up keeps paying the pool's nodes for tens of cycles, so nodes do not live from deposit to deposit.
 - **Keeps payouts honest.** A node collects its share only cycle by cycle, and only while its proofs keep passing — being paid for storage that can no longer be proven is impossible.
-- **Creates short ripples around a stable average.** A wave of user top-ups lifts payouts briefly and a quiet week dents them, but over any longer stretch what a node earns tracks what its pool's users pay.
+- It smooths income instead of paying on demand. A deposit keeps feeding payouts for about 30 cycles (~1.5 days), so a wave of user top-ups lifts them briefly and a quiet week dents them. These are short-term ripples around a stable average: over any longer stretch, what a node earns tracks what its pool's users pay.
 
 ## A Worked Example
 
