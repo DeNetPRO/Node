@@ -8,7 +8,7 @@ Datakeeper rewards are not minted from nothing — they are exactly the fees sto
 
 - [Where Rewards Come From](#where-rewards-come-from)
 - [The Deposit](#the-deposit)
-- [The Reward Jar](#the-reward-jar)
+- [The Reward Fund](#the-reward-fund)
 - [The Storage Cycle](#the-storage-cycle)
 - [How One Cycle Pays](#how-one-cycle-pays)
 - [Why Payouts Are Gradual](#why-payouts-are-gradual)
@@ -19,7 +19,7 @@ Datakeeper rewards are not minted from nothing — they are exactly the fees sto
 
 ## Where Rewards Come From
 
-A storage user pays in **TBY tokens** for keeping their files safe. TBY is a utility token for paying for network services and distributing rewards for resources actually provided — it is not an investment product. Datakeeper nodes do the storing, grouped into **pools** of up to 32 nodes; each user's data lives in one specific pool. Your node is rewarded by the users of *its* pool — that single fact explains almost all variation in earnings you will ever see.
+A storage user pays in **TBY tokens** for keeping their files safe. TBY is a utility token for paying for network services and distributing rewards for the provided storage resources. Datakeeper nodes do the storing, grouped into **pools** of up to 32 nodes; each user's data lives in one specific pool. Your node is rewarded by the users of *its* pool — that single fact explains almost all variation in earnings you will ever see.
 
 No bank or intermediary holds rewards: the rules that move them are written into smart contracts, which validate storage proofs and apply rewards and penalties automatically.
 
@@ -27,9 +27,9 @@ No bank or intermediary holds rewards: the rules that move them are written into
 
 When a user pays, the tokens move into the pool's smart contract and stay there as the **user's balance**. Nothing is paid to nodes at this moment. The balance is a ceiling: it marks how much the protocol is allowed to charge this user over time, and anything not yet charged stays refundable at any time.
 
-## The Reward Jar
+## The Reward Fund
 
-Fees are transferred from user balances into the pool's shared **reward jar** in *draws* — small charges that happen as the user's data occupies storage:
+Fees are transferred from user balances into the pool's shared **reward fund** in *draws* — small charges that happen as the user's data occupies storage:
 
 | Event | What happens |
 |---|---|
@@ -40,7 +40,7 @@ Fees are transferred from user balances into the pool's shared **reward jar** in
 
 Storage is billed on elapsed time at **1 TBY per terabyte per year**, with one rule: accounts below 100 GB are billed as 100 GB. Nothing is charged between draws — if a draw is skipped, the next one simply collects the whole passed period at once.
 
-Once a fee crosses into the jar, it is no longer anybody's balance — the cycles ahead will distribute it to the Datakeepers.
+Once a fee crosses into the fund, it is no longer anybody's balance — the cycles ahead will distribute it to the Datakeepers.
 
 ## The Storage Cycle
 
@@ -55,24 +55,24 @@ A node that fails to prove its data in a cycle gets nothing for that cycle and t
 
 ## How One Cycle Pays
 
-At the end of each cycle, the pool pays out **1/30 of its jar**, split among the nodes that proved their data:
+At the end of each cycle, the pool pays out **1/30 of its fund**, split among the nodes that proved their data:
 
-> **reward = (jar / 30) × (your confirmed MB / all confirmed MB in the pool)**
+> **reward = (fund / 30) × (your confirmed MB / all confirmed MB in the pool)**
 
 Two numbers decide everything:
 
-- **How much the jar gives up this cycle** — set by what the pool's users are paying.
+- **How much the fund gives up this cycle** — set by what the pool's users are paying.
 - **Your share of the pool's confirmed data** — *confirmed* means reported and proven in the current cycle.
 
 Note what is *not* in the formula: the size of your disk. You are paid for the data you actually store and prove, megabyte by megabyte — empty or purchased-but-unused space earns nothing.
 
 ## Why Payouts Are Gradual
 
-The jar fills continuously, yet it pays out in slices of 1/30 per cycle. A deposit of 300 TBY entering the jar, for instance, pays out like this:
+The fund fills continuously, yet it pays out in slices of 1/30 per cycle. A deposit of 300 TBY entering the fund, for instance, pays out like this:
 
 | Cycle | 1 | 2 | 5 | 10 | 30 | 100 |
 |---|---|---|---|---|---|---|
-| Paid out of this jar, TBY | 10.0 | 9.7 | 8.8 | 7.4 | 3.6 | 0.3 |
+| Paid out of this fund, TBY | 10.0 | 9.7 | 8.8 | 7.4 | 3.6 | 0.3 |
 | Paid out in total, TBY | 10 | 20 | 47 | 86 | 192 | 290 |
 
 This shape does three things:
@@ -95,7 +95,7 @@ The protocol runs a cycle roughly every 75 minutes (cycle length is a protocol s
 | 20 small accounts × 50 GB | 1 TB | 2 TB (100 GB minimum each) |
 | **Total** | **10 TB** | **11 TB** |
 
-11 TBY a year flows into the jar ≈ 0.0016 TBY per cycle, and in steady state the pool pays the same ≈ 0.0016 TBY per cycle. A node that proves 2 of the pool's 30 confirmed TB gets 2/30 of each payout: **≈ 0.00011 TBY per cycle, ≈ 0.0020 TBY per day**.
+11 TBY a year flows into the fund ≈ 0.0016 TBY per cycle, and in steady state the pool pays the same ≈ 0.0016 TBY per cycle. A node that proves 2 of the pool's 30 confirmed TB gets 2/30 of each payout: **≈ 0.00011 TBY per cycle, ≈ 0.0020 TBY per day**.
 
 **Pool B** — the same 10 TB, but from one user paying for exactly 10 TB. The same node now earns **≈ 0.0018 TBY per day** from identical hardware and identical data volume.
 
@@ -117,18 +117,18 @@ Each cycle the pool pays its share¹ straight to the wallet that your license be
 
 ## Verify Your Payouts (Coming Soon)
 
-Reward accounting is executed on-chain: the pool's jar and the confirmed amounts are recorded in the contracts, so payouts can in principle be re-checked for any past cycle. A comfortable interface for that doesn't exist yet — soon the **Datakeeper Console** will let you see and recalculate your earnings from the on-chain data yourself. Until then, counting, charging and distributing are handled by the contract code rather than by hand.
+Reward accounting is executed on-chain: the pool's fund and the confirmed amounts are recorded in the contracts, so payouts can in principle be re-checked for any past cycle. A comfortable interface for that doesn't exist yet — soon the **Datakeeper Console** will let you see and recalculate your earnings from the on-chain data yourself. Until then, counting, charging and distributing are handled by the contract code rather than by hand.
 
 ## FAQ
 
 **Does a user's payment go to the nodes right away?**
-No. The tokens sit in the pool contract as the user's balance and only cross into the reward jar in draws, strictly as the user's data occupies time.
+No. The tokens sit in the pool contract as the user's balance and only cross into the reward fund in draws, strictly as the user's data occupies time.
 
 **Is the "payment cycle" the same as the storage cycle?**
 Yes — the protocol runs in cycles, accounts are drawn on events, and every cycle ends in one payout.
 
 **Why do my rewards jump and sag while my stored data doesn't change?**
-Because the jar drains by 1/30 per cycle, payouts mostly reflect the pool's recent deposits, and payouts are made per pool, not per network. Different days and different nodes get different rates even for identical bytes. A "network average" is a number no real node actually receives.
+Because the fund drains by 1/30 per cycle, payouts mostly reflect the pool's recent deposits, and payouts are made per pool, not per network. Different days and different nodes get different rates even for identical bytes. A "network average" is a number no real node actually receives.
 
 **Does my disk size affect my reward?**
 No. Only data reported by your node and proven in the current cycle counts. Empty disk earns nothing.
