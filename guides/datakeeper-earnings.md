@@ -2,11 +2,11 @@
 
 **Last update:** 2026-09-29
 
-Datakeeper rewards are not minted from nothing — they are exactly the fees storage users pay, distributed by stored volume. This guide follows a single coin through the protocol: from a user's payment to your wallet.
+Datakeeper rewards are not minted from nothing — they are exactly the fees storage users pay, distributed by stored volume. Rewards are paid in the same token a user paid with, credited by contract to the wallet the license belongs to. This guide follows a single payment through the protocol: from the moment a user makes it to the moment it lands in your wallet.
 
 ## Table of Contents
 
-- [Where the Money Comes From](#where-the-money-comes-from)
+- [Where Rewards Come From](#where-rewards-come-from)
 - [The Deposit](#the-deposit)
 - [The Reward Jar](#the-reward-jar)
 - [The Storage Cycle](#the-storage-cycle)
@@ -17,9 +17,11 @@ Datakeeper rewards are not minted from nothing — they are exactly the fees sto
 - [Verify Your Payouts (Coming Soon)](#verify-your-payouts-coming-soon)
 - [FAQ](#faq)
 
-## Where the Money Comes From
+## Where Rewards Come From
 
-A storage user pays in **TBY tokens** for keeping their files safe. Datakeeper nodes do the storing, grouped into **pools** of up to 32 nodes; each user's data lives in one specific pool. Your node is paid by the users of *its* pool — that single fact explains almost all variation in earnings you will ever see.
+A storage user pays in **TBY tokens** for keeping their files safe. TBY is a utility token for paying for network services and distributing rewards for resources actually provided — it is not an investment product. Datakeeper nodes do the storing, grouped into **pools** of up to 32 nodes; each user's data lives in one specific pool. Your node is rewarded by the users of *its* pool — that single fact explains almost all variation in earnings you will ever see.
+
+No bank or intermediary holds rewards: the rules that move them are written into smart contracts, which validate storage proofs and apply rewards and penalties automatically.
 
 ## The Deposit
 
@@ -27,7 +29,7 @@ When a user pays, the tokens move into the pool's smart contract and stay there 
 
 ## The Reward Jar
 
-Money is transferred from user balances into the pool's shared **reward jar** in *draws* — small charges that happen as the user's data occupies storage:
+Fees are transferred from user balances into the pool's shared **reward jar** in *draws* — small charges that happen as the user's data occupies storage:
 
 | Event | What happens |
 |---|---|
@@ -38,7 +40,7 @@ Money is transferred from user balances into the pool's shared **reward jar** in
 
 Storage is billed on elapsed time at **1 TBY per terabyte per year**, with one rule: accounts below 100 GB are billed as 100 GB. Nothing is charged between draws — if a draw is skipped, the next one simply collects the whole passed period at once.
 
-Once money crosses into the jar, it is no longer anybody's balance — the cycles ahead will distribute it to the Datakeepers.
+Once a fee crosses into the jar, it is no longer anybody's balance — the cycles ahead will distribute it to the Datakeepers.
 
 ## The Storage Cycle
 
@@ -49,7 +51,7 @@ A pool works in repeated **cycles**. Each cycle has four stages:
 3. The network waits for all reports to settle.
 4. The node proves the stored files are still intact — payouts happen, and a new cycle starts.
 
-A node that fails to prove its data in a cycle gets nothing for that cycle and takes one **penalty**. Ten penalties in a row mean leaving the pool — its share of the distribution goes to the remaining nodes. One successful proof resets the counter. **Money already earned is never taken away.**
+A node that fails to prove its data in a cycle gets nothing for that cycle and takes one **penalty**. Ten penalties in a row mean leaving the pool — its share of the distribution goes to the remaining nodes. One successful proof resets the counter. **Rewards already earned are never taken away.**
 
 ## How One Cycle Pays
 
@@ -75,8 +77,8 @@ The jar fills continuously, yet it pays out in slices of 1/30 per cycle. A depos
 
 This shape does three things:
 
-- **Smooths income.** One user top-up keeps paying the pool's nodes for tens of cycles, so nodes do not live from deposit to deposit.
-- **Prevents exit scams.** A node collects its share only cycle by cycle, and only while its proofs keep passing — grabbing the money and disappearing is impossible.
+- **Smooths payouts.** One user top-up keeps paying the pool's nodes for tens of cycles, so nodes do not live from deposit to deposit.
+- **Keeps payouts honest.** A node collects its share only cycle by cycle, and only while its proofs keep passing — being paid for storage that can no longer be proven is impossible.
 - **Creates short ripples around a stable average.** A wave of user top-ups lifts payouts briefly and a quiet week dents them, but over any longer stretch what a node earns tracks what its pool's users pay.
 
 ## A Worked Example
@@ -105,15 +107,17 @@ The protocol runs a cycle roughly every 75 minutes (cycle length is a protocol s
 | Users pay per day | 0.030 TBY | 0.027 TBY |
 | Your node (2 TB proven) per day | 0.0020 TBY | 0.0018 TBY |
 
-The takeaway: the same terabyte can pay slightly differently from pool to pool, because a pool's income is the sum of its users' bills. Neither you nor the protocol can steer this — it is decided by where the users happen to be. In every pool the two sides stay equal: users pay per day exactly what nodes receive.
+The takeaway: the same terabyte can pay slightly differently from pool to pool, because a pool's rewards are the sum of its users' fees. Neither you nor the protocol can steer this — it is decided by where the users happen to be. In every pool the two sides stay equal: users pay per day exactly what nodes receive.
 
 ## Where Your Rewards Appear
 
-Each cycle the pool pays its share straight to the wallet that your license belongs to. In the **Datakeeper Console** this arrives as **Current Rewards**, which you can withdraw at any time.
+Each cycle the pool pays its share¹ straight to the wallet that your license belongs to. In the **Datakeeper Console** this arrives as **Current Rewards**, which you can withdraw at any time.
+
+¹ Per the protocol rules a fee may be retained as part of this distribution, and the same fee applies when TBY is issued or redeemed; the payout figures in this guide are shown before any such fee.
 
 ## Verify Your Payouts (Coming Soon)
 
-Everything described here lives on-chain: the pool's jar and the confirmed amounts are recorded, so payouts can in principle be re-checked for any past cycle. A comfortable interface for that doesn't exist yet — soon the **Datakeeper Console** will let you visually see and verify your earnings against the on-chain data yourself. Until then, the protocol itself counts, distributes and charges everything for you.
+Reward accounting is executed on-chain: the pool's jar and the confirmed amounts are recorded in the contracts, so payouts can in principle be re-checked for any past cycle. A comfortable interface for that doesn't exist yet — soon the **Datakeeper Console** will let you see and recalculate your earnings from the on-chain data yourself. Until then, counting, charging and distributing are handled by the contract code rather than by hand.
 
 ## FAQ
 
@@ -130,4 +134,4 @@ Because the jar drains by 1/30 per cycle, payouts mostly reflect the pool's rece
 No. Only data reported by your node and proven in the current cycle counts. Empty disk earns nothing.
 
 **What happens if I miss a proof?**
-You get nothing for that cycle and take one penalty; 10 penalties in a row remove you from the pool. One successful proof resets the counter, and money you already earned is never taken away.
+You get nothing for that cycle and take one penalty; 10 penalties in a row remove you from the pool. One successful proof resets the counter, and rewards you already earned are never taken away.
