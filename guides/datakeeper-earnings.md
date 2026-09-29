@@ -79,10 +79,11 @@ This shape does three things:
 
 - **Smooths payouts.** One user top-up keeps paying the pool's nodes for tens of cycles, so nodes do not live from deposit to deposit.
 - **Keeps payouts honest.** A node collects its share only cycle by cycle, and only while its proofs keep passing — being paid for storage that can no longer be proven is impossible.
+- It smooths income instead of paying on demand. A deposit keeps feeding payouts for about 30 cycles (~1.5 days), so a wave of user top-ups lifts them briefly and a quiet week dents them. These are short-term ripples around a stable average: over any longer stretch, what a node earns tracks what its pool's users pay.
 
 ## A Worked Example
 
-Let's assume the protocol runs a cycle every 75 minutes (cycle length is a protocol setting and gets adjusted), so about **19 cycles a day**. Data is kept in at least 3 copies, so a pool storing 10 TB of user data confirms about 30 TB.
+Let's assume the protocol runs a cycle every 90 minutes (cycle length is a protocol setting and gets adjusted), so about **16 cycles a day**. Data is kept in at least 3 copies, so a pool storing 10 TB of user data confirms about 30 TB.
 
 **Pool A** — 10 TB of data from many users:
 
@@ -94,7 +95,7 @@ Let's assume the protocol runs a cycle every 75 minutes (cycle length is a proto
 | 20 small accounts × 50 GB | 1 TB | 2 TB (100 GB minimum each) |
 | **Total** | **10 TB** | **11 TB** |
 
-11 TBY a year flows into the fund ≈ 0.0016 TBY per cycle, and in steady state the pool pays the same ≈ 0.0016 TBY per cycle. A node that proves 2 of the pool's 30 confirmed TB gets 2/30 of each payout: **≈ 0.00011 TBY per cycle, ≈ 0.0020 TBY per day**.
+11 TBY a year flows into the fund ≈ 0.0019 TBY per cycle, and in steady state the pool pays the same ≈ 0.0019 TBY per cycle. A node that proves 2 of the pool's 30 confirmed TB gets 2/30 of each payout: **≈ 0.00013 TBY per cycle, ≈ 0.0020 TBY per day**.
 
 **Pool B** — the same 10 TB, but from one user paying for exactly 10 TB. The same node now earns **≈ 0.0018 TBY per day** from identical hardware and identical data volume.
 
