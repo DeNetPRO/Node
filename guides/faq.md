@@ -1,5 +1,5 @@
 ## FAQ
-**Last update:** 2026-09-24
+**Last update:** 2026-10-02
 
 > In the following answers, using the term "node", we mean the **Datakeeper node**.
 
@@ -267,23 +267,15 @@ We'll announce it if something of this kind appears.
 
 ### How is network revenue generated and distributed?
 
-Coming soon: live earnings calculation and forecasting will be built directly into official [Datakeeper Console](https://datakeeper-console.denet.pro/dashboard), so every Datakeeper can track their real-time share and projected growth in one place.
+Revenue is the storage fees users pay in TBY. Each user's fees are distributed among the Datakeepers of that user's pool in proportion to the data they store and prove. See [How Datakeeper Earnings Work](./datakeeper-earnings.md).
 
 ### What determines the difference in earnings between Datakeepers?
 
-Earnings come from real user payments for storage. When a node successfully submits Proof-of-Storage, it receives TBY directly from the users whose data it stores in the pool in which it was defined.
-
-The more data a node stores and successfully proves, the higher its earnings.
+Two things: how much the users of your pool pay, and your share of the pool's proven data. See the [worked example](./datakeeper-earnings.md#a-worked-example) in the earnings guide.
 
 ### How are rewards actually calculated?
 
-Node earnings come from what the pool's users pay. Users top up a balance in the pool contract, which is drawn down over time into the pool's reward jar.
-
-Each round, about 1/30 of the jar is split among the nodes with a valid proof, in proportion to how much data each one stores. Paying out only a small share per round smooths irregular payments into steady rewards and means a node can't take the money and stop proving: it earns only while its data keeps being proven.
-
-This is also why rewards can change even while the stored data doesn't. Since each round takes a share of what's left, a new payment pays out most within the first ~30 rounds, then tapers off. Payouts jump when fresh payment arrives and shrink until the next payment.
-
-Reserved capacity that the user does not fill is still billed and still lands in the jar, while the jar is split by data actually stored, so nodes carrying real data earn more per occupied terabyte than the plain user rate would suggest. Earnings therefore follow demand in the pool, not disk size — a pool without demand stays empty no matter how many terabytes you provide. But demand is exactly what grows as the network finds its users: every file stored and every balance topped up flows straight into the jar, so for a reliable node that keeps proving each round, payouts grow with the network.
+Each cycle the pool pays out 1/30 of its reward fund, split among the nodes that proved their data in proportion to their confirmed data. See [How One Cycle Pays](./datakeeper-earnings.md#how-one-cycle-pays) in the earnings guide.
 
 ## Uptime & Penalties
 
