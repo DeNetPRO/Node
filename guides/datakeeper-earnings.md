@@ -97,6 +97,8 @@ Let's assume the protocol runs a cycle every 90 minutes (cycle length is a proto
 
 11 TBY a year flows into the fund ≈ 0.0019 TBY per cycle, and in steady state the pool pays the same ≈ 0.0019 TBY per cycle. A node that proves 2 of the pool's 30 confirmed TB gets 2/30 of each payout: **≈ 0.00013 TBY per cycle, ≈ 0.0020 TBY per day**.
 
+These are averages: fees enter the fund in draws rather than every cycle, so the actual reward per cycle and per day varies around them.
+
 **Pool B** — the same 10 TB, but from one user paying for exactly 10 TB. The same node now earns **≈ 0.0018 TBY per day** from identical hardware and identical data volume.
 
 | | Pool A | Pool B |
@@ -135,3 +137,6 @@ No. Only data reported by your node and proven in the current cycle counts. Empt
 
 **What happens if I miss a proof?**
 You get nothing for that cycle and take one penalty; 10 penalties in a row remove you from the pool. One successful proof resets the counter, and rewards you already earned are never taken away.
+
+**Are rewards guaranteed?** 
+No. They depend on the storage fees paid by users in your pool, your share of proven data and passed proofs; they can be low or zero, and the TBY/USD rate changes.
