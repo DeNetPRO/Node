@@ -283,7 +283,7 @@ Each round, about 1/30 of the jar is split among the nodes with a valid proof, i
 
 This is also why rewards can change even while the stored data doesn't. Since each round takes a share of what's left, a new payment pays out most within the first ~30 rounds, then tapers off. Payouts jump when fresh payment arrives and shrink until the next payment.
 
-Billing follows the data a user actually stores, with a minimum rate of 100 GB, and only what the protocol draws from a user's balance lands in the jar — the rest stays available to the user. Since small users are billed at the 100 GB minimum while occupying less, the jar receives slightly more than the occupied space alone would account for, so nodes carrying real data earn a bit more per occupied terabyte than the plain user rate would suggest. Earnings therefore follow demand in the pool, not disk size — a pool without demand stays empty no matter how many terabytes you provide. But demand is exactly what grows as the network finds its users: every file stored flows straight into the jar, so for a reliable node that keeps proving each round, payouts grow with the network.
+Reserved capacity that the user does not fill is still billed and still lands in the jar, while the jar is split by data actually stored, so nodes carrying real data earn more per occupied terabyte than the plain user rate would suggest. Earnings therefore follow demand in the pool, not disk size — a pool without demand stays empty no matter how many terabytes you provide. But demand is exactly what grows as the network finds its users: every file stored and every balance topped up flows straight into the jar, so for a reliable node that keeps proving each round, payouts grow with the network.
 
 ## Uptime & Penalties
 
