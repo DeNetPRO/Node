@@ -203,6 +203,5 @@ To determine your system architecture:
 
 ## General
 - [Requirements](./guides/requirements.md)
-- [How Datakeeper Earnings Work](./guides/datakeeper-earnings.md)
 - [FAQ](./guides/faq.md)
 
