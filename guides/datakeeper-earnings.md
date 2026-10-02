@@ -19,7 +19,7 @@ Datakeeper rewards are not minted from nothing — they are exactly the fees sto
 
 ## Where Rewards Come From
 
-A storage user pays in **TBY tokens** for keeping their files safe. TBY is a utility token for paying for network services and distributing rewards for the provided storage resources. Datakeeper nodes do the storing, grouped into **pools** of up to 32 nodes; each user's data lives in one specific pool. Your node is rewarded by the users of *its* pool — that single fact explains almost all variation in earnings you will ever see.
+A storage user pays in **TBY tokens** for keeping their files safe. TBY is a utility token for paying for network services and distributing rewards for the provided storage resources. Datakeeper nodes do the storing, grouped into **pools** of up to 32 nodes; each user's data lives in one specific pool. Your node is rewarded by the users of *its* pool.
 
 No bank or intermediary holds rewards: the rules that move them are written into smart contracts, which validate storage proofs and apply rewards and penalties automatically.
 
@@ -44,12 +44,11 @@ Once a fee crosses into the fund, it is no longer anybody's balance — the cycl
 
 ## The Storage Cycle
 
-A pool works in repeated **cycles**. Each cycle has four stages:
+A pool works in repeated **cycles**. Each cycle has three stages:
 
-1. The node reports which users uploaded or removed their data.
-2. The node reports how many files it stores.
-3. The period in which the node continues to store user data.
-4. The node proves the stored files are still intact — payouts happen, and a new cycle starts.
+1. The node reports which users uploaded or removed their data and how many files it stores.
+2. The period in which the node continues to store user data.
+3. The node proves the stored files are still intact — payouts happen, and a new cycle starts.
 
 A node that fails to prove its data in a cycle gets nothing for that cycle and takes one **penalty**. Ten penalties in a row mean leaving the pool — its share of the distribution goes to the remaining nodes. One successful proof resets the counter. **Rewards already earned are never taken away.**
 
@@ -113,9 +112,7 @@ The takeaway: the same terabyte can pay slightly differently from pool to pool, 
 
 ## Where Your Rewards Appear
 
-Each cycle the pool pays its share¹ straight to the wallet that your license belongs to. In the **Datakeeper Console** this arrives as **Current Rewards**, which you can withdraw at any time.
-
-¹ Per the protocol rules a fee may be retained as part of this distribution, and the same fee applies when TBY is issued or redeemed; the payout figures in this guide are shown before any such fee.
+Each cycle the pool pays its share straight to the wallet that your license belongs to. In the [Datakeeper Console](https://datakeeper-console.denet.pro/) you can see your current TBY balance in the **Dashboard** section after connecting your wallet.
 
 ## Verify Your Payouts (Coming Soon)
 
