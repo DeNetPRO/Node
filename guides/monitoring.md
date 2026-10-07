@@ -61,6 +61,8 @@ Node logs are located at:
 
 Screenshot the latest logs or a particular errors from your terminal.
 
+If the node runs as a [systemd service](./systemd-service.md), it has no terminal and its output goes to journald: `journalctl -u denode -n 100`.
+
 ### Log File Information
 
 - Log files are named according to your license numbers
