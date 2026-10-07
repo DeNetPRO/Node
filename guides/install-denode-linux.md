@@ -58,6 +58,8 @@ To run in background:
 DENODE_PASSWORD=your_password nohup ./denode --address you_datakeeper_address --license your_license_number > denode.log 2>&1 &
 ```
 
+> 💡 **Note**: typed this way, the password stays in your shell history and in the environment of everything the node starts. On a machine with more than one account, run the node as a [systemd service](./systemd-service.md) instead — it reads the password from a root-only file.
+
 **Output:**
 ```
 $ nohup ./denode > denode.log 2>&1 &
@@ -127,8 +129,8 @@ In short, with the node already installed and configured under `YOUR_USER`:
 1. Keep the password out of the unit file (unit files are world-readable):
    ```bash
    sudo mkdir -p /etc/denode && sudo chmod 700 /etc/denode
-   printf 'DENODE_PASSWORD=your_password\n' | sudo tee /etc/denode/denode.env > /dev/null
-   sudo chmod 600 /etc/denode/denode.env
+   sudo install -o root -g root -m 600 /dev/null /etc/denode/denode.env
+   sudo nano /etc/denode/denode.env      # one line: DENODE_PASSWORD=your_password
    ```
 
 2. Create `/etc/systemd/system/denode.service` with the content from the [systemd service guide](./systemd-service.md#step-2-write-the-unit-file), replacing `YOUR_USER`, the wallet address and the license ID.
