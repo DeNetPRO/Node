@@ -58,6 +58,8 @@ To run in background:
 DENODE_PASSWORD=your_password nohup ./denode --address you_datakeeper_address --license your_license_number > denode.log 2>&1 &
 ```
 
+> 💡 **Note**: typed this way, the password stays in your shell history and in the environment of everything the node starts. On a machine with more than one account, run the node as a [systemd service](./systemd-service.md) instead — it reads the password from a root-only file.
+
 **Output:**
 ```
 $ nohup ./denode > denode.log 2>&1 &
@@ -120,42 +122,27 @@ When running multiple DeNet Datakeeper Nodes on the same machine, each node need
 
 ## Advanced: Systemd Service Setup (Optional)
 
-For automatic startup on boot:
+To start the node on boot and have it restart itself after a crash, run it as a systemd service. Full instructions — the unit file, where the wallet password goes, multiple nodes, upgrades — are in the **[systemd service guide](./systemd-service.md)**.
 
-1. Create a dedicated user (recommended):
+In short, with the node already installed and configured under `YOUR_USER`:
+
+1. Keep the password out of the unit file (unit files are world-readable):
    ```bash
-   sudo adduser denet
+   sudo mkdir -p /etc/denode && sudo chmod 700 /etc/denode
+   sudo install -o root -g root -m 600 /dev/null /etc/denode/denode.env
+   sudo nano /etc/denode/denode.env      # one line: DENODE_PASSWORD=your_password
    ```
 
-2. Create service file:
-   ```bash
-   sudo nano /etc/systemd/system/denode.service
-   ```
+2. Create `/etc/systemd/system/denode.service` with the content from the [systemd service guide](./systemd-service.md#step-2-write-the-unit-file), replacing `YOUR_USER`, the wallet address and the license ID.
 
-3. Add this content (replace `username` with your actual username):
-   ```ini
-   [Unit]
-   Description=DeNode Service
-   After=network.target
-
-   [Service]
-   User=username
-   Group=username
-   Type=simple
-   ExecStart=/home/username/denet/denode
-   Restart=always
-   RestartSec=5
-
-   [Install]
-   WantedBy=multi-user.target
-   ```
-
-4. Enable and start:
+3. Enable and start it:
    ```bash
    sudo systemctl daemon-reload
-   sudo systemctl enable denode.service
-   sudo systemctl start denode.service
+   sudo systemctl enable --now denode.service
+   sudo systemctl status denode.service     # active (running)
    ```
+
+> ⚠️ Two things the node will not work without: `User=` must be the account you configured the node under (its config and encrypted key live in `~/.denode`), and `ExecStart` must pass `--address` and `--license` — a service has no keyboard, so a node that still has questions to ask exits immediately.
 
 ## Reinstalling Your Node
 
@@ -183,9 +170,17 @@ If you need to reinstall your DeNet Datakeeper Node, follow these steps:
 
 ## Useful Commands
 
+Started by hand (`nohup`):
+
 - View logs: `tail -f ~/denet/denode.log`
 - Check status: `ps aux | grep denode`
 - Stop node: `pkill denode`
+
+Started as a [systemd service](./systemd-service.md):
+
+- View logs: `journalctl -u denode -f`
+- Check status: `sudo systemctl status denode`
+- Stop node: `sudo systemctl stop denode`
 
 **Output Example:**
 ```
