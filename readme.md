@@ -195,6 +195,7 @@ To determine your system architecture:
 - [Disks Management](./guides/disks-management.md)
 - [License Management](./guides/license-management.md)
 - [Monitoring](./guides/monitoring.md)
+- [Systemd Service (Linux CLI)](./guides/systemd-service.md)
 
 ## Networking
 - [Public IP](./guides/public-ip.md)

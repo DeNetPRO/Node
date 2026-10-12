@@ -1,6 +1,6 @@
 # How Datakeeper Earnings Work
 
-**Last update:** 2026-09-29
+**Last update:** 2026-10-12
 
 Datakeeper rewards are not minted from nothing — they are exactly the fees storage users pay, distributed by stored volume. Rewards are paid in the same token a user paid with, credited by contract to the wallet the license belongs to. This guide follows a single payment through the protocol: from the moment a user makes it to the moment it lands in your wallet.
 
@@ -14,7 +14,7 @@ Datakeeper rewards are not minted from nothing — they are exactly the fees sto
 - [Why Payouts Are Gradual](#why-payouts-are-gradual)
 - [A Worked Example](#a-worked-example)
 - [Where Your Rewards Appear](#where-your-rewards-appear)
-- [Verify Your Payouts (Coming Soon)](#verify-your-payouts-coming-soon)
+- [Rewards Calculator](#rewards-calculator)
 - [FAQ](#faq)
 
 ## Where Rewards Come From
@@ -114,9 +114,15 @@ The takeaway: the same terabyte can pay slightly differently from pool to pool, 
 
 Each cycle the pool pays its share straight to the wallet that your license belongs to. In the [Datakeeper Console](https://datakeeper-console.denet.pro/) you can see your current TBY balance in the **Dashboard** section after connecting your wallet.
 
-## Verify Your Payouts (Coming Soon)
+## Rewards Calculator
 
-Reward accounting is executed on-chain: the pool's fund and the confirmed amounts are recorded in the contracts, so payouts can in principle be re-checked for any past cycle. A comfortable interface for that doesn't exist yet — soon the **Datakeeper Console** will let you see and recalculate your earnings from the on-chain data yourself. Until then, counting, charging and distributing are handled by the contract code rather than by hand.
+The [Datakeeper Console](https://datakeeper-console.denet.pro/) has a **Rewards Calculator**: every Datakeeper can estimate their own nodes' rewards, worked out from their pool's on-chain data with the formula above. Connect your wallet and pick the pool and nodes you want to check. The calculator shows:
+
+- **The pool's state:** what users pay per month, how much data they store and how much is billed, and how much is in the reward fund right now.
+- **The next cycle, step by step:** the reward fund → the 1/30 paid to all of the pool's Datakeepers → your share of the proven data → your reward. You get that reward only for the nodes that pass the proof.
+- **Your estimated rewards** for 30 days and per day on average, in TBY and USD.
+
+A slider for the pool's monthly reward fund shows how your estimate changes if users pay more or less. These are estimates: the actual payout depends on the draws, on your proofs and on how much data the other nodes in the pool prove.
 
 ## FAQ
 
