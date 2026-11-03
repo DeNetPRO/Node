@@ -41,9 +41,9 @@ STATIC_DIR="$INSTALL_DIR/static"
 LOGS_DIR="$INSTALL_DIR/logs"
 
 echo -e "\n${BLUE}=== Starting Denode Manager Installation ===${NC}\n"
-echo -e "${YELLOW}Detected OS: ${BOLD}$OS${NC}, Architecture: ${BOLD}$ARCH${NC}"
-echo -e "${YELLOW}Selected archive: ${BOLD}$ARCHIVE.zip${NC}"
-echo -e "${YELLOW}Installation directory: ${BOLD}$INSTALL_DIR${NC}\n"
+echo -e "Detected OS: ${BOLD}$OS${NC}, Architecture: ${BOLD}$ARCH${NC}"
+echo -e "Selected archive: ${BOLD}$ARCHIVE.zip${NC}"
+echo -e "Installation directory: ${BOLD}$INSTALL_DIR${NC}\n"
 
 if [ ! -f "$ARCHIVE.zip" ]; then
   echo -e "${RED}ERROR: Archive ${BOLD}$ARCHIVE.zip${NC} not found in current directory"
@@ -51,7 +51,7 @@ if [ ! -f "$ARCHIVE.zip" ]; then
 fi
 
 TEMP_DIR=$(mktemp -d)
-echo -e "${YELLOW}Extracting zip archive to ${BOLD}$TEMP_DIR${NC}..."
+echo -e "Extracting zip archive to ${BOLD}$TEMP_DIR${NC}..."
 unzip -q "$ARCHIVE.zip" -d "$TEMP_DIR"
 if [ $? -ne 0 ]; then
   echo -e "${RED}ERROR: Failed to extract zip archive${NC}"
@@ -62,8 +62,8 @@ fi
 # Check for a .tar.gz file in the extracted contents
 TAR_FILE=$(find "$TEMP_DIR" -name "*.tar.gz" -type f)
 if [ -n "$TAR_FILE" ]; then
-  echo -e "${YELLOW}Found tar.gz archive: ${BOLD}$TAR_FILE${NC}"
-  echo -e "${YELLOW}Extracting tar.gz to ${BOLD}$TEMP_DIR${NC}..."
+  echo -e "Found tar.gz archive: ${BOLD}$TAR_FILE${NC}"
+  echo -e "Extracting tar.gz to ${BOLD}$TEMP_DIR${NC}..."
   tar -xzf "$TAR_FILE" -C "$TEMP_DIR"
   if [ $? -ne 0 ]; then
     echo -e "${RED}ERROR: Failed to extract tar.gz archive${NC}"
@@ -74,7 +74,7 @@ if [ -n "$TAR_FILE" ]; then
   rm -f "$TAR_FILE"
   echo -e "${GREEN}Removed intermediate tar.gz file${NC}"
 else
-  echo -e "${YELLOW}No tar.gz file found, assuming direct extraction from zip${NC}"
+  echo -e "No tar.gz file found, assuming direct extraction from zip${NC}"
 fi
 
 # Define paths to expected files in the extracted archive
@@ -103,7 +103,7 @@ fi
 mkdir -p "$INSTALL_DIR" "$LOGS_DIR"
 echo -e "${GREEN}Created directories: ${BOLD}$INSTALL_DIR${NC}, ${BOLD}$LOGS_DIR${NC}"
 
-echo -e "${YELLOW}Installing ${BOLD}denode${NC} to ${BOLD}$INSTALL_DIR${NC}..."
+echo -e "Installing ${BOLD}denode${NC} to ${BOLD}$INSTALL_DIR${NC}..."
 cp "$NODE_BIN" "$INSTALL_DIR/denode"
 chmod +x "$INSTALL_DIR/denode"
 chown -R "$(whoami)" "$INSTALL_DIR/denode"
@@ -111,7 +111,7 @@ if [ "$OS" = "darwin" ]; then
   xattr -d com.apple.quarantine "$INSTALL_DIR/denode" 2>/dev/null
 fi
 
-echo -e "${YELLOW}Installing server to ${BOLD}$INSTALL_DIR${NC}..."
+echo -e "Installing server to ${BOLD}$INSTALL_DIR${NC}..."
 cp "$SERVER_BIN" "$INSTALL_DIR/server"
 chmod +x "$INSTALL_DIR/server"
 chown -R "$(whoami)" "$INSTALL_DIR/server"
@@ -119,11 +119,11 @@ if [ "$OS" = "darwin" ]; then
   xattr -d com.apple.quarantine "$INSTALL_DIR/server" 2>/dev/null
 fi
 
-echo -e "${YELLOW}Installing static files to ${BOLD}$STATIC_DIR${NC}..."
+echo -e "Installing static files to ${BOLD}$STATIC_DIR${NC}..."
 rm -rf "$STATIC_DIR"
 cp -r "$STATIC_SRC" "$STATIC_DIR"
 
-echo -e "${YELLOW}Checking denode installation...${NC}"
+echo -e "Checking denode installation...${NC}"
 NODE_VERSION=$("$INSTALL_DIR/denode" --version 2>/dev/null)
 if [ $? -eq 0 ]; then
   echo -e "${GREEN}Denode installed successfully: ${BOLD}$NODE_VERSION${NC}"
@@ -136,4 +136,7 @@ fi
 rm -rf "$TEMP_DIR"
 echo -e "\n${GREEN}=== Installation Complete! ===${NC}"
 echo -e "${BLUE}Use denode-manager.sh to start and manage the server.${NC}"
+printf "\n${RED}WARNING: Manager Web now listens on localhost only by default.\n"
+printf "It cannot be opened from another device unless you configure remote access.\n"
+printf "Do not expose TCP port 1111 to the internet. Guide: https://github.com/DeNetPRO/Node/blob/Dev/guides/remote-manager-access.md${NC}\n"
 echo -e "${BLUE}Installation directory: ${BOLD}$INSTALL_DIR${NC}"

@@ -2,6 +2,8 @@
 
 ## Installation Guide
 
+> **Remote access:** Do not expose Manager Web port 1111 directly to the internet. To connect from another device, follow the [secure remote access guide](./remote-manager-access.md) for VPN or SSH setup.
+
 ### Step 0: Prepare Environment
 1. Download installation and management scripts from the [scripts](https://github.com/DeNetPRO/Node/tree/Dev/scripts) directory
     ```shell

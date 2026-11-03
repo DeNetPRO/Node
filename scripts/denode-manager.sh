@@ -45,6 +45,9 @@ get_server_pid() {
 }
 
 echo -e "${BLUE}Denode Manager Control${NC}"
+printf "${RED}WARNING: Manager Web listens on localhost only by default; remote devices cannot connect directly.\n"
+printf "Keep TCP port 1111 closed to the internet.\n"
+printf "Guide: https://github.com/DeNetPRO/Node/blob/Dev/guides/remote-manager-access.md${NC}\n\n"
 echo "1. Start application"
 echo "2. Stop application"
 echo "3. Restart application"
